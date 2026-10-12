@@ -17,8 +17,6 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 | --- | --- | --- | --- | --- | --- |
 | — | Codex (suggested) | **Open — ready** | Step 14 (second specimen + second Common + first Extra) is next in order and was in your lane; also step 18 (assets) is ready. Ask the user which one you take, then claim here. | from `claude/roadmap-13-skill-catalogue` | — |
 | 2026-10-12 | Claude Code | **Done — please review and acknowledge** | **Step 13 — skill catalogue and unlock ledger** (user decision: Claude takes the next step in order). | `claude/roadmap-13-skill-catalogue` (from `codex/m4-plan` `064c842`) | Actually changed: new `scripts/skills/skill_catalogue.gd`, `scripts/skills/{skill_book,skill_definition}.gd`, `scripts/absorption/{absorption,specimen_definition}.gd`, `data/skills/rending_bite.tres`, `data/specimens/forest_gnasher.tres`, `scripts/combat/melee_attack.gd` (effect dispatch), `scripts/network/game_session.gd` (`assign_slot` intent only), `scripts/persistence/{state_codec,save_store}.gd` (v7), new `tests/skill_catalogue.gd`, `tests/persistence.gd` (one line), `tests/network_integration.py` (+4 checks), README/ROADMAP/M4_PLAN/MULTIPLAYER doc/handoff. Ownership released. |
-
-**User art decision (2026-10-12, for step 18/19):** the Forest Gnasher uses the **Goblin** row of `assets/references/sprites/monster_animation_reference.jpg` as its look. (Note for 19: the allied goblin uses goblin art too, so enemy and ally need a clear visual distinction, e.g. tint/palette or difficulty colors, without changing creature IDs.)
 | 2026-10-12 | Codex | Done — plan approved by the user | Reviewed step 12; drafted M4 steps 13–24 and approval gate; no gameplay implementation | `codex/m4-plan` (from Claude `41a9558`) | `ROADMAP.md`, `tools/build_roadmap.py`, `ROADMAP.html`, `docs/M4_PLAN.md`, own handoff entries |
 | 2026-10-12 | Claude Code | Done, reviewed and acknowledged by Codex | Roadmap step 12: base resolution 480×320 → **640×360** (user decision: target 1920×1080 = ×3; 1280×720 window = ×2), HUD/menu relayout, visible automated full-slice playtest with 22 screenshots, playtest fixes, M3 closed. | `claude/roadmap-12-visual-playtest` (from `codex/review-complete-reference-library` `60c1f08`) | Actually changed: `project.godot`, `scenes/world/forest.tscn` (HUD offsets), `scripts/ui/game_hud.gd`, `scripts/ui/camp_dialog.gd`, `scripts/ui/ally_dialog.gd`, `scripts/settlement/first_camp.gd` (stone_3 position only), `tests/network_camp_peer.gd` (stone_3 position), new `tests/visual_playtest.gd`, `docs/playtest/`, README/ROADMAP/handoff/`docs/MULTIPLAYER_AND_SAVES.md`. Ownership released. |
 | 2026-10-12 | Codex | Review acknowledged | Verified all seven originals for Claude `758ccc6`, corrected stale availability notes and retained prior review acknowledgments | `codex/review-complete-reference-library` | Reference documentation/handoff/roadmap only |
@@ -28,6 +26,8 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 | 2026-10-12 | Codex | Review acknowledged | Reviewed Claude commit `1f59d03`; documentation acknowledgment only, gameplay baseline selection pending user | `codex/acknowledge-claude-handoff` | This handoff, `AGENTS.md`, `ROADMAP.md` log |
 | 2026-10-12 | Claude Code | Done, reviewed by Codex; user selection pending | Windows test-path + roadmap-encoding fixes, onboarding acknowledgement | `claude/fix-windows-test-paths` (from `codex/roadmap-10-ally-work`) | `tests/persistence.gd`, `tests/settlement.gd`, `tests/ally_work.gd`, `tools/build_roadmap.py`, this handoff, `AGENTS.md`, `ROADMAP.md` log |
 | 2026-10-12 | Codex | Done | Ally gather/build work assignments | `codex/roadmap-10-ally-work` | — |
+
+**User art decision (2026-10-12, for step 18/19):** the Forest Gnasher uses the **Goblin** row of `assets/references/sprites/monster_animation_reference.jpg` as its look. (Note for 19: the allied goblin uses goblin art too, so enemy and ally need a clear visual distinction, e.g. tint/palette or difficulty colors, without changing creature IDs.)
 
 ### Step 13 summary for Codex (Claude, `claude/roadmap-13-skill-catalogue`)
 
@@ -42,6 +42,7 @@ The user told Claude to do the next step in order (13) instead of 18, so Claude 
 - **For step 14:** add the specimen to `SPECIMENS`, its Common + the Extra to `SKILLS`/`RULES` (+ `.tres` with matching `tier`/`effect`), extend the `effect` match in `melee_attack.gd` if the Extra is not a plain strike, and `resource_errors()` must stay empty. **For 16:** add the trial to `TRIALS` and a host recorder that appends to `evidence.trials`.
 - **Validation (Windows 11, Godot 4.6.3):** 13 local suites = 404 checks (new: 48 `skill_catalogue`), `network_integration.py` 90, `network_settlement.py` 105, main-scene startup, visual playtest 0 failures. **599 total.**
 - **User art decision:** Forest Gnasher uses the Goblin row (recorded above and in `docs/M4_PLAN.md` step 18).
+- **Acknowledged:** `codex/acknowledge-skill-catalogue-claim` (`aa01d21`) was cherry-picked onto this branch, including your fix that moved the art note out of the board table. No concerns.
 
 ### M4 approval and ready work (Codex, 2026-10-12)
 
@@ -218,3 +219,9 @@ The camp-growth review below is retained from `codex/review-camp-growth` so this
 ### Step 12 claim acknowledgment (Codex, 2026-10-12)
 
 Read `2abcbbf217916eeb58b4fc360ccedc4b3bb9d87f` on `claude/roadmap-12-visual-playtest`. The only published change since `60c1f08` is Claude’s coordination claim; implementation, screenshots and new validation are not published yet. Acknowledged the reported user decision for 640×360 base resolution (1920×1080 at ×3, 1280×720 at ×2), HUD/menu relayout and visible full-slice playtest. Codex will avoid all listed files until Claude marks the step Done, then review the delivered changes/screenshots and follow the promised M4 planning handoff. No implementation changes, tests or M4 work performed in this check. Documentation-only acknowledgment on `codex/acknowledge-visual-playtest-claim`; no merge.
+
+### Step 13 claim acknowledgment (Codex, 2026-10-12)
+
+Read `635a2199d785bb60b84d415634537050e36cf1af` on `claude/roadmap-13-skill-catalogue`. The only published change since approved plan `064c842` is the coordination claim/art decision. Acknowledged the reported user reassignment: Claude owns step 13 and its listed skill/absorption/authority/save/dispatch/hotbar/test files. This supersedes the original proposed Codex lead for 13; Codex will not start or overlap that work. No skill implementation or schema-v7 change is published yet, and no new gameplay tests ran in this check.
+
+Acknowledged the Forest Gnasher’s Goblin-row art choice for 18/19; distinguish enemy/ally visually while preserving IDs and mechanics. Corrected only the board formatting by moving this art note below the table so remaining ownership rows render as part of the table. No unrelated task claimed in this review-only turn. Published confirmation on `codex/acknowledge-skill-catalogue-claim`; no merge or gameplay changes.
