@@ -4,10 +4,25 @@
     {
       "id": "monster_animations",
       "title": "Monster animation chart",
-      "path": "assets/references/sprites/monster_animation_reference.png",
-      "source": "User-provided conversation image, 2026-10-12",
-      "status": "missing_original",
-      "notes": "Ogre, Orc, Goblin, Skeleton, Slime, Dark Knight, Necromancer and Devil; idle, walk, attack and death examples.",
+      "path": "assets/references/sprites/monster_animation_reference.jpg",
+      "source": "User-provided image (local file 527920ae-fb49-428f-add1-c97a285878e1.jfif), added by Claude 2026-10-12",
+      "status": "available",
+      "width": 1024,
+      "height": 559,
+      "sha256": "23eb1e09004dee6b4d9a0fa42c4a6301851950dc16b3a3ddc7aec8a9af0172c1",
+      "notes": "Ogre, Orc, Goblin, Skeleton, Slime, Dark Knight, Necromancer and Devil; idle, walk, attack and death examples. Original JPEG bytes kept unchanged (renamed from .jfif).",
+      "documentation": "docs/ART_REFERENCES.md"
+    },
+    {
+      "id": "ogre_animations",
+      "title": "Ogre animation sheet",
+      "path": "assets/references/sprites/ogre_animation_reference.jpg",
+      "source": "User-provided image (local file 701f7acd-0705-485f-a632-dcc82369e15e.jfif), added by Claude 2026-10-12",
+      "status": "available",
+      "width": 1024,
+      "height": 559,
+      "sha256": "f114eb26e80a386a68fe2dfead491203b0beaf8749de80f260dcf9d3160a6a7a",
+      "notes": "Red horned ogre with club: 6 idle, 10 walk, 15 attack and 6 death/knock-out frames plus a large preview. Original JPEG bytes kept unchanged (renamed from .jfif).",
       "documentation": "docs/ART_REFERENCES.md"
     },
     {
@@ -16,25 +31,31 @@
       "path": "assets/references/ui/gameplay_hud_reference.png",
       "source": "User-provided conversation image, 2026-10-12",
       "status": "missing_original",
-      "notes": "Portrait/stats, minimap, quests, assistant panel, hotbar and event log.",
+      "notes": "Portrait/stats, minimap, quests, assistant panel, hotbar and event log. Not among the files found on the user's PC; the pause-menu reference shows a similar HUD behind its overlay.",
       "documentation": "docs/UI_REFERENCES.md"
     },
     {
       "id": "title_screen",
       "title": "Title screen",
       "path": "assets/references/ui/title_screen_reference.png",
-      "source": "User-provided conversation image, 2026-10-12",
-      "status": "missing_original",
-      "notes": "Storm and castle backdrop, Tempest RPG logo and framed menu.",
+      "source": "User-provided image (Desktop 'ChatGPT-Bild 12. Okt. 2026, 22_39_22.png'), added by Claude 2026-10-12",
+      "status": "available",
+      "width": 1024,
+      "height": 572,
+      "sha256": "f17fdd343a97b64f5105d7dafae9aa33fd5a4add26ae63891e46e471c5b314c1",
+      "notes": "Storm and castle backdrop, Tempest RPG logo, 'qiragames presents', framed menu (New Game, Continue, Load Game, Settings, Credits, Quit) with slime cursor, v1.0.0 (BETA).",
       "documentation": "docs/UI_REFERENCES.md"
     },
     {
       "id": "pause_menu",
       "title": "Pause menu",
       "path": "assets/references/ui/pause_menu_reference.png",
-      "source": "User-provided conversation image, 2026-10-12",
-      "status": "missing_original",
-      "notes": "Dimmed game view, central menu and player/zone summary.",
+      "source": "User-provided image (Desktop 'ChatGPT-Bild 12. Okt. 2026, 22_39_17.png'), added by Claude 2026-10-12",
+      "status": "available",
+      "width": 1024,
+      "height": 572,
+      "sha256": "a1db829b05ab0de617d2bff1209855c0d04f18daa1c69d66c1ee28be88e0b9d7",
+      "notes": "Dimmed game view, central menu (Resume, Status & Class, Inventory & Equipment, Skill Tree, Quest Log, Save/Load, Options, Quit), portrait/HP/MAG/EXP, minimap, hotbar, event log and player/zone summary. Sample stats are illustrative, not game data.",
       "documentation": "docs/UI_REFERENCES.md"
     },
     {
@@ -43,16 +64,19 @@
       "path": "assets/references/ui/inventory_reference.png",
       "source": "User-provided conversation image, 2026-10-12",
       "status": "missing_original",
-      "notes": "Equipment paper doll, categorized bag and item details.",
+      "notes": "Equipment paper doll, categorized bag and item details. Not among the files found on the user's PC.",
       "documentation": "docs/UI_REFERENCES.md"
     },
     {
       "id": "forest_goblin_tileset",
       "title": "Forest and goblin village tileset",
       "path": "assets/references/world/forest_goblin_village_reference.png",
-      "source": "User-provided conversation image, 2026-10-12",
-      "status": "missing_original",
-      "notes": "Terrain, foliage, modular buildings and village props.",
+      "source": "User-provided image (Desktop 'ChatGPT-Bild 12. Okt. 2026, 22_39_11.png'), added by Claude 2026-10-12",
+      "status": "available",
+      "width": 1024,
+      "height": 572,
+      "sha256": "58b48168bee04fd2595edbb5b8dc89847a82805d7da6284f529859ade91199b6",
+      "notes": "Terrain/auto-tiles (grass, dirt path, cobblestone, cliff, stairs), trees/foliage/rocks/stumps, modular thatched roofs/walls/palisades/gates and two huts, props (barrels, crates, stalls, campfires, cauldrons, well, ladders, torches, tents, fences).",
       "documentation": "docs/ART_REFERENCES.md"
     }
   ]

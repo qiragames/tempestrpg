@@ -14,7 +14,7 @@ Both tools use this directory for artwork received from the user and artwork pre
 
 ## Original references
 
-`references/index.json` lists the six images supplied in chat on 2026-10-12 and their intended paths. Their descriptions are in `docs/ART_REFERENCES.md` and `docs/UI_REFERENCES.md`. **The original image bytes are not currently present in Git.** They were displayed in conversation, but no downloadable image files were available in the cloud attachment folders. Do not mark an entry available or imported until the actual file exists.
+`references/index.json` lists the reference images and their paths. Their descriptions are in `docs/ART_REFERENCES.md` and `docs/UI_REFERENCES.md`. As of 2026-10-12, five originals are in Git (monster chart, ogre sheet, title screen, pause menu, forest/goblin village tileset; added by Claude from the user's PC). The gameplay HUD and inventory originals are still missing. Do not mark an entry available or imported until the actual file exists.
 
 When the user supplies PNG/JPG files or a ZIP, place each original at the path in the index, preserving its pixels. Set its `status` to `available`, add its `sha256` and dimensions, and commit the image and index together. If Claude already has the originals on the user's computer, Claude can add them directly to these paths and push. Keep future entries in the same index. Record source/credit details when supplied.
 
