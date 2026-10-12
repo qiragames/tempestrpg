@@ -57,7 +57,9 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 
 **Done evidence:** form changes are replicated to two clients, old characters migrate to Slime, resources/cooldowns survive switching and reconnect, blocked transformations fail without charging, and death/respawn retain an explicit safe-form policy.
 
-## 16 — Personal trial, one Unique and future Ultimate gate (Codex)
+## 16 — Personal trial, one Unique and future Ultimate gate (Claude, next in order by user decision) — **Done (placeholder story)**
+
+**Status 2026-10-13:** implemented on `claude/roadmap-16-trial-unique`. **All names, text and looks are placeholders** until the user writes the storyline. Trial `proving_trial` (`scripts/trials/proving_trial.gd`): stone (480, 100), start with F (intent `trial {operation: "start"}`) when the character knows `piercing_fang`, has not completed it, is alive/awake/at the stone and no trial runs; 3 Easy creatures (`trial_0..2`, no specimen, `drops_rewards = false`); success when all fall within 60 s while the owner is alive and within 150 px; fails on owner defeat/leaving/disconnect/timeout; only the owner is credited (`SkillBook.record_trial`). Running trials replicate in snapshots (`trial` state + creatures) but `GameSession.persistent_document()` strips them from saves, so a host restart cancels the attempt. Unique `predator_focus` (`focus` effect, 25 Magicules, 1 s cooldown): arms `Absorption.focus_left` = 20 s; the next analysis has double reach and a 0.3 s channel, focus is consumed when it starts (no refund), and it cannot stack. Fourth hotbar slot (`skill_4`, key 4). Mastery is not recorded yet and no Ultimate/ascension exists, so Ultimate remains locked. Schema v10 (4 slots, `analysis.focus`).
 
 **Goal/dependencies:** requires 13–15. Add one small trial using the existing map/encounter foundations, unlock one Unique synthesis from its personal completion and the required Extra. Suggested Unique: Predator Focus, a costed modifier to the next analysis, with limits defined before implementation. Ultimate remains locked behind future ascension.
 

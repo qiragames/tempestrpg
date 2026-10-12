@@ -304,7 +304,34 @@ func _run() -> void:
     await _wait(2.1)
     await _tap("transform")
     _check(await _until(func(): return player.form == "slime"), "T returns to the slime after the cooldown")
-    _log("## 11. Multiplayer panel")
+    _log("## 11. Proving Trial (placeholder) and the first Unique skill")
+    var trial: Node2D = world.trial
+    var trial_route_ok: bool = await _walk_to(Vector2(484, 440), 8.0, 20.0) and await _walk_to(Vector2(484, 340), 8.0, 20.0) and await _walk_to(trial.STONE + Vector2(4, 24), 6.0, 20.0)
+    _check(trial_route_ok, "Walked north to the trial stone")
+    # Test assistance (logged): HP never regenerates yet, and earlier fights leave the slime near half health.
+    _log("  Assisted: HP %d -> %d before the trial (no HP recovery exists yet; balance finding for step 24)." % [player.get_node("Health").current, player.get_node("Health").maximum])
+    player.get_node("Health").current = player.get_node("Health").maximum
+    pool._current = pool.maximum
+    await _tap("interact")
+    _check(await _until(func(): return trial.state.active), "F at the stone starts the Proving Trial")
+    var trial_creatures: Array = trial.creatures()
+    _check(trial_creatures.size() == 3, "Three trial creatures appear")
+    await _wait(0.4)
+    await _shot("trial_start", "Proving Trial: arena circle, three creatures and the trial banner")
+    for creature in trial_creatures:
+        if is_instance_valid(creature) and creature.get_node("Health").current > 0:
+            pool._current = maxf(pool.current, 60.0)
+            await _fight(creature, true, "trial_fight")
+    _check(await _until(func(): return not trial.state.active, 3.0), "Trial ends after the last creature falls")
+    var learned = player.get_node("SkillBook")
+    _check("proving_trial" in learned.evidence.trials and learned.knows(&"predator_focus"), "Trial complete: Predator Focus (Unique) learned")
+    _check(messages.any(func(m): return m.contains("Unique: Predator Focus acquired")), "System Voice announced the Unique skill")
+    pool._current = pool.maximum
+    player.get_node("MeleeAttack").cooldown_left = 0.0
+    await _tap("skill_4")
+    _check(await _until(func(): return player.get_node("Absorption").focus_left > 0.0), "Slot 4 arms Predator Focus")
+    await _shot("predator_focus", "Unique skill: Predator Focus armed from hotbar slot 4")
+    _log("## 12. Multiplayer panel")
     await _key(KEY_F8)
     await _shot("session_panel", "F8 host/join panel")
     await _key(KEY_F8)

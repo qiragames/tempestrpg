@@ -145,7 +145,7 @@ func _unhandled_input(event: InputEvent) -> void:
     if session.active:
         if event.is_action_pressed("restart") and not event.is_echo():
             session.request_action("respawn")
-        for action in ["attack", "absorb", "skill_1", "skill_2", "skill_3"]:
+        for action in ["attack", "absorb", "skill_1", "skill_2", "skill_3", "skill_4"]:
             if event.is_action_pressed(action) and not event.is_echo():
                 session.request_action(action)
         return
@@ -154,7 +154,7 @@ func _unhandled_input(event: InputEvent) -> void:
     elif event.is_action_pressed("absorb") and not event.is_echo():
         $Absorption.attempt_absorb()
     elif not event.is_echo():
-        for index in range(3):
+        for index in range($SkillBook.SLOT_COUNT):
             if event.is_action_pressed("skill_%d" % (index + 1)):
                 var skill: Resource = $SkillBook.skill_at_slot(index)
                 if skill != null:

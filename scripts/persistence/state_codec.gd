@@ -23,7 +23,7 @@ static func capture_player(actor: Node2D) -> Dictionary:
     for skill in book.all_skills():
         known.append(String(skill.id))
     var slots: Array = []
-    for index in range(3):
+    for index in range(book.SLOT_COUNT):
         var skill: Resource = book.skill_at_slot(index)
         slots.append(String(skill.id) if skill else "")
     var counts: Dictionary = {}
@@ -38,7 +38,7 @@ static func capture_player(actor: Node2D) -> Dictionary:
         "magicules": {"maximum": pool.maximum, "current": pool.current, "regen": pool.regeneration_per_second, "regen_delay": pool.regeneration_delay, "delay": pool._delay_left, "enabled": pool.enabled},
         "skill_ids": known, "slots": slots, "skill_evidence": book.evidence.duplicate(true), "inventory": {"capacity": bag.capacity, "counts": counts},
         "attack_recovery": actor.get_node("MeleeAttack").cooldown_left,
-        "analysis": {"target": absorption._target.entity_id if absorption.active else "", "remaining": absorption.time_left},
+        "analysis": {"target": absorption._target.entity_id if absorption.active else "", "remaining": absorption.time_left, "focus": absorption.focus_left},
         "progression": actor.progression.duplicate(true)
     }
 
@@ -70,7 +70,7 @@ static func apply_player(actor: Node2D, state: Dictionary, world: Node2D, replic
     book._known.clear()
     for id in state.skill_ids:
         book._known[StringName(id)] = load(SKILLS[id])
-    for index in range(3):
+    for index in range(book.SLOT_COUNT):
         book._slots[index] = StringName(state.slots[index])
     book.evidence = CATALOGUE.empty_evidence()
     for kind in CATALOGUE.EVIDENCE_KINDS:
@@ -88,6 +88,7 @@ static func apply_player(actor: Node2D, state: Dictionary, world: Node2D, replic
     # Replicas show the channel. Reload/reconnect interrupts it without refunding cost.
     absorption._target = world.entity_by_id(state.analysis.target) if replica else null
     absorption.time_left = state.analysis.remaining if replica and absorption.active else 0.0
+    absorption.focus_left = state.analysis.focus
     actor.queue_redraw()
 
 static func capture_entities(world: Node2D) -> Dictionary:
@@ -104,10 +105,11 @@ static func capture_entities(world: Node2D) -> Dictionary:
             pickups.append({"id": node.entity_id, "position": vector(node.position), "amount": node.amount})
         elif node.is_in_group("allies"):
             allies.append({"id": node.entity_id, "position": vector(node.position), "owner": node.owner_id, "name": node.display_name, "race": node.race, "maximum_hp": node.maximum_hp, "power": node.power, "speed": node.follow_speed, "work": {"role": node.work_role, "target": node.work_target, "remaining": node.work_left}})
-    return {"enemies": enemies, "pickups": pickups, "allies": allies, "camp": world.camp.state.duplicate(true)}
+    return {"enemies": enemies, "pickups": pickups, "allies": allies, "camp": world.camp.state.duplicate(true), "trial": world.trial.state.duplicate(true)}
 
 static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> void:
     world.camp.restore(data.camp)
+    world.trial.restore(data.get("trial"))
     var wanted: Dictionary = {}
     for state in data.get("allies", []):
         wanted[state.id] = true

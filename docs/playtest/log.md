@@ -123,7 +123,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 94.9 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.0 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](21_shrine.png)
@@ -164,9 +164,38 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 *Gnasher Form: cyan mimic of the Gnasher, faster, stronger basic strike; HUD shows form and cooldown* (640x360)
 
 - [x] T returns to the slime after the cooldown
-## 11. Multiplayer panel
+## 11. Proving Trial (placeholder) and the first Unique skill
+- [x] Walked north to the trial stone
+  Assisted: HP 52 -> 100 before the trial (no HP recovery exists yet; balance finding for step 24).
+- [x] F at the stone starts the Proving Trial
+- [x] Three trial creatures appear
 
-![F8 host/join panel](28_session_panel.png)
+![Proving Trial: arena circle, three creatures and the trial banner](28_trial_start.png)
+*Proving Trial: arena circle, three creatures and the trial banner* (640x360)
+
+
+![Fighting: strike arc and enemy health bar](29_trial_fight.png)
+*Fighting: strike arc and enemy health bar* (640x360)
+
+
+![Fighting: strike arc and enemy health bar](30_trial_fight.png)
+*Fighting: strike arc and enemy health bar* (640x360)
+
+
+![Fighting: strike arc and enemy health bar](31_trial_fight.png)
+*Fighting: strike arc and enemy health bar* (640x360)
+
+- [x] Trial ends after the last creature falls
+- [x] Trial complete: Predator Focus (Unique) learned
+- [x] System Voice announced the Unique skill
+- [x] Slot 4 arms Predator Focus
+
+![Unique skill: Predator Focus armed from hotbar slot 4](32_predator_focus.png)
+*Unique skill: Predator Focus armed from hotbar slot 4* (640x360)
+
+## 12. Multiplayer panel
+
+![F8 host/join panel](33_session_panel.png)
 *F8 host/join panel* (640x360)
 
 
@@ -204,5 +233,20 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Analysis complete. Common: Thorn Lash, Extra: Piercing Fang acquired.
 - Mimicry: Gnasher Form.
 - Mimicry: Slime.
+- Proving Trial begun: defeat 3 creatures within 60 seconds. Stay inside the circle.
+- Threat neutralized. Specimen retained.
+- Threat neutralized. Specimen retained.
+- Insufficient Magicules. Action unavailable.
+- Insufficient Magicules. Action unavailable.
+- Insufficient Magicules. Action unavailable.
+- Insufficient Magicules. Action unavailable.
+- Insufficient Magicules. Action unavailable.
+- Insufficient Magicules. Action unavailable.
+- Insufficient Magicules. Action unavailable.
+- Insufficient Magicules. Action unavailable.
+- Insufficient Magicules. Action unavailable.
+- Threat neutralized. Specimen retained.
+- Proving Trial complete. Unique: Predator Focus acquired.
+- Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 
-**Result: 0 failed checks, 28 screenshots.**
+**Result: 0 failed checks, 33 screenshots.**

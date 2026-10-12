@@ -14,6 +14,8 @@ const PICKUP_SCENE := preload("res://scenes/pickups/magicule_pickup.tscn")
 @export var specimen: Resource = preload("res://data/specimens/forest_gnasher.tres")
 ## Stable saved creature kind; selects the scene on restore (see StateCodec.ENEMY_SCENES).
 @export var kind: String = "gnasher"
+## Trial creatures drop nothing (and carry no specimen) so trials cannot be farmed.
+@export var drops_rewards: bool = true
 var being_analyzed: bool = false
 @export var entity_id: String = ""
 var speed: float = 55.0
@@ -95,7 +97,8 @@ func _defeat() -> void:
     velocity = Vector2.ZERO
     $CollisionShape2D.set_deferred("disabled", true)
     # Defer creation because defeat can originate during a physics callback.
-    _drop_magicules.call_deferred()
+    if drops_rewards:
+        _drop_magicules.call_deferred()
     # Retain the defeated creature for the next absorption milestone.
     queue_redraw()
 

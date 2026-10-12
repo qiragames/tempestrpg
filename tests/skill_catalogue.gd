@@ -17,7 +17,7 @@ func _run() -> void:
     # Real catalogue.
     _check(CATALOGUE.resource_errors().is_empty(), "Shipped catalogue and skill resources are consistent: %s" % [CATALOGUE.resource_errors()])
     _check(CATALOGUE.TIERS == ["Common", "Extra", "Unique", "Ultimate"], "Four tier labels in order")
-    _check(CATALOGUE.TRIALS.is_empty() and CATALOGUE.ASCENSIONS.is_empty(), "No trial or ascension can be earned yet")
+    _check(CATALOGUE.TRIALS.keys() == ["proving_trial"] and CATALOGUE.ASCENSIONS.is_empty(), "One trial exists; no ascension can be earned yet, so Ultimate stays locked")
     # A synthetic chain through every tier validates the rule engine without shipping fake skills.
     var specimens := {"forest_gnasher": "", "wolf": ""}
     var trials := {"trial_a": true}

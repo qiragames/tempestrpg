@@ -86,7 +86,7 @@ func _run() -> void:
     _check(not session.apply_action(actor, "transform", {"form": "gnasher"}), "Repeated requests charge once")
     # Persistence.
     var data := _document(world, actor)
-    _check(STORE.VERSION == 9 and STORE.validate(data) and data.players.host.form.id == "gnasher" and data.players.host.form.cooldown > 0, "v9 save stores form and cooldown")
+    _check(STORE.VERSION >= 9 and STORE.validate(data) and data.players.host.form.id == "gnasher" and data.players.host.form.cooldown > 0, "v9 save stores form and cooldown")
     var restored = load("res://scenes/player/player.tscn").instantiate()
     restored.local_controlled = false
     world.add_child(restored)

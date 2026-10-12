@@ -6,7 +6,8 @@ const CATALOGUE := preload("res://scripts/skills/skill_catalogue.gd")
 
 signal learned(skill: Resource)
 var _known: Dictionary = {}
-var _slots: Array[StringName] = [&"", &"", &""]
+const SLOT_COUNT := 4
+var _slots: Array[StringName] = [&"", &"", &"", &""]
 var evidence: Dictionary = CATALOGUE.empty_evidence()
 
 ## Host-side: record a completed analysis and grant whatever it unlocks. Returns new skills.
@@ -15,6 +16,14 @@ func record_analysis(specimen_id: StringName) -> Array:
         return []
     if not String(specimen_id) in evidence.analyzed:
         evidence.analyzed.append(String(specimen_id))
+    return _grant_unlocked()
+
+## Host-side: record a personally completed trial and grant whatever it unlocks.
+func record_trial(trial_id: String) -> Array:
+    if not AUTHORITY.can_mutate(self) or not CATALOGUE.TRIALS.has(trial_id):
+        return []
+    if not trial_id in evidence.trials:
+        evidence.trials.append(trial_id)
     return _grant_unlocked()
 
 func _grant_unlocked() -> Array:

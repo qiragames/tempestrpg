@@ -35,7 +35,23 @@ func attack_skill(facing: Vector2, skill_id: StringName) -> bool:
             return _strike(facing, skill.damage, skill.magicule_cost, skill.cooldown)
         &"pierce":
             return _strike(facing, skill.damage, skill.magicule_cost, skill.cooldown, &"pierce")
+        &"focus":
+            return _focus(skill)
     return false
+
+## Predator Focus arms the next analysis; it cannot stack while already armed.
+func _focus(skill: Resource) -> bool:
+    var absorption = get_parent().get_node("Absorption")
+    if not AUTHORITY.can_mutate(self) or cooldown_left > 0.0 or absorption.focus_left > 0.0:
+        return false
+    if get_parent().get_node("Health").current <= 0 or get_parent().is_exhausted():
+        return false
+    if not get_parent().get_node("Magicules").try_spend(skill.magicule_cost):
+        return false
+    cooldown_left = skill.cooldown
+    absorption.focus_left = absorption.FOCUS_SECONDS
+    absorption.status_changed.emit("Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.")
+    return true
 
 func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, effect: StringName = &"strike") -> bool:
     if not AUTHORITY.can_mutate(self):

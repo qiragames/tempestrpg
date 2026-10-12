@@ -11,18 +11,20 @@ extends RefCounted
 
 const TIERS := ["Common", "Extra", "Unique", "Ultimate"]
 const EVIDENCE_KINDS := ["analyzed", "trials", "mastery", "ascensions"]
-const EFFECTS := ["strike", "pierce"]
+const EFFECTS := ["strike", "pierce", "focus"]
 const SPECIMENS := {"forest_gnasher": "res://data/specimens/forest_gnasher.tres", "thornback_gnasher": "res://data/specimens/thornback_gnasher.tres"}
 ## Dimensional-storage material retained by each specimen.
 const MATERIALS := {"gnasher_essence": "forest_gnasher", "thornback_quill": "thornback_gnasher"}
-const SKILLS := {"rending_bite": "res://data/skills/rending_bite.tres", "thorn_lash": "res://data/skills/thorn_lash.tres", "piercing_fang": "res://data/skills/piercing_fang.tres"}
+const SKILLS := {"rending_bite": "res://data/skills/rending_bite.tres", "thorn_lash": "res://data/skills/thorn_lash.tres", "piercing_fang": "res://data/skills/piercing_fang.tres", "predator_focus": "res://data/skills/predator_focus.tres"}
 const RULES := {
     "rending_bite": {"tier": "Common", "analysis": "forest_gnasher"},
     "thorn_lash": {"tier": "Common", "analysis": "thornback_gnasher"},
     "piercing_fang": {"tier": "Extra", "requires": ["rending_bite", "thorn_lash"], "analysis": "thornback_gnasher"},
+    "predator_focus": {"tier": "Unique", "requires": ["piercing_fang"], "trial": "proving_trial"},
 }
-## Trials and ascension milestones that can actually be completed. Empty until steps 16/M6.
-const TRIALS := {}
+## Trials and ascension milestones that can actually be completed. No ascension exists before M6,
+## so Ultimate skills stay locked.
+const TRIALS := {"proving_trial": "Proving Trial"}
 const ASCENSIONS := {}
 
 static func empty_evidence() -> Dictionary:

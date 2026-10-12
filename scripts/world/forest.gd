@@ -9,6 +9,7 @@ const ROCKS: Array[Rect2] = [Rect2(440, 250, 32, 24), Rect2(304, 400, 40, 24)]
 const TREES: Array[Vector2] = [Vector2(160, 144), Vector2(240, 192), Vector2(352, 112), Vector2(544, 160), Vector2(816, 288), Vector2(176, 464), Vector2(576, 496), Vector2(752, 480)]
 
 var camp: Node2D
+var trial: Node2D
 var local_player: CharacterBody2D
 var progression: Dictionary = {"quests": {}, "settlements": {}, "world_time": 0.0}
 
@@ -16,6 +17,9 @@ func _ready() -> void:
     camp = load("res://scripts/settlement/first_camp.gd").new()
     camp.name = "FirstCamp"
     add_child(camp)
+    trial = load("res://scripts/trials/proving_trial.gd").new()
+    trial.name = "ProvingTrial"
+    add_child(trial)
     local_player = $Player
     session.bind_world(self)
     bind_local_player(local_player)
@@ -73,7 +77,7 @@ func wire_enemy(enemy: Node2D) -> void:
     enemy.get_node("Health").defeated.connect(session.queue_save)
     enemy.get_node("Health").defeated.connect(func():
         if get_local_player().get_node("Health").current > 0:
-            _announce("Threat neutralized. Specimen retained.")
+            _announce("Threat neutralized. Specimen retained." if enemy.specimen != null else "Threat neutralized.")
     )
 
 func player_by_id(id: String) -> CharacterBody2D:

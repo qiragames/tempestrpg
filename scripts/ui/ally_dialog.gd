@@ -32,6 +32,12 @@ func _ready() -> void:
 func open_nearest() -> void:
     if hud.menu_open() or hud.player.get_node("Health").current <= 0:
         return
+    # F at the trial stone starts the (placeholder) Proving Trial instead.
+    var trial = hud.get_parent().trial
+    if trial.near(hud.player):
+        # The host explains any refusal through the System Voice.
+        session.request_action("trial", {"operation": "start"})
+        return
     var closest: Node2D
     var distance: float = 40.1
     for candidate in get_tree().get_nodes_in_group("allies"):

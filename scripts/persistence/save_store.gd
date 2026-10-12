@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 9
+const VERSION := 10
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
 ## Initial saved state of the v8 encounter; matches scenes/world/forest.tscn.
@@ -71,7 +71,7 @@ static func validate_player(state: Variant, id: String) -> bool:
         return false
     var known = state.get("skill_ids")
     var slots = state.get("slots")
-    if not known is Array or known.size() > CODEC.SKILLS.size() or not slots is Array or slots.size() != 3:
+    if not known is Array or known.size() > CODEC.SKILLS.size() or not slots is Array or slots.size() != 4:
         return false
     var seen: Dictionary = {}
     for skill in known:
@@ -103,7 +103,7 @@ static func validate_player(state: Variant, id: String) -> bool:
     if total > bag.capacity or not _number(state.get("attack_recovery"), 0, 60):
         return false
     var analysis = state.get("analysis")
-    if not analysis is Dictionary or not _id(analysis.get("target"), true) or not _number(analysis.get("remaining"), 0, 60):
+    if not analysis is Dictionary or not _id(analysis.get("target"), true) or not _number(analysis.get("remaining"), 0, 60) or not _number(analysis.get("focus"), 0, 20):
         return false
     var progression = state.get("progression")
     if not progression is Dictionary or not _plain(progression) or not _number(progression.get("level"), 1, 1000, true) or not _number(progression.get("experience"), 0, 1000000000, true):
@@ -261,11 +261,23 @@ static func migrate(data: Variant) -> Variant:
         if not data.get("players") is Dictionary:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 9
         for state in data.players.values():
             if not state is Dictionary:
                 return null
             state["form"] = state.get("form", {"id": FORMS.BASE, "cooldown": 0.0})
+    # v10: a fourth hotbar slot and the armed Predator Focus timer.
+    if data.get("version") == 9:
+        if not data.get("players") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = VERSION
+        for state in data.players.values():
+            if not state is Dictionary or not state.get("slots") is Array or not state.get("analysis") is Dictionary:
+                return null
+            while state.slots.size() < 4:
+                state.slots.append("")
+            state.analysis["focus"] = state.analysis.get("focus", 0.0)
     return data
 
 static func _read(path: String) -> Dictionary:

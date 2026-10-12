@@ -4,7 +4,7 @@ A Godot **4.6.3** / GDScript prototype for a top-down pixel-art Isekai RPG.
 
 ## Play
 
-Open `project.godot` in Godot 4.6.3 and press **F5** to run the project. Move with **WASD / arrow keys**, strike with **Space / J**, absorb with **E**, use hotbar slots with **1–3** or a click, open storage with **I**, and use **F8** for Host/Join or **F9** for host save. **T** switches mimic form, **R** retries offline or respawns a defeated hosted character. Explore as a placeholder slime; trees, rocks, water, and the map edge have collision.
+Open `project.godot` in Godot 4.6.3 and press **F5** to run the project. Move with **WASD / arrow keys**, strike with **Space / J**, absorb with **E**, use hotbar slots with **1–4** or a click, open storage with **I**, and use **F8** for Host/Join or **F9** for host save. **T** switches mimic form, **R** retries offline or respawns a defeated hosted character. Explore as a placeholder slime; trees, rocks, water, and the map edge have collision.
 
 The game renders at a 640 × 360 base resolution (×2 = 1280 × 720 default window, ×3 = 1920 × 1080 fullscreen), integer scaling, nearest texture filtering, and a bounded player camera. Art is a procedural placeholder. One Forest Gnasher notices you within 180 pixels, chases at 55 pixels/second, and pauses for a 0.35-second bite windup. Dodge away while it turns orange. It recovers for 0.9 seconds before attacking again. Its basic AI can collide with terrain; pathfinding is not implemented.
 
@@ -63,13 +63,15 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/skill_catalogue.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/extra_skill.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/mimic_form.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/trial_unique.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
 python3 tests/network_forms.py
+python3 tests/network_trial.py
 "$GODOT_BIN" --headless --path . --quit-after 120
 ```
 
-The cloud checks validate import, 17 foundation checks, 24 combat checks, 27 Magicule checks, 32 drop checks, 26 absorption checks, 35 skills/storage checks, 32 persistence checks, 18 ally checks, 28 naming checks, 34 settlement checks, 35 worker checks, 48 camp-growth checks, 51 skill-catalogue checks, 40 Extra-skill checks, 30 mimic-form checks, and 212 real multi-process networking checks (689 total, independently verified on Linux and reported passing on Windows 11, where `python` replaces `python3`). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
+The cloud checks validate import, 17 foundation checks, 24 combat checks, 27 Magicule checks, 32 drop checks, 26 absorption checks, 35 skills/storage checks, 32 persistence checks, 18 ally checks, 28 naming checks, 34 settlement checks, 35 worker checks, 48 camp-growth checks, 51 skill-catalogue checks, 40 Extra-skill checks, 30 mimic-form checks, 40 trial checks, and 234 real multi-process networking checks (751 total on Windows 11 for step 16; the 689 checks through step 15 were independently verified on Linux, where `python` replaces `python3`). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
 
 ## Structure
 
@@ -200,3 +202,11 @@ Review fix: saved Extra/Unique/Ultimate skills must retain their required known 
 ## Mimicry: Gnasher Form
 
 After your character has analyzed a Forest Gnasher, press **T** to take **Gnasher Form** for **20 Magicules**: you move 30% faster and your basic strike deals 14 instead of 10 damage. Skills keep their own damage. Press **T** again to turn back into a slime for free. Changing form has a 2-second cooldown, shown next to the form name in the HUD. The Gnasher body is slightly larger, so you need a little room away from walls to transform; if there is none, nothing is charged. Transforming never restores HP or Magicules and is impossible while asleep, defeated or in a menu. Defeat always turns you back into a slime. Each character's form is saved (schema **v9**; older characters start as slimes) and every player sees it. Tests: `tests/mimic_form.gd` (30) and `python3 tests/network_forms.py` (17 real-process checks).
+
+## Proving Trial and the first Unique skill (placeholder story)
+
+*The trial's name, texts and look are placeholders until the storyline is written.*
+
+A stone stands in the north at **(480, 100)**. Once your character knows **Piercing Fang**, stand at the stone and press **F** to begin the **Proving Trial**: three trial creatures appear, and you have **60 seconds** to defeat them all while staying inside the faint circle. A banner at the top shows the creatures left and the time. Other players may help, but **only the character who started the trial is credited**. The trial fails if you are defeated, leave the circle, disconnect or run out of time, and you can simply try again. Trial creatures drop nothing and cannot be analyzed. A trial in progress is not saved: a host restart cancels it.
+
+Completing it teaches the first **Unique** skill, **Predator Focus** (placeholder name), which goes into the new **4th hotbar slot (key 4)**. It costs 25 Magicules: your **next analysis within 20 seconds** reaches twice as far (72 px) and completes in 0.3 s instead of 1.2 s. It is used up when that analysis begins, so interrupting it gives nothing back, and it cannot be stacked. **Ultimate** skills stay locked until an ascension exists (planned for M6). Schema **v10** stores the fourth slot and an armed focus. Tests: `tests/trial_unique.gd` (40) and `python3 tests/network_trial.py` (22 real-process checks).

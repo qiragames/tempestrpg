@@ -56,6 +56,10 @@ skill_3={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"physical_keycode":51)]
 }
+skill_4={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":52)]
+}
 
 transform={
 "deadzone": 0.2,

@@ -322,6 +322,12 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             return false
         var ally = world.entity_by_id(payload.id)
         return ally.try_name(actor, payload.name) if ally != null and ally.is_in_group("allies") else false
+    if action == "trial":
+        # Only the stone interaction is sent; the trial checks skill, range, state and evidence.
+        if payload.size() != 1 or payload.get("operation") != "start":
+            rejected_requests += 1
+            return false
+        return false if actor.input_blocked else world.trial.try_start(actor)
     if action == "transform":
         # Clients name the target form only; the host checks knowledge, room, cost and timers.
         if payload.size() != 1 or not payload.get("form") is String or payload.form.length() > 32:
@@ -353,7 +359,7 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             return actor.get_node("MeleeAttack").attack(actor.facing)
         "absorb":
             return actor.get_node("Absorption").attempt_absorb()
-        "skill_1", "skill_2", "skill_3":
+        "skill_1", "skill_2", "skill_3", "skill_4":
             var skill: Resource = actor.get_node("SkillBook").skill_at_slot(int(action.right(1)) - 1)
             return actor.get_node("MeleeAttack").attack_skill(actor.facing, skill.id) if skill else false
     rejected_requests += 1
@@ -417,10 +423,17 @@ func document() -> Dictionary:
     data.merge({"version": STORE.VERSION, "world_id": world_id, "players": records.duplicate(true), "progression": world.progression.duplicate(true)})
     return data
 
+## Saves exclude a running trial and its creatures: a host restart cancels the trial.
+func persistent_document() -> Dictionary:
+    var data := document()
+    data.erase("trial")
+    data.enemies = data.enemies.filter(func(enemy): return not String(enemy.id).begins_with("trial_"))
+    return data
+
 func save_world() -> Error:
     if not active or not multiplayer.is_server() or not is_instance_valid(world):
         return ERR_UNAUTHORIZED
-    var result := STORE.write_world(save_path, document())
+    var result := STORE.write_world(save_path, persistent_document())
     if result != OK:
         world._announce("Save failed; the previous valid save is retained.")
     return result

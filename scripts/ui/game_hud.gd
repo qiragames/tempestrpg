@@ -15,6 +15,8 @@ var _entries: Array = []
 var _selection: StringName = &""
 var _paused_before_open: bool = false
 var _recovery: Label
+var _trial_back: ColorRect
+var _trial_label: Label
 var _camp_dialog: Panel
 var _ally_dialog: Panel
 @onready var player = get_parent().get_node("Player")
@@ -27,6 +29,13 @@ func _ready() -> void:
     _backdrop(Rect2(6, 42, 206, 88))
     _backdrop(Rect2(446, 42, 188, 80))
     _recovery = _label("", Vector2(12, 110), Vector2(300, 30), self, 11)
+    _trial_back = ColorRect.new()
+    _trial_back.position = Vector2(220, 44)
+    _trial_back.size = Vector2(220, 22)
+    _trial_back.color = Color(0.25, 0.18, 0.05, 0.75)
+    _trial_back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    add_child(_trial_back)
+    _trial_label = _label("", Vector2(226, 47), Vector2(210, 18), self, 10)
     _build_hotbar()
     _build_inventory()
     inventory.changed.connect(_refresh_inventory)
@@ -91,8 +100,9 @@ func _label(text: String, position: Vector2, size: Vector2, parent: Node, font_s
     return label
 
 func _build_hotbar() -> void:
-    for index in range(3):
-        var button := _button("%d: Empty" % (index + 1), Vector2(174 + index * 99, 294), Vector2(95, 38), self)
+    for index in range(4):
+        var button := _button("%d: Empty" % (index + 1), Vector2(176 + index * 86, 294), Vector2(82, 38), self)
+        button.add_theme_font_size_override("font_size", 9)
         button.focus_mode = Control.FOCUS_NONE
         button.pressed.connect(_activate_slot.bind(index))
         _slots.append(button)
@@ -119,6 +129,11 @@ func _activate_slot(index: int) -> void:
 
 func _process(_delta: float) -> void:
     _recovery.visible = player.is_exhausted()
+    var trial: Dictionary = get_parent().trial.state if get_parent().get("trial") != null else {}
+    _trial_back.visible = trial.get("active", false)
+    _trial_label.visible = _trial_back.visible
+    if _trial_back.visible:
+        _trial_label.text = "%s · %d left · %.0fs%s" % [get_parent().trial.DISPLAY_NAME, trial.remaining, trial.time_left, "" if trial.owner == player.character_id else " (another player)"]
     var shape: Dictionary = player.FORMS.FORMS[player.form]
     $StrikeCost.text = "Strike: 8 Magicules · Form: %s%s" % [shape.name, " (%.1fs)" % player.form_cooldown if player.form_cooldown > 0.0 else " · T: mimic"]
     _recovery.text = "Recovering: %.1fs · need %.0f Magicules" % [player.exhaustion_left, player.get_node("Magicules").maximum * 0.25]

@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**Current focus: M4 steps 16 (personal trial + first Unique), 17 (analysis assistant model) and 18 (asset preparation) are ready.** Step 15 is done (Claude): the first mimic form. A character that has analyzed a Forest Gnasher can press T to take Gnasher Form for 20 Magicules (30% faster movement, +4 basic-strike damage, slightly larger body) and press T again to revert for free after a 2-second cooldown. Transformation needs room, never refills HP/Magicules or ends exhaustion, and defeat always reverts to the slime. Schema v9 saves each character's form. 689 automated checks pass on Windows and independently on Linux (477 local + 90 general + 105 camp + 17 form network) plus the visual playtest. Details: `docs/M4_PLAN.md`.
+**Current focus: M4 steps 17 (analysis assistant model) and 18 (asset preparation) are ready; 19 waits for 18.** Step 16 is done (Claude) with a **placeholder story**: a "Proving Trial" stone in the north (480, 100). A character who knows Piercing Fang presses F there, and three trial creatures appear. Defeating them within 60 s while staying in the circle grants personal trial evidence and the first Unique skill, Predator Focus (placeholder name: 25 Magicules; the next analysis within 20 s reaches twice as far and completes in 0.3 s). Helpers get no credit, trial creatures drop nothing and cannot be analyzed, and a running trial is never saved. A 4th hotbar slot (key 4) was added. Ultimate stays locked: no ascension exists yet. Schema v10. 751 automated checks pass on Windows (517 local + 90 + 105 + 17 + 22 network) plus the visual playtest. The trial's names, text and look are placeholders to re-theme once the user writes the storyline.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -117,6 +117,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 | Starting form | Slime/shapeshifter prototype consistent with absorption | M1 |
 | Naming balance | 80 cost, 25% recovery reserve, minimum 8-second sleep verified; tune through playtesting | M2 complete |
 | World identity | Develop original names, lore, and assets from the supplied inspirations | Before final content production |
+| HP recovery and trial difficulty | Step 16 playtest: HP never regenerates; the 3-creature trial defeated a half-health slime and left a full-health one at 36/100. Decide an HP recovery source and tune the trial | Step 24 (balance) or earlier if the user wants |
 | Project scope | Ship a small playable slice before expanding to nation-scale simulation | M3 review |
 
 ## Ally progression tasks
@@ -136,7 +137,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 
 ## M4 approved steps
 
-**Approved by the user, 2026-10-12.** Detailed goals, files, authority/save contracts and completion evidence: `docs/M4_PLAN.md`. Steps 13–15 are Done; steps 16, 17 and 18 are Next; later steps remain Planned behind their prerequisites.
+**Approved by the user, 2026-10-12.** Detailed goals, files, authority/save contracts and completion evidence: `docs/M4_PLAN.md`. Steps 13–16 are Done; steps 17 and 18 are Next; later steps remain Planned behind their prerequisites.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -144,7 +145,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 | 13 Skill catalogue and unlock ledger | Done | Approve M4 plan | 48 catalogue checks + 4 new network checks: four-tier rule validation, per-character evidence, idempotent unlocks, forged/premature unlock and save rejection, host loadout intent, effect dispatch, eight separate ledgers, v6→v7 migration |
 | 14 Second specimen and Extra upgrade | Done | 13 | 37 checks: Thornback encounter, Thorn Lash, Piercing Fang in both unlock orders, line hits/LOS/cost/cooldown, contested corpse, quill/kind save, v7→v8 migration; visible showcase |
 | 15 First mimic form | Done | 13, 14 | 30 local + 17 real-process checks: unlock by analysis, cost once, room check, no refills, exhaustion/menus/replicas blocked, defeat/respawn revert, per-character body, v8→v9 migration, replicated/saved/reloaded forms; visible showcase |
-| 16 Personal trial and Unique gate | Next | 13, 15 | One personal trial/Unique; mastery saved, Ultimate explicitly locked for future ascension |
+| 16 Personal trial and Unique gate | Done | 13, 15 | 40 local + 22 real-process checks: start rules, owner-only credit, four failure paths, no rewards/analysis from trial creatures, Predator Focus reach/time/consumption/no refund/expiry, trial excluded from saves but replicated, v9→v10 migration; visible showcase. Story is a placeholder. |
 | 17 Analysis assistant model | Next | 13, 14 | Read-only factual traits/unlock/recovery advice isolated to each character |
 | 18 Prepare sprite, tileset and UI assets | Next | Approve M4 plan | Preserve originals; review transparent exports, pivots/atlases and nearest previews at x2/x3 |
 | 19 Character sprites and mimic presentation | Planned | 15, 16, 18 | Visible state/form/evolution animations; combat timing and client identity unchanged |
@@ -163,6 +164,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-13: Claude Code completed M4 step 16 with a placeholder story (user decision). New `scripts/trials/proving_trial.gd` (stone at (480, 100), F to start, 3 Easy no-reward creatures, 60 s, 150 px arena, owner-only credit, fail on defeat/leaving/disconnect/timeout, never saved), `SkillBook.record_trial`, Unique **Predator Focus** (`focus` effect, 25 Magicules: next analysis within 20 s has double reach and a 0.3 s channel, consumed at start), 4th hotbar slot/key 4, HUD trial banner, schema v10. New `tests/trial_unique.gd` (40) and `tests/network_trial.py` (22); visual playtest fights the trial. 517 local + 234 network checks pass on Windows. Branch: `claude/roadmap-16-trial-unique`. Next: 17, 18; the story placeholders await the user's storyline.
 
 - 2026-10-13: Codex reviewed Claude mimic-form step `59d035c`, confirmed the prior save-prerequisite correction is carried forward, and independently reproduced 689 checks on Linux (477 local + 90 general network + 105 camp network + 17 form network), import and startup. Verified 28 screenshot files/log links and inspected the mimic capture. No blocking findings; documentation-only acknowledgment on `codex/review-mimic-form`. Steps 16/17/18 remain ready; no new feature claim or merge.
 
