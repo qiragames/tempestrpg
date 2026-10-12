@@ -7,6 +7,7 @@ const ROCKS: Array[Rect2] = [Rect2(440, 250, 32, 24), Rect2(304, 400, 40, 24)]
 const TREES: Array[Vector2] = [Vector2(160, 144), Vector2(240, 192), Vector2(352, 112), Vector2(544, 160), Vector2(816, 288), Vector2(176, 464), Vector2(576, 496), Vector2(752, 480)]
 
 func _ready() -> void:
+    $Player/Absorption.status_changed.connect(_analysis_changed)
     _magicules_changed($Player/Magicules.current, $Player/Magicules.maximum)
     _health_changed($Player/Health.current, $Player/Health.maximum)
     $Player/Magicules.changed.connect(_magicules_changed)
@@ -33,6 +34,16 @@ func _ready() -> void:
         _add_obstacle(Rect2(tree + Vector2(-6, 4), Vector2(12, 12)))
     for border in [Rect2(-16, 0, 16, 640), Rect2(960, 0, 16, 640), Rect2(0, -16, 960, 16), Rect2(0, 640, 960, 16)]:
         _add_obstacle(border)
+
+func _process(_delta: float) -> void:
+    var absorption = $Player/Absorption
+    $HUD/AnalysisProgress.visible = absorption.active
+    $HUD/AnalysisProgress.value = 1.0 - absorption.time_left / absorption.analysis_seconds
+
+func _analysis_changed(message: String) -> void:
+    $HUD/Analysis.text = message
+    if $Player/Health.current > 0:
+        $HUD/SystemVoice.text = "[System] " + message
 
 func _health_changed(current: int, maximum: int) -> void:
     $HUD/Health.text = "HP %d / %d" % [current, maximum]

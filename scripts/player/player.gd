@@ -21,6 +21,8 @@ func _physics_process(_delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
     if event.is_action_pressed("attack") and not event.is_echo():
         $MeleeAttack.attack(facing)
+    elif event.is_action_pressed("absorb") and not event.is_echo():
+        $Absorption.attempt_absorb()
 
 func _draw() -> void:
     if has_node("Health") and $Health.current <= 0:

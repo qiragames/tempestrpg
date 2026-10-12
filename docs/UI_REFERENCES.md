@@ -16,7 +16,7 @@ The current prototype has health, Magicules, combat feedback, and controls. Ques
 
 Separate transparent PNGs or a documented atlas will make the reference implementable: panel/frame pieces, bar backgrounds/fills, icons, portraits, hotbar slot states, and minimap/compass decoration. Prefer scalable frame pieces where possible. Keep names, numbers, labels, notifications, and key hints out of baked textures so Godot can update and localize them. Retain readable pixel sizes at the provisional 480 × 320 viewport and test gameplay visibility.
 
-The source reference images are in the conversation, not imported into this repository. The user offered separate elements. Title-screen and pause-menu propositions are described below; inventory artwork is expected next. These menus have not been implemented yet.
+The source reference images are in the conversation, not imported into this repository. The user offered separate elements. Title-screen, pause-menu, and inventory propositions are described below. Their complete styled layouts have not been implemented yet.
 
 Implement the acquired-skill hotbar during M1 and broader visual polish during M4. A title screen and pause menu can be planned as a separate usability step once their references arrive. Basic combat input must remain available beneath noninteractive HUD panels.
 
@@ -31,3 +31,9 @@ Use separate backdrop, logo, menu frame, and cursor artwork if available. Render
 The user's pause reference shows the gameplay HUD/world dimmed behind a large GAME PAUSED banner, a central dark gold-trimmed menu, and a right-side player/zone summary card. The slime selection marker is reused. Proposed entries: Resume, Status & Class, Inventory & Equipment, Skill Tree, Quest Log, Save / Load Game, Options, Quit to Main Menu. A bottom hint explains back/resume and choosing an entry.
 
 When implemented, freeze gameplay physics, enemy timers, resource regeneration, pickups, and other gameplay updates while allowing pause-menu UI input. Resume should restore the previous state; returning to a main menu needs an actual title scene. Keep status, play time, currency, region, and world-level values backed by real systems. Do not copy the reference's sample character stats into the game as functional progression. Unavailable systems need clear disabled entries rather than dead buttons. Preserve focus and readable contrast on the overlay.
+
+## Inventory reference
+
+The user supplied a three-column inventory overlay on 2026-10-12: Equipped on the left with a character paper doll and equipment slots; Bag in the middle with item stacks, currency, and capacity; Item Details on the right with icon, rarity, description, stats, and Equip/Discard actions. Category tabs: All, Gear, Usables, Materials, Quest Items. Dark panels, gold trim, purple accents, selection borders, and a close button match the other references.
+
+Start with actual absorbed materials and readable item details in a small dimensional-storage panel. Introduce equipment, usable items, rarity, currency, capacity, and quest-item tabs only alongside their real gameplay systems. Keep all counts and details data-driven; the reference's items, sample currency, stats, and player are examples rather than starting inventory. Full equipment and paper-doll UI belongs to a later inventory/equipment step. Preserve keyboard navigation and dynamic text, and pause gameplay while a modal inventory is open.

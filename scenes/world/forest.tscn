@@ -45,7 +45,7 @@ color = Color(0.04, 0.09, 0.12, 0.92)
 offset_left = 12.0
 offset_top = 301.0
 theme_override_font_sizes/font_size = 10
-text = "WASD / Arrows  Move    Space / J  Strike    R  Restart"
+text = "WASD Move   Space/J Strike   E Absorb   R Restart"
 
 [node name="Health" type="Label" parent="HUD"]
 offset_left = 12.0
@@ -74,3 +74,24 @@ offset_left = 12.0
 offset_top = 92.0
 theme_override_font_sizes/font_size = 10
 text = "Strike: 8 Magicules · Recover: 6/s"
+
+[node name="Analysis" type="Label" parent="HUD"]
+offset_left = 292.0
+offset_top = 44.0
+offset_right = 468.0
+offset_bottom = 103.0
+theme_override_colors/font_color = Color(0.65, 0.92, 0.86, 1)
+theme_override_font_sizes/font_size = 11
+text = "ANALYSIS\nE: absorb a nearby defeated creature.\nCost: 12 Magicules"
+autowrap_mode = 2
+
+[node name="AnalysisProgress" type="ProgressBar" parent="HUD"]
+visible = false
+offset_left = 292.0
+offset_top = 108.0
+offset_right = 468.0
+offset_bottom = 116.0
+max_value = 1.0
+step = 0.001
+show_percentage = false
+mouse_filter = 2

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/skills/skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"rending_bite"
+display_name = "Rending Bite"
+tier = "Common"
+description = "Adapt the Forest Gnasher's jaw strength into a short-range aura strike."
+damage = 20
+magicule_cost = 12.0
+cooldown = 0.8

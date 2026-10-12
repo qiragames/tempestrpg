@@ -10,6 +10,8 @@ const TIER_STATS := {
 }
 const PICKUP_SCENE := preload("res://scenes/pickups/magicule_pickup.tscn")
 @export var difficulty: Difficulty = Difficulty.STANDARD
+@export var specimen: Resource = preload("res://data/specimens/forest_gnasher.tres")
+var being_analyzed: bool = false
 var speed: float = 55.0
 @export var detection_radius: float = 180.0
 @export var leash_radius: float = 220.0
@@ -70,6 +72,7 @@ func _defeat() -> void:
     if state == State.DEFEATED:
         return
     state = State.DEFEATED
+    add_to_group("absorbable_creatures")
     velocity = Vector2.ZERO
     $CollisionShape2D.set_deferred("disabled", true)
     # Defer creation because defeat can originate during a physics callback.
@@ -88,7 +91,7 @@ func _drop_magicules() -> void:
 
 func _draw() -> void:
     if state == State.DEFEATED:
-        draw_rect(Rect2(-10, 0, 20, 5), Color("656653"))
+        draw_rect(Rect2(-10, 0, 20, 5), Color("71e4d4") if being_analyzed else Color("656653"))
         return
     var color := Color("d7b16d") if state != State.WINDUP else Color("f08065")
     if state != State.WINDUP and difficulty == Difficulty.ELITE:

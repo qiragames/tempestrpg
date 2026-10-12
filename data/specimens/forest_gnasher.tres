@@ -1,0 +1,8 @@
+[gd_resource type="Resource" load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/absorption/specimen_definition.gd" id="1"]
+[ext_resource type="Resource" path="res://data/skills/rending_bite.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+species = "Forest Gnasher"
+skill = ExtResource("2")

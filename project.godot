@@ -24,6 +24,11 @@ environment/defaults/default_clear_color=Color(0.05, 0.09, 0.1, 1)
 
 [input]
 
+absorb={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":69)]
+}
+
 attack={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"physical_keycode":32), Object(InputEventKey,"physical_keycode":74)]

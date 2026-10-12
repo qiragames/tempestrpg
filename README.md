@@ -10,7 +10,13 @@ The initial foundation uses a 480 × 320 viewport, integer scaling, nearest text
 
 The player has 100 HP and 0.65-second damage immunity. Bites deal 12 damage; aura-assisted directional strikes deal 10 damage, cost **8 Magicules**, and have a 0.4-second cooldown. A strike spends its cost even if it misses. The shared Magicule pool starts at **100**, regenerates **6 per second** after **1.5 seconds** without successful spending, and is shown as a number and bar. Unaffordable strikes fail without damage or cooldown; moving remains free so you can retreat and recover. Cooldown rejection does not spend resources or postpone recovery. Defeat stops recovery; restarting restores the pool.
 
-The enemy has 30 HP and a visible health bar. Strike range and obstruction checks prevent attacks through terrain. Defeated creatures remain for the upcoming absorption mechanic; a defeated player must restart. Skills, absorption, naming, and naming-induced sleep remain planned. The shared resource component is ready to support their future costs; current numbers are prototype balance values.
+The enemy has 30 HP and a visible health bar. Strike range and obstruction checks prevent attacks through terrain. Defeated creatures remain available for absorption; a defeated player must restart. Naming and naming-induced sleep remain planned. The shared resource component is ready to support their future costs; current numbers are prototype balance values.
+
+## Absorption and analysis
+
+After defeating the Gnasher, stand within 36 pixels of its body and press **E**. Analysis costs **12 Magicules** and takes **1.2 seconds** beside an unobstructed specimen. The analysis panel shows progress; completion consumes the body and learns the **Common Skill Rending Bite**. Duplicate specimens do not stack the same learned skill. Leaving range, moving behind terrain, or being defeated interrupts analysis: its cost is spent, but the corpse remains available. Magicule drops are independent of corpse absorption.
+
+Skill/specimen definitions live in `data/skills` and `data/specimens`. Acquired skills are currently session-local; restarting resets them. Skill activation and dimensional storage are the next roadmap step; save/load is planned for M2.
 
 ## Enemy difficulty and drops
 
@@ -38,10 +44,11 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/combat.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/magicules.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/drops.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/absorption.gd
 "$GODOT_BIN" --headless --path . --quit-after 120
 ```
 
-The cloud checks validate import, 17 foundation checks, 24 combat checks, 27 Magicule checks, and 32 drop checks. These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. Visual playtesting is still pending.
+The cloud checks validate import, 17 foundation checks, 24 combat checks, 27 Magicule checks, 32 drop checks, and 26 absorption checks. These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. Visual playtesting is still pending.
 
 ## Structure
 
@@ -55,6 +62,8 @@ The cloud checks validate import, 17 foundation checks, 24 combat checks, 27 Mag
 - `tests/combat.gd`: combat encounter and edge-case checks.
 - `tests/magicules.gd`: resource and gameplay integration checks.
 - `tests/drops.gd`: enemy-tier rewards and collection integration checks.
+- `scripts/absorption`, `scripts/skills`, `data`: analysis, acquired-skill book, and creature/skill definitions.
+- `tests/absorption.gd`: acquisition, channel interruption, duplicates, and restart.
 - `ROADMAP.md`: project goals and progress; `ROADMAP.html`: interactive dependency graph.
 
 After roadmap changes, run `python3 tools/build_roadmap.py` to update the graph.
