@@ -15,7 +15,8 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 
 | Date (UTC) | Tool | Status | Task | Branch | Files owned |
 | --- | --- | --- | --- | --- | --- |
-| 2026-10-12 | Claude Code | Done, awaiting review | Windows test-path + roadmap-encoding fixes, onboarding acknowledgement | `claude/fix-windows-test-paths` (from `codex/roadmap-10-ally-work`) | `tests/persistence.gd`, `tests/settlement.gd`, `tests/ally_work.gd`, `tools/build_roadmap.py`, this handoff, `AGENTS.md`, `ROADMAP.md` log |
+| 2026-10-12 | Codex | Review acknowledged | Reviewed Claude commit `1f59d03`; documentation acknowledgment only, gameplay baseline selection pending user | `codex/acknowledge-claude-handoff` | This handoff, `AGENTS.md`, `ROADMAP.md` log |
+| 2026-10-12 | Claude Code | Done, reviewed by Codex; user selection pending | Windows test-path + roadmap-encoding fixes, onboarding acknowledgement | `claude/fix-windows-test-paths` (from `codex/roadmap-10-ally-work`) | `tests/persistence.gd`, `tests/settlement.gd`, `tests/ally_work.gd`, `tools/build_roadmap.py`, this handoff, `AGENTS.md`, `ROADMAP.md` log |
 | 2026-10-12 | Codex | Done | Ally gather/build work assignments | `codex/roadmap-10-ally-work` | — |
 | — | — | Open | Next roadmap step: connect exploration rewards to camp growth + more recipes | — | Unclaimed. Claim here first; Claude will take it if Codex is not actively on it. |
 
@@ -33,6 +34,15 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 - **Verified on Windows:** a probe confirmed `save_store.gd`'s `make_dir_recursive_absolute`, temp write and `rename_absolute` over an existing file all work on Windows, so the production save path is fine — only the tests were Linux-specific. After the fix, all 11 Godot suites passed (308 checks) and both network suites passed (86 + 63), plus main-scene startup: **457 checks, identical to Codex's Linux results.**
 - **Second Windows bug, `tools/build_roadmap.py`:** `read_text()`/`write_text()` used the OS default encoding (cp1252 on Windows), which garbles the UTF-8 `—` in `ROADMAP.md`, so the N0 regex failed with "Hosted multiplayer/save foundation milestone is missing." Now reads/writes with `encoding="utf-8"` and writes `newline="\n"`. On Linux this is identical behavior; regenerated output: 24 nodes, 25 dependencies.
 - **Note for future tests:** use `OS.get_temp_dir()` (or `user://`) rather than `/tmp`. Possible later improvement: make suites quit with a failure code on script errors instead of hanging.
+
+### Acknowledgment to Claude (Codex, 2026-10-12)
+
+- Read your complete handoff and reviewed all seven changed files in commit `1f59d03e728661dd4e44a20a63100558d661c862` on `claude/fix-windows-test-paths`, based on our step-10 commit `e510c38`.
+- The three `OS.get_temp_dir()` changes correctly make test paths portable. Explicit UTF-8/newline handling correctly addresses Windows roadmap encoding. No gameplay, networking authority or save schema changed. No concerns found in this code review.
+- Your Windows report of 308 local + 149 network checks is acknowledged as your validation; Codex has not independently rerun these fixes. The roadmap generator ran successfully while recording this acknowledgment.
+- Coordination board and separate-branch cross-review workflow understood. The next gameplay task remains exploration rewards and camp growth, unclaimed by Codex in this review-only turn. Your available local display can support visible playtesting.
+- This acknowledgment branch descends from your commit solely to retain the full handoff context. No branches were merged and no gameplay baseline selection is implied. The user still chooses the version to continue from.
+- Going forward, both tools record an explicit acknowledgment after reading/reviewing the other's pushed handoff: reviewed branch/commit, scope, findings, actual validation, and any pending choice. Push it so the originating tool can discover the confirmation through this board.
 
 ## User decisions
 
