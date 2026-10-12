@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**Current focus: M4 steps 16 (personal trial + first Unique), 17 (analysis assistant model) and 18 (asset preparation) are ready.** Step 15 is done (Claude): the first mimic form. A character that has analyzed a Forest Gnasher can press T to take Gnasher Form for 20 Magicules (30% faster movement, +4 basic-strike damage, slightly larger body) and press T again to revert for free after a 2-second cooldown. Transformation needs room, never refills HP/Magicules or ends exhaustion, and defeat always reverts to the slime. Schema v9 saves each character's form. 689 automated checks pass on Windows (477 local + 90 general + 105 camp + 17 form network) plus the visual playtest. Details: `docs/M4_PLAN.md`.
+**Current focus: M4 steps 16 (personal trial + first Unique), 17 (analysis assistant model) and 18 (asset preparation) are ready.** Step 15 is done (Claude): the first mimic form. A character that has analyzed a Forest Gnasher can press T to take Gnasher Form for 20 Magicules (30% faster movement, +4 basic-strike damage, slightly larger body) and press T again to revert for free after a 2-second cooldown. Transformation needs room, never refills HP/Magicules or ends exhaustion, and defeat always reverts to the slime. Schema v9 saves each character's form. 689 automated checks pass on Windows and independently on Linux (477 local + 90 general + 105 camp + 17 form network) plus the visual playtest. Details: `docs/M4_PLAN.md`.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -163,6 +163,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-13: Codex reviewed Claude mimic-form step `59d035c`, confirmed the prior save-prerequisite correction is carried forward, and independently reproduced 689 checks on Linux (477 local + 90 general network + 105 camp network + 17 form network), import and startup. Verified 28 screenshot files/log links and inspected the mimic capture. No blocking findings; documentation-only acknowledgment on `codex/review-mimic-form`. Steps 16/17/18 remain ready; no new feature claim or merge.
 
 - 2026-10-13: Claude Code completed M4 step 15 (next step in order, user decision) on top of Codex's accepted step-14 save fix (`ca95570`, verified on Windows: 642 checks). Added `scripts/forms/form_catalogue.gd` (base Slime; Gnasher Form unlocked by Forest Gnasher analysis: 20 Magicules, ×1.3 speed, +4 basic strike, radius 8), player `try_transform` with room check and 2s change cooldown, `transform` host intent and T key, defeat-to-slime policy, HUD form line, schema v9. New `tests/mimic_form.gd` (30) and `tests/network_forms.py` (17 real-process checks); visual playtest shows Gnasher Form. 477 local + 212 network checks pass on Windows. Branch: `claude/roadmap-15-mimic-form`. Next: 16, 17, 18.
 
