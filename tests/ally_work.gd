@@ -63,7 +63,7 @@ func _run() -> void:
     var saved: Dictionary = CODEC.capture_entities(world)
     saved.merge({"version": STORE.VERSION, "world_id": "work_test", "players": {"host": CODEC.capture_player(actor)}, "progression": world.progression.duplicate(true)})
     _check(STORE.validate(saved), "Partial job snapshot validates")
-    var path := "/tmp/tempestrpg-work-" + Crypto.new().generate_random_bytes(8).hex_encode() + "/world.json"
+    var path := OS.get_temp_dir().path_join("tempestrpg-work-" + Crypto.new().generate_random_bytes(8).hex_encode()) + "/world.json"
     _check(STORE.write_world(path, saved) == OK, "Partial job saves atomically")
     var loaded: Dictionary = STORE.load_world(path)
     ally.work_role = "follow"

@@ -87,7 +87,7 @@ func _run() -> void:
     var document: Dictionary = CODEC.capture_entities(world)
     document.merge({"version": STORE.VERSION, "world_id": "settlement_test", "players": {"host": CODEC.capture_player(actor)}, "progression": world.progression.duplicate(true)})
     _check(STORE.validate(document), "Actual camp snapshot validates")
-    var path := "/tmp/tempestrpg-camp-" + Crypto.new().generate_random_bytes(8).hex_encode() + "/world.json"
+    var path := OS.get_temp_dir().path_join("tempestrpg-camp-" + Crypto.new().generate_random_bytes(8).hex_encode()) + "/world.json"
     _check(STORE.write_world(path, document) == OK, "Camp world saves atomically")
     var loaded: Dictionary = STORE.load_world(path)
     camp.restore(camp.initial_state())

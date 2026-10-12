@@ -9,6 +9,31 @@
 5. State the task being taken and files likely to change in the current session. If another tool is working concurrently, coordinate ownership with the user or through an explicitly shared task record before overlapping edits. Markdown files are context, not an automatic lock or live communication channel.
 6. Complete one roadmap step, run meaningful checks, update roadmap/handoff, regenerate the graph, commit and push a separate descriptive branch. Preserve others' uncommitted work. Record failures honestly.
 
+## Coordination board
+
+Newest entry first. Each tool records what it is doing now, the files it owns, and when it finishes. Before editing, read this board and `git ls-remote --heads origin`; claim your task here (commit + push the claim) before touching files another tool may own. If the other tool is not actively working on something, take the next roadmap step.
+
+| Date (UTC) | Tool | Status | Task | Branch | Files owned |
+| --- | --- | --- | --- | --- | --- |
+| 2026-10-12 | Claude Code | Done, awaiting review | Windows test-path + roadmap-encoding fixes, onboarding acknowledgement | `claude/fix-windows-test-paths` (from `codex/roadmap-10-ally-work`) | `tests/persistence.gd`, `tests/settlement.gd`, `tests/ally_work.gd`, `tools/build_roadmap.py`, this handoff, `AGENTS.md`, `ROADMAP.md` log |
+| 2026-10-12 | Codex | Done | Ally gather/build work assignments | `codex/roadmap-10-ally-work` | — |
+| — | — | Open | Next roadmap step: connect exploration rewards to camp growth + more recipes | — | Unclaimed. Claim here first; Claude will take it if Codex is not actively on it. |
+
+### Messages to Codex (from Claude Code, 2026-10-12)
+
+- **Onboarding acknowledged.** Claude Code has read and understood `CLAUDE.md`, `AGENTS.md`, this handoff, `ROADMAP.md`, `README.md`, `docs/MULTIPLAYER_AND_SAVES.md` and the step-10 diff. Claude follows the same rules: check handoff/commits/remote branches before critical steps and commits, one branch per completed step, no pushes to `main`, no merges without the user, preserve each other's work.
+- **New user instruction (given by the user to Claude, applies to both tools):** if either tool finds errors or room for major improvement in the other's code, fix it on a **separate sub-branch** (never by rewriting the other's branch) and record in this handoff **what changed, where, and how/why**. The user then chooses the better version, and both tools continue from the chosen version.
+- **User instruction on coordination:** both tools tell each other what they are currently doing, divide the work, agree on file ownership and report progress/completion through this board, the roadmap and the progress log.
+- **Claude's environment:** the user's Windows 11 machine with a display, Godot 4.6.3 at `C:\Users\Anwender\Desktop\stuff\gr\godot.exe`, Python 3.13, Git, GitHub CLI. Claude can open real game windows for visual playtests, which the cloud cannot.
+
+### Review: Windows test-path fix (Claude, `claude/fix-windows-test-paths`)
+
+- **Problem:** `tests/persistence.gd:35`, `tests/settlement.gd:90` and `tests/ally_work.gd:66` saved to hard-coded `/tmp/...`. On Windows `/tmp` cannot be created, so the first `write_world` failed, the next line raised a script error, and the test process hung forever instead of exiting (it never reached `quit`).
+- **Change:** each path now uses `OS.get_temp_dir().path_join("tempestrpg-...-<random>")`, which is `/tmp` on Linux (no behavior change in the cloud) and `%TEMP%` on Windows. Three one-line changes; no game code touched.
+- **Verified on Windows:** a probe confirmed `save_store.gd`'s `make_dir_recursive_absolute`, temp write and `rename_absolute` over an existing file all work on Windows, so the production save path is fine — only the tests were Linux-specific. After the fix, all 11 Godot suites passed (308 checks) and both network suites passed (86 + 63), plus main-scene startup: **457 checks, identical to Codex's Linux results.**
+- **Second Windows bug, `tools/build_roadmap.py`:** `read_text()`/`write_text()` used the OS default encoding (cp1252 on Windows), which garbles the UTF-8 `—` in `ROADMAP.md`, so the N0 regex failed with "Hosted multiplayer/save foundation milestone is missing." Now reads/writes with `encoding="utf-8"` and writes `newline="\n"`. On Linux this is identical behavior; regenerated output: 24 nodes, 25 dependencies.
+- **Note for future tests:** use `OS.get_temp_dir()` (or `user://`) rather than `/tmp`. Possible later improvement: make suites quit with a failure code on script errors instead of hanging.
+
 ## User decisions
 
 Godot 4.6.3 with GDScript; top-down pixel-art RPG. Explore → fight → absorb/analyze → acquire skills → name/evolve allies → grow a settlement/nation. Host runs the authoritative game on their own machine. Eight players total, including host. Persist implemented per-character and shared world state, extending schemas with each feature. Never fabricate mechanics represented only in UI reference images.
@@ -40,7 +65,7 @@ Next goal: M3 connect exploration rewards to camp growth and add recipes. Curren
 
 ## Validation
 
-Use Godot 4.6.3. Cloud: `source /workspace/.tempestrpg/env.sh` exports `GODOT_BIN` and writable XDG directories outside the repo. Local: set `GODOT_BIN` to the installed executable. From repo root:
+Use Godot 4.6.3. Cloud: `source /workspace/.tempestrpg/env.sh` exports `GODOT_BIN` and writable XDG directories outside the repo. Local: set `GODOT_BIN` to the installed executable. Windows: the GUI `godot.exe` detaches from the console, so capture output by redirecting stdout/stderr (e.g. PowerShell `Start-Process -NoNewWindow -Wait -RedirectStandardOutput`) and use `python` instead of `python3`. From repo root:
 
 ```bash
 "$GODOT_BIN" --headless --path . --editor --import

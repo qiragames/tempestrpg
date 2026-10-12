@@ -32,7 +32,7 @@ func _run() -> void:
     var saved := CODEC.capture_entities(world)
     saved.merge({"version": STORE.VERSION, "world_id": "world_test", "players": {"host": CODEC.capture_player(player)}, "progression": {"quests": {"village": 1}, "settlements": {"camp": {"wood": 12}}, "world_time": 50.0}})
     _check(STORE.validate(saved), "Complete state must validate")
-    var folder := "/tmp/tempestrpg-save-test-" + Crypto.new().generate_random_bytes(16).hex_encode()
+    var folder := OS.get_temp_dir().path_join("tempestrpg-save-test-" + Crypto.new().generate_random_bytes(16).hex_encode())
     var path := folder + "/world.json"
     _check(STORE.write_world(path, saved) == OK, "First atomic save must succeed")
     var result := STORE.load_world(path)

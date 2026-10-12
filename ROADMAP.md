@@ -143,6 +143,8 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-12: Claude Code joined (Windows 11, local Godot 4.6.3 with a display). Fixed three tests that saved to Linux-only `/tmp` and hung on Windows; all 457 checks (308 local + 149 network) plus main-scene startup now pass on Windows as well as Linux. Added the coordination board and the user's cross-review rule to the handoff/AGENTS. Branch: `claude/fix-windows-test-paths`. Next roadmap step unchanged: exploration rewards and camp growth.
+
 - 2026-10-12: Added Gather/Build/Follow camp commands, finite timed citizen jobs, single completion rewards/costs, blocked-site waiting and recall. Schema-v5 retains role/target/time and migrates old allies to Follow. 457 checks passed headlessly (308 local + 86 general network + 63 camp network), plus main-scene startup. GitHub/Claude handoff checked before architecture and commit. Branch: `codex/roadmap-10-ally-work`. Next: exploration rewards and camp growth.
 
 - 2026-10-12: Added the shared first camp, finite deposits, evolved-ally founding requirement, one costed hut with collision, B camp UI, validated schema-v4 migration and host save/replication. 401 checks passed headlessly (273 local + 86 prior network + 42 camp network), plus main-scene startup. Reinforced reciprocal Claude/Codex checks before critical steps and commits. Branch: `codex/roadmap-09-first-camp`. Next: ally work assignments.

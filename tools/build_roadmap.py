@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-source = (ROOT / "ROADMAP.md").read_text()
+source = (ROOT / "ROADMAP.md").read_text(encoding="utf-8")
 rows = re.findall(r"^\| ([^|]+) \| (Done|Next|Planned) \| ([^|]+) \| ([^|]+) \|$", source.split("## Current milestone tasks")[0], re.M)
 ids = ["brief", "engine", "roadmap", "install", "project", "movement", "validation"]
 dependencies = [[], ["brief"], ["brief", "engine"], ["engine"], ["install"], ["project"], ["movement"]]
@@ -80,7 +80,7 @@ for index, (mid, title, status_text, body) in enumerate(milestones):
 if len(nodes) != 24:
     raise ValueError("Milestone structure changed: review the graph mapping.")
 updated = re.search(r"Last updated: (.*)", source).group(1)
-template = (ROOT / "tools/roadmap.template.html").read_text()
+template = (ROOT / "tools/roadmap.template.html").read_text(encoding="utf-8")
 payload = json.dumps(dict(nodes=nodes, updated=updated), ensure_ascii=False).replace("<", "\\u003c")
-(ROOT / "ROADMAP.html").write_text(template.replace("__ROADMAP_DATA__", payload))
+(ROOT / "ROADMAP.html").write_text(template.replace("__ROADMAP_DATA__", payload), encoding="utf-8", newline="\n")
 print(f"Generated ROADMAP.html: {len(nodes)} nodes, {sum(len(n['deps']) for n in nodes)} dependencies")
