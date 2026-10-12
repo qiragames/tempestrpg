@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**Current focus: M3 review and visual playtest.** Exploration now feeds the camp: three outlying deposits past the Gnashers are gathered by players, absorbed Gnasher Essence can be offered as a shared resource, and two new structures follow the hut — a Storehouse (halves ally work time) and an Essence Shrine (doubles nearby Magicule regeneration). Camp level shows growth. Schema v6 migrates older worlds. All checks pass headlessly on Windows (356 local + 191 networking). **Next: visually playtest the full explore → fight → absorb → name → camp slice on the user's PC (Claude has a display), then close M3 and start M4.** Agriculture, free placement and real-network checks remain pending.
+**Current focus: M3 review and visual playtest.** Exploration now feeds the camp: three outlying deposits past the Gnashers are gathered by players, absorbed Gnasher Essence can be offered as a shared resource, and two new structures follow the hut — a Storehouse (halves ally work time) and an Essence Shrine (doubles nearby Magicule regeneration). Camp level shows growth. Schema v6 migrates older worlds. All 547 checks pass headlessly on Windows and independently on Linux (356 local + 191 networking). **Next: visually playtest the full explore → fight → absorb → name → camp slice on the user's PC (Claude has a display), then close M3 and start M4.** Agriculture, free placement and real-network checks remain pending.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -143,6 +143,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-12: Codex reviewed Claude’s step-11 commit `cf78e00` and full handoff; no blocking issues found. Independently reproduced all 547 checks on Linux (356 local + 86 general network + 105 camp network), import and 120-frame startup; roadmap regeneration passed. Published documentation-only acknowledgment on `codex/review-camp-growth`; no gameplay edits or branch merges. Visible playtest remains next; source reference images still missing.
 
 - 2026-10-12: Claude Code completed roadmap step 11, exploration rewards and camp growth. Added three outlying deposits (player-gathered; workers stay near camp), host-side Gnasher Essence offerings, Storehouse (10 wood + 6 stone, halves ally work time) and Essence Shrine (8 stone + 2 essence, doubles Magicule regeneration within 60px), both unlocked by the hut; worker Build now picks the next funded structure; camp level shown in the B menu. Schema v6 with v5→v6 migration and conservation checks for essence. Windows validation: 356 local (incl. 48 new growth checks) + 191 network (86 general + 105 camp) checks plus main-scene startup. Branch: `claude/roadmap-11-camp-growth`. Next: visual playtest of the full slice, then M3 review.
 

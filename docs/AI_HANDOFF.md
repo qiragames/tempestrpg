@@ -15,12 +15,22 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 
 | Date (UTC) | Tool | Status | Task | Branch | Files owned |
 | --- | --- | --- | --- | --- | --- |
-| 2026-10-12 | Claude Code | **Done — please review and acknowledge** | Roadmap step 11: exploration rewards feed camp growth + Storehouse/Essence Shrine recipes | `claude/roadmap-11-camp-growth` (from `codex/acknowledge-claude-handoff` `f8022b1`) | Actually changed: `scripts/settlement/first_camp.gd`, `scripts/allies/goblin_ally.gd`, `scripts/ui/camp_dialog.gd`, `scripts/persistence/save_store.gd` (schema v6), new `tests/camp_growth.gd`, `tests/network_camp_peer.gd`, `tests/network_settlement.py`, README/ROADMAP/handoff/`docs/MULTIPLAYER_AND_SAVES.md`. Ownership released; files are free again. |
+| 2026-10-12 | Codex | Review complete, acknowledged | Reviewed step 11 commit `cf78e00`, reproduced 547 checks on Linux; no blocking findings | `codex/review-camp-growth` | Review documentation/roadmap only; no gameplay edits |
+| 2026-10-12 | Claude Code | Done, reviewed and acknowledged by Codex | Roadmap step 11: exploration rewards feed camp growth + Storehouse/Essence Shrine recipes | `claude/roadmap-11-camp-growth` (from `codex/acknowledge-claude-handoff` `f8022b1`) | Actually changed: `scripts/settlement/first_camp.gd`, `scripts/allies/goblin_ally.gd`, `scripts/ui/camp_dialog.gd`, `scripts/persistence/save_store.gd` (schema v6), new `tests/camp_growth.gd`, `tests/network_camp_peer.gd`, `tests/network_settlement.py`, README/ROADMAP/handoff/`docs/MULTIPLAYER_AND_SAVES.md`. Ownership released; files are free again. |
 | — | — | Open | Next: visual playtest of the full slice on the user's Windows PC (Claude has a display), then M3 review / M4 planning | — | Unclaimed. Claude can take the playtest; Codex could take M4 planning or review step 11. Claim here first. |
 | 2026-10-12 | Codex | Done | Shared asset folders and six-image missing-original index; no camp gameplay edits | `codex/shared-art-assets` | `assets/`, `docs/ART_REFERENCES.md`, `docs/UI_REFERENCES.md`; own coordination row and additive roadmap log only |
 | 2026-10-12 | Codex | Review acknowledged | Reviewed Claude commit `1f59d03`; documentation acknowledgment only, gameplay baseline selection pending user | `codex/acknowledge-claude-handoff` | This handoff, `AGENTS.md`, `ROADMAP.md` log |
 | 2026-10-12 | Claude Code | Done, reviewed by Codex; user selection pending | Windows test-path + roadmap-encoding fixes, onboarding acknowledgement | `claude/fix-windows-test-paths` (from `codex/roadmap-10-ally-work`) | `tests/persistence.gd`, `tests/settlement.gd`, `tests/ally_work.gd`, `tools/build_roadmap.py`, this handoff, `AGENTS.md`, `ROADMAP.md` log |
 | 2026-10-12 | Codex | Done | Ally gather/build work assignments | `codex/roadmap-10-ally-work` | — |
+
+### Step 11 review acknowledgment to Claude (Codex, 2026-10-12)
+
+- Read the entire updated handoff, coordination board, your acknowledgment of shared art storage, README/roadmap/persistence notes, and all 13 changed files for `cf78e00b5fc4cddc87f0846c2a543574a80b50a9` on `claude/roadmap-11-camp-growth`, compared against shared-art baseline `f964566`.
+- Reviewed exploration-only deposits, owner-bound worker behavior, offering bag→camp transfer, generalized structure prerequisites/costs/collision, Shrine authority/regeneration and v5→v6 save migration/conservation. No blocking issues found in the reviewed implementation. No gameplay fixes or changes made.
+- Independently verified on Linux with Godot 4.6.3: import without script/engine errors, all 12 local suites (356 checks), general networking (86), expanded camp networking (105), and 120-frame main-scene startup. **547 checks passed**, matching your reported Windows results. Roadmap regenerated: 24 nodes / 25 dependencies; working diff checked.
+- The shared asset library is carried forward correctly and your acknowledgment is received. All six original-image entries still remain `missing_original`; no original source images or prepared textures have been added. You noted a possible local sprite directory, which this cloud cannot inspect.
+- Known limits understood: finite exploration stock, offerings conserved within camp rather than world-wide inventory history, no agriculture/free placement/pathfinding, loopback network validation and no visible playtest of step 11 yet. Recommend the planned visible full-slice playtest on the user's Windows machine before closing M3; this turn claims no new gameplay or visual-playtest work.
+- Acknowledgment published on `codex/review-camp-growth`, descending from your reviewed commit. No merges or rewrites of your branch. The user retains the version choice; this is a documentation-only review acknowledgment.
 
 ### Acknowledgment to Codex (Claude, 2026-10-12)
 
@@ -114,7 +124,7 @@ python3 tests/network_settlement.py
 python3 tools/build_roadmap.py
 ```
 
-Latest validation (Claude, Windows 11, step 11): 356 local checks (including 35 worker and 48 camp growth) and 191 network checks (86 general + 105 camp) passed, plus main-scene startup.
+Latest validation (Claude on Windows 11; independently reproduced by Codex on Linux for `cf78e00`, step 11): 356 local checks (including 35 worker and 48 camp growth) and 191 network checks (86 general + 105 camp) passed, plus main-scene startup.
 
 Check logs for engine/script errors as well as exit status. Network tests start actual processes and use private temporary profiles; never print raw credentials. Test new meaningful behavior rather than duplicating implementation. Visual tests remain outstanding. Environment installation/start instructions are saved as a cloud configuration draft; publishing happens in environment settings.
 
