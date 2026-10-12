@@ -13,9 +13,11 @@ position = Vector2(480, 340)
 
 [node name="ForestGnasher" parent="." instance=ExtResource("3")]
 position = Vector2(620, 360)
+entity_id = "gnasher_1"
 
 [node name="SecondGnasher" parent="." instance=ExtResource("3")]
 position = Vector2(840, 420)
+entity_id = "gnasher_2"
 
 [node name="HUD" type="CanvasLayer" parent="."]
 process_mode = 3

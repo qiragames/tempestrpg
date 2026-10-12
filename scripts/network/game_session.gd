@@ -1,0 +1,486 @@
+extends Node
+## One RPC endpoint. Peer-to-character ownership is assigned and verified by the host.
+
+signal character_assigned(id: String)
+signal player_joined(actor: Node2D)
+signal session_failed(message: String)
+const MAX_PLAYERS := 8
+const DEFAULT_PORT := 24560
+const CODEC := preload("res://scripts/persistence/state_codec.gd")
+const STORE := preload("res://scripts/persistence/save_store.gd")
+var active: bool = false
+var replica_world: bool = false
+var world: Node2D
+var world_id: String = ""
+var local_character_id: String = "host"
+var save_path: String = "user://worlds/forest.json"
+var identity_path: String = "user://profiles/characters.json"
+var records: Dictionary = {}
+var owners: Dictionary = {}
+var latest_snapshot: Dictionary = {}
+var rejected_requests: int = 0
+var _snapshot_time: float = 0.0
+var _save_time: float = 0.0
+var _revision: int = 0
+var _received_revision: int = -1
+var _join_deadline: int = 0
+var _action_budgets: Dictionary = {}
+var _save_queued: bool = false
+
+func _ready() -> void:
+    process_mode = Node.PROCESS_MODE_ALWAYS
+    multiplayer.peer_connected.connect(_peer_connected)
+    multiplayer.peer_disconnected.connect(_peer_disconnected)
+    multiplayer.connection_failed.connect(func(): _fail("Connection failed."))
+    multiplayer.server_disconnected.connect(func(): _fail("Host disconnected. Reconnect to restore your character."))
+    get_tree().root.close_requested.connect(_close_requested)
+    call_deferred("_launch_arguments")
+
+func _launch_arguments() -> void:
+    var options: Dictionary = {}
+    for argument in OS.get_cmdline_user_args():
+        var pair := argument.trim_prefix("--").split("=", true, 1)
+        options[pair[0]] = pair[1] if pair.size() == 2 else ""
+    if not options.has("host") and not options.has("join"):
+        return
+    await get_tree().process_frame
+    bind_world(get_tree().current_scene)
+    if options.has("host"):
+        start_host(int(options.get("port", DEFAULT_PORT)), options.get("save", save_path))
+    else:
+        join_host(options.join, int(options.get("port", DEFAULT_PORT)), options.get("identity", identity_path))
+
+func bind_world(value: Node2D) -> void:
+    if not active and value != world:
+        replica_world = false
+        local_character_id = "host"
+    world = value
+
+func new_id(prefix: String = "") -> String:
+    return prefix + Crypto.new().generate_random_bytes(16).hex_encode()
+
+func start_host(port: int = DEFAULT_PORT, path: String = "user://worlds/forest.json") -> Error:
+    if active or replica_world or not is_instance_valid(world) or port < 1 or port > 65535:
+        return ERR_INVALID_PARAMETER
+    var loaded: Dictionary = {}
+    if FileAccess.file_exists(path) or FileAccess.file_exists(path + ".bak"):
+        var result := STORE.load_world(path)
+        if not result.ok:
+            _fail("Save is invalid; preserved on disk. Choose a different world path or restore a valid backup.")
+            return ERR_FILE_CORRUPT
+        loaded = result.data
+    var peer := ENetMultiplayerPeer.new()
+    # Clients talk only to the host. No client-to-client relay is needed for
+    # authoritative snapshots, and disabling it avoids stale relay peers on exit.
+    (multiplayer as SceneMultiplayer).server_relay = false
+    var error := peer.create_server(port, MAX_PLAYERS - 1)
+    if error != OK:
+        _fail("Could not host on UDP port %d." % port)
+        return error
+    multiplayer.multiplayer_peer = peer
+    active = true
+    Engine.max_fps = 60
+    get_tree().auto_accept_quit = false
+    save_path = path
+    world_id = loaded.get("world_id", new_id("world_"))
+    records = loaded.get("players", {}).duplicate(true)
+    owners = {1: "host"}
+    local_character_id = "host"
+    var host_actor = world.get_local_player()
+    host_actor.character_id = "host"
+    host_actor.local_controlled = true
+    if not loaded.is_empty():
+        world.progression = loaded.progression.duplicate(true)
+        CODEC.apply_entities(world, loaded, false)
+        CODEC.apply_player(host_actor, records.host, world, false)
+    world.bind_local_player(host_actor)
+    _track_actor(host_actor)
+    _update_records()
+    var saved := save_world()
+    if saved != OK:
+        stop_session(false)
+        _fail("Could not save the hosted world; hosting stopped.")
+        return saved
+    world._announce("Hosting for up to 8 players on UDP %d. F9 saves." % port)
+    character_assigned.emit("host")
+    return OK
+
+func join_host(address: String, port: int = DEFAULT_PORT, profile: String = "user://profiles/characters.json") -> Error:
+    if active or not is_instance_valid(world) or address.is_empty() or port < 1 or port > 65535:
+        return ERR_INVALID_PARAMETER
+    var peer := ENetMultiplayerPeer.new()
+    var error := peer.create_client(address, port)
+    if error != OK:
+        return error
+    identity_path = profile
+    replica_world = true
+    multiplayer.multiplayer_peer = peer
+    active = true
+    Engine.max_fps = 60
+    local_character_id = ""
+    _join_deadline = Time.get_ticks_msec() + 8000
+    world.get_local_player().local_controlled = false
+    for actor in world.get_children():
+        if actor.is_in_group("player"):
+            actor.configure_replica()
+        elif actor.is_in_group("enemies") or actor.is_in_group("magicule_pickups"):
+            actor.set_physics_process(false)
+            if actor.has_node("Health"):
+                actor.get_node("Health").set_process(false)
+    return OK
+
+func _peer_connected(peer: int) -> void:
+    if active and multiplayer.is_server():
+        _hello.rpc_id(peer, world_id)
+
+@rpc("authority", "call_remote", "reliable")
+func _hello(id: String) -> void:
+    world_id = id
+    var profiles: Variant = {}
+    if FileAccess.file_exists(identity_path):
+        var parser := JSON.new()
+        profiles = parser.data if parser.parse(FileAccess.get_file_as_string(identity_path)) == OK else null
+        if not profiles is Dictionary:
+            _fail("Character profile is invalid; preserve it and restore a valid profile before joining.")
+            return
+    var profile: Variant = profiles.get(id, {})
+    if not profile is Dictionary:
+        _fail("Character profile is invalid.")
+        return
+    if not profile.get("character", "") is String or not profile.get("credential", "") is String:
+        _fail("Character profile fields are invalid.")
+        return
+    _join_world.rpc_id(1, profile.get("character", ""), profile.get("credential", ""))
+
+@rpc("any_peer", "call_remote", "reliable")
+func _join_world(character: String, credential: String) -> void:
+    if not active or not multiplayer.is_server():
+        return
+    var peer := multiplayer.get_remote_sender_id()
+    if owners.has(peer):
+        return
+    if owners.size() >= MAX_PLAYERS:
+        _deny(peer, "The eight-player session is full.")
+        return
+    if not character.is_empty():
+        if character == "host" or not records.has(character) or credential.length() != 64 or records[character].get("token_hash", "") != (world_id + credential).sha256_text() or owners.values().has(character):
+            _deny(peer, "Character identity could not be verified or is already connected.")
+            return
+    else:
+        character = new_id("character_")
+        credential = Crypto.new().generate_random_bytes(32).hex_encode()
+    var actor = load("res://scenes/player/player.tscn").instantiate()
+    actor.name = "Character_" + character
+    actor.character_id = character
+    actor.local_controlled = false
+    actor.network_controlled = true
+    actor.position = Vector2(480 + (owners.size() - 1) * 20, 340)
+    world.add_child(actor)
+    if records.has(character):
+        CODEC.apply_player(actor, records[character], world, false)
+    else:
+        records[character] = CODEC.capture_player(actor)
+        records[character]["token_hash"] = (world_id + credential).sha256_text()
+    owners[peer] = character
+    _wire_remote(actor)
+    player_joined.emit(actor)
+    _accepted.rpc_id(peer, character, credential)
+    save_world()
+    _broadcast()
+
+func _deny(peer: int, message: String) -> void:
+    _denied.rpc_id(peer, message)
+    await get_tree().create_timer(0.2).timeout
+    if active and multiplayer.is_server():
+        multiplayer.multiplayer_peer.disconnect_peer(peer)
+
+@rpc("authority", "call_remote", "reliable")
+func _denied(message: String) -> void:
+    _fail(message)
+
+@rpc("authority", "call_remote", "reliable")
+func _accepted(character: String, credential: String) -> void:
+    var profiles: Dictionary = {}
+    if FileAccess.file_exists(identity_path):
+        var parser := JSON.new()
+        if parser.parse(FileAccess.get_file_as_string(identity_path)) != OK or not parser.data is Dictionary:
+            _fail("Cannot overwrite an invalid reconnect profile.")
+            return
+        profiles = parser.data
+    profiles[world_id] = {"character": character, "credential": credential}
+    var absolute := ProjectSettings.globalize_path(identity_path)
+    DirAccess.make_dir_recursive_absolute(absolute.get_base_dir())
+    var file := FileAccess.open(absolute + ".tmp", FileAccess.WRITE)
+    if file == null:
+        _fail("Cannot save the reconnect profile; connection stopped.")
+        return
+    file.store_string(JSON.stringify(profiles))
+    file.flush()
+    var write_error := file.get_error()
+    file.close()
+    if write_error != OK or DirAccess.rename_absolute(absolute + ".tmp", absolute) != OK:
+        _fail("Cannot save the reconnect profile; connection stopped.")
+        return
+    local_character_id = character
+    _join_deadline = 0
+    var actor = world.get_local_player()
+    actor.character_id = character
+    actor.local_controlled = true
+    world.bind_local_player(actor)
+    character_assigned.emit(character)
+
+func send_move(direction: Vector2) -> void:
+    if active and not multiplayer.is_server() and not local_character_id.is_empty():
+        _move_input.rpc_id(1, direction)
+
+@rpc("any_peer", "call_remote", "unreliable_ordered", 1)
+func _move_input(direction: Vector2) -> void:
+    if not multiplayer.is_server():
+        return
+    var peer := multiplayer.get_remote_sender_id()
+    if not owners.has(peer) or not is_finite(direction.x) or not is_finite(direction.y) or absf(direction.x) > 1 or absf(direction.y) > 1:
+        rejected_requests += 1
+        return
+    var actor = world.player_by_id(owners[peer])
+    if actor:
+        actor.remote_direction = direction.limit_length(1.0)
+        actor.last_input_msec = Time.get_ticks_msec()
+
+func request_action(action: String, payload: Dictionary = {}) -> void:
+    if active and not multiplayer.is_server():
+        if not local_character_id.is_empty():
+            _request_action.rpc_id(1, action, payload)
+    else:
+        apply_action(world.get_local_player(), action, payload)
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_action(action: String, payload: Dictionary) -> void:
+    if not multiplayer.is_server():
+        return
+    var peer := multiplayer.get_remote_sender_id()
+    if not owners.has(peer):
+        rejected_requests += 1
+        return
+    var now: int = int(Time.get_ticks_msec() / 1000.0)
+    var budget: Dictionary = _action_budgets.get(peer, {"second": now, "count": 0})
+    if budget.second != now:
+        budget = {"second": now, "count": 0}
+    budget.count += 1
+    _action_budgets[peer] = budget
+    if budget.count > 30:
+        rejected_requests += 1
+        return
+    apply_action(world.player_by_id(owners[peer]), action, payload)
+
+func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bool:
+    if actor == null or (active and not multiplayer.is_server()):
+        return false
+    if action == "menu":
+        if payload.size() != 1 or not payload.get("open") is bool:
+            rejected_requests += 1
+            return false
+        actor.input_blocked = payload.open
+        actor.remote_direction = Vector2.ZERO
+        return true
+    if action == "respawn":
+        if not payload.is_empty() or actor.get_node("Health").current > 0 or actor.input_blocked:
+            return false
+        if actor.get_node("Absorption").active:
+            actor.get_node("Absorption")._cancel("Analysis interrupted.")
+        actor.position = Vector2(480, 340)
+        actor.get_node("Health").current = actor.get_node("Health").maximum
+        actor.get_node("Health").immunity_left = 1.0
+        actor.get_node("Health").changed.emit(actor.get_node("Health").current, actor.get_node("Health").maximum)
+        actor.get_node("Magicules").enabled = true
+        actor.get_node("MeleeAttack").cooldown_left = 0.0
+        actor.remote_direction = Vector2.ZERO
+        actor.queue_redraw()
+        queue_save()
+        return true
+    if actor.get_node("Health").current <= 0:
+        return false
+    if action == "discard":
+        if payload.size() != 1 or not payload.get("id") is String or payload.id.length() > 64:
+            rejected_requests += 1
+            return false
+        return actor.get_node("Inventory").discard(StringName(payload.id))
+    if actor.input_blocked:
+        return false
+    if not payload.is_empty():
+        rejected_requests += 1
+        return false
+    match action:
+        "attack":
+            return actor.get_node("MeleeAttack").attack(actor.facing)
+        "absorb":
+            return actor.get_node("Absorption").attempt_absorb()
+        "skill_1", "skill_2", "skill_3":
+            var skill: Resource = actor.get_node("SkillBook").skill_at_slot(int(action.right(1)) - 1)
+            return actor.get_node("MeleeAttack").attack_skill(actor.facing, skill.id) if skill else false
+    rejected_requests += 1
+    return false
+
+func _wire_remote(actor: Node2D) -> void:
+    _track_actor(actor)
+    actor.get_node("Absorption").status_changed.connect(func(message: String): notify_character(actor.character_id, message, true))
+    actor.get_node("Magicules").spend_rejected.connect(func(_cost: float): notify_character(actor.character_id, "Insufficient Magicules. Action unavailable."))
+    actor.get_node("Health").defeated.connect(func(): notify_character(actor.character_id, "Vital signs depleted. Press R to respawn."))
+
+func _track_actor(actor: Node2D) -> void:
+    if actor.has_meta("save_wired"):
+        return
+    actor.set_meta("save_wired", true)
+    actor.get_node("Absorption").analyzed.connect(func(_specimen: Resource, _new_skill: bool): queue_save())
+    actor.get_node("Inventory").changed.connect(queue_save)
+    actor.get_node("Health").defeated.connect(queue_save)
+
+func queue_save() -> void:
+    if active and multiplayer.is_server() and not _save_queued:
+        _save_queued = true
+        _flush_save.call_deferred()
+
+func _flush_save() -> void:
+    _save_queued = false
+    if active and multiplayer.is_server():
+        save_world()
+
+func notify_character(id: String, message: String, analysis: bool = false) -> void:
+    if id == local_character_id:
+        if analysis:
+            world._analysis_changed(message)
+        else:
+            world._announce(message)
+        return
+    if active and multiplayer.is_server():
+        var peer: int = owners.find_key(id) if owners.values().has(id) else 0
+        if peer > 1:
+            _notice.rpc_id(peer, message, analysis)
+
+@rpc("authority", "call_remote", "reliable")
+func _notice(message: String, analysis: bool = false) -> void:
+    if is_instance_valid(world):
+        if analysis:
+            world._analysis_changed(message)
+        else:
+            world._announce(message)
+
+func _update_records() -> void:
+    for id in owners.values():
+        var actor = world.player_by_id(id)
+        if actor:
+            var hash_value: String = records.get(id, {}).get("token_hash", "")
+            records[id] = CODEC.capture_player(actor)
+            records[id]["token_hash"] = hash_value
+
+func document() -> Dictionary:
+    _update_records()
+    var data := CODEC.capture_entities(world)
+    data.merge({"version": STORE.VERSION, "world_id": world_id, "players": records.duplicate(true), "progression": world.progression.duplicate(true)})
+    return data
+
+func save_world() -> Error:
+    if not active or not multiplayer.is_server() or not is_instance_valid(world):
+        return ERR_UNAUTHORIZED
+    var result := STORE.write_world(save_path, document())
+    if result != OK:
+        world._announce("Save failed; the previous valid save is retained.")
+    return result
+
+func _broadcast() -> void:
+    var data := document()
+    var connected: Dictionary = {}
+    for id in owners.values():
+        if data.players.has(id):
+            connected[id] = data.players[id].duplicate(true)
+            connected[id].erase("token_hash")
+    data.players = connected
+    _revision += 1
+    # Several clients can disconnect in the same poll. Do not broadcast to ENet
+    # peers whose channels have already closed but whose callback is still queued.
+    for peer in multiplayer.get_peers():
+        if owners.has(peer) and multiplayer.multiplayer_peer.get_peer(peer).get_state() == ENetPacketPeer.STATE_CONNECTED:
+            _snapshot.rpc_id(peer, data, _revision)
+
+@rpc("authority", "call_remote", "reliable", 2)
+func _snapshot(data: Dictionary, revision: int) -> void:
+    if multiplayer.is_server() or local_character_id.is_empty() or revision <= _received_revision:
+        return
+    _received_revision = revision
+    latest_snapshot = data
+    world.progression = data.progression.duplicate(true)
+    var wanted: Dictionary = {}
+    for id in data.players:
+        wanted[id] = true
+        var actor = world.player_by_id(id)
+        if actor == null:
+            actor = load("res://scenes/player/player.tscn").instantiate()
+            actor.name = "Character_" + id
+            actor.character_id = id
+            actor.local_controlled = id == local_character_id
+            world.add_child(actor)
+            actor.configure_replica()
+    CODEC.apply_entities(world, data, true)
+    for id in data.players:
+        CODEC.apply_player(world.player_by_id(id), data.players[id], world, true)
+    for actor in world.get_children():
+        if actor.is_in_group("player") and not wanted.has(actor.character_id):
+            world.remove_child(actor)
+            actor.queue_free()
+    var local = world.player_by_id(local_character_id)
+    if local:
+        world.bind_local_player(local)
+
+func _peer_disconnected(peer: int) -> void:
+    if not active or not multiplayer.is_server() or not owners.has(peer):
+        return
+    var id: String = owners[peer]
+    var actor = world.player_by_id(id)
+    if actor:
+        if actor.get_node("Absorption").active:
+            actor.get_node("Absorption")._cancel("Analysis interrupted by disconnection.")
+        records[id] = CODEC.capture_player(actor).merged({"token_hash": records[id].token_hash})
+        world.remove_child(actor)
+        actor.queue_free()
+    owners.erase(peer)
+    _action_budgets.erase(peer)
+    save_world()
+    _broadcast()
+
+func _process(delta: float) -> void:
+    if not active:
+        return
+    if _join_deadline > 0 and Time.get_ticks_msec() > _join_deadline:
+        _fail("Connection timed out or the session is full.")
+        return
+    if not multiplayer.is_server() or not is_instance_valid(world):
+        return
+    _snapshot_time += delta
+    _save_time += delta
+    if _snapshot_time >= 0.05:
+        _snapshot_time = 0.0
+        _broadcast()
+    if _save_time >= 15.0:
+        _save_time = 0.0
+        if save_world() != OK:
+            world._announce("Autosave failed. Use F9 to retry; the previous save is retained.")
+
+func stop_session(save: bool = true) -> void:
+    if active and save and multiplayer.is_server():
+        save_world()
+    active = false
+    _join_deadline = 0
+    multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
+    owners.clear()
+
+func _fail(message: String) -> void:
+    stop_session(false)
+    if replica_world and is_instance_valid(world):
+        world.get_local_player().input_blocked = true
+        world.get_local_player().local_controlled = false
+    session_failed.emit(message)
+    if is_instance_valid(world):
+        world._announce(message)
+
+func _close_requested() -> void:
+    stop_session(true)
+    get_tree().quit()

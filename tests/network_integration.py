@@ -1,0 +1,145 @@
+"""Run actual Godot host/client processes; keep reconnect credentials out of logs."""
+import json
+import os
+from pathlib import Path
+import socket
+import subprocess
+import tempfile
+import time
+
+ROOT = Path(__file__).resolve().parents[1]
+GODOT = os.environ.get("GODOT_BIN", "godot")
+WORK = Path(tempfile.mkdtemp(prefix="tempestrpg-network-"))
+processes = []
+checks = 0
+
+
+def check(condition, message):
+    global checks
+    checks += 1
+    if not condition:
+        raise AssertionError(message)
+
+
+def free_port():
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return sock.getsockname()[1]
+
+
+def start(name, **options):
+    log = (WORK / f"{name}.log").open("w")
+    report = WORK / f"{name}.json"
+    command = [GODOT, "--headless", "--path", str(ROOT), "--script", "tests/network_peer.gd", "--"]
+    options["report"] = report
+    command += [f"--{key}={value}" for key, value in options.items()]
+    proc = subprocess.Popen(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+    processes.append((proc, log, name))
+    return proc, report
+
+
+def wait_report(path, predicate=lambda value: True, timeout=12):
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if path.exists():
+            try:
+                value = json.loads(path.read_text())
+            except json.JSONDecodeError:
+                value = {}
+            if value.get("error"):
+                raise AssertionError(value["error"])
+            if value and predicate(value):
+                return value
+        time.sleep(0.03)
+    raise AssertionError(f"Timed out waiting for {path.name}")
+
+
+def finish(proc):
+    check(proc.wait(timeout=8) == 0, "Integration process must exit successfully")
+
+
+try:
+    port = free_port()
+    world_save = WORK / "world.json"
+    server_stop = WORK / "server.stop"
+    server, server_report = start("host", mode="server", port=port, save=world_save, stop=server_stop)
+    wait_report(server_report, lambda d: d.get("ready"))
+    clients = [start(f"player_{i}", mode="client", port=port, identity=WORK / f"identity_{i}.json", case="play") for i in range(2)]
+    results = [wait_report(report, lambda d: "state" in d) for _, report in clients]
+    for proc, _ in clients:
+        finish(proc)
+    for result in results:
+        check(result["moved"], "Host must accept owned movement intent")
+        check(result["guards"], "Client mutations must be blocked")
+        check(result["menu_local"], "Local inventory must not pause the host world")
+        check(result["no_credentials"], "Replication must omit reconnect credential hashes")
+    check(sum(len(r["state"]["skill_ids"]) for r in results) == 1, "Concurrent absorption must acquire a corpse once")
+    check(sum(sum(r["state"]["inventory"]["counts"].values()) for r in results) == 1, "Concurrent absorption must award one material")
+    check(abs(sum(r["state"]["magicules"]["current"] for r in results) - 188) < 0.01, "Two paid attacks, one absorption, and one shared drop must balance without duplicate rewards")
+    time.sleep(0.3)
+    server_stop.touch()
+    saved = wait_report(server_report, lambda d: d.get("saved"))
+    finish(server)
+    check(saved["rejected"] >= 4, "Host must reject forged ownership and nonfinite movement")
+    check(saved["state"]["players"]["host"]["inventory"]["counts"].get("gnasher_essence") == 1, "A guest cannot discard the host's inventory")
+    check(all(e["id"] != "gnasher_1" for e in saved["state"]["enemies"]), "Consumed corpse must be absent from world save")
+
+    # Restart the host and reconnect both characters using their private profiles.
+    port = free_port()
+    reload_stop = WORK / "reload.stop"
+    server, server_report = start("reloaded_host", mode="server", port=port, save=world_save, stop=reload_stop, reload="yes")
+    wait_report(server_report, lambda d: d.get("ready"))
+    resumed = [start(f"resumed_{i}", mode="client", port=port, identity=WORK / f"identity_{i}.json", case="resume") for i in range(2)]
+    restored = [wait_report(report, lambda d: "state" in d) for _, report in resumed]
+    for proc, _ in resumed:
+        finish(proc)
+    for before, after in zip(results, restored):
+        for field in ["id", "position", "health", "magicules", "skill_ids", "slots", "inventory", "progression"]:
+            check(before["state"][field] == after["state"][field], f"Reconnect must restore {field}")
+        check(after["world"]["settlements"]["camp"]["wood"] == 7, "Shared settlement state must survive reload")
+    # A valid character ID with an invalid credential must be rejected.
+    profile = json.loads((WORK / "identity_0.json").read_text())
+    for entry in profile.values():
+        entry["credential"] = "0" * 64
+    forged = WORK / "forged_profile.json"
+    forged.write_text(json.dumps(profile))
+    bad, bad_report = start("forged_identity", mode="client", port=port, identity=forged, case="denied")
+    check(wait_report(bad_report).get("denied"), "Reconnect must verify the credential, not just the character ID")
+    finish(bad)
+    reload_stop.touch()
+    loaded = wait_report(server_report, lambda d: d.get("saved"))
+    finish(server)
+    check(loaded["state"]["players"]["host"]["health"]["current"] == 77 and loaded["state"]["players"]["host"]["progression"]["level"] == 3, "Host stats and progression must survive reload")
+
+    # 1 host + 7 simultaneous guests; an eighth guest must not be admitted.
+    port = free_port()
+    capacity_stop = WORK / "capacity.stop"
+    guest_stop = WORK / "guests.stop"
+    server, server_report = start("capacity_host", mode="server", port=port, save=WORK / "capacity_world.json", stop=capacity_stop)
+    wait_report(server_report, lambda d: d.get("ready"))
+    guests = [start(f"guest_{i}", mode="client", port=port, identity=WORK / f"guest_{i}_identity.json", case="capacity", stop=guest_stop) for i in range(7)]
+    joined = [wait_report(report) for _, report in guests]
+    check(all(r.get("joined") for r in joined) and len({r["id"] for r in joined}) == 7, "Seven guests must join with distinct characters")
+    excess, excess_report = start("excess_guest", mode="client", port=port, identity=WORK / "excess_identity.json", case="denied")
+    check(wait_report(excess_report).get("denied"), "A ninth total player must be rejected")
+    finish(excess)
+    guest_stop.touch()
+    for proc, _ in guests:
+        finish(proc)
+    capacity_stop.touch()
+    wait_report(server_report, lambda d: d.get("saved"))
+    finish(server)
+    for _, log, name in processes:
+        log.flush()
+        text = (WORK / f"{name}.log").read_text()
+        check("SCRIPT ERROR" not in text and "ERROR:" not in text, f"{name} must finish without engine/script errors")
+    print(f"Network integration: {checks} checks passed; real host/clients, concurrency, reload/reconnect, forged identity, 8-player cap")
+finally:
+    for proc, log, _ in processes:
+        if proc.poll() is None:
+            proc.terminate()
+            try:
+                proc.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+        log.close()

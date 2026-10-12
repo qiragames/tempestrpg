@@ -1,17 +1,34 @@
 extends CharacterBody2D
+@onready var session: Node = get_node("/root/GameSession")
 ## Movement delegates health and attacks to reusable combat components.
 
 @export var move_speed: float = 95.0
 var facing := Vector2.DOWN
+var character_id: String = "host"
+var local_controlled: bool = true
+var network_controlled: bool = false
+var input_blocked: bool = false
+var remote_direction := Vector2.ZERO
+var last_input_msec: int = 0
+var progression: Dictionary = {"level": 1, "experience": 0, "race": "Slime", "quests": {}, "equipment": {}}
 
 func _ready() -> void:
+    $Camera2D.enabled = local_controlled
     $Health.defeated.connect(func(): $Magicules.enabled = false)
 
 func _physics_process(_delta: float) -> void:
+    var direction := Vector2.ZERO
+    if local_controlled and not input_blocked:
+        direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+    elif network_controlled and not input_blocked and Time.get_ticks_msec() - last_input_msec < 350:
+        direction = remote_direction
+    if session.replica_world:
+        if local_controlled:
+            session.send_move(direction)
+        return
     if $Health.current <= 0:
         velocity = Vector2.ZERO
         return
-    var direction := Input.get_vector("move_left", "move_right", "move_up", "move_down")
     velocity = direction * move_speed
     if not direction.is_zero_approx():
         facing = direction
@@ -19,6 +36,15 @@ func _physics_process(_delta: float) -> void:
     queue_redraw()
 
 func _unhandled_input(event: InputEvent) -> void:
+    if not local_controlled or input_blocked:
+        return
+    if session.active:
+        if event.is_action_pressed("restart") and not event.is_echo():
+            session.request_action("respawn")
+        for action in ["attack", "absorb", "skill_1", "skill_2", "skill_3"]:
+            if event.is_action_pressed(action) and not event.is_echo():
+                session.request_action(action)
+        return
     if event.is_action_pressed("attack") and not event.is_echo():
         $MeleeAttack.attack(facing)
     elif event.is_action_pressed("absorb") and not event.is_echo():
@@ -29,6 +55,10 @@ func _unhandled_input(event: InputEvent) -> void:
                 var skill: Resource = $SkillBook.skill_at_slot(index)
                 if skill != null:
                     $MeleeAttack.attack_skill(facing, skill.id)
+
+func configure_replica() -> void:
+    for component in [$Health, $Magicules, $MeleeAttack, $Absorption]:
+        component.set_process(false)
 
 func _draw() -> void:
     if has_node("Health") and $Health.current <= 0:

@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**M1 complete: combat → drops → absorption → analysis → skill acquisition → skill use.** Rending Bite is usable through the hotbar, analyzed essence stacks in a 20-unit dimensional bag, and the inventory overlay pauses gameplay. The clearing has a second enemy to exercise the acquired skill. All 161 gameplay checks passed headlessly. **Next: hosted multiplayer and persistent-world foundations (N0), before the first ally and naming (M2).** Sprite, HUD, title, pause, inventory, and tileset references remain documented; final art integration and visual playtesting are pending.
+**N0 implemented for desktop/LAN testing:** an authoritative host supports 8 total players, verified character reconnects, private identities, versioned character/world saves, recovery from a valid backup, and per-player multiplayer inventory menus. 161 gameplay, 32 persistence, and 68 real-process networking checks passed headlessly. The actual game CLI also hosted/joined successfully. **Next: recruit a nameless ally (M2), then naming, evolution and their replicated/save state.** Internet connectivity, encrypted transport, final art integration, and visual playtesting remain outstanding.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -50,16 +50,16 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 - Completed: three hotbar slots, Rending Bite activation, shared attack cooldown, bounded material stacks, paused inventory UI, and System Voice/event-log feedback (35 checks passed).
 - Exit goal: movement → combat → defeat → absorption → skill use works end to end.
 
-### N0 — Hosted multiplayer + saves · Next, requires M1
+### N0 — Hosted multiplayer + saves · Done
 
-- Establish an authoritative host and client architecture, explicit player ownership, stable character/entity IDs, and a configurable limit capped at 8 total players (1 host + 7 guests).
-- Persist implemented positions, stats, resources, skills, inventory and world entities with versioned atomic saves; extend the schema for levels, equipment, quests, citizens, settlements and diplomacy as those systems are added.
-- Replicate host-validated movement/combat/rewards; prevent duplicate loot and corpse claims during concurrent interactions.
-- Bind HUD/inventory to each local player; multiplayer menus must not pause the host or other players.
-- Validate with real host/client processes, capacity, save/reload, disconnect/reconnect, and invalid/corrupt save cases.
-- Exit goal: a playable hosted session with the supported player cap and verified restoration of character/world state without ownership errors or duplicated rewards.
+- Completed: ENet host/client architecture, host-validated intents, explicit player ownership, stable character/entity IDs, verified reconnect credentials, and 8 total player capacity.
+- Completed: versioned atomic saves/backups for implemented player/entity/world state, reserved character/shared progression dictionaries, and restoration tests. Extend validated schemas as new gameplay systems are added.
+- Completed: authoritative movement/combat/rewards and concurrent-claim validation without duplicated loot or skill/material awards.
+- Completed: local HUD/inventory binding and per-character menu input blocking; shared simulation continues.
+- Passed: 68 real-process networking checks and 32 persistence checks; one host plus seven guests, ninth-player rejection, save/reload/reconnect, invalid credentials, corrupt save recovery. LAN/WAN, encryption, latency and visual playtests remain future validation.
+- Exit goal: verified locally with 8-player capacity and restored character/world state; real network deployment remains a follow-up check.
 
-### M2 — First ally and naming · Planned, requires N0
+### M2 — First ally and naming · Next, requires N0
 
 - Recruit one nameless ally through a small encounter.
 - Name the ally with a visible Magicule cost and confirmation of the expected result.
@@ -126,6 +126,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-12: Implemented N0 host-authoritative sessions, stable entity/character IDs, reconnect credentials, private profiles, versioned atomic saves/backup recovery, autosave/explicit save/normal shutdown, local multiplayer menus, and per-character respawn. 161 gameplay + 32 persistence + 68 network checks passed; actual CLI host/join also passed. Branch: `codex/roadmap-06-network-saves`. Local eight-player capacity is verified; WAN/encryption/visual checks remain. M2 recruitment/naming is next.
 
 - 2026-10-12: User added hosted multiplayer and complete persistent-world requirements. Inserted N0 before deeper progression and recorded authority, stable identity, character/shared state, local-menu behavior, and save/restore validation in `docs/MULTIPLAYER_AND_SAVES.md`. Runtime networking and saves remain unimplemented; player cap is confirmed as 8 total (1 host + 7 guests).
 

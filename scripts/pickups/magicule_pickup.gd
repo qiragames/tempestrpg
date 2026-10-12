@@ -1,15 +1,22 @@
 extends Area2D
+const AUTHORITY := preload("res://scripts/network/authority.gd")
 ## Collect nearby drops without losing overflow when the player's reserves are full.
 
 signal collected(amount: float)
+signal collected_by(amount: float, character_id: String)
+var entity_id: String = ""
 @export var amount: float = 16.0
 
 func _ready() -> void:
+    if entity_id.is_empty():
+        entity_id = "drop_" + Crypto.new().generate_random_bytes(16).hex_encode()
     add_to_group("magicule_pickups")
     if not is_finite(amount) or amount <= 0.0:
         queue_free()
 
 func _physics_process(_delta: float) -> void:
+    if not AUTHORITY.can_mutate(self):
+        return
     for body in get_overlapping_bodies():
         if not body.is_in_group("player") or not body.has_node("Magicules"):
             continue
@@ -23,6 +30,7 @@ func _physics_process(_delta: float) -> void:
             var gained: float = pool.current - before
             amount = maxf(0.0, amount - gained)
             collected.emit(gained)
+            collected_by.emit(gained, body.character_id)
             queue_redraw()
             if amount <= 0.00001:
                 # Stop immediately so another callback/frame cannot collect it twice.

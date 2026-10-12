@@ -1,4 +1,5 @@
 extends Node
+const AUTHORITY := preload("res://scripts/network/authority.gd")
 ## Shared health and immunity rules for actors; no combat logic in the HUD.
 
 signal changed(current: int, maximum: int)
@@ -13,9 +14,13 @@ func _ready() -> void:
     current = maximum
 
 func _process(delta: float) -> void:
+    if not AUTHORITY.can_mutate(self):
+        return
     immunity_left = maxf(0.0, immunity_left - delta)
 
 func take_damage(amount: int) -> bool:
+    if not AUTHORITY.can_mutate(self):
+        return false
     if amount <= 0 or current <= 0 or immunity_left > 0.0:
         return false
     current = maxi(0, current - amount)

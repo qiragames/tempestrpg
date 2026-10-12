@@ -1,4 +1,5 @@
 extends Node
+const AUTHORITY := preload("res://scripts/network/authority.gd")
 ## Shared spending/recovery contract for attacks, future skills, and naming.
 
 signal changed(current: float, maximum: float)
@@ -19,6 +20,8 @@ func _ready() -> void:
     _current = maximum
 
 func try_spend(cost: float) -> bool:
+    if not AUTHORITY.can_mutate(self):
+        return false
     if not enabled or not is_finite(cost) or cost <= 0.0:
         return false
     if cost > _current:
@@ -32,6 +35,8 @@ func try_spend(cost: float) -> bool:
     return true
 
 func restore(amount: float) -> bool:
+    if not AUTHORITY.can_mutate(self):
+        return false
     if not enabled or not is_finite(amount) or amount <= 0.0 or _current >= maximum:
         return false
     _current = minf(maximum, _current + amount)
@@ -39,6 +44,8 @@ func restore(amount: float) -> bool:
     return true
 
 func _process(delta: float) -> void:
+    if not AUTHORITY.can_mutate(self):
+        return
     if not enabled or _current >= maximum:
         return
     # Only time after the recovery delay contributes, even in a long frame.

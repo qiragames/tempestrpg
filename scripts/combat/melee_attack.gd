@@ -1,4 +1,5 @@
 extends Node2D
+const AUTHORITY := preload("res://scripts/network/authority.gd")
 ## A directional strike checks both range and world obstruction.
 
 @export var damage: int = 10
@@ -9,6 +10,8 @@ var flash_left: float = 0.0
 var direction := Vector2.DOWN
 
 func _process(delta: float) -> void:
+    if not AUTHORITY.can_mutate(self):
+        return
     cooldown_left = maxf(0.0, cooldown_left - delta)
     flash_left = maxf(0.0, flash_left - delta)
     queue_redraw()
@@ -23,6 +26,8 @@ func attack_skill(facing: Vector2, skill_id: StringName) -> bool:
     return _strike(facing, skill.damage, skill.magicule_cost, skill.cooldown)
 
 func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float) -> bool:
+    if not AUTHORITY.can_mutate(self):
+        return false
     if cooldown_left > 0.0 or get_parent().get_node("Health").current <= 0:
         return false
     if not get_parent().get_node("Magicules").try_spend(cost):

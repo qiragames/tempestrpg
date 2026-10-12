@@ -1,4 +1,5 @@
 extends Node
+const AUTHORITY := preload("res://scripts/network/authority.gd")
 ## Session-local analyzed materials, with bounded stacks and stable item IDs.
 
 signal changed
@@ -15,6 +16,8 @@ func can_store() -> bool:
     return total_units() < capacity
 
 func add_specimen(specimen: Resource) -> bool:
+    if not AUTHORITY.can_mutate(self):
+        return false
     if specimen == null or specimen.material_id == &"" or not can_store():
         return false
     var id: StringName = specimen.material_id
@@ -29,6 +32,8 @@ func entries() -> Array:
     return _entries.values().duplicate(true)
 
 func discard(id: StringName, quantity: int = 1) -> bool:
+    if not AUTHORITY.can_mutate(self):
+        return false
     if quantity <= 0 or not _entries.has(id) or quantity > _entries[id].count:
         return false
     _entries[id].count -= quantity

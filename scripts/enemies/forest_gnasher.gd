@@ -1,4 +1,5 @@
 extends CharacterBody2D
+const AUTHORITY := preload("res://scripts/network/authority.gd")
 ## Simple local encounter AI. Navigation around complex terrain comes later.
 
 enum State { IDLE, CHASE, WINDUP, RECOVER, DEFEATED }
@@ -12,6 +13,7 @@ const PICKUP_SCENE := preload("res://scenes/pickups/magicule_pickup.tscn")
 @export var difficulty: Difficulty = Difficulty.STANDARD
 @export var specimen: Resource = preload("res://data/specimens/forest_gnasher.tres")
 var being_analyzed: bool = false
+@export var entity_id: String = ""
 var speed: float = 55.0
 @export var detection_radius: float = 180.0
 @export var leash_radius: float = 220.0
@@ -21,9 +23,12 @@ var state: State = State.IDLE
 var state_time: float = 0.0
 var home: Vector2
 @onready var health = $Health
-@onready var target: CharacterBody2D = get_tree().get_first_node_in_group("player")
+var target: CharacterBody2D
 
 func _ready() -> void:
+    add_to_group("enemies")
+    if entity_id.is_empty():
+        entity_id = "enemy_" + Crypto.new().generate_random_bytes(16).hex_encode()
     var stats: Dictionary = TIER_STATS[difficulty]
     health.maximum = stats.health
     health.current = health.maximum
@@ -34,9 +39,19 @@ func _ready() -> void:
     health.defeated.connect(_defeat)
 
 func _physics_process(delta: float) -> void:
+    if not AUTHORITY.can_mutate(self):
+        return
     velocity = Vector2.ZERO
     state_time = maxf(0.0, state_time - delta)
-    if state == State.DEFEATED or not is_instance_valid(target):
+    if state == State.DEFEATED:
+        return
+    if state != State.WINDUP or not is_instance_valid(target) or not target.is_inside_tree():
+        target = _nearest_player()
+    if not is_instance_valid(target):
+        state = State.IDLE
+        if global_position.distance_to(home) > 3.0:
+            velocity = global_position.direction_to(home) * speed
+            move_and_slide()
         return
     var distance := global_position.distance_to(target.global_position)
     var target_alive: bool = target.get_node("Health").current > 0
@@ -69,6 +84,8 @@ func _physics_process(delta: float) -> void:
     queue_redraw()
 
 func _defeat() -> void:
+    if not AUTHORITY.can_mutate(self):
+        return
     if state == State.DEFEATED:
         return
     state = State.DEFEATED
@@ -83,11 +100,24 @@ func _defeat() -> void:
 func _drop_magicules() -> void:
     var pickup = PICKUP_SCENE.instantiate()
     pickup.amount = TIER_STATS[difficulty].drop
+    pickup.entity_id = "drop_" + entity_id
     pickup.position = position
     var world := get_parent()
     if world.has_method("announce_magicule_pickup"):
-        pickup.collected.connect(world.announce_magicule_pickup)
+        pickup.collected_by.connect(world.announce_magicule_pickup)
     world.add_child(pickup)
+
+func _nearest_player() -> CharacterBody2D:
+    var nearest: CharacterBody2D
+    var distance: float = detection_radius + 1.0
+    for actor in get_tree().get_nodes_in_group("player"):
+        if actor.get_node("Health").current <= 0:
+            continue
+        var candidate: float = global_position.distance_to(actor.global_position)
+        if candidate < distance:
+            nearest = actor
+            distance = candidate
+    return nearest
 
 func _draw() -> void:
     if state == State.DEFEATED:

@@ -1,4 +1,5 @@
 extends Node
+const AUTHORITY := preload("res://scripts/network/authority.gd")
 ## Channel beside a defeated creature, analyze its traits, and learn its skill.
 
 signal status_changed(message: String)
@@ -13,6 +14,8 @@ var active: bool:
         return is_instance_valid(_target)
 
 func attempt_absorb() -> bool:
+    if not AUTHORITY.can_mutate(self):
+        return false
     var player := get_parent() as Node2D
     if player.get_node("Health").current <= 0 or active:
         return false
@@ -48,6 +51,8 @@ func _reachable(target: Node2D) -> bool:
     return target.get_world_2d().direct_space_state.intersect_ray(ray).is_empty()
 
 func _process(delta: float) -> void:
+    if not AUTHORITY.can_mutate(self):
+        return
     if time_left <= 0.0:
         return
     if not active or get_parent().get_node("Health").current <= 0:

@@ -1,4 +1,5 @@
 extends Node2D
+@onready var session: Node = get_node("/root/GameSession")
 signal system_message(message: String)
 ## A deterministic placeholder map: visual obstacles and collisions share geometry.
 
@@ -7,28 +8,15 @@ const POND := Rect2(624, 112, 160, 96)
 const ROCKS: Array[Rect2] = [Rect2(440, 250, 32, 24), Rect2(304, 400, 40, 24)]
 const TREES: Array[Vector2] = [Vector2(160, 144), Vector2(240, 192), Vector2(352, 112), Vector2(544, 160), Vector2(816, 288), Vector2(176, 464), Vector2(576, 496), Vector2(752, 480)]
 
+var local_player: CharacterBody2D
+var progression: Dictionary = {"quests": {}, "settlements": {}, "world_time": 0.0}
+
 func _ready() -> void:
-    $Player/Absorption.status_changed.connect(_analysis_changed)
-    _magicules_changed($Player/Magicules.current, $Player/Magicules.maximum)
-    _health_changed($Player/Health.current, $Player/Health.maximum)
-    $Player/Magicules.changed.connect(_magicules_changed)
-    $Player/Magicules.depleted.connect(func():
-        _announce("Magicules depleted. Allow aura to recover.")
-    )
-    $Player/Magicules.spend_rejected.connect(func(_cost: float):
-        if $Player/Health.current > 0:
-            _announce("Insufficient Magicules. Action unavailable.")
-    )
-    $Player/Health.changed.connect(_health_changed)
-    $Player/Health.defeated.connect(func():
-        _announce("Vital signs depleted. Press R to retry.")
-        $Player.queue_redraw()
-    )
+    local_player = $Player
+    session.bind_world(self)
+    bind_local_player(local_player)
     for enemy in [$ForestGnasher, $SecondGnasher]:
-        enemy.get_node("Health").defeated.connect(func():
-            if $Player/Health.current > 0:
-                _announce("Threat neutralized. Specimen retained.")
-        )
+        wire_enemy(enemy)
     _add_obstacle(POND)
     for rock in ROCKS:
         _add_obstacle(rock)
@@ -37,14 +25,81 @@ func _ready() -> void:
     for border in [Rect2(-16, 0, 16, 640), Rect2(960, 0, 16, 640), Rect2(0, -16, 960, 16), Rect2(0, 640, 960, 16)]:
         _add_obstacle(border)
 
-func _process(_delta: float) -> void:
-    var absorption = $Player/Absorption
+func get_local_player() -> CharacterBody2D:
+    return local_player if is_instance_valid(local_player) else $Player
+
+func bind_local_player(actor: CharacterBody2D) -> void:
+    local_player = actor
+    actor.local_controlled = true
+    actor.get_node("Camera2D").enabled = true
+    actor.get_node("Camera2D").make_current()
+    $HUD.bind_player(actor)
+    if not actor.has_meta("local_hud_wired"):
+        actor.set_meta("local_hud_wired", true)
+        actor.get_node("Health").changed.connect(func(current: int, maximum: int):
+            if actor == local_player:
+                _health_changed(current, maximum)
+        )
+        actor.get_node("Magicules").changed.connect(func(current: float, maximum: float):
+            if actor == local_player:
+                _magicules_changed(current, maximum)
+        )
+        actor.get_node("Absorption").status_changed.connect(func(message: String):
+            if actor == local_player:
+                _analysis_changed(message)
+        )
+        actor.get_node("Magicules").depleted.connect(func():
+            if actor == local_player:
+                _announce("Magicules depleted. Allow aura to recover.")
+        )
+        actor.get_node("Magicules").spend_rejected.connect(func(_cost: float):
+            if actor == local_player and actor.get_node("Health").current > 0:
+                _announce("Insufficient Magicules. Action unavailable.")
+        )
+        actor.get_node("Health").defeated.connect(func():
+            if actor == local_player:
+                _announce("Vital signs depleted. Press R to respawn." if session.active else "Vital signs depleted. Press R to retry.")
+                actor.queue_redraw()
+        )
+
+func wire_enemy(enemy: Node2D) -> void:
+    if enemy.has_meta("world_wired"):
+        return
+    enemy.set_meta("world_wired", true)
+    enemy.get_node("Health").defeated.connect(session.queue_save)
+    enemy.get_node("Health").defeated.connect(func():
+        if get_local_player().get_node("Health").current > 0:
+            _announce("Threat neutralized. Specimen retained.")
+    )
+
+func player_by_id(id: String) -> CharacterBody2D:
+    for actor in get_children():
+        if actor.is_in_group("player") and actor.character_id == id:
+            return actor
+    return null
+
+func entity_by_id(id: String) -> Node2D:
+    if id.is_empty():
+        return null
+    for actor in get_children():
+        if (actor.is_in_group("enemies") or actor.is_in_group("magicule_pickups")) and actor.entity_id == id and not actor.is_queued_for_deletion():
+            return actor
+    return null
+
+func _process(delta: float) -> void:
+    if not is_instance_valid(local_player):
+        return
+    if not session.active or multiplayer.is_server():
+        progression.world_time += delta
+    var absorption = local_player.get_node("Absorption")
     $HUD/AnalysisProgress.visible = absorption.active
     $HUD/AnalysisProgress.value = 1.0 - absorption.time_left / absorption.analysis_seconds
+    _health_changed(local_player.get_node("Health").current, local_player.get_node("Health").maximum)
+    _magicules_changed(local_player.get_node("Magicules").current, local_player.get_node("Magicules").maximum)
 
 func _analysis_changed(message: String) -> void:
     $HUD/Analysis.text = message
-    if $Player/Health.current > 0:
+    if get_local_player().get_node("Health").current > 0:
         _announce(message)
 
 func _announce(message: String) -> void:
@@ -56,11 +111,14 @@ func _health_changed(current: int, maximum: int) -> void:
 
 func _magicules_changed(current: float, maximum: float) -> void:
     $HUD/Magicules.text = "Magicules %.1f / %.0f" % [current, maximum]
-    $HUD/MagiculeBar.value = current
     $HUD/MagiculeBar.max_value = maximum
+    $HUD/MagiculeBar.value = current
 
-func announce_magicule_pickup(amount: float) -> void:
-    if $Player/Health.current > 0:
+func announce_magicule_pickup(amount: float, character_id: String = "") -> void:
+    var id: String = character_id if not character_id.is_empty() else get_local_player().character_id
+    if session.active:
+        session.notify_character(id, "Recovered %.1f Magicules." % amount)
+    elif get_local_player().get_node("Health").current > 0:
         _announce("Recovered %.1f Magicules." % amount)
 
 func _add_obstacle(rect: Rect2) -> void:
@@ -74,7 +132,7 @@ func _add_obstacle(rect: Rect2) -> void:
     add_child(body)
 
 func _unhandled_input(event: InputEvent) -> void:
-    if event.is_action_pressed("restart"):
+    if event.is_action_pressed("restart") and not session.active:
         get_tree().reload_current_scene()
 
 func _draw() -> void:
