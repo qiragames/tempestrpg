@@ -61,10 +61,13 @@
     {
       "id": "inventory",
       "title": "Inventory and equipment",
-      "path": "assets/references/ui/inventory_reference.png",
-      "source": "User-provided conversation image, 2026-10-12",
-      "status": "missing_original",
-      "notes": "Equipment paper doll, categorized bag and item details. Not among the files found on the user's PC.",
+      "path": "assets/references/ui/inventory_reference.webp",
+      "source": "User-provided image (sent to Claude in chat), added by Claude 2026-10-12",
+      "status": "available",
+      "width": 1024,
+      "height": 572,
+      "sha256": "5f89bcfca4d9fe4b8f991dc94992ed362c8af4667e9437b753d3d2ebb8399162",
+      "notes": "Inventory window over the HUD: All/Gear/Usables/Materials/Quest Items tabs, equipment paper doll with ATK/DEF/MAG, 6x6 bag with stack counts and rarity borders, gold and capacity (42/100), item details (Kijin Katana, Epic) with Equip/Discard. Sample items/stats are illustrative, not game data. Original WebP bytes unchanged.",
       "documentation": "docs/UI_REFERENCES.md"
     },
     {
