@@ -93,7 +93,7 @@ static func capture_entities(world: Node2D) -> Dictionary:
         elif node.is_in_group("magicule_pickups"):
             pickups.append({"id": node.entity_id, "position": vector(node.position), "amount": node.amount})
         elif node.is_in_group("allies"):
-            allies.append({"id": node.entity_id, "position": vector(node.position), "owner": node.owner_id, "name": node.display_name, "race": node.race, "maximum_hp": node.maximum_hp, "power": node.power, "speed": node.follow_speed})
+            allies.append({"id": node.entity_id, "position": vector(node.position), "owner": node.owner_id, "name": node.display_name, "race": node.race, "maximum_hp": node.maximum_hp, "power": node.power, "speed": node.follow_speed, "work": {"role": node.work_role, "target": node.work_target, "remaining": node.work_left}})
     return {"enemies": enemies, "pickups": pickups, "allies": allies, "camp": world.camp.state.duplicate(true)}
 
 static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> void:
@@ -113,6 +113,9 @@ static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> vo
         ally.maximum_hp = int(state.maximum_hp)
         ally.power = int(state.power)
         ally.follow_speed = state.speed
+        ally.work_role = state.work.role
+        ally.work_target = state.work.target
+        ally.work_left = state.work.remaining
         ally.set_physics_process(not replica)
         ally.queue_redraw()
     for state in data.enemies:

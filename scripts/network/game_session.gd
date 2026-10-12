@@ -299,6 +299,12 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
         return true
     if actor.get_node("Health").current <= 0:
         return false
+    if action == "ally_work":
+        if payload.size() != 2 or not payload.get("id") is String or payload.id.length() > 64 or not payload.get("role") is String or payload.role.length() > 16:
+            rejected_requests += 1
+            return false
+        var ally = world.entity_by_id(payload.id)
+        return ally.assign_work(actor, payload.role) if ally != null and ally.is_in_group("allies") else false
     if action == "camp":
         if payload.size() != 2 or not payload.get("operation") is String or not payload.get("id") is String or payload.operation.length() > 16 or payload.id.length() > 64:
             rejected_requests += 1

@@ -11,6 +11,9 @@ var race: String = "Goblin"
 var maximum_hp: int = 30
 var power: int = 4
 var follow_speed: float = 45.0
+var work_role: String = "follow"
+var work_target: String = ""
+var work_left: float = 0.0
 
 func _ready() -> void:
     add_to_group("allies")
@@ -73,10 +76,84 @@ func try_name(actor: Node2D, value: String) -> bool:
     session.queue_save()
     return true
 
-func _physics_process(_delta: float) -> void:
+func can_assign_work(actor: Node2D, role: String) -> bool:
+    var camp = get_parent().camp
+    if owner_id != actor.character_id or display_name.is_empty() or race != "Hobgoblin" or not camp.can_reach(actor, camp.SITE, 55):
+        return false
+    if role not in ["follow", "gather", "build"] or role == work_role:
+        return false
+    if role != "follow" and (not camp.state.founded or global_position.distance_to(camp.SITE) > 100):
+        return false
+    if role == "build" and (camp.state.hut or camp.state.wood < camp.HUT_COST.wood or camp.state.stone < camp.HUT_COST.stone):
+        return false
+    if role == "gather" and _next_deposit().is_empty():
+        return false
+    return true
+
+func assign_work(actor: Node2D, role: String) -> bool:
+    if not AUTHORITY.can_mutate(self) or not can_assign_work(actor, role):
+        return false
+    work_role = role
+    work_target = _next_deposit() if role == "gather" else "hut_1" if role == "build" else ""
+    work_left = 3.0 if role == "gather" else 4.0 if role == "build" else 0.0
+    get_node("/root/GameSession").notify_character(owner_id, "%s: %s assigned." % [display_name, role])
+    get_node("/root/GameSession").queue_save()
+    return true
+
+func _next_deposit() -> String:
+    var camp = get_parent().camp
+    var target := ""
+    var distance := INF
+    for id in camp.DEPOSITS:
+        var current: float = global_position.distance_to(camp.DEPOSITS[id].position)
+        if camp.state.deposits[id] > 0 and current < distance:
+            target = id
+            distance = current
+    return target
+
+func _finish_work(message: String) -> void:
+    work_role = "follow"
+    work_target = ""
+    work_left = 0.0
+    get_node("/root/GameSession").notify_character(owner_id, message)
+    get_node("/root/GameSession").queue_save()
+
+func _work_tick(delta: float) -> void:
+    var camp = get_parent().camp
+    if work_role == "gather" and (work_target.is_empty() or camp.state.deposits[work_target] == 0):
+        work_target = _next_deposit()
+        work_left = 3.0
+        if work_target.is_empty():
+            _finish_work("All nearby deposits gathered. Ally returning to follow.")
+            return
+    if work_role == "build" and camp.state.hut:
+        _finish_work("Hut complete. Ally returning to follow.")
+        return
+    var target: Vector2 = camp.DEPOSITS[work_target].position if work_role == "gather" else camp.SITE
+    if global_position.distance_to(target) > 10:
+        velocity = global_position.direction_to(target) * follow_speed
+        move_and_slide()
+        return
+    var ray := PhysicsRayQueryParameters2D.create(global_position, target, 1)
+    if not get_world_2d().direct_space_state.intersect_ray(ray).is_empty() or (work_role == "build" and not camp.build_ready()):
+        return
+    work_left = maxf(0.0, work_left - delta)
+    if work_left > 0:
+        return
+    if work_role == "gather":
+        if camp.harvest(work_target):
+            get_node("/root/GameSession").notify_character(owner_id, "%s gathered materials for camp." % display_name)
+        work_target = ""
+    elif camp.complete_hut():
+        _finish_work("Ally completed the Goblin Hut.")
+
+func _physics_process(delta: float) -> void:
     if not AUTHORITY.can_mutate(self):
         return
     velocity = Vector2.ZERO
+    if work_role != "follow":
+        _work_tick(delta)
+        return
     var owner = get_parent().player_by_id(owner_id)
     if owner != null and owner.get_node("Health").current > 0 and global_position.distance_to(owner.global_position) > 28.0:
         velocity = global_position.direction_to(owner.global_position) * follow_speed

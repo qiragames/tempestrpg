@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**Current focus: M3 ally work roles.** The first camp now has finite shared wood/stone deposits, founding with an evolved ally, and one buildable Goblin Hut with terrain collision. Host-only transactions and schema-v4 migration/save/replication are verified. 401 checks passed headlessly (273 local + 128 networking). **Next: assign the ally to gathering/construction, then connect exploration rewards to camp growth.** Art and real-network/visual deployment checks remain pending.
+**Current focus: M3 exploration and camp growth.** The evolved ally now gathers finite deposits automatically, constructs the hut over time, and can be recalled to Follow. Assignments, targets and remaining work survive host restart; shared costs/rewards resolve once. 457 checks passed headlessly (308 local + 149 networking). **Next: connect exploration rewards to settlement growth and add further recipes.** Art and real-network/visual deployment checks remain pending.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -71,7 +71,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 
 - Completed first structure: found a camp with your evolved ally nearby; gather finite wood/stone into shared stock and build one Goblin Hut for 12 wood + 6 stone.
 - Verified: one transaction per deposit/structure, safe placement and collision, schema-v4 migration and host restart/client replication (34 local + 42 camp networking checks). Additional structures follow after the work-role loop.
-- Assign allies to gathering, agriculture, and construction roles.
+- Completed: owner commands for timed automatic gathering, hut construction and recall; job/target/timer save and replication, autonomous work while owner disconnects. Agriculture remains future work.
 - Connect exploration rewards to settlement production and growth.
 - Exit goal: a complete playable slice from exploration to an evolved ally contributing to the camp.
 
@@ -130,8 +130,8 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
 | Found a shared camp, gather finite materials and build the first hut | Done | Named evolved ally and saved world | 34 settlement and 42 real-process camp network checks passed; schema-v4 migration and collision verified |
-| Assign the ally to gathering and construction work | Next | First camp and limited materials | Citizen role authority, production rules, saved assignments and contribution feedback required |
-| Connect exploration rewards and production to camp growth | Planned | Ally work assignments | Playable adventure-to-settlement loop and additional structure recipes required |
+| Assign the ally to gathering and construction work | Done | First camp and limited materials | 35 worker checks and 63 camp network checks passed: owner commands, jobs, conservation, recall and partial-job reload |
+| Connect exploration rewards and production to camp growth | Next | Ally work assignments | Playable adventure-to-settlement loop and additional structure recipes required |
 
 ## Update contract
 
@@ -142,6 +142,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-12: Added Gather/Build/Follow camp commands, finite timed citizen jobs, single completion rewards/costs, blocked-site waiting and recall. Schema-v5 retains role/target/time and migrates old allies to Follow. 457 checks passed headlessly (308 local + 86 general network + 63 camp network), plus main-scene startup. GitHub/Claude handoff checked before architecture and commit. Branch: `codex/roadmap-10-ally-work`. Next: exploration rewards and camp growth.
 
 - 2026-10-12: Added the shared first camp, finite deposits, evolved-ally founding requirement, one costed hut with collision, B camp UI, validated schema-v4 migration and host save/replication. 401 checks passed headlessly (273 local + 86 prior network + 42 camp network), plus main-scene startup. Reinforced reciprocal Claude/Codex checks before critical steps and commits. Branch: `codex/roadmap-09-first-camp`. Next: ally work assignments.
 

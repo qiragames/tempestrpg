@@ -58,12 +58,13 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/allies.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/naming.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/settlement.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/ally_work.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
 "$GODOT_BIN" --headless --path . --quit-after 120
 ```
 
-The cloud checks validate import, 17 foundation checks, 24 combat checks, 27 Magicule checks, 32 drop checks, 26 absorption checks, 35 skills/storage checks, 32 persistence checks, 18 ally checks, 28 naming checks, and 86 real multi-process networking checks (325 total). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. Visual playtesting is still pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
+The cloud checks validate import, 17 foundation checks, 24 combat checks, 27 Magicule checks, 32 drop checks, 26 absorption checks, 35 skills/storage checks, 32 persistence checks, 18 ally checks, 28 naming checks, 34 settlement checks, 35 worker checks, and 149 real multi-process networking checks (457 total). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. Visual playtesting is still pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
 
 ## Structure
 
@@ -119,7 +120,7 @@ Architecture and future persistence requirements: `docs/MULTIPLAYER_AND_SAVES.md
 
 A nameless goblin waits west of the starting point at (220, 360). Defeat the clearing’s first Gnasher, approach within 40 pixels, and press **F**. The dialog shows its actual stats and a **Recruit** button. Recruitment is free. Enter a name in the same dialog and explicitly confirm the **80-Magicule** cost to evolve it into a Hobgoblin (HP 60, power 8, follow speed 65, larger armored silhouette). Naming is permanent and only the owner can do it. The goblin follows its owner with terrain collision, waits if that character disconnects/dies, and retains ownership when the character reconnects. Other players cannot steal it, and simultaneous claims resolve once on the host. Its placeholder appearance is a small green goblin; combat orders/pathfinding come later.
 
-Schema version **3** includes allied entities, stable ownership, naming/evolution, and per-character exhaustion. Version-1 worlds migrate by introducing the unclaimed goblin, while retaining their characters and world progress. Allied positions and ownership replicate and save with the world. Validation rejects unknown owners and duplicate entity IDs. `tests/allies.gd` adds 18 checks; `tests/naming.gd` adds 28.
+Since schema version **3**, saves include allied entities, stable ownership, naming/evolution, and per-character exhaustion. Version-1 worlds migrate by introducing the unclaimed goblin, while retaining their characters and world progress. Allied positions and ownership replicate and save with the world. Validation rejects unknown owners and duplicate entity IDs. `tests/allies.gd` adds 18 checks; `tests/naming.gd` adds 28.
 
 Naming leaves a namer below 25% reserves asleep for at least **8 seconds**, and until reserves reach 25%. Movement, attacks and absorption stop; regeneration continues while alive. Other players continue playing. Exhaustion, its remaining timer, and paid costs survive host save/reload and reconnect. Disconnected characters stop simulating; respawn preserves exhaustion. Offline dialogs pause recovery until closed; hosted dialogs only block that character’s input. Allies currently follow rather than fight.
 
@@ -135,4 +136,14 @@ Approach each material deposit within 36 pixels, open **B**, and click **Gather 
 
 The camp menu shows current shared stock and disables unavailable actions. Hosted menus block only your own movement/actions; the world keeps running. The host saves founding, founder identity, stock, depleted deposits and construction together. Schema **v4** introduces these fields; older worlds retain their existing progress and gain the untouched camp. The reserved `progression.settlements` dictionary is separate from this implemented, validated first camp.
 
-Ally gathering/construction assignments, production, additional buildings and settlement bonuses are upcoming. This step provides one fixed hut recipe rather than free placement. Camp tests: `tests/settlement.gd` (34 checks) and `python3 tests/network_settlement.py` (42 checks). All suites total **401 checks**; local visual and real LAN/WAN playtests remain pending.
+Ally gathering/construction assignments are now available (see below); ongoing production, additional buildings and settlement bonuses are upcoming. This step provides one fixed hut recipe rather than free placement. Camp tests: `tests/settlement.gd` (34 checks) and `python3 tests/network_settlement.py` (63 checks). With 35 worker checks, all suites total **457 checks**; local visual and real LAN/WAN playtests remain pending.
+
+## Ally work assignments
+
+After founding the camp, stand within 55 pixels of its flag and open **B**. Your named Hobgoblin must be within 100 pixels when starting work. Only its owner can command it. The bottom row provides:
+
+- **Ally: Gather** — walk to each remaining deposit and gather it after 3 seconds of work. Materials go directly into shared camp stock. It skips deposits another player has emptied and returns to Follow when none remain.
+- **Ally: Build** — available with 12 wood and 6 stone. The ally works at the camp for 4 seconds, then builds the hut and charges its recipe once. It waits if someone occupies the hut footprint; keep that area clear. A manual build safely ends the same job without a second charge.
+- **Ally: Follow** — recall the worker and cancel unfinished work. Construction materials are paid on completion, so recall before completion spends nothing.
+
+Close the menu to let work run offline. Hosted menus keep work running. The menu shows the ally's current role, target and remaining work time. Assigned citizens continue working while their owner is disconnected/dead; the host world must remain running. Follow waits for the owner's return. Schema **v5** saves role, target, position and remaining job timer, and migrates earlier allies to Follow. Reload resumes the job without creating extra materials. Workers use straight-line movement with collision; navigation around complex obstacles is future work. Deposits remain finite, and a previously completed hut cannot be constructed again.

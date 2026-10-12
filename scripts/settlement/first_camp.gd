@@ -85,7 +85,10 @@ func nearest_deposit(actor: Node2D) -> String:
     return closest
 
 func can_build(actor: Node2D) -> bool:
-    if not state.founded or state.hut or state.wood < HUT_COST.wood or state.stone < HUT_COST.stone or not can_reach(actor, SITE, 55):
+    return can_reach(actor, SITE, 55) and build_ready()
+
+func build_ready() -> bool:
+    if not state.founded or state.hut or state.wood < HUT_COST.wood or state.stone < HUT_COST.stone:
         return false
     # Placement cannot trap a character or citizen. Dead players still respawn elsewhere.
     for node in get_parent().get_children():
@@ -106,21 +109,37 @@ func transact(actor: Node2D, operation: String, id: String) -> bool:
         "gather":
             if not DEPOSITS.has(id) or state.deposits[id] <= 0 or not can_reach(actor, DEPOSITS[id].position, 36):
                 return false
-            state[DEPOSITS[id].resource] += state.deposits[id]
-            state.deposits[id] = 0
+            harvest(id)
         "build":
             if id != "hut_1" or not can_build(actor):
                 return false
-            state.wood -= HUT_COST.wood
-            state.stone -= HUT_COST.stone
-            state.hut = true
-            _hut_shape.set_deferred("disabled", false)
+            complete_hut()
         _:
             return false
     queue_redraw()
     var session := get_node("/root/GameSession")
     session.notify_character(actor.character_id, "Camp founded." if operation == "found" else "Goblin hut built. Shared materials consumed." if operation == "build" else "Materials added to shared camp stock.")
     session.queue_save()
+    return true
+
+func harvest(id: String) -> bool:
+    if not AUTHORITY.can_mutate(self) or not DEPOSITS.has(id) or state.deposits[id] <= 0:
+        return false
+    state[DEPOSITS[id].resource] += state.deposits[id]
+    state.deposits[id] = 0
+    queue_redraw()
+    get_node("/root/GameSession").queue_save()
+    return true
+
+func complete_hut() -> bool:
+    if not AUTHORITY.can_mutate(self) or not build_ready():
+        return false
+    state.wood -= HUT_COST.wood
+    state.stone -= HUT_COST.stone
+    state.hut = true
+    _hut_shape.set_deferred("disabled", false)
+    queue_redraw()
+    get_node("/root/GameSession").queue_save()
     return true
 
 func _draw() -> void:

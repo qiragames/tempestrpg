@@ -33,8 +33,8 @@ def start(name, **options):
     processes.append((proc, log, name))
     return proc, report
 
-def wait(path, key, value=True):
-    deadline = time.monotonic() + 10
+def wait(path, key, value=True, timeout=10):
+    deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         try:
             data = json.loads(path.read_text())
@@ -82,6 +82,44 @@ try:
     check(wait(guest_report, "restored")["camp"] == saved["camp"], "Returning guest receives restored camp state")
     check(guest.wait(timeout=8) == 0, "Returning client exits successfully")
     finish(host, "reload_host")
+    # Owned worker jobs survive an actual host restart midway through gathering.
+    udp_port = port()
+    work_save = WORK / "work_world.json"
+    host, report = start("work_host", mode="server", port=udp_port, save=work_save, work="yes")
+    wait(report, "ready")
+    workers = [start(f"worker_{i}", mode="client", port=udp_port, identity=WORK / f"worker_identity_{i}.json") for i in range(2)]
+    for _, path in workers:
+        wait(path, "ready")
+    (WORK / "phase").write_text("work_gather")
+    assigned = [wait(path, "phase", "work_gather") for _, path in workers]
+    check(all(r["guard"] and r["menu_local"] for r in assigned), "Clients cannot mutate jobs; work menus remain local")
+    check(all(r["work"]["role"] == "gather" for r in assigned), "Clients observe one authoritative gathering assignment")
+    for i, (proc, _) in enumerate(workers):
+        finish(proc, f"worker_{i}")
+    finish(host, "work_host")
+    partial = wait(report, "saved")
+    check(partial["work"]["role"] == "gather", "Host persists an unfinished worker job")
+    (WORK / "phase").unlink()
+    udp_port = port()
+    host, report = start("work_reload", mode="server", port=udp_port, save=work_save, reload="yes", work="yes")
+    restored = wait(report, "ready")
+    check(restored["work"]["owner"] == partial["work"]["owner"] and restored["work"]["role"] == "gather", "Restart restores worker ownership and role")
+    check(restored["work"]["remaining"] <= partial["work"]["remaining"], "Restart cannot reset work timer")
+    gathered = wait(report, "gathered", timeout=20)
+    check(gathered["camp"]["wood"] == 16 and gathered["camp"]["stone"] == 8, "Disconnected owner's worker finishes finite gathering without duplicate stock")
+    clients = [start(f"builder_{i}", mode="client", port=udp_port, identity=WORK / f"worker_identity_{i}.json") for i in range(2)]
+    for _, path in clients:
+        wait(path, "ready")
+    (WORK / "phase").write_text("work_build")
+    building = [wait(path, "phase", "work_build") for _, path in clients]
+    check(all(r["work"]["role"] == "build" for r in building), "Owned construction assignment replicates to both clients")
+    time.sleep(4.5)
+    for i, (proc, _) in enumerate(clients):
+        finish(proc, f"builder_{i}")
+    finish(host, "work_reload")
+    built = wait(report, "saved")
+    check(built["camp"]["hut"] and built["camp"]["wood"] == 4 and built["camp"]["stone"] == 2, "Worker construction charges materials once and saves completed hut")
+    check(built["work"]["role"] == "follow", "Completed builder returns to follow")
     for _, log, name in processes:
         log.flush()
         output = (WORK / f"{name}.log").read_text()

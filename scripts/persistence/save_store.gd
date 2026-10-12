@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 4
+const VERSION := 5
 const CAMP := preload("res://scripts/settlement/first_camp.gd")
 const ALLY := preload("res://scripts/allies/goblin_ally.gd")
 const MAX_BYTES := 4 * 1024 * 1024
@@ -130,6 +130,19 @@ static func validate(data: Variant) -> bool:
                 return false
         elif not ALLY.valid_name(ally.name) or ally.owner.is_empty() or ally.get("race") != "Hobgoblin" or ally.get("maximum_hp") != 60 or ally.get("power") != 8 or ally.get("speed") != 65:
             return false
+        var work = ally.get("work")
+        if not work is Dictionary or work.size() != 3 or work.get("role") not in ["follow", "gather", "build"] or not work.get("target") is String or not _number(work.get("remaining"), 0, 4):
+            return false
+        if work.role == "follow":
+            if work.target != "" or work.remaining != 0:
+                return false
+        elif ally.name.is_empty() or not data.camp.founded:
+            return false
+        elif work.role == "gather":
+            if (work.target != "" and not CAMP.DEPOSITS.has(work.target)) or work.remaining > 3:
+                return false
+        elif work.target != "hut_1":
+            return false
         if not ally.name.is_empty():
             if names.has(ally.name.to_lower()):
                 return false
@@ -179,8 +192,17 @@ static func migrate(data: Variant) -> Variant:
             state["exhaustion"] = state.get("exhaustion", {"active": false, "remaining": 0.0})
     if data.get("version") == 3:
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 4
         data["camp"] = data.get("camp", CAMP.initial_state())
+    if data.get("version") == 4:
+        if not data.get("allies") is Array:
+            return null
+        data = data.duplicate(true)
+        data.version = VERSION
+        for ally in data.allies:
+            if not ally is Dictionary:
+                return null
+            ally["work"] = ally.get("work", {"role": "follow", "target": "", "remaining": 0.0})
     return data
 
 static func _read(path: String) -> Dictionary:
