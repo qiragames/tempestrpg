@@ -30,9 +30,10 @@ func _process(delta: float) -> void:
     var step := minf(delta, regen_left)
     regen_left -= step
     _regen_carry += regen_rate * step
-    var whole := int(_regen_carry)
+    # Frame-sized additions can leave an integer heal a few ulps short.
+    var whole := int(floor(_regen_carry + 0.000000001))
     if whole > 0:
-        _regen_carry -= whole
+        _regen_carry = maxf(0.0, _regen_carry - whole)
         current = mini(maximum, current + whole)
         changed.emit(current, maximum)
     if regen_left <= 0.0:

@@ -154,7 +154,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 | 22 Title and pause flow | Planned | 21 | Real New/Continue/Join/Resume/Quit paths, host saves, guest disconnect and corrupt-save handling |
 | 23 Audio and combat/analysis VFX | Planned | 16, 19, 21 | Clear cues, mute/reduced effects, no duplicate snapshot audio or gameplay timing change |
 | 24 Balance and M4 acceptance | Planned | 14, 15, 16, 17, 20, 21, 22, 23 | Visible user feedback, measured costs/recovery, eight-player/save checks and scoped LAN validation |
-| 16b Healing on absorb | Done | 16 | 21 checks: tier heals 15/25/40 over 10 s, gradual and capped, stronger heal replaces weaker, ends on defeat, host-only, saved/reloaded, v10→v11; the unassisted visible playtest now completes the trial |
+| 16b Healing on absorb | Done | 16 | Review: frame rounding correction proposed; fractional carry lost on reload awaits 16c save fix. 21 checks: tier heals 15/25/40 over 10 s, gradual and capped, stronger heal replaces weaker, ends on defeat, host-only, saved/reloaded, v10→v11; the unassisted visible playtest now completes the trial |
 | 16c Worlds, save slots and menus (user step A) | Next | 16b | Title menu (New World with name + seed, Load World list, Join, Quit), always-saved worlds (solo = local host), pause menu with Resume / Open to friends / Save & Quit; replaces F8 panel; real-process host/join/save checks |
 | 16d Seeded worlds (user step B) | Planned | 16c | Fixed map layout; seed decides deposits, creature placement/difficulty, points of interest and decorations; same seed = same world; seed saved and validated; routes stay reachable |
 
@@ -167,6 +167,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-13: Codex independently reviewed steps 16/16b: 776 existing Linux checks, import and startup pass. Extra probes found one HP lost at frame-sized healing ticks (proposed correction on `codex/fix-absorbed-vitality-rounding`, verified) and fractional progress lost on reload (pending Claude’s claimed 16c save files). Handoff includes exact reproduction and restoration requirements; passing existing tests do not resolve that save defect.
 
 - 2026-10-13: Claude Code completed step 16b (user request): absorbed vitality heals by creature tier (Easy 15 / Standard 25 / Elite 40 HP over 10 s, host-only, capped, no stacking unless stronger, ends on defeat), HUD shows "+ healing", schema v11. New `tests/absorb_healing.gd` (21). The visual playtest no longer restores HP before the trial and still passes. User decisions recorded: new steps 16c (worlds/save slots/menus, "Open to friends") and 16d (seeded worlds) come before 17. 538 local + 238 network checks pass on Windows. Branch: `claude/roadmap-16b-absorb-healing`.
 
