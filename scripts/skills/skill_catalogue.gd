@@ -112,11 +112,11 @@ static func unlockable(known: Array, evidence: Dictionary, rules: Dictionary = R
                 gained.append(id)
     return gained
 
-## True when every known skill can be derived from the evidence alone (used by save validation).
+## Every known skill needs valid evidence and its prerequisites in the actual known set.
 static func justified(known: Array, evidence: Dictionary, rules: Dictionary = RULES) -> bool:
     var derivable: Array = unlockable([], evidence, rules)
     for id in known:
-        if not id in derivable:
+        if not id in derivable or not requirements_met(id, known, evidence, rules):
             return false
     return true
 

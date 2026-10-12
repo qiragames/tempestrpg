@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**Current focus: M4 steps 15 (first mimic form), 17 (analysis assistant model) and 18 (asset preparation) are ready.** Step 14 is done (Claude): a Thornback Gnasher variant in the southeast corner, a second Common skill (Thorn Lash) and the first Extra skill (Piercing Fang: a line thrust that hits every creature in it), unlocked only when a character knows both Rending Bite and Thorn Lash with Thornback evidence, in either order. Schema v8 adds enemy kinds, the Thornback Quill material and the encounter to older worlds. 636 automated checks pass on Windows (441 local + 90 general network + 105 camp network) plus the extended visual playtest. Details: `docs/M4_PLAN.md`. Real LAN/WAN checks and final art/audio remain pending.
+**Current focus: M4 steps 15 (first mimic form), 17 (analysis assistant model) and 18 (asset preparation) are ready.** Step 14 is done (Claude): a Thornback Gnasher variant in the southeast corner, a second Common skill (Thorn Lash) and the first Extra skill (Piercing Fang: a line thrust that hits every creature in it), unlocked only when a character knows both Rending Bite and Thorn Lash with Thornback evidence, in either order. Schema v8 adds enemy kinds, the Thornback Quill material and the encounter to older worlds. Claude’s original 636 checks pass on Windows and Linux. Codex’s separate save-prerequisite correction passes 642 checks on Linux (447 local + 90 general network + 105 camp network) and awaits the user’s version choice; the visible playtest is Claude’s Windows evidence. Details: `docs/M4_PLAN.md`. Real LAN/WAN checks and final art/audio remain pending.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -163,6 +163,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-13: Codex reviewed step-14 `ce35b1d` and reproduced its 636 checks on Linux; verified 27 screenshot files/log links. Found and reproduced an inconsistent-save case allowing Piercing Fang without required known Commons. Separate branch `codex/fix-extra-skill-save-prerequisites` requires actual known prerequisites; 6 new regressions fail before/pass after, full fixed suite 642 checks plus startup passed. Acknowledgment published; Claude’s branch unchanged and user version selection pending.
 
 - 2026-10-13: Claude Code completed M4 step 14 (next step in order, user decision). Added the Thornback Gnasher (`scenes/enemies/thornback_gnasher.tscn`, kind `thornback`, southeast corner (880, 560)), specimen `thornback_gnasher` with material Thornback Quill, Common skill Thorn Lash (14 dmg, 8 Magicules, 0.5s) and Extra skill Piercing Fang (`pierce` effect: 64px line, 26 dmg to every creature in it, 18 Magicules, 1.2s), unlocked by Rending Bite + Thorn Lash + Thornback analysis. Saves v8: enemy kind and material IDs validated against the catalogue; v7 worlds gain one living Thornback. New `tests/extra_skill.gd` (37 checks); visual playtest extended to hunt the Thornback and fire Piercing Fang. 441 local + 90 + 105 network checks pass on Windows. Branch: `claude/roadmap-14-extra-skill`. Next: 15 (mimic), 17 (assistant model), 18 (assets).
 

@@ -71,3 +71,7 @@ Each character record adds `skill_evidence = {analyzed, trials, mastery, ascensi
 ## Second specimen and Extra (schema v8)
 
 Enemy records carry a validated `kind` (`gnasher`, `thornback`) that selects the scene on restore through `StateCodec.ENEMY_SCENES`; client data never supplies scene paths. Inventory counts accept the catalogue materials (`gnasher_essence`, `thornback_quill`). v7→v8 migration appends one living `thornback_1` at its home (880, 560) only when absent, so a defeated Thornback is never revived or duplicated; an absorbed one is consumed and absent from v8 saves like any absorbed corpse. Unlocks still come only from host-recorded evidence: Piercing Fang requires Rending Bite and Thorn Lash known plus Thornback analysis evidence. The existing corpse reservation makes concurrent absorption award once. Covered by `tests/extra_skill.gd` (37 checks).
+
+## Step 14 review correction
+
+On `codex/fix-extra-skill-save-prerequisites`, `SkillCatalogue.justified` checks each saved skill against both its evidence and the actual saved known-skill list. Evidence implying a lower-tier skill is insufficient if that required skill is missing from the saved list. Six regressions cover missing prerequisites at Extra/Unique/Ultimate tiers and Piercing Fang saves with neither or only one of its Commons. This is a validation correction within v8; valid earned saves/migrations are preserved, and inconsistent saves are rejected rather than supplied free prerequisite skills.

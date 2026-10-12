@@ -52,6 +52,9 @@ func _run() -> void:
     almost.mastery = ["focus"]
     _check("storm" in CATALOGUE.unlockable(["bite", "claw", "pierce", "focus"], almost, rules), "Ultimate unlocks with mastery + ascension")
     _check(not CATALOGUE.justified(["pierce"], _evidence(["wolf"]), rules) and CATALOGUE.justified(["bite", "claw", "pierce"], _evidence(["forest_gnasher", "wolf"]), rules), "Known skills must be derivable from evidence")
+    _check(not CATALOGUE.justified(["pierce"], _evidence(["forest_gnasher", "wolf"]), rules), "Extra save must retain required Common skills even with complete analysis evidence")
+    _check(not CATALOGUE.justified(["focus"], _evidence(["forest_gnasher", "wolf"], ["trial_a"]), rules), "Unique save must retain its required Extra skill")
+    _check(not CATALOGUE.justified(["storm"], almost, rules), "Ultimate save must retain its required Unique skill")
     # Skill book on the real player.
     var world = load("res://scenes/world/forest.tscn").instantiate()
     root.add_child(world)

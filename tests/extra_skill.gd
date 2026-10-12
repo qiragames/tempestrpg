@@ -153,6 +153,11 @@ func _run() -> void:
     bad = data.duplicate(true)
     bad.players.rival.skill_ids = ["piercing_fang"]
     _check(not STORE.validate(bad), "Extra without its evidence and Commons rejected")
+    for known in [["piercing_fang"], ["thorn_lash", "piercing_fang"], ["rending_bite", "piercing_fang"]]:
+        bad = data.duplicate(true)
+        bad.players.host.skill_ids = known
+        bad.players.host.slots = ["piercing_fang", "", ""]
+        _check(not STORE.validate(bad), "Extra save missing a required Common must fail despite complete analysis evidence: %s" % [known])
     # v7 worlds gain the encounter exactly once.
     var legacy := data.duplicate(true)
     legacy.version = 7
