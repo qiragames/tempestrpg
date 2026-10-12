@@ -16,7 +16,7 @@ The current prototype has health, Magicules, combat feedback, and controls. Ques
 
 Separate transparent PNGs or a documented atlas will make the reference implementable: panel/frame pieces, bar backgrounds/fills, icons, portraits, hotbar slot states, and minimap/compass decoration. Prefer scalable frame pieces where possible. Keep names, numbers, labels, notifications, and key hints out of baked textures so Godot can update and localize them. Retain readable pixel sizes at the provisional 480 × 320 viewport and test gameplay visibility.
 
-The source reference images are in the conversation, not imported into this repository. The user offered separate elements. Title-screen, pause-menu, and inventory propositions are described below. The material bag now has a functional prototype; their complete styled layouts have not been implemented yet.
+The original HUD, title, pause and inventory references are saved under `assets/references/ui/`; filenames, dimensions and checksums are in `assets/references/index.json`. They are stored references and have not been integrated into the game. The user offered separate elements. Title-screen, pause-menu, and inventory propositions are described below. The material bag now has a functional prototype; their complete styled layouts have not been implemented yet.
 
 Implement the acquired-skill hotbar during M1 and broader visual polish during M4. A title screen and pause menu can be planned as a separate usability step once their references arrive. Basic combat input must remain available beneath noninteractive HUD panels.
 
@@ -24,7 +24,7 @@ Implement the acquired-skill hotbar during M1 and broader visual polish during M
 
 The user also supplied a title-screen proposition on 2026-10-12: a pixel-art storm/tornado and lightning over a distant castle and forest, a large Tempest RPG logo on the right, qiragames presentation/developer credits, and a dark gold-trimmed menu on the left. A small blue slime marks selection. Proposed entries: New Game, Continue, Load Game, Settings, Credits, Quit.
 
-Use separate backdrop, logo, menu frame, and cursor artwork if available. Render menu labels and version dynamically. Support keyboard/gamepad focus and pointer selection. Continue and Load Game require the later save system and must remain unavailable until backed by real saved data. This is an art reference, not an implemented title menu or an imported source image.
+Use separate backdrop, logo, menu frame, and cursor artwork if available. Render menu labels and version dynamically. Support keyboard/gamepad focus and pointer selection. Continue and Load Game require the later save system and must remain unavailable until backed by real saved data. This is an art reference, not an implemented title menu; its original image is stored in the shared reference folder.
 
 ## Pause screen reference
 
@@ -40,4 +40,4 @@ Start with actual absorbed materials and readable item details in a small dimens
 
 ## Shared image storage
 
-Both Claude Code and Codex use `assets/README.md` and `assets/references/index.json`. The index records the intended original-image paths and their actual availability; all six conversation images currently need their original files added. Preserve originals under `assets/references/`, working art under `assets/source/`, and prepared textures under `assets/game/`. Descriptions alone do not supply image bytes.
+Both Claude Code and Codex use `assets/README.md` and `assets/references/index.json`. All seven indexed originals are available in Git, including the gameplay HUD and inventory. The index records paths, dimensions and SHA256 checksums. Preserve originals under `assets/references/`, working art under `assets/source/`, and prepared textures under `assets/game/`. Descriptions alone do not supply image bytes.

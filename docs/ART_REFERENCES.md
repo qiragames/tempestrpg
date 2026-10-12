@@ -4,7 +4,7 @@ The user supplied a monster animation reference chart in chat on 2026-10-12. It 
 
 Use the blue slime as the first player animation reference; keep the larger silhouettes for later enemies and evolution. Idle, walk, attack, and death should map to separate animation states. Future evolved forms should visibly change silhouette rather than only tinting the same frame.
 
-The supplied chart has labels, borders, a background, and uneven frame sizes. No clean sprite texture has been imported yet, and the source image is currently in the conversation rather than saved in this repository. The current game continues using procedural placeholders. Obtain or prepare individual frames/a clean sheet before replacing them; use nearest filtering, consistent feet/pivot alignment, and separate collision geometry from sprite bounds.
+The supplied chart has labels, borders, a background, and uneven frame sizes. No clean sprite texture has been imported yet, and the original chart is saved at `assets/references/sprites/monster_animation_reference.jpg`. The current game continues using procedural placeholders. Obtain or prepare individual frames/a clean sheet before replacing them; use nearest filtering, consistent feet/pivot alignment, and separate collision geometry from sprite bounds.
 
 Integration order: slime idle/walk → strike/death → first enemy animations → future race/evolution variants. Preserve combat timing independently of the artwork; animation changes must not bypass cooldowns, Magicule costs, or defeat states.
 
@@ -14,7 +14,7 @@ The user supplied a world-building chart on 2026-10-12 showing terrain/auto-tile
 
 Use this direction for the initial forest and later goblin camp. Build terrain with Godot TileMapLayer/TileSet terrain sets; place larger trees, buildings, and interactive props separately. Define collision only on trunks, rocks, walls, cliffs and relevant obstacles; do not make every canopy pixel solid. Preserve walkable doorways, player foot alignment, and vertical sorting around structures.
 
-The chart includes headings, backgrounds, irregular layouts, and some multi-tile objects. It is a reference rather than a ready imported TileSet. A clean atlas with tile dimensions (plus separately prepared large props) is needed before creating terrain connections and collision polygons. The source image remains in the conversation; the repository currently contains reference notes, not the image itself. Art replacement remains a future step; the current clearing uses procedural placeholders.
+The chart includes headings, backgrounds, irregular layouts, and some multi-tile objects. It is a reference rather than a ready imported TileSet. A clean atlas with tile dimensions (plus separately prepared large props) is needed before creating terrain connections and collision polygons. The original chart is saved at `assets/references/world/forest_goblin_village_reference.png`. Art replacement remains a future step; the current clearing uses procedural placeholders.
 
 ## Shared image storage
 
