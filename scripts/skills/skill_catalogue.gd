@@ -11,10 +11,16 @@ extends RefCounted
 
 const TIERS := ["Common", "Extra", "Unique", "Ultimate"]
 const EVIDENCE_KINDS := ["analyzed", "trials", "mastery", "ascensions"]
-const EFFECTS := ["strike"]
-const SPECIMENS := {"forest_gnasher": "res://data/specimens/forest_gnasher.tres"}
-const SKILLS := {"rending_bite": "res://data/skills/rending_bite.tres"}
-const RULES := {"rending_bite": {"tier": "Common", "analysis": "forest_gnasher"}}
+const EFFECTS := ["strike", "pierce"]
+const SPECIMENS := {"forest_gnasher": "res://data/specimens/forest_gnasher.tres", "thornback_gnasher": "res://data/specimens/thornback_gnasher.tres"}
+## Dimensional-storage material retained by each specimen.
+const MATERIALS := {"gnasher_essence": "forest_gnasher", "thornback_quill": "thornback_gnasher"}
+const SKILLS := {"rending_bite": "res://data/skills/rending_bite.tres", "thorn_lash": "res://data/skills/thorn_lash.tres", "piercing_fang": "res://data/skills/piercing_fang.tres"}
+const RULES := {
+    "rending_bite": {"tier": "Common", "analysis": "forest_gnasher"},
+    "thorn_lash": {"tier": "Common", "analysis": "thornback_gnasher"},
+    "piercing_fang": {"tier": "Extra", "requires": ["rending_bite", "thorn_lash"], "analysis": "thornback_gnasher"},
+}
 ## Trials and ascension milestones that can actually be completed. Empty until steps 16/M6.
 const TRIALS := {}
 const ASCENSIONS := {}
@@ -68,6 +74,10 @@ static func resource_errors() -> Array:
     for id in SKILLS:
         if not RULES.has(id):
             errors.append("%s: skill resource without unlock rule" % id)
+    for id in SPECIMENS:
+        var specimen: Resource = load(SPECIMENS[id])
+        if specimen == null or String(specimen.id) != id or MATERIALS.get(String(specimen.material_id)) != id or specimen.skill == null or not RULES.has(String(specimen.skill.id)):
+            errors.append("%s: specimen resource does not match the catalogue" % id)
     return errors
 
 static func requirements(id: String, known: Array, evidence: Dictionary, rules: Dictionary = RULES) -> Array:

@@ -33,7 +33,9 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 
 **Done evidence:** old saves preserve skills/resources/loadout; forged/premature unlocks fail; duplicate/reconnect acquisition is idempotent; eight-character ownership stays separate. Existing combat/absorption/network suites pass. Locked Ultimate remains unavailable.
 
-## 14 — Second specimen and one Extra upgrade (Codex)
+## 14 — Second specimen and one Extra upgrade (Claude, next in order by user decision) — **Done**
+
+**Status 2026-10-13:** implemented on `claude/roadmap-14-extra-skill`. Thornback Gnasher (enemy kind `thornback`, entity `thornback_1` at (880, 560), specimen `thornback_gnasher`, material `thornback_quill`), Common **Thorn Lash** (`strike`, 14/8/0.5s), Extra **Piercing Fang** (`pierce`, 64×14 px line, 26 dmg per creature, 18 Magicules, 1.2s) with rule `requires [rending_bite, thorn_lash]` + `analysis thornback_gnasher`. Enemy kinds map to scenes in `StateCodec.ENEMY_SCENES`; materials to specimens in `SkillCatalogue.MATERIALS`. Schema v8 migration adds one living Thornback to v7 worlds. The Thornback uses placeholder drawing (purple body + quills) until step 19.
 
 **Goal/dependencies:** requires 13. Add one modest variant encounter with a distinct specimen and second Common skill. Suggested low-scope upgrade: existing Rending Bite plus a second analyzed trait unlocks an Extra piercing strike; final names/numbers remain proposals.
 

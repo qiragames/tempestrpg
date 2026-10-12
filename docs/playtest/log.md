@@ -121,16 +121,44 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 ![Camp with hut, storehouse, shrine and range ring](20_camp_overview.png)
 *Camp with hut, storehouse, shrine and range ring* (640x360)
 
-## 8. Shrine and multiplayer panel
+## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.1 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.0 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](21_shrine.png)
 *Resting at the Essence Shrine* (640x360)
 
+## 9. Thornback Gnasher and the first Extra skill
+- [x] Walked to the southeast corner
 
-![F8 host/join panel](22_session_panel.png)
+![Thornback Gnasher: spiny purple variant in the southeast corner](22_thornback.png)
+*Thornback Gnasher: spiny purple variant in the southeast corner* (640x360)
+
+
+![Fighting: strike arc and enemy health bar](23_thornback_fight.png)
+*Fighting: strike arc and enemy health bar* (640x360)
+
+- [x] Defeated the Thornback Gnasher with Rending Bite
+
+![Absorbing thornback_1: analysis channel and progress bar](24_analysis_thornback_1.png)
+*Absorbing thornback_1: analysis channel and progress bar* (640x360)
+
+- [x] Absorbed the Thornback
+- [x] Learned Thorn Lash (Common) and Piercing Fang (Extra)
+- [x] System Voice announced the Extra skill
+
+![Hotbar: Rending Bite, Thorn Lash and Piercing Fang](25_extra_unlocked.png)
+*Hotbar: Rending Bite, Thorn Lash and Piercing Fang* (640x360)
+
+
+![Piercing Fang: long thrust that hits every creature in a line](26_piercing_fang.png)
+*Piercing Fang: long thrust that hits every creature in a line* (640x360)
+
+- [x] Piercing Fang activated from hotbar slot 3
+## 10. Multiplayer panel
+
+![F8 host/join panel](27_session_panel.png)
 *F8 host/join panel* (640x360)
 
 
@@ -162,5 +190,9 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Gnasher Essence offered to the camp.
 - Storehouse built. Shared materials consumed.
 - Essence Shrine built. Shared materials consumed.
+- Threat neutralized. Specimen retained.
+- Recovered 16.0 Magicules.
+- Analyzing Thornback Gnasher. Remain nearby.
+- Analysis complete. Common: Thorn Lash, Extra: Piercing Fang acquired.
 
-**Result: 0 failed checks, 22 screenshots.**
+**Result: 0 failed checks, 27 screenshots.**

@@ -1,8 +1,10 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 7
+const VERSION := 8
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
+## Initial saved state of the v8 encounter; matches scenes/world/forest.tscn.
+const THORNBACK := {"id": "thornback_1", "kind": "thornback", "position": [880.0, 560.0], "home": [880.0, 560.0], "difficulty": 1, "hp": 30, "maximum_hp": 30, "immunity": 0.0, "state": 0, "state_time": 0.0, "target": ""}
 const CAMP := preload("res://scripts/settlement/first_camp.gd")
 const ALLY := preload("res://scripts/allies/goblin_ally.gd")
 const MAX_BYTES := 4 * 1024 * 1024
@@ -88,7 +90,7 @@ static func validate_player(state: Variant, id: String) -> bool:
         return false
     var total: int = 0
     for item in bag.counts:
-        if item != "gnasher_essence" or not _number(bag.counts[item], 1, bag.capacity, true):
+        if not SKILLS.MATERIALS.has(item) or not _number(bag.counts[item], 1, bag.capacity, true):
             return false
         total += int(bag.counts[item])
     if total > bag.capacity or not _number(state.get("attack_recovery"), 0, 60):
@@ -155,7 +157,7 @@ static func validate(data: Variant) -> bool:
             names[ally.name.to_lower()] = true
         ids[ally.id] = true
     for enemy in data.enemies:
-        if not enemy is Dictionary or not _id(enemy.get("id")) or ids.has(enemy.id) or enemy.get("kind") != "gnasher" or not _position(enemy.get("position")) or not _position(enemy.get("home")):
+        if not enemy is Dictionary or not _id(enemy.get("id")) or ids.has(enemy.id) or not CODEC.ENEMY_SCENES.has(enemy.get("kind")) or not _position(enemy.get("position")) or not _position(enemy.get("home")):
             return false
         ids[enemy.id] = true
         if not _number(enemy.get("difficulty"), 0, 2, true) or not _number(enemy.get("maximum_hp"), 1, 1000000, true) or not _number(enemy.get("hp"), 0, enemy.maximum_hp, true) or not _number(enemy.get("immunity"), 0, 60) or not _number(enemy.get("state"), 0, 4, true) or not _number(enemy.get("state_time"), 0, 60) or not _id(enemy.get("target"), true):
@@ -226,7 +228,7 @@ static func migrate(data: Variant) -> Variant:
         if not data.get("players") is Dictionary:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 7
         for state in data.players.values():
             if not state is Dictionary or not state.get("skill_ids", []) is Array:
                 return null
@@ -236,6 +238,17 @@ static func migrate(data: Variant) -> Variant:
                 if rule.has("analysis") and not rule.analysis in evidence.analyzed:
                     evidence.analyzed.append(rule.analysis)
             state["skill_evidence"] = state.get("skill_evidence", evidence)
+    # v8 adds the Thornback Gnasher encounter to existing worlds, alive and at home.
+    if data.get("version") == 7:
+        if not data.get("enemies") is Array:
+            return null
+        data = data.duplicate(true)
+        data.version = VERSION
+        var present := false
+        for enemy in data.enemies:
+            present = present or (enemy is Dictionary and enemy.get("id") == THORNBACK.id)
+        if not present:
+            data.enemies.append(THORNBACK.duplicate(true))
     return data
 
 static func _read(path: String) -> Dictionary:

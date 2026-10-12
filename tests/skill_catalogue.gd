@@ -111,7 +111,7 @@ func _run() -> void:
         players[guest.character_id] = CODEC.capture_player(guest)
         players[guest.character_id]["token_hash"] = "a".repeat(64)
     data.merge({"version": STORE.VERSION, "world_id": "skill_world", "players": players, "progression": world.progression.duplicate(true)})
-    _check(STORE.VERSION == 7 and STORE.validate(data), "Eight-character v7 snapshot validates")
+    _check(STORE.VERSION >= 7 and STORE.validate(data), "Eight-character snapshot with evidence validates")
     _check(data.players.host.skill_evidence.analyzed == ["forest_gnasher"] and data.players.guest_0.skill_evidence.analyzed.is_empty(), "Evidence saved per character")
     var bad := data.duplicate(true)
     bad.players.guest_0.skill_ids = ["rending_bite"]

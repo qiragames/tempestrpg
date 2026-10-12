@@ -264,7 +264,7 @@ func _run() -> void:
     await _tap("camp")
     await _wait(0.3)
     await _shot("camp_overview", "Camp with hut, storehouse, shrine and range ring")
-    _log("## 8. Shrine and multiplayer panel")
+    _log("## 8. Shrine")
     pool.try_spend(30)
     _check(await _walk_to(camp.STRUCTURES.shrine_1.site + Vector2(0, 26)), "Walked to the shrine")
     var before: float = pool.current
@@ -272,6 +272,28 @@ func _run() -> void:
     _log("  Magicules near shrine: %.1f -> %.1f in 3s (base regen 6/s after 1.5s delay)" % [before, pool.current])
     _check(pool.current - before > 18.0 * 0.9 or pool.current >= pool.maximum, "Shrine visibly speeds up regeneration")
     await _shot("shrine", "Resting at the Essence Shrine")
+    _log("## 9. Thornback Gnasher and the first Extra skill")
+    var thornback: Node2D = world.entity_by_id("thornback_1")
+    var hunt_ok: bool = await _walk_to(Vector2(300, 340), 8.0) and await _walk_to(Vector2(484, 340), 8.0, 20.0) and await _walk_to(Vector2(484, 440), 8.0, 20.0) and await _walk_to(Vector2(800, 560), 8.0, 20.0)
+    _check(hunt_ok, "Walked to the southeast corner")
+    await _shot("thornback", "Thornback Gnasher: spiny purple variant in the southeast corner")
+    if thornback.get_node("Health").current > 0:
+        _check(await _fight(thornback, true, "thornback_fight"), "Defeated the Thornback Gnasher with Rending Bite")
+    _check(await _absorb(thornback), "Absorbed the Thornback")
+    var skills = player.get_node("SkillBook")
+    _check(skills.knows(&"thorn_lash") and skills.knows(&"piercing_fang"), "Learned Thorn Lash (Common) and Piercing Fang (Extra)")
+    _check(messages.any(func(m): return m.contains("Extra: Piercing Fang acquired")), "System Voice announced the Extra skill")
+    await _shot("extra_unlocked", "Hotbar: Rending Bite, Thorn Lash and Piercing Fang")
+    pool._current = pool.maximum
+    player.get_node("MeleeAttack").cooldown_left = 0.0
+    _steer(Vector2.RIGHT)
+    await physics_frame
+    _release_moves()
+    var spent_before: float = pool.current
+    await _tap("skill_3")
+    await _shot("piercing_fang", "Piercing Fang: long thrust that hits every creature in a line")
+    _check(is_equal_approx(spent_before - pool.current, 18.0) or pool.current < spent_before, "Piercing Fang activated from hotbar slot 3")
+    _log("## 10. Multiplayer panel")
     await _key(KEY_F8)
     await _shot("session_panel", "F8 host/join panel")
     await _key(KEY_F8)

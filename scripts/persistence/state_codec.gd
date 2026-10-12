@@ -4,6 +4,8 @@ extends RefCounted
 const CATALOGUE := preload("res://scripts/skills/skill_catalogue.gd")
 const SKILLS := CATALOGUE.SKILLS
 const SPECIMEN := "res://data/specimens/forest_gnasher.tres"
+## Saved enemy kind -> scene. Stable IDs only; never a client-supplied path.
+const ENEMY_SCENES := {"gnasher": "res://scenes/enemies/forest_gnasher.tscn", "thornback": "res://scenes/enemies/thornback_gnasher.tscn"}
 
 static func vector(value: Vector2) -> Array:
     return [value.x, value.y]
@@ -74,8 +76,8 @@ static func apply_player(actor: Node2D, state: Dictionary, world: Node2D, replic
     var bag = actor.get_node("Inventory")
     bag.capacity = int(state.inventory.capacity)
     bag._entries.clear()
-    var specimen: Resource = load(SPECIMEN)
     for id in state.inventory.counts:
+        var specimen: Resource = load(CATALOGUE.SPECIMENS[CATALOGUE.MATERIALS[id]])
         bag._entries[StringName(id)] = {"id": StringName(id), "name": specimen.material_name, "description": specimen.material_description, "category": "Materials", "count": int(state.inventory.counts[id])}
     bag.changed.emit()
     actor.get_node("MeleeAttack").cooldown_left = state.attack_recovery
@@ -94,7 +96,7 @@ static func capture_entities(world: Node2D) -> Dictionary:
             continue
         if node.is_in_group("enemies"):
             var health = node.get_node("Health")
-            enemies.append({"id": node.entity_id, "kind": "gnasher", "position": vector(node.position), "home": vector(node.home), "difficulty": node.difficulty, "hp": health.current, "maximum_hp": health.maximum, "immunity": health.immunity_left, "state": node.state, "state_time": node.state_time, "target": node.target.character_id if is_instance_valid(node.target) else ""})
+            enemies.append({"id": node.entity_id, "kind": node.kind, "position": vector(node.position), "home": vector(node.home), "difficulty": node.difficulty, "hp": health.current, "maximum_hp": health.maximum, "immunity": health.immunity_left, "state": node.state, "state_time": node.state_time, "target": node.target.character_id if is_instance_valid(node.target) else ""})
         elif node.is_in_group("magicule_pickups"):
             pickups.append({"id": node.entity_id, "position": vector(node.position), "amount": node.amount})
         elif node.is_in_group("allies"):
@@ -127,7 +129,7 @@ static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> vo
         wanted[state.id] = true
         var actor = world.entity_by_id(state.id)
         if actor == null:
-            actor = load("res://scenes/enemies/forest_gnasher.tscn").instantiate()
+            actor = load(ENEMY_SCENES[state.kind]).instantiate()
             actor.entity_id = state.id
             actor.difficulty = int(state.difficulty)
             world.add_child(actor)

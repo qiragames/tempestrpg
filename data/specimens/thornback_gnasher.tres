@@ -1,0 +1,12 @@
+[gd_resource type="Resource" load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/absorption/specimen_definition.gd" id="1"]
+[ext_resource type="Resource" path="res://data/skills/thorn_lash.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"thornback_gnasher"
+species = "Thornback Gnasher"
+skill = ExtResource("2")
+material_id = &"thornback_quill"
+material_name = "Thornback Quill"
+material_description = "A hardened quill retained from an analyzed Thornback Gnasher."

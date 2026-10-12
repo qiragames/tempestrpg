@@ -19,7 +19,7 @@ func _ready() -> void:
     local_player = $Player
     session.bind_world(self)
     bind_local_player(local_player)
-    for enemy in [$ForestGnasher, $SecondGnasher]:
+    for enemy in [$ForestGnasher, $SecondGnasher, $ThornbackGnasher]:
         wire_enemy(enemy)
     _add_obstacle(POND)
     for rock in ROCKS:

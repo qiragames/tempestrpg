@@ -12,6 +12,8 @@ const TIER_STATS := {
 const PICKUP_SCENE := preload("res://scenes/pickups/magicule_pickup.tscn")
 @export var difficulty: Difficulty = Difficulty.STANDARD
 @export var specimen: Resource = preload("res://data/specimens/forest_gnasher.tres")
+## Stable saved creature kind; selects the scene on restore (see StateCodec.ENEMY_SCENES).
+@export var kind: String = "gnasher"
 var being_analyzed: bool = false
 @export var entity_id: String = ""
 var speed: float = 55.0
@@ -128,7 +130,13 @@ func _draw() -> void:
         color = Color("b99fd5")
     elif state != State.WINDUP and difficulty == Difficulty.EASY:
         color = Color("99b87d")
+    if kind == "thornback" and state != State.WINDUP:
+        color = Color("8f7fb0")
     draw_rect(Rect2(-9, -8, 18, 14), color)
+    if kind == "thornback":
+        # Quills along the back distinguish the variant from ordinary Gnashers.
+        for x in [-7, -2, 3]:
+            draw_colored_polygon(PackedVector2Array([Vector2(x, -8), Vector2(x + 2, -15), Vector2(x + 4, -8)]), Color("e8dcc0"))
     draw_rect(Rect2(-11, -12, 5, 8), color)
     draw_rect(Rect2(6, -12, 5, 8), color)
     draw_rect(Rect2(-6, -4, 3, 3), Color("352d36"))

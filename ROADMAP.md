@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**Current focus: M4 step 14 (second specimen + first Extra) and step 18 (asset preparation).** Step 13 is done (Claude, by user decision): a skill catalogue with stable IDs and explicit unlock rules for all four tiers, a per-character evidence ledger (analyzed specimens, trials, mastery, ascensions), host-owned loadout and effect dispatch, a read-only requirements view for the future assistant, and schema v7 that only accepts skills justified by saved evidence. Unique/Ultimate stay locked because no trial or ascension exists yet. 599 automated checks pass on Windows and independently on Linux (404 local + 90 general network + 105 camp network); Claude also reports a passing visible playtest. Details: `docs/M4_PLAN.md`. Real LAN/WAN checks and final art/audio remain pending.
+**Current focus: M4 steps 15 (first mimic form), 17 (analysis assistant model) and 18 (asset preparation) are ready.** Step 14 is done (Claude): a Thornback Gnasher variant in the southeast corner, a second Common skill (Thorn Lash) and the first Extra skill (Piercing Fang: a line thrust that hits every creature in it), unlocked only when a character knows both Rending Bite and Thorn Lash with Thornback evidence, in either order. Schema v8 adds enemy kinds, the Thornback Quill material and the encounter to older worlds. 636 automated checks pass on Windows (441 local + 90 general network + 105 camp network) plus the extended visual playtest. Details: `docs/M4_PLAN.md`. Real LAN/WAN checks and final art/audio remain pending.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -136,16 +136,16 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 
 ## M4 approved steps
 
-**Approved by the user, 2026-10-12.** Detailed goals, files, authority/save contracts and completion evidence: `docs/M4_PLAN.md`. Step 13 is Done; steps 14 and 18 are Next; later steps remain Planned behind their prerequisites.
+**Approved by the user, 2026-10-12.** Detailed goals, files, authority/save contracts and completion evidence: `docs/M4_PLAN.md`. Steps 13 and 14 are Done; steps 15, 17 and 18 are Next; later steps remain Planned behind their prerequisites.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
 | Approve M4 plan | Done | M3 | User explicitly approved steps 13–24 on 2026-10-12 |
 | 13 Skill catalogue and unlock ledger | Done | Approve M4 plan | 48 catalogue checks + 4 new network checks: four-tier rule validation, per-character evidence, idempotent unlocks, forged/premature unlock and save rejection, host loadout intent, effect dispatch, eight separate ledgers, v6→v7 migration |
-| 14 Second specimen and Extra upgrade | Next | 13 | Earn and use second Common plus one Extra; concurrent claims and saved unlocks verified |
-| 15 First mimic form | Planned | 13, 14 | Owned transform/revert, safe collision, no resource refill and replicated saved form |
+| 14 Second specimen and Extra upgrade | Done | 13 | 37 checks: Thornback encounter, Thorn Lash, Piercing Fang in both unlock orders, line hits/LOS/cost/cooldown, contested corpse, quill/kind save, v7→v8 migration; visible showcase |
+| 15 First mimic form | Next | 13, 14 | Owned transform/revert, safe collision, no resource refill and replicated saved form |
 | 16 Personal trial and Unique gate | Planned | 13, 15 | One personal trial/Unique; mastery saved, Ultimate explicitly locked for future ascension |
-| 17 Analysis assistant model | Planned | 13, 14 | Read-only factual traits/unlock/recovery advice isolated to each character |
+| 17 Analysis assistant model | Next | 13, 14 | Read-only factual traits/unlock/recovery advice isolated to each character |
 | 18 Prepare sprite, tileset and UI assets | Next | Approve M4 plan | Preserve originals; review transparent exports, pivots/atlases and nearest previews at x2/x3 |
 | 19 Character sprites and mimic presentation | Planned | 15, 16, 18 | Visible state/form/evolution animations; combat timing and client identity unchanged |
 | 20 Forest and village tiles/props | Planned | 18, 19 | All routes/deposits remain reachable; visual depth, collision/LOS and camp restore pass |
@@ -163,6 +163,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-13: Claude Code completed M4 step 14 (next step in order, user decision). Added the Thornback Gnasher (`scenes/enemies/thornback_gnasher.tscn`, kind `thornback`, southeast corner (880, 560)), specimen `thornback_gnasher` with material Thornback Quill, Common skill Thorn Lash (14 dmg, 8 Magicules, 0.5s) and Extra skill Piercing Fang (`pierce` effect: 64px line, 26 dmg to every creature in it, 18 Magicules, 1.2s), unlocked by Rending Bite + Thorn Lash + Thornback analysis. Saves v8: enemy kind and material IDs validated against the catalogue; v7 worlds gain one living Thornback. New `tests/extra_skill.gd` (37 checks); visual playtest extended to hunt the Thornback and fire Piercing Fang. 441 local + 90 + 105 network checks pass on Windows. Branch: `claude/roadmap-14-extra-skill`. Next: 15 (mimic), 17 (assistant model), 18 (assets).
 
 - 2026-10-13: Codex reviewed Claude step-13 implementation and visual-script hardening through `1fa7f13`; independently reproduced 599 checks, clean import and startup on Linux. No blocking gameplay findings; clarified README save-validation and visual-test status wording. Documentation-only acknowledgment on `codex/review-skill-catalogue-complete`; no merges or new feature claim. Steps 14 and 18 remain ready.
 

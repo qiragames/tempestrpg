@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/skills/skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"piercing_fang"
+display_name = "Piercing Fang"
+tier = "Extra"
+description = "Fuse Rending Bite's jaw with Thorn Lash's quills into a long thrust that pierces every creature in a line."
+damage = 26
+magicule_cost = 18.0
+cooldown = 1.2
+effect = &"pierce"
