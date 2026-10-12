@@ -71,6 +71,7 @@ func _run() -> void:
             world.get_node("ForestGnasher").position = Vector2(510, 340)
             world.get_node("ForestGnasher").home = Vector2(510, 340)
             world.get_node("ForestGnasher/Health").current = 10
+            world.get_node("GoblinAlly").position = Vector2(510, 340)
         for actor in world.get_children():
             if actor.is_in_group("enemies"):
                 actor.set_physics_process(false)
@@ -109,7 +110,7 @@ func _run() -> void:
         return
     if options.get("case") == "resume":
         await _wait(0.3)
-        _report({"state": CODEC.capture_player(world.get_local_player()), "world": session.latest_snapshot.progression})
+        _report({"state": CODEC.capture_player(world.get_local_player()), "world": session.latest_snapshot.progression, "allies": session.latest_snapshot.allies})
         session.stop_session(false)
         quit(0)
         return
@@ -131,6 +132,8 @@ func _run() -> void:
     session._move_input.rpc_id(1, Vector2(NAN, 0))
     session.request_action("absorb")
     await _wait(1.6)
+    session.request_action("recruit", {"id": "ally_goblin_1"})
+    await _wait(0.2)
     var hud = world.get_node("HUD")
     hud.open_inventory()
     var time_before: float = session.latest_snapshot.progression.world_time
@@ -142,6 +145,6 @@ func _run() -> void:
     var secrets_absent: bool = true
     for state in snapshot.players.values():
         secrets_absent = secrets_absent and not state.has("token_hash")
-    _report({"moved": moved, "guards": guards, "menu_local": local_menu, "no_credentials": secrets_absent, "state": CODEC.capture_player(actor)})
+    _report({"moved": moved, "guards": guards, "menu_local": local_menu, "no_credentials": secrets_absent, "state": CODEC.capture_player(actor), "allies": snapshot.allies})
     session.stop_session(false)
     quit(0)

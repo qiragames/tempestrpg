@@ -82,7 +82,7 @@ func entity_by_id(id: String) -> Node2D:
     if id.is_empty():
         return null
     for actor in get_children():
-        if (actor.is_in_group("enemies") or actor.is_in_group("magicule_pickups")) and actor.entity_id == id and not actor.is_queued_for_deletion():
+        if (actor.is_in_group("enemies") or actor.is_in_group("magicule_pickups") or actor.is_in_group("allies")) and actor.entity_id == id and not actor.is_queued_for_deletion():
             return actor
     return null
 

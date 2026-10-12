@@ -80,6 +80,7 @@ static func apply_player(actor: Node2D, state: Dictionary, world: Node2D, replic
 static func capture_entities(world: Node2D) -> Dictionary:
     var enemies: Array = []
     var pickups: Array = []
+    var allies: Array = []
     for node in world.get_children():
         if node.is_queued_for_deletion():
             continue
@@ -88,10 +89,28 @@ static func capture_entities(world: Node2D) -> Dictionary:
             enemies.append({"id": node.entity_id, "kind": "gnasher", "position": vector(node.position), "home": vector(node.home), "difficulty": node.difficulty, "hp": health.current, "maximum_hp": health.maximum, "immunity": health.immunity_left, "state": node.state, "state_time": node.state_time, "target": node.target.character_id if is_instance_valid(node.target) else ""})
         elif node.is_in_group("magicule_pickups"):
             pickups.append({"id": node.entity_id, "position": vector(node.position), "amount": node.amount})
-    return {"enemies": enemies, "pickups": pickups}
+        elif node.is_in_group("allies"):
+            allies.append({"id": node.entity_id, "position": vector(node.position), "owner": node.owner_id, "name": node.display_name, "race": node.race, "maximum_hp": node.maximum_hp, "power": node.power, "speed": node.follow_speed})
+    return {"enemies": enemies, "pickups": pickups, "allies": allies}
 
 static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> void:
     var wanted: Dictionary = {}
+    for state in data.get("allies", []):
+        wanted[state.id] = true
+        var ally = world.entity_by_id(state.id)
+        if ally == null:
+            ally = load("res://scenes/allies/goblin_ally.tscn").instantiate()
+            ally.entity_id = state.id
+            world.add_child(ally)
+        ally.position = to_vector(state.position)
+        ally.owner_id = state.owner
+        ally.display_name = state.name
+        ally.race = state.race
+        ally.maximum_hp = int(state.maximum_hp)
+        ally.power = int(state.power)
+        ally.follow_speed = state.speed
+        ally.set_physics_process(not replica)
+        ally.queue_redraw()
     for state in data.enemies:
         wanted[state.id] = true
         var actor = world.entity_by_id(state.id)
@@ -133,6 +152,6 @@ static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> vo
         pickup.amount = state.amount
         pickup.set_physics_process(not replica)
     for node in world.get_children():
-        if (node.is_in_group("enemies") or node.is_in_group("magicule_pickups")) and not wanted.has(node.entity_id):
+        if (node.is_in_group("enemies") or node.is_in_group("magicule_pickups") or node.is_in_group("allies")) and not wanted.has(node.entity_id):
             world.remove_child(node)
             node.queue_free()

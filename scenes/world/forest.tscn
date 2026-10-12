@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/forest.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/forest_gnasher.tscn" id="3"]
 [ext_resource type="Script" path="res://scripts/ui/game_hud.gd" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/allies/goblin_ally.tscn" id="5"]
 
 [node name="Forest" type="Node2D"]
 script = ExtResource("1")
@@ -103,3 +104,6 @@ max_value = 1.0
 step = 0.001
 show_percentage = false
 mouse_filter = 2
+
+[node name="GoblinAlly" parent="." instance=ExtResource("5")]
+position = Vector2(220, 360)

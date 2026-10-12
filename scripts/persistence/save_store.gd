@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 1
+const VERSION := 2
 const MAX_BYTES := 4 * 1024 * 1024
 const CODEC := preload("res://scripts/persistence/state_codec.gd")
 
@@ -106,6 +106,16 @@ static func validate(data: Variant) -> bool:
     if not data.get("enemies") is Array or data.enemies.size() > 1024 or not data.get("pickups") is Array or data.pickups.size() > 1024:
         return false
     var ids: Dictionary = {}
+    if not data.get("allies") is Array or data.allies.size() > 256:
+        return false
+    for ally in data.allies:
+        if not ally is Dictionary or not _id(ally.get("id")) or ids.has(ally.id) or not _position(ally.get("position")) or not _id(ally.get("owner"), true):
+            return false
+        if not ally.owner.is_empty() and not data.players.has(ally.owner):
+            return false
+        if ally.get("name") != "" or ally.get("race") != "Goblin" or ally.get("maximum_hp") != 30 or ally.get("power") != 4 or ally.get("speed") != 45:
+            return false
+        ids[ally.id] = true
     for enemy in data.enemies:
         if not enemy is Dictionary or not _id(enemy.get("id")) or ids.has(enemy.id) or enemy.get("kind") != "gnasher" or not _position(enemy.get("position")) or not _position(enemy.get("home")):
             return false
@@ -128,13 +138,17 @@ static func migrate(data: Variant) -> Variant:
         if not data.get("players") is Dictionary:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 1
         data["progression"] = data.get("progression", {"quests": {}, "settlements": {}, "world_time": 0.0})
         for state in data.get("players", {}).values():
             if not state is Dictionary or not state.get("skill_ids", []) is Array:
                 return null
             state["progression"] = state.get("progression", {"level": 1, "experience": 0, "race": "Slime", "quests": {}, "equipment": {}})
             state["slots"] = state.get("slots", [state.get("skill_ids", [])[0] if not state.get("skill_ids", []).is_empty() else "", "", ""])
+    if data.get("version") == 1:
+        data = data.duplicate(true)
+        data.version = VERSION
+        data["allies"] = data.get("allies", [{"id": "ally_goblin_1", "position": [220.0, 360.0], "owner": "", "name": "", "race": "Goblin", "maximum_hp": 30, "power": 4, "speed": 45.0}])
     return data
 
 static func _read(path: String) -> Dictionary:

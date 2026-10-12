@@ -110,3 +110,9 @@ Optional arguments: `--port=24560`, host `--save=/path/to/world.json`, client `-
 This is a desktop/LAN prototype. It uses ENet/UDP, host-verified reconnect credentials and reliable full-state snapshots; encrypted transport, latency prediction, and Internet deployment are not implemented/tested. Joining across the Internet also requires a reachable host (typically UDP port forwarding and a firewall allowance on the host machine). LAN playtesting comes first; do not treat the loopback checks as proof that Internet connectivity works.
 
 Architecture and future persistence requirements: `docs/MULTIPLAYER_AND_SAVES.md`. Networking/persistence code: `scripts/network`, `scripts/persistence`. Source code is on GitHub; world saves and reconnect profiles remain private user data.
+
+## First ally
+
+A nameless goblin waits west of the starting point at (220, 360). Defeat the clearing’s first Gnasher, approach within 40 pixels, and press **F**. The dialog shows its actual stats and a **Recruit** button. Recruitment is free; naming is a separate upcoming action. The goblin follows its owner with terrain collision, waits if that character disconnects/dies, and retains ownership when the character reconnects. Other players cannot steal it, and simultaneous claims resolve once on the host. Its placeholder appearance is a small green goblin; combat orders/pathfinding come later.
+
+Schema version **2** adds allied entities and stable ownership. Version-1 worlds migrate by introducing the unclaimed goblin, while retaining their characters and world progress. Allied positions and ownership replicate and save with the world. Validation rejects unknown owners and duplicate entity IDs. `tests/allies.gd` adds 18 checks; the network runner now has 73 checks including concurrent recruitment/reload.

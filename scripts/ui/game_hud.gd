@@ -14,6 +14,7 @@ var _events: Array[String] = []
 var _entries: Array = []
 var _selection: StringName = &""
 var _paused_before_open: bool = false
+var _ally_dialog: Panel
 @onready var player = get_parent().get_node("Player")
 @onready var inventory = player.get_node("Inventory")
 
@@ -26,6 +27,11 @@ func _ready() -> void:
     _refresh_inventory()
     record_event("Reincarnation confirmed.")
     _build_session_panel()
+    _ally_dialog = load("res://scripts/ui/ally_dialog.gd").new()
+    add_child(_ally_dialog)
+
+func menu_open() -> bool:
+    return _modal.visible or _session_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible)
 
 func bind_player(actor: Node2D) -> void:
     if player == actor:
@@ -168,7 +174,7 @@ func _select_item(index: int) -> void:
     _discard.disabled = false
 
 func open_inventory() -> void:
-    if _modal.visible:
+    if menu_open():
         return
     _paused_before_open = get_tree().paused
     if session.active:
@@ -191,6 +197,8 @@ func close_inventory() -> void:
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and not event.echo:
         if event.keycode == KEY_F8:
+            if _modal.visible or _ally_dialog.visible:
+                return
             _session_panel.visible = not _session_panel.visible
             player.input_blocked = _session_panel.visible
             if session.active:

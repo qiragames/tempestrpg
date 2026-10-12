@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**N0 implemented for desktop/LAN testing:** an authoritative host supports 8 total players, verified character reconnects, private identities, versioned character/world saves, recovery from a valid backup, and per-player multiplayer inventory menus. 161 gameplay, 32 persistence, and 68 real-process networking checks passed headlessly. The actual game CLI also hosted/joined successfully. **Next: recruit a nameless ally (M2), then naming, evolution and their replicated/save state.** Internet connectivity, encrypted transport, final art integration, and visual playtesting remain outstanding.
+**Current focus: M2 ally progression.** The nameless goblin can be recruited after the clearing threat is defeated. It follows its stable character owner, waits through disconnect/death, and replicates/persists with the world. 284 checks passed headlessly, including 18 ally checks and 73 networking checks. **Next: naming, Hobgoblin evolution, and saved Magicule exhaustion/recovery.** Art and real-network/visual deployment checks remain pending.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -61,7 +61,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 
 ### M2 — First ally and naming · Next, requires N0
 
-- Recruit one nameless ally through a small encounter.
+- Completed: recruit a nameless goblin after defeating the clearing threat; stable ownership, follow behavior, host-only claims and save/reconnect (18 ally checks plus network coverage).
 - Name the ally with a visible Magicule cost and confirmation of the expected result.
 - Evolve its race, stats, and visual appearance; support depletion and recovery.
 - Extend N0 multiplayer/save foundations to persist recruited allies, naming costs, race evolution, and depletion/recovery state.
@@ -117,6 +117,13 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 | World identity | Develop original names, lore, and assets from the supplied inspirations | Before final content production |
 | Project scope | Ship a small playable slice before expanding to nation-scale simulation | M3 review |
 
+## Ally progression tasks
+
+| Task | Status | Prerequisite | Completion evidence |
+| --- | --- | --- | --- |
+| Recruit and follow a nameless goblin with persistent ownership | Done | Hosted multiplayer and saves | 18 ally checks and 73 network checks passed, including concurrent claims and reload |
+| Name and evolve the ally with saved Magicule costs and exhaustion | Next | Recruited ally | Cost preview, single evolution, resource spending, recovery, save/reload and multiplayer validation required |
+
 ## Update contract
 
 Open `ROADMAP.html` for the graphical dependency map. Hover or click a title to view its purpose, completion criteria, prerequisites, and successors. Generate the view after roadmap edits with `python3 tools/build_roadmap.py`; it has no external dependencies or running server requirement.
@@ -126,6 +133,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-12: Added the first goblin, threat-gated recruitment, stable ownership, collision-aware following, interaction UI and schema-v2 migration/save/replication. 18 ally checks and 73 network checks passed alongside 193 previous local checks (284 total). Branch: `codex/roadmap-07-first-ally`. Naming/evolution/recovery is next.
 
 - 2026-10-12: Implemented N0 host-authoritative sessions, stable entity/character IDs, reconnect credentials, private profiles, versioned atomic saves/backup recovery, autosave/explicit save/normal shutdown, local multiplayer menus, and per-character respawn. 161 gameplay + 32 persistence + 68 network checks passed; actual CLI host/join also passed. Branch: `codex/roadmap-06-network-saves`. Local eight-player capacity is verified; WAN/encryption/visual checks remain. M2 recruitment/naming is next.
 
