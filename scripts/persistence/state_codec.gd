@@ -1,7 +1,8 @@
 extends RefCounted
 ## Stable IDs and primitive data only; runtime nodes/resources never enter a save.
 
-const SKILLS := {"rending_bite": "res://data/skills/rending_bite.tres"}
+const CATALOGUE := preload("res://scripts/skills/skill_catalogue.gd")
+const SKILLS := CATALOGUE.SKILLS
 const SPECIMEN := "res://data/specimens/forest_gnasher.tres"
 
 static func vector(value: Vector2) -> Array:
@@ -32,7 +33,7 @@ static func capture_player(actor: Node2D) -> Dictionary:
         "exhaustion": {"active": actor.exhaustion_active, "remaining": actor.exhaustion_left},
         "health": {"maximum": health.maximum, "current": health.current, "immunity": health.immunity_left, "immunity_seconds": health.immunity_seconds},
         "magicules": {"maximum": pool.maximum, "current": pool.current, "regen": pool.regeneration_per_second, "regen_delay": pool.regeneration_delay, "delay": pool._delay_left, "enabled": pool.enabled},
-        "skill_ids": known, "slots": slots, "inventory": {"capacity": bag.capacity, "counts": counts},
+        "skill_ids": known, "slots": slots, "skill_evidence": book.evidence.duplicate(true), "inventory": {"capacity": bag.capacity, "counts": counts},
         "attack_recovery": actor.get_node("MeleeAttack").cooldown_left,
         "analysis": {"target": absorption._target.entity_id if absorption.active else "", "remaining": absorption.time_left},
         "progression": actor.progression.duplicate(true)
@@ -66,6 +67,10 @@ static func apply_player(actor: Node2D, state: Dictionary, world: Node2D, replic
         book._known[StringName(id)] = load(SKILLS[id])
     for index in range(3):
         book._slots[index] = StringName(state.slots[index])
+    book.evidence = CATALOGUE.empty_evidence()
+    for kind in CATALOGUE.EVIDENCE_KINDS:
+        for entry in state.skill_evidence[kind]:
+            book.evidence[kind].append(String(entry))
     var bag = actor.get_node("Inventory")
     bag.capacity = int(state.inventory.capacity)
     bag._entries.clear()

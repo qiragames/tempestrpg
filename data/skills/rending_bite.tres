@@ -9,3 +9,4 @@ description = "Adapt the Forest Gnasher's jaw strength into a short-range aura s
 damage = 20
 magicule_cost = 12.0
 cooldown = 0.8
+effect = &"strike"

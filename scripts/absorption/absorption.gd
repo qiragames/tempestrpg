@@ -1,5 +1,6 @@
 extends Node
 const AUTHORITY := preload("res://scripts/network/authority.gd")
+const CATALOGUE := preload("res://scripts/skills/skill_catalogue.gd")
 ## Channel beside a defeated creature, analyze its traits, and learn its skill.
 
 signal status_changed(message: String)
@@ -29,7 +30,7 @@ func attempt_absorb() -> bool:
     if nearest == null:
         status_changed.emit("No reachable defeated creature nearby.")
         return false
-    if nearest.specimen == null or nearest.specimen.skill == null:
+    if nearest.specimen == null or nearest.specimen.skill == null or not CATALOGUE.SPECIMENS.has(String(nearest.specimen.id)):
         status_changed.emit("No analyzable traits detected.")
         return false
     if not player.get_node("Inventory").can_store():
@@ -67,11 +68,16 @@ func _process(delta: float) -> void:
         if not get_parent().get_node("Inventory").add_specimen(specimen):
             _cancel("Dimensional storage full. Specimen retained.")
             return
-        var new_skill: bool = get_parent().get_node("SkillBook").learn(specimen.skill)
+        # The skill book applies the catalogue's unlock rules to this character's evidence.
+        var gained: Array = get_parent().get_node("SkillBook").record_analysis(specimen.id)
         _target.queue_free()
         _target = null
-        analyzed.emit(specimen, new_skill)
-        status_changed.emit("Analysis complete. %s: %s %s." % [specimen.skill.tier, specimen.skill.display_name, "acquired" if new_skill else "already known"])
+        analyzed.emit(specimen, not gained.is_empty())
+        if gained.is_empty():
+            status_changed.emit("Analysis complete. %s: %s already known." % [specimen.skill.tier, specimen.skill.display_name])
+        else:
+            var names: Array = gained.map(func(skill): return "%s: %s" % [skill.tier, skill.display_name])
+            status_changed.emit("Analysis complete. %s acquired." % ", ".join(names))
 
 func _cancel(message: String) -> void:
     if active:

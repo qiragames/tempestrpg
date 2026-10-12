@@ -22,7 +22,7 @@ func _run() -> void:
     player.progression = {"level": 4, "experience": 123, "race": "Slime", "quests": {"intro": {"stage": 2}}, "equipment": {}}
     player.get_node("Magicules").try_spend(30)
     player.get_node("Health").take_damage(23)
-    player.get_node("SkillBook").learn(load(CODEC.SKILLS.rending_bite))
+    player.get_node("SkillBook").record_analysis(&"forest_gnasher")
     player.get_node("Inventory").add_specimen(load(CODEC.SPECIMEN))
     player.get_node("MeleeAttack").cooldown_left = 0.7
     var enemy = world.get_node("ForestGnasher")

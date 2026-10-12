@@ -23,7 +23,11 @@ func attack_skill(facing: Vector2, skill_id: StringName) -> bool:
     var skill: Resource = get_parent().get_node("SkillBook").get_skill(skill_id)
     if skill == null:
         return false
-    return _strike(facing, skill.damage, skill.magicule_cost, skill.cooldown)
+    # Effects are dispatched by stable ID; new effect types are added here deliberately.
+    match skill.effect:
+        &"strike":
+            return _strike(facing, skill.damage, skill.magicule_cost, skill.cooldown)
+    return false
 
 func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float) -> bool:
     if not AUTHORITY.can_mutate(self):

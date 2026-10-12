@@ -1,7 +1,8 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 6
+const VERSION := 7
+const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
 const CAMP := preload("res://scripts/settlement/first_camp.gd")
 const ALLY := preload("res://scripts/allies/goblin_ally.gd")
 const MAX_BYTES := 4 * 1024 * 1024
@@ -74,9 +75,14 @@ static func validate_player(state: Variant, id: String) -> bool:
         if not skill is String or not CODEC.SKILLS.has(skill) or seen.has(skill):
             return false
         seen[skill] = true
+    var equipped := {}
     for slot in slots:
-        if not slot is String or (slot != "" and not seen.has(slot)):
+        if not slot is String or (slot != "" and (not seen.has(slot) or equipped.has(slot))):
             return false
+        equipped[slot] = true
+    # Every saved skill must follow from this character's own unlock evidence.
+    if not SKILLS.evidence_valid(state.get("skill_evidence"), known) or not SKILLS.justified(known, state.skill_evidence):
+        return false
     var bag = state.get("inventory")
     if not bag is Dictionary or not _number(bag.get("capacity"), 1, 10000, true) or not bag.get("counts") is Dictionary:
         return false
@@ -208,12 +214,28 @@ static func migrate(data: Variant) -> Variant:
         if not data.get("camp") is Dictionary or not data.camp.get("deposits") is Dictionary:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 6
         var fresh: Dictionary = CAMP.initial_state()
         for key in ["essence", "essence_offered", "storehouse", "shrine"]:
             data.camp[key] = data.camp.get(key, fresh[key])
         for id in fresh.deposits:
             data.camp.deposits[id] = data.camp.deposits.get(id, fresh.deposits[id])
+    # v7 adds per-character unlock evidence. Rebuild only the analyses implied by skills the
+    # character actually knows; never invent trials, mastery or ascensions.
+    if data.get("version") == 6:
+        if not data.get("players") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = VERSION
+        for state in data.players.values():
+            if not state is Dictionary or not state.get("skill_ids", []) is Array:
+                return null
+            var evidence: Dictionary = SKILLS.empty_evidence()
+            for skill in state.get("skill_ids", []):
+                var rule: Dictionary = SKILLS.RULES.get(skill, {})
+                if rule.has("analysis") and not rule.analysis in evidence.analyzed:
+                    evidence.analyzed.append(rule.analysis)
+            state["skill_evidence"] = state.get("skill_evidence", evidence)
     return data
 
 static func _read(path: String) -> Dictionary:

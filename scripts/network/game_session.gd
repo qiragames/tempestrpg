@@ -322,6 +322,16 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             return false
         var ally = world.entity_by_id(payload.id)
         return ally.try_name(actor, payload.name) if ally != null and ally.is_in_group("allies") else false
+    if action == "assign_slot":
+        # Loadout is host-owned: clients name a slot and a skill ID; the book checks knowledge.
+        var slot: Variant = payload.get("slot")
+        if payload.size() != 2 or not (slot is int or (slot is float and slot == floor(slot))) or not payload.get("id") is String or payload.id.length() > 64:
+            rejected_requests += 1
+            return false
+        var assigned: bool = actor.get_node("SkillBook").assign_slot(int(slot), StringName(payload.id))
+        if assigned:
+            queue_save()
+        return assigned
     if action == "discard":
         if payload.size() != 1 or not payload.get("id") is String or payload.id.length() > 64:
             rejected_requests += 1

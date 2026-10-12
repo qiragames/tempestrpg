@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**Current focus: M4 approved — skill foundations and art preparation are ready.** The user approved steps 13–24 on 2026-10-12. Step 13 (Codex: skill catalogue/unlock ledger) and step 18 (Claude: asset preparation only) can start in parallel after ownership claims. The detailed scope, tier rules, dependencies and host/save contracts are in `docs/M4_PLAN.md`. No M4 gameplay implementation has started yet. The accepted step-12 baseline has 547 passing headless checks and Claude’s 22 visible-playtest captures. Real LAN/WAN checks and final art/audio integration remain pending.
+**Current focus: M4 step 14 (second specimen + first Extra) and step 18 (asset preparation).** Step 13 is done (Claude, by user decision): a skill catalogue with stable IDs and explicit unlock rules for all four tiers, a per-character evidence ledger (analyzed specimens, trials, mastery, ascensions), host-owned loadout and effect dispatch, a read-only requirements view for the future assistant, and schema v7 that only accepts skills justified by saved evidence. Unique/Ultimate stay locked because no trial or ascension exists yet. 599 automated checks pass (404 local + 90 general network + 105 camp network) plus the visual playtest. Details: `docs/M4_PLAN.md`. Real LAN/WAN checks and final art/audio remain pending.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -136,13 +136,13 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 
 ## M4 approved steps
 
-**Approved by the user, 2026-10-12.** Detailed goals, files, authority/save contracts and completion evidence: `docs/M4_PLAN.md`. Steps 13 and 18 are Next; later steps remain Planned behind their prerequisites.
+**Approved by the user, 2026-10-12.** Detailed goals, files, authority/save contracts and completion evidence: `docs/M4_PLAN.md`. Step 13 is Done; steps 14 and 18 are Next; later steps remain Planned behind their prerequisites.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
 | Approve M4 plan | Done | M3 | User explicitly approved steps 13–24 on 2026-10-12 |
-| 13 Skill catalogue and unlock ledger | Next | Approve M4 plan | Stable tiers/evidence/activation contract, legacy migration and per-character authority checks |
-| 14 Second specimen and Extra upgrade | Planned | 13 | Earn and use second Common plus one Extra; concurrent claims and saved unlocks verified |
+| 13 Skill catalogue and unlock ledger | Done | Approve M4 plan | 48 catalogue checks + 4 new network checks: four-tier rule validation, per-character evidence, idempotent unlocks, forged/premature unlock and save rejection, host loadout intent, effect dispatch, eight separate ledgers, v6→v7 migration |
+| 14 Second specimen and Extra upgrade | Next | 13 | Earn and use second Common plus one Extra; concurrent claims and saved unlocks verified |
 | 15 First mimic form | Planned | 13, 14 | Owned transform/revert, safe collision, no resource refill and replicated saved form |
 | 16 Personal trial and Unique gate | Planned | 13, 15 | One personal trial/Unique; mastery saved, Ultimate explicitly locked for future ascension |
 | 17 Analysis assistant model | Planned | 13, 14 | Read-only factual traits/unlock/recovery advice isolated to each character |
@@ -163,6 +163,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-12: Claude Code completed M4 step 13 (user decision: Claude takes the next step in order). Added `scripts/skills/skill_catalogue.gd` (stable skill/specimen/trial/ascension IDs, tier rule shapes and validation), per-character `skill_evidence` in the skill book, rule-based unlocks on analysis (no direct grants), host `assign_slot` intent, effect dispatch for skill activation, a read-only requirements overview, and schema v7 (saved skills must be justified by evidence; v6 migration rebuilds analyses only from actual knowledge). User art decision: the Forest Gnasher will use the Goblin row of the monster chart. 404 local + 90 + 105 network checks and the visual playtest pass on Windows. Branch: `claude/roadmap-13-skill-catalogue`. Next: step 14 (second specimen + Extra) and step 18 (assets).
 
 - 2026-10-12: User explicitly approved the M4 plan (steps 13–24). Recorded approval in plan/handoff/graph; steps 13 (Codex skill foundations) and 18 (Claude asset preparation) are ready in parallel. Later steps retain their dependencies and require ownership claims before edits. Commit/push on `codex/m4-plan`; no implementation or branch merge in this approval update.
 

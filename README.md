@@ -60,12 +60,13 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/settlement.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/ally_work.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/camp_growth.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/skill_catalogue.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
 "$GODOT_BIN" --headless --path . --quit-after 120
 ```
 
-The cloud checks validate import, 17 foundation checks, 24 combat checks, 27 Magicule checks, 32 drop checks, 26 absorption checks, 35 skills/storage checks, 32 persistence checks, 18 ally checks, 28 naming checks, 34 settlement checks, 35 worker checks, 48 camp-growth checks, and 191 real multi-process networking checks (547 total; also verified on Windows 11, where `python` replaces `python3`). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. Visual playtesting is still pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
+The cloud checks validate import, 17 foundation checks, 24 combat checks, 27 Magicule checks, 32 drop checks, 26 absorption checks, 35 skills/storage checks, 32 persistence checks, 18 ally checks, 28 naming checks, 34 settlement checks, 35 worker checks, 48 camp-growth checks, 48 skill-catalogue checks, and 195 real multi-process networking checks (599 total; also verified on Windows 11, where `python` replaces `python3`). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. Visual playtesting is still pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
 
 ## Structure
 
@@ -177,3 +178,16 @@ godot --path . --script tests/visual_playtest.gd
 ```
 
 It saves 22 screenshots plus `log.md` (checklist, captions and system messages) to `docs/playtest/` and exits with code 1 if any check fails. Don't minimize the window while it runs; covering it with other windows is fine. Menu buttons are pressed programmatically, and offline (sandbox) mode is used; hosted play is covered by the network suites.
+
+## Skill tiers and unlock rules
+
+Every skill is listed in `scripts/skills/skill_catalogue.gd` with a stable ID, a tier and an explicit unlock rule:
+
+| Tier | How it unlocks |
+| --- | --- |
+| Common | Analyze a specific creature (Rending Bite: Forest Gnasher) |
+| Extra | Already know the listed Common skills, then analyze a specific creature |
+| Unique | Know the required Extra skill and complete a personal trial |
+| Ultimate | Know and master the required Unique skill, then reach an ascension milestone |
+
+Each character keeps its own **evidence**: which creatures it has analyzed and which trials, masteries and ascensions it has earned. The host grants skills only when that evidence satisfies a rule, so repeating an analysis, reconnecting or editing a save never adds skills. A save is rejected if it contains a skill that its evidence doesn't justify. So far only Rending Bite exists; Extra arrives in M4 step 14, and Unique/Ultimate stay locked until a trial (step 16) and ascension (later) exist. Hotbar slots are assigned by the host through an `assign_slot` request, and skills activate through a fixed effect list. Schema **v7** stores the evidence; older worlds rebuild it from the skills characters actually know. Tests: `tests/skill_catalogue.gd` (48 checks).

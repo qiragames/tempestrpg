@@ -4,5 +4,6 @@
 
 [resource]
 script = ExtResource("1")
+id = &"forest_gnasher"
 species = "Forest Gnasher"
 skill = ExtResource("2")

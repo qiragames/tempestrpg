@@ -75,6 +75,8 @@ try:
         check(result["no_credentials"], "Replication must omit reconnect credential hashes")
     check(sum(len(r["state"]["skill_ids"]) for r in results) == 1, "Concurrent absorption must acquire a corpse once")
     check(sum(sum(r["state"]["inventory"]["counts"].values()) for r in results) == 1, "Concurrent absorption must award one material")
+    check(sorted(len(r["state"]["skill_evidence"]["analyzed"]) for r in results) == [0, 1], "Concurrent absorption records unlock evidence for exactly one character")
+    check(all(len(r["state"]["skill_ids"]) == len(r["state"]["skill_evidence"]["analyzed"]) for r in results), "Replicated skills match each character's own evidence")
     check(abs(sum(r["pre_naming"] for r in results) - 188) < 0.01, "Two paid attacks, one absorption, and one shared drop must balance without duplicate rewards")
     owner = results[0]["allies"][0]["owner"]
     check(owner in {r["state"]["id"] for r in results}, "Concurrent recruitment must assign one connected character")
@@ -104,7 +106,7 @@ try:
     for proc, _ in resumed:
         finish(proc)
     for before, after in zip(results, restored):
-        for field in ["id", "position", "health", "skill_ids", "slots", "inventory", "progression"]:
+        for field in ["id", "position", "health", "skill_ids", "slots", "skill_evidence", "inventory", "progression"]:
             check(before["state"][field] == after["state"][field], f"Reconnect must restore {field}")
         before_pool = before["state"]["magicules"]
         after_pool = after["state"]["magicules"]

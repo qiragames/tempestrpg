@@ -21,7 +21,9 @@ Codex handles the mechanical progression lane (13–17). Claude can prepare art 
 
 Personal trial/mastery evidence belongs to the character. A shared camp level alone must not grant a late-tier skill to every guest. Repeating absorption/reconnecting never duplicates unlocks. Migration reconstructs only evidence implied by actual saved knowledge and never fabricates completed trials. Higher tiers have explicit costs/cooldowns and do not bypass the existing resource, exhaustion or global attack-recovery rules. Precise balance values are proposed with each feature and tuned in 24.
 
-## 13 — Skill catalogue and unlock ledger (Codex)
+## 13 — Skill catalogue and unlock ledger (Claude, by user decision) — **Done**
+
+**Status 2026-10-12:** implemented by Claude on `claude/roadmap-13-skill-catalogue` because the user asked Claude to take the next step in order. Contract for later steps: `SkillCatalogue.RULES` (tier rule shapes), `SKILLS`/`SPECIMENS`/`TRIALS`/`ASCENSIONS` (stable IDs), `SkillBook.record_analysis(id)` (host-only evidence + unlock), `SkillBook.assign_slot` / `assign_slot` intent, `SkillDefinition.effect` dispatched in `MeleeAttack.attack_skill`, `SkillBook.describe()` / `SkillCatalogue.overview()` read-only view for 17/21. Step 14 adds a specimen + Common + Extra by extending these tables and the effect match; 16 adds a trial ID to `TRIALS` and a recorder for trial evidence.
 
 **Goal/dependencies:** after M4 approval, define stable tier/skill/unlock IDs and a per-character progression ledger while keeping Rending Bite behavior intact. This is the contract for later skills and assistant queries.
 
@@ -77,7 +79,7 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 
 **Files/systems:** `assets/references/index.json` for provenance additions, `assets/source/`, `assets/game/{sprites,world,ui}/`, preparation notes. Preserve original JPEG/PNG/WebP bytes. Record atlas cells, animation ordering/timing, pivots, transparency and intended use.
 
-**Authority/save:** visual-only resources, no progression/save mutations. Assets use stable named paths; rendered labels/stats remain dynamic. The chart has no explicitly labeled Forest Gnasher row: agree a suitable stand-in or prepare a matching sprite rather than silently changing its creature identity. JPEG/chart labels/backgrounds require cleanup; approve poor-quality slices before integration.
+**Authority/save:** visual-only resources, no progression/save mutations. Assets use stable named paths; rendered labels/stats remain dynamic. The chart has no explicitly labeled Forest Gnasher row. **User decision 2026-10-12: the Forest Gnasher uses the Goblin row**; keep enemy and allied goblins visually distinct (e.g. palette/difficulty tint) without changing creature IDs. JPEG/chart labels/backgrounds require cleanup; approve poor-quality slices before integration.
 
 **Done evidence:** inspect slime, goblin/Hobgoblin and Gnasher/form candidates, one small forest atlas/props set and reusable frame/icon pieces; nearest-filter export preview at ×2 and ×3; originals/index checksums retained. Actual scene integration is 19–22.
 
