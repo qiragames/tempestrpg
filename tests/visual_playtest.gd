@@ -308,9 +308,8 @@ func _run() -> void:
     var trial: Node2D = world.trial
     var trial_route_ok: bool = await _walk_to(Vector2(484, 440), 8.0, 20.0) and await _walk_to(Vector2(484, 340), 8.0, 20.0) and await _walk_to(trial.STONE + Vector2(4, 24), 6.0, 20.0)
     _check(trial_route_ok, "Walked north to the trial stone")
-    # Test assistance (logged): HP never regenerates yet, and earlier fights leave the slime near half health.
-    _log("  Assisted: HP %d -> %d before the trial (no HP recovery exists yet; balance finding for step 24)." % [player.get_node("Health").current, player.get_node("Health").maximum])
-    player.get_node("Health").current = player.get_node("Health").maximum
+    # No HP assistance since step 16b: absorbed vitality is the only healing.
+    _log("  Entering the trial with HP %d / %d (unassisted)." % [player.get_node("Health").current, player.get_node("Health").maximum])
     pool._current = pool.maximum
     await _tap("interact")
     _check(await _until(func(): return trial.state.active), "F at the stone starts the Proving Trial")

@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**Current focus: M4 steps 17 (analysis assistant model) and 18 (asset preparation) are ready; 19 waits for 18.** Step 16 is done (Claude) with a **placeholder story**: a "Proving Trial" stone in the north (480, 100). A character who knows Piercing Fang presses F there, and three trial creatures appear. Defeating them within 60 s while staying in the circle grants personal trial evidence and the first Unique skill, Predator Focus (placeholder name: 25 Magicules; the next analysis within 20 s reaches twice as far and completes in 0.3 s). Helpers get no credit, trial creatures drop nothing and cannot be analyzed, and a running trial is never saved. A 4th hotbar slot (key 4) was added. Ultimate stays locked: no ascension exists yet. Schema v10. 751 automated checks pass on Windows (517 local + 90 + 105 + 17 + 22 network) plus the visual playtest. The trial's names, text and look are placeholders to re-theme once the user writes the storyline.
+**Current focus: step 16c (user step A) — worlds, save slots and menus; then 16d (user step B) — seeded worlds; then 17.** User decision 2026-10-13 after the step-16 playtest: (1) healing on absorb, done as 16b: Easy 15 / Standard 25 / Elite 40 HP over 10 s; the unassisted visible playtest now completes the Proving Trial; (2) a working main menu earlier than step 22 (final art stays in 22): several named save slots, every world always saved (playing alone = hosting with nobody connected), "Open to friends" from the pause menu, join by address; (3) seeded worlds like Minecraft: the map layout stays fixed, while deposits, creatures, points of interest and decorations come from the world's seed. Steps 13–16 and 16b are done; 17 and 18 remain ready. 776 automated checks pass on Windows (538 local + 238 network) plus the visual playtest.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -117,7 +117,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 | Starting form | Slime/shapeshifter prototype consistent with absorption | M1 |
 | Naming balance | 80 cost, 25% recovery reserve, minimum 8-second sleep verified; tune through playtesting | M2 complete |
 | World identity | Develop original names, lore, and assets from the supplied inspirations | Before final content production |
-| HP recovery and trial difficulty | Step 16 playtest: HP never regenerates; the 3-creature trial defeated a half-health slime and left a full-health one at 36/100. Decide an HP recovery source and tune the trial | Step 24 (balance) or earlier if the user wants |
+| HP recovery and trial difficulty | Step 16 playtest: the trial was too hard without healing. Addressed in 16b by absorbed vitality (Easy 15 / Standard 25 / Elite 40 HP over 10 s); the unassisted playtest now completes the trial. Fine-tune in step 24 | Step 24 |
 | Project scope | Ship a small playable slice before expanding to nation-scale simulation | M3 review |
 
 ## Ally progression tasks
@@ -154,6 +154,9 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 | 22 Title and pause flow | Planned | 21 | Real New/Continue/Join/Resume/Quit paths, host saves, guest disconnect and corrupt-save handling |
 | 23 Audio and combat/analysis VFX | Planned | 16, 19, 21 | Clear cues, mute/reduced effects, no duplicate snapshot audio or gameplay timing change |
 | 24 Balance and M4 acceptance | Planned | 14, 15, 16, 17, 20, 21, 22, 23 | Visible user feedback, measured costs/recovery, eight-player/save checks and scoped LAN validation |
+| 16b Healing on absorb | Done | 16 | 21 checks: tier heals 15/25/40 over 10 s, gradual and capped, stronger heal replaces weaker, ends on defeat, host-only, saved/reloaded, v10→v11; the unassisted visible playtest now completes the trial |
+| 16c Worlds, save slots and menus (user step A) | Next | 16b | Title menu (New World with name + seed, Load World list, Join, Quit), always-saved worlds (solo = local host), pause menu with Resume / Open to friends / Save & Quit; replaces F8 panel; real-process host/join/save checks |
+| 16d Seeded worlds (user step B) | Planned | 16c | Fixed map layout; seed decides deposits, creature placement/difficulty, points of interest and decorations; same seed = same world; seed saved and validated; routes stay reachable |
 
 ## Update contract
 
@@ -164,6 +167,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-13: Claude Code completed step 16b (user request): absorbed vitality heals by creature tier (Easy 15 / Standard 25 / Elite 40 HP over 10 s, host-only, capped, no stacking unless stronger, ends on defeat), HUD shows "+ healing", schema v11. New `tests/absorb_healing.gd` (21). The visual playtest no longer restores HP before the trial and still passes. User decisions recorded: new steps 16c (worlds/save slots/menus, "Open to friends") and 16d (seeded worlds) come before 17. 538 local + 238 network checks pass on Windows. Branch: `claude/roadmap-16b-absorb-healing`.
 
 - 2026-10-13: Claude Code completed M4 step 16 with a placeholder story (user decision). New `scripts/trials/proving_trial.gd` (stone at (480, 100), F to start, 3 Easy no-reward creatures, 60 s, 150 px arena, owner-only credit, fail on defeat/leaving/disconnect/timeout, never saved), `SkillBook.record_trial`, Unique **Predator Focus** (`focus` effect, 25 Magicules: next analysis within 20 s has double reach and a 0.3 s channel, consumed at start), 4th hotbar slot/key 4, HUD trial banner, schema v10. New `tests/trial_unique.gd` (40) and `tests/network_trial.py` (22); visual playtest fights the trial. 517 local + 234 network checks pass on Windows. Branch: `claude/roadmap-16-trial-unique`. Next: 17, 18; the story placeholders await the user's storyline.
 

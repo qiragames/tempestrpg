@@ -34,7 +34,7 @@ static func capture_player(actor: Node2D) -> Dictionary:
         "move_speed": actor.move_speed,
         "form": {"id": actor.form, "cooldown": actor.form_cooldown},
         "exhaustion": {"active": actor.exhaustion_active, "remaining": actor.exhaustion_left},
-        "health": {"maximum": health.maximum, "current": health.current, "immunity": health.immunity_left, "immunity_seconds": health.immunity_seconds},
+        "health": {"maximum": health.maximum, "current": health.current, "immunity": health.immunity_left, "immunity_seconds": health.immunity_seconds, "regen_rate": health.regen_rate, "regen_left": health.regen_left},
         "magicules": {"maximum": pool.maximum, "current": pool.current, "regen": pool.regeneration_per_second, "regen_delay": pool.regeneration_delay, "delay": pool._delay_left, "enabled": pool.enabled},
         "skill_ids": known, "slots": slots, "skill_evidence": book.evidence.duplicate(true), "inventory": {"capacity": bag.capacity, "counts": counts},
         "attack_recovery": actor.get_node("MeleeAttack").cooldown_left,
@@ -57,6 +57,8 @@ static func apply_player(actor: Node2D, state: Dictionary, world: Node2D, replic
     health.current = int(state.health.current)
     health.immunity_left = state.health.immunity
     health.immunity_seconds = state.health.immunity_seconds
+    health.regen_rate = state.health.regen_rate
+    health.regen_left = state.health.regen_left
     health.changed.emit(health.current, health.maximum)
     var pool = actor.get_node("Magicules")
     pool.maximum = state.magicules.maximum

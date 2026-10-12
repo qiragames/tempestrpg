@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 10
+const VERSION := 11
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
 ## Initial saved state of the v8 encounter; matches scenes/world/forest.tscn.
@@ -65,7 +65,7 @@ static func validate_player(state: Variant, id: String) -> bool:
     var pool = state.get("magicules")
     if not health is Dictionary or not pool is Dictionary:
         return false
-    if not _number(health.get("maximum"), 1, 1000000, true) or not _number(health.get("current"), 0, health.maximum, true) or not _number(health.get("immunity"), 0, 60) or not _number(health.get("immunity_seconds"), 0, 60):
+    if not _number(health.get("maximum"), 1, 1000000, true) or not _number(health.get("current"), 0, health.maximum, true) or not _number(health.get("immunity"), 0, 60) or not _number(health.get("immunity_seconds"), 0, 60) or not _number(health.get("regen_rate"), 0, 10) or not _number(health.get("regen_left"), 0, 10):
         return false
     if not _number(pool.get("maximum"), 1, 1000000) or not _number(pool.get("current"), 0, pool.maximum) or not _number(pool.get("regen"), 0, 1000) or not _number(pool.get("regen_delay"), 0, 60) or not _number(pool.get("delay"), 0, 60) or not pool.get("enabled") is bool:
         return false
@@ -271,13 +271,24 @@ static func migrate(data: Variant) -> Variant:
         if not data.get("players") is Dictionary:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 10
         for state in data.players.values():
             if not state is Dictionary or not state.get("slots") is Array or not state.get("analysis") is Dictionary:
                 return null
             while state.slots.size() < 4:
                 state.slots.append("")
             state.analysis["focus"] = state.analysis.get("focus", 0.0)
+    # v11: gradual healing from absorbed vitality.
+    if data.get("version") == 10:
+        if not data.get("players") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = VERSION
+        for state in data.players.values():
+            if not state is Dictionary or not state.get("health") is Dictionary:
+                return null
+            state.health["regen_rate"] = state.health.get("regen_rate", 0.0)
+            state.health["regen_left"] = state.health.get("regen_left", 0.0)
     return data
 
 static func _read(path: String) -> Dictionary:

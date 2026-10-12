@@ -154,3 +154,17 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 The user approved this plan on 2026-10-12. The approval node is Done; 13 (Codex) and 18 (Claude) are Next and can start in parallel after each tool pushes its ownership claim. All other steps wait for their stated dependencies. Update the plan if priorities/rules change. Plan approval does not merge branches automatically.
 
 Claim file ownership in `docs/AI_HANDOFF.md` and push the claim before work. During 13–17, Claude owns only asset preparation (18); Codex owns skill/form/analysis/authority/save files. Integration 19 waits for stable form/trial contracts. Assistant-model work (17) can proceed beside sprite/map presentation provided no world/HUD adapters overlap. Claude owns shared UI/world presentation for 20–22; Codex reviews/verifies released steps rather than editing the same files. Exchange exact branch/commit acknowledgments and use the user-selected integrated baseline before dependent work. Both tools recheck new remote commits at critical steps and approximately every ten minutes during long active tasks.
+
+## Added after approval (user decisions, 2026-10-13)
+
+### 16b — Healing on absorb (Claude) — **Done**
+
+After the step-16 playtest showed the trial was too hard without any HP recovery, the user chose healing that scales with the absorbed creature: Easy 15, Standard 25, Elite 40 HP restored gradually over 10 s (`Health.start_regen`, `TIER_STATS.absorb_heal`). A new heal replaces the running one only if it restores more; healing is capped at max HP, ends on defeat, runs only on the host and is saved (`health.regen_rate/regen_left`, schema v11). Trial creatures cannot be absorbed, so trials still cannot be farmed for healing.
+
+### 16c — Worlds, save slots and menus (user step A, Claude) — **Next**
+
+A working, unstyled title flow before the art steps (final presentation remains step 22): New World (name + optional seed), Load World (list of save slots with name, seed and last-played time), Join (address), Quit. Every world is always saved; playing alone means running as a local host with nobody connected, so the pause menu's **Open to friends** simply starts accepting joins without a restart. The pause menu also offers Resume and Save & Quit. Replaces the F8 host/join panel. Must keep host authority, private reconnect identities, autosave/backup behavior, 8-player cap and existing save migration; per-world save files under `user://worlds/`.
+
+### 16d — Seeded worlds (user step B) — **Planned**
+
+Each world stores a seed. The map layout, spawn and camp site stay fixed; the seed deterministically places resource deposits (positions/amounts), creatures (placement and difficulty), points of interest (trial stone, ally start, from designed candidate spots) and decorations (trees/rocks) while keeping every route, deposit and point of interest reachable. The same seed always produces the same world; the seed is saved, validated and shown in the menu. Static IDs stay stable so saves, ownership and conservation rules keep working. The user also ticked "something else" without details; to be clarified.

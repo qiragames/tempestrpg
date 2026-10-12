@@ -5,9 +5,9 @@ const AUTHORITY := preload("res://scripts/network/authority.gd")
 enum State { IDLE, CHASE, WINDUP, RECOVER, DEFEATED }
 enum Difficulty { EASY, STANDARD, ELITE }
 const TIER_STATS := {
-    Difficulty.EASY: {"health": 20, "damage": 8, "speed": 45.0, "drop": 8.0},
-    Difficulty.STANDARD: {"health": 30, "damage": 12, "speed": 55.0, "drop": 16.0},
-    Difficulty.ELITE: {"health": 60, "damage": 20, "speed": 65.0, "drop": 32.0},
+    Difficulty.EASY: {"health": 20, "damage": 8, "speed": 45.0, "drop": 8.0, "absorb_heal": 15.0},
+    Difficulty.STANDARD: {"health": 30, "damage": 12, "speed": 55.0, "drop": 16.0, "absorb_heal": 25.0},
+    Difficulty.ELITE: {"health": 60, "damage": 20, "speed": 65.0, "drop": 32.0, "absorb_heal": 40.0},
 }
 const PICKUP_SCENE := preload("res://scenes/pickups/magicule_pickup.tscn")
 @export var difficulty: Difficulty = Difficulty.STANDARD

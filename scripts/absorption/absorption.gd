@@ -80,6 +80,10 @@ func _process(delta: float) -> void:
         if not get_parent().get_node("Inventory").add_specimen(specimen):
             _cancel("Dimensional storage full. Specimen retained.")
             return
+        # Absorbed vitality: the creature's tier sets the gradual heal (replaces a weaker running heal).
+        var heal: float = _target.TIER_STATS[_target.difficulty].get("absorb_heal", 0.0) if "TIER_STATS" in _target else 0.0
+        if get_parent().get_node("Health").start_regen(heal):
+            status_changed.emit("Absorbed vitality: +%d HP over %ds." % [int(heal), int(get_parent().get_node("Health").REGEN_SECONDS)])
         # The skill book applies the catalogue's unlock rules to this character's evidence.
         var gained: Array = get_parent().get_node("SkillBook").record_analysis(specimen.id)
         _target.queue_free()

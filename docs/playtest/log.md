@@ -166,7 +166,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - [x] T returns to the slime after the cooldown
 ## 11. Proving Trial (placeholder) and the first Unique skill
 - [x] Walked north to the trial stone
-  Assisted: HP 52 -> 100 before the trial (no HP recovery exists yet; balance finding for step 24).
+  Entering the trial with HP 100 / 100 (unassisted).
 - [x] F at the stone starts the Proving Trial
 - [x] Three trial creatures appear
 
@@ -204,6 +204,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Threat neutralized. Specimen retained.
 - Recovered 16.0 Magicules.
 - Analyzing Forest Gnasher. Remain nearby.
+- Absorbed vitality: +25 HP over 10s.
 - Analysis complete. Common: Rending Bite acquired.
 - A nameless goblin has joined you.
 - Aster evolved into a Hobgoblin. 80 Magicules transferred.
@@ -219,6 +220,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Threat neutralized. Specimen retained.
 - Recovered 16.0 Magicules.
 - Analyzing Forest Gnasher. Remain nearby.
+- Absorbed vitality: +25 HP over 10s.
 - Analysis complete. Common: Rending Bite already known.
 - Materials added to shared camp stock.
 - Materials added to shared camp stock.
@@ -230,12 +232,13 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Threat neutralized. Specimen retained.
 - Recovered 16.0 Magicules.
 - Analyzing Thornback Gnasher. Remain nearby.
+- Absorbed vitality: +25 HP over 10s.
 - Analysis complete. Common: Thorn Lash, Extra: Piercing Fang acquired.
 - Mimicry: Gnasher Form.
 - Mimicry: Slime.
 - Proving Trial begun: defeat 3 creatures within 60 seconds. Stay inside the circle.
-- Threat neutralized. Specimen retained.
-- Threat neutralized. Specimen retained.
+- Threat neutralized.
+- Threat neutralized.
 - Insufficient Magicules. Action unavailable.
 - Insufficient Magicules. Action unavailable.
 - Insufficient Magicules. Action unavailable.
@@ -244,8 +247,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Insufficient Magicules. Action unavailable.
 - Insufficient Magicules. Action unavailable.
 - Insufficient Magicules. Action unavailable.
-- Insufficient Magicules. Action unavailable.
-- Threat neutralized. Specimen retained.
+- Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 

@@ -106,8 +106,13 @@ try:
     for proc, _ in resumed:
         finish(proc)
     for before, after in zip(results, restored):
-        for field in ["id", "position", "health", "skill_ids", "slots", "skill_evidence", "inventory", "progression"]:
+        for field in ["id", "position", "skill_ids", "slots", "skill_evidence", "inventory", "progression"]:
             check(before["state"][field] == after["state"][field], f"Reconnect must restore {field}")
+        # Absorbed-vitality healing keeps ticking on the host until the character disconnects.
+        hb, ha = before["state"]["health"], after["state"]["health"]
+        check(all(ha[k] == hb[k] for k in ("maximum", "immunity_seconds")), "Reconnect must restore health limits")
+        check(hb["current"] <= ha["current"] <= ha["maximum"], "Reconnect never loses HP; running healing may only add up to the maximum")
+        check(ha["regen_left"] <= hb["regen_left"] and (ha["regen_left"] == 0 or ha["regen_rate"] == hb["regen_rate"]), "Reconnect never resets or strengthens a running heal")
         before_pool = before["state"]["magicules"]
         after_pool = after["state"]["magicules"]
         check(all(after_pool[k] == before_pool[k] for k in before_pool if k != "delay"), "Reconnect restores resource amounts and parameters")

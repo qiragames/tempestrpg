@@ -115,7 +115,8 @@ func _announce(message: String) -> void:
     system_message.emit(message)
 
 func _health_changed(current: int, maximum: int) -> void:
-    $HUD/Health.text = "HP %d / %d" % [current, maximum]
+    var regen: bool = is_instance_valid(local_player) and local_player.get_node("Health").regen_left > 0.0
+    $HUD/Health.text = "HP %d / %d%s" % [current, maximum, "  + healing" if regen else ""]
 
 func _magicules_changed(current: float, maximum: float) -> void:
     $HUD/Magicules.text = "Magicules %.1f / %.0f" % [current, maximum]

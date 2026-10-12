@@ -9,6 +9,11 @@ signal defeated
 @export var immunity_seconds: float = 0.65
 var current: int
 var immunity_left: float = 0.0
+## Gradual healing (absorbed vitality): HP per second and seconds left. Host-only, saved.
+const REGEN_SECONDS := 10.0
+var regen_rate: float = 0.0
+var regen_left: float = 0.0
+var _regen_carry: float = 0.0
 
 func _ready() -> void:
     current = maximum
@@ -17,6 +22,36 @@ func _process(delta: float) -> void:
     if not AUTHORITY.can_mutate(self):
         return
     immunity_left = maxf(0.0, immunity_left - delta)
+    if regen_left <= 0.0:
+        return
+    if current <= 0:
+        clear_regen()
+        return
+    var step := minf(delta, regen_left)
+    regen_left -= step
+    _regen_carry += regen_rate * step
+    var whole := int(_regen_carry)
+    if whole > 0:
+        _regen_carry -= whole
+        current = mini(maximum, current + whole)
+        changed.emit(current, maximum)
+    if regen_left <= 0.0:
+        clear_regen()
+
+## Heal `total` HP over REGEN_SECONDS. A new heal replaces the running one only if it restores more.
+func start_regen(total: float) -> bool:
+    if not AUTHORITY.can_mutate(self) or total <= 0.0 or current <= 0:
+        return false
+    if total <= regen_rate * regen_left:
+        return false
+    regen_rate = total / REGEN_SECONDS
+    regen_left = REGEN_SECONDS
+    return true
+
+func clear_regen() -> void:
+    regen_rate = 0.0
+    regen_left = 0.0
+    _regen_carry = 0.0
 
 func take_damage(amount: int) -> bool:
     if not AUTHORITY.can_mutate(self):

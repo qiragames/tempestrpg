@@ -159,7 +159,7 @@ func _run() -> void:
     var data: Dictionary = CODEC.capture_entities(world)
     data.merge({"version": STORE.VERSION, "world_id": "trial_world", "players": {"host": CODEC.capture_player(actor)}, "progression": world.progression.duplicate(true)})
     data.erase("trial")
-    _check(STORE.VERSION == 10 and STORE.validate(data) and data.players.host.slots.size() == 4 and data.players.host.analysis.focus == 20.0, "v10 save keeps four slots and the armed focus")
+    _check(STORE.VERSION >= 10 and STORE.validate(data) and data.players.host.slots.size() == 4 and data.players.host.analysis.focus == 20.0, "v10 save keeps four slots and the armed focus")
     var restored = _guest("restored", Vector2(600, 600), false)
     CODEC.apply_player(restored, JSON.parse_string(JSON.stringify(data.players.host)), world, false)
     _check(restored.get_node("Absorption").focus_left == 20.0 and restored.get_node("SkillBook").skill_at_slot(3).id == &"predator_focus", "Reload restores focus timer and slot 4")
