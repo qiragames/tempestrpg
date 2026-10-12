@@ -1,4 +1,5 @@
 extends Node2D
+signal system_message(message: String)
 ## A deterministic placeholder map: visual obstacles and collisions share geometry.
 
 const WORLD_SIZE := Vector2(960, 640)
@@ -12,21 +13,22 @@ func _ready() -> void:
     _health_changed($Player/Health.current, $Player/Health.maximum)
     $Player/Magicules.changed.connect(_magicules_changed)
     $Player/Magicules.depleted.connect(func():
-        $HUD/SystemVoice.text = "[System] Magicules depleted. Allow aura to recover."
+        _announce("Magicules depleted. Allow aura to recover.")
     )
     $Player/Magicules.spend_rejected.connect(func(_cost: float):
         if $Player/Health.current > 0:
-            $HUD/SystemVoice.text = "[System] Insufficient Magicules. Strike unavailable."
+            _announce("Insufficient Magicules. Action unavailable.")
     )
     $Player/Health.changed.connect(_health_changed)
     $Player/Health.defeated.connect(func():
-        $HUD/SystemVoice.text = "[System] Vital signs depleted. Press R to retry."
+        _announce("Vital signs depleted. Press R to retry.")
         $Player.queue_redraw()
     )
-    $ForestGnasher/Health.defeated.connect(func():
-        if $Player/Health.current > 0:
-            $HUD/SystemVoice.text = "[System] Threat neutralized. Specimen retained."
-    )
+    for enemy in [$ForestGnasher, $SecondGnasher]:
+        enemy.get_node("Health").defeated.connect(func():
+            if $Player/Health.current > 0:
+                _announce("Threat neutralized. Specimen retained.")
+        )
     _add_obstacle(POND)
     for rock in ROCKS:
         _add_obstacle(rock)
@@ -43,7 +45,11 @@ func _process(_delta: float) -> void:
 func _analysis_changed(message: String) -> void:
     $HUD/Analysis.text = message
     if $Player/Health.current > 0:
-        $HUD/SystemVoice.text = "[System] " + message
+        _announce(message)
+
+func _announce(message: String) -> void:
+    $HUD/SystemVoice.text = "[System] " + message
+    system_message.emit(message)
 
 func _health_changed(current: int, maximum: int) -> void:
     $HUD/Health.text = "HP %d / %d" % [current, maximum]
@@ -55,7 +61,7 @@ func _magicules_changed(current: float, maximum: float) -> void:
 
 func announce_magicule_pickup(amount: float) -> void:
     if $Player/Health.current > 0:
-        $HUD/SystemVoice.text = "[System] Recovered %.1f Magicules." % amount
+        _announce("Recovered %.1f Magicules." % amount)
 
 func _add_obstacle(rect: Rect2) -> void:
     var body := StaticBody2D.new()

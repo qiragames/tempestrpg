@@ -14,12 +14,21 @@ func _process(delta: float) -> void:
     queue_redraw()
 
 func attack(facing: Vector2) -> bool:
+    return _strike(facing, damage, magicule_cost, cooldown)
+
+func attack_skill(facing: Vector2, skill_id: StringName) -> bool:
+    var skill: Resource = get_parent().get_node("SkillBook").get_skill(skill_id)
+    if skill == null:
+        return false
+    return _strike(facing, skill.damage, skill.magicule_cost, skill.cooldown)
+
+func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float) -> bool:
     if cooldown_left > 0.0 or get_parent().get_node("Health").current <= 0:
         return false
-    if not get_parent().get_node("Magicules").try_spend(magicule_cost):
+    if not get_parent().get_node("Magicules").try_spend(cost):
         return false
     direction = facing.normalized()
-    cooldown_left = cooldown
+    cooldown_left = recovery
     flash_left = 0.12
     var circle := CircleShape2D.new()
     circle.radius = 16.0
@@ -35,7 +44,7 @@ func attack(facing: Vector2) -> bool:
             continue
         var sight := PhysicsRayQueryParameters2D.create(global_position, target.global_position, 1)
         if space.intersect_ray(sight).is_empty() and target.has_node("Health"):
-            target.get_node("Health").take_damage(damage)
+            target.get_node("Health").take_damage(strike_damage)
     return true
 
 func _draw() -> void:

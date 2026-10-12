@@ -40,6 +40,15 @@ for i, row in enumerate(combat_rows):
 if len(combat_rows) != 5:
     raise ValueError("Combat tasks changed: review the graph mapping.")
 milestones = re.findall(r"### (M\d) — (.*?) · ([^\n]+)\n(.*?)(?=\n### |\n## |\Z)", source, re.S)
+network = re.search(r"### N0 — (.*?) · ([^\n]+)\n(.*?)(?=\n### |\n## |\Z)", source, re.S)
+if not network:
+    raise ValueError("Hosted multiplayer/save foundation milestone is missing.")
+network_title, network_status, network_body = network.groups()
+network_bullets = re.findall(r"^- (.*)$", network_body, re.M)
+nodes.append(dict(id="network_saves", title=network_title, status="next" if network_status.lower().startswith("next") else "done" if network_status.lower().startswith("done") else "planned", deps=["M1"],
+                  what="\n".join(b for b in network_bullets if not b.startswith("Exit goal:")),
+                  why="Host friends on the user's machine and preserve each character and shared world before deeper progression.",
+                  evidence=next(b.removeprefix("Exit goal: ") for b in network_bullets if b.startswith("Exit goal:")), x=300, y=1295, phase="N0"))
 why = [
     "Establish the distinctive fight → absorb → acquire → use loop before expanding progression.",
     "Turn progression into relationships, with meaningful Magicule costs and persistent evolution.",
@@ -55,10 +64,10 @@ for index, (mid, title, status_text, body) in enumerate(milestones):
     bullets = re.findall(r"^- (.*)$", body, re.M)
     evidence = next((b.removeprefix("Exit goal: ") for b in bullets if b.startswith("Exit goal:")), "")
     status = "done" if status_text.lower().startswith("done") else "next" if status_text.lower().startswith("next") else "planned"
-    nodes.append(dict(id=mid, title=title, status=status, deps=["skill_ui" if number == 1 else f"M{number-1}"],
+    nodes.append(dict(id=mid, title=title, status=status, deps=["skill_ui" if number == 1 else "network_saves" if number == 2 else f"M{number-1}"],
                       what="\n".join(b for b in bullets if not b.startswith("Exit goal:")),
-                      why=why[number-1], evidence=evidence, x=300, y=1180+(number-1)*115, phase=mid))
-if len(nodes) != 18:
+                      why=why[number-1], evidence=evidence, x=300, y=1180+(number-1)*115+(115 if number >= 2 else 0), phase=mid))
+if len(nodes) != 19:
     raise ValueError("Milestone structure changed: review the graph mapping.")
 updated = re.search(r"Last updated: (.*)", source).group(1)
 template = (ROOT / "tools/roadmap.template.html").read_text()

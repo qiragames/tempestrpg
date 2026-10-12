@@ -4,11 +4,11 @@ Last updated: 2026-10-12
 
 ## Goal
 
-A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript. Explore, fight, absorb creatures and acquire skills, name and evolve allies, and grow a camp into a multi-race nation with trade, diplomacy, and army battles.
+A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends connecting to the user’s host machine and persistent characters/worlds. Explore, fight, absorb creatures and acquire skills, name and evolve allies, and grow a camp into a multi-race nation with trade, diplomacy, and army battles.
 
 ## Current focus
 
-**Current milestone: combat and absorption (M1).** Absorption and analysis now consume defeated specimens and acquire the Common Skill Rending Bite. Press E near a corpse; the 12-Magicule, 1.2-second channel requires staying within 36 pixels and clear terrain. Duplicate skills do not stack. All 126 existing gameplay checks passed headlessly. **Next: the skill hotbar and dimensional storage.** Sprite, HUD, title, pause, inventory, and world-tileset references are documented; final art/menu integration and visual playtesting remain pending.
+**M1 complete: combat → drops → absorption → analysis → skill acquisition → skill use.** Rending Bite is usable through the hotbar, analyzed essence stacks in a 20-unit dimensional bag, and the inventory overlay pauses gameplay. The clearing has a second enemy to exercise the acquired skill. All 161 gameplay checks passed headlessly. **Next: hosted multiplayer and persistent-world foundations (N0), before the first ally and naming (M2).** Sprite, HUD, title, pause, inventory, and tileset references remain documented; final art integration and visual playtesting are pending.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -28,7 +28,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript. Explore, fig
 | Magicules as a shared resource with regeneration | Done | Validated foundation | 27 Magicule checks passed: spending, failure, delay, regeneration, depletion, HUD, defeat and restart |
 | Difficulty-scaled Magicule drops and proximity collection | Done | Combat and Magicules | 32 checks passed: tier stats/rewards, one drop per defeat, collection, overflow, obstruction and restart |
 | Absorb a defeated creature, analyze it, acquire one Common Skill | Done | Combat, Magicules and drops | 26 checks passed: cost, corpse selection, range, obstruction, channel, interruption, acquisition and duplicates |
-| Skill hotbar, cooldowns, inventory storage, and System Voice | Next | Absorption and analysis | Acquired skill must be selectable and usable with correct costs and feedback |
+| Skill hotbar, cooldowns, inventory storage, and System Voice | Done | Absorption and analysis | 35 checks passed: acquisition/use loop, skill costs/cooldown, material stacks, capacity, discard, UI and pause |
 
 ## Milestones and dependencies
 
@@ -41,21 +41,30 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 - Set up repeatable local/cloud validation and reusable installation/startup instructions.
 - Exit goal: the project opens, runs, and passes a meaningful headless smoke check.
 
-### M1 — Combat and absorption · Next, requires M0
+### M1 — Combat and absorption · Done
 
 - Completed: player health, directional basic attack, chasing enemy, telegraphed bite, damage immunity, defeat, and restart (24 checks passed).
 - Completed: shared Magicules, aura-strike spending, delayed regeneration, numeric/bar HUD, depletion and recovery (27 checks passed).
 - Completed user-requested addition: difficulty-scaled Magicule drops with proximity collection and overflow preservation (32 checks passed).
 - Completed: defeated-creature absorption, timed analysis, and acquisition of Common Skill Rending Bite (26 checks passed).
-- Add a skill hotbar, cooldowns, inventory storage, and System Voice notifications.
+- Completed: three hotbar slots, Rending Bite activation, shared attack cooldown, bounded material stacks, paused inventory UI, and System Voice/event-log feedback (35 checks passed).
 - Exit goal: movement → combat → defeat → absorption → skill use works end to end.
 
-### M2 — First ally and naming · Planned, requires M1
+### N0 — Hosted multiplayer + saves · Next, requires M1
+
+- Establish an authoritative host and client architecture, explicit player ownership, stable character/entity IDs, and a configurable limit capped at 8 total players (1 host + 7 guests).
+- Persist implemented positions, stats, resources, skills, inventory and world entities with versioned atomic saves; extend the schema for levels, equipment, quests, citizens, settlements and diplomacy as those systems are added.
+- Replicate host-validated movement/combat/rewards; prevent duplicate loot and corpse claims during concurrent interactions.
+- Bind HUD/inventory to each local player; multiplayer menus must not pause the host or other players.
+- Validate with real host/client processes, capacity, save/reload, disconnect/reconnect, and invalid/corrupt save cases.
+- Exit goal: a playable hosted session with the supported player cap and verified restoration of character/world state without ownership errors or duplicated rewards.
+
+### M2 — First ally and naming · Planned, requires N0
 
 - Recruit one nameless ally through a small encounter.
 - Name the ally with a visible Magicule cost and confirmation of the expected result.
 - Evolve its race, stats, and visual appearance; support depletion and recovery.
-- Add save/load for the player, learned skills, ally, and evolution state.
+- Extend N0 multiplayer/save foundations to persist recruited allies, naming costs, race evolution, and depletion/recovery state.
 - Exit goal: naming has a meaningful cost, evolution persists, and depletion cannot be bypassed by reload.
 
 ### M3 — First settlement · Planned, requires M2
@@ -117,6 +126,10 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-12: User added hosted multiplayer and complete persistent-world requirements. Inserted N0 before deeper progression and recorded authority, stable identity, character/shared state, local-menu behavior, and save/restore validation in `docs/MULTIPLAYER_AND_SAVES.md`. Runtime networking and saves remain unimplemented; player cap is confirmed as 8 total (1 host + 7 guests).
+
+- 2026-10-12: Completed M1 with usable Common Skill Rending Bite, hotbar cost/cooldown feedback, a second enemy, analyzed-material storage, bag/details/discard UI, gameplay pause during inventory, and an event log. 35 new integration checks and 126 previous checks passed headlessly. Branch: `codex/roadmap-05-skills-storage`. Next: hosted multiplayer and persistent-save foundations, then the first nameless ally and naming/evolution progression.
 
 - 2026-10-12: Added the corpse absorption channel, specimen/skill data, acquired-skill book, analysis progress/notifications, and duplicate protection. 26 absorption checks and the 100 previous checks passed headlessly. Documented inventory and forest/village tileset references. Branch: `codex/roadmap-04-absorption`. Next: hotbar skill activation and dimensional storage.
 

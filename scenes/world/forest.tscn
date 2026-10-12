@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/forest.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/forest_gnasher.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/ui/game_hud.gd" id="4"]
 
 [node name="Forest" type="Node2D"]
 script = ExtResource("1")
@@ -13,7 +14,12 @@ position = Vector2(480, 340)
 [node name="ForestGnasher" parent="." instance=ExtResource("3")]
 position = Vector2(620, 360)
 
+[node name="SecondGnasher" parent="." instance=ExtResource("3")]
+position = Vector2(840, 420)
+
 [node name="HUD" type="CanvasLayer" parent="."]
+process_mode = 3
+script = ExtResource("4")
 
 [node name="TopBar" type="ColorRect" parent="HUD"]
 offset_right = 480.0
@@ -45,7 +51,7 @@ color = Color(0.04, 0.09, 0.12, 0.92)
 offset_left = 12.0
 offset_top = 301.0
 theme_override_font_sizes/font_size = 10
-text = "WASD Move   Space/J Strike   E Absorb   R Restart"
+text = "WASD Move  Space/J Strike  E Absorb  1-3 Skills  I Bag  R Retry"
 
 [node name="Health" type="Label" parent="HUD"]
 offset_left = 12.0

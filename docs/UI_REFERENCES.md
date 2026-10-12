@@ -10,13 +10,13 @@ The user supplied a gameplay HUD reference in chat on 2026-10-12, with a dark fr
 - Bottom center: skill hotbar with key hints, cooldowns, item slots, and resource feedback.
 - Bottom left: System Voice and combat event log.
 
-The current prototype has health, Magicules, combat feedback, and controls. Quests, experience, clock, minimap, assistant analysis, skill inventory, and item systems remain unimplemented. Only display live values for implemented systems; introduce later panels with their actual gameplay feature.
+The current prototype has health, Magicules, combat feedback, and controls. Quests, experience, clock, minimap, experience/quest/time/minimap systems remain unimplemented. Analysis, acquired-skill slots, and a dimensional material bag now have prototype UI; equipment and usable items remain unimplemented. Only display live values for implemented systems; introduce later panels with their actual gameplay feature.
 
 ## Asset preparation
 
 Separate transparent PNGs or a documented atlas will make the reference implementable: panel/frame pieces, bar backgrounds/fills, icons, portraits, hotbar slot states, and minimap/compass decoration. Prefer scalable frame pieces where possible. Keep names, numbers, labels, notifications, and key hints out of baked textures so Godot can update and localize them. Retain readable pixel sizes at the provisional 480 × 320 viewport and test gameplay visibility.
 
-The source reference images are in the conversation, not imported into this repository. The user offered separate elements. Title-screen, pause-menu, and inventory propositions are described below. Their complete styled layouts have not been implemented yet.
+The source reference images are in the conversation, not imported into this repository. The user offered separate elements. Title-screen, pause-menu, and inventory propositions are described below. The material bag now has a functional prototype; their complete styled layouts have not been implemented yet.
 
 Implement the acquired-skill hotbar during M1 and broader visual polish during M4. A title screen and pause menu can be planned as a separate usability step once their references arrive. Basic combat input must remain available beneath noninteractive HUD panels.
 

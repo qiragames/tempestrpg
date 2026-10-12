@@ -1,6 +1,7 @@
 # This .gitignore file should be placed at the root of your Unity project directory
 # Godot development caches (the existing Unity rules are retained).
 .godot/
+/saves/
 *.tmp
 
 #

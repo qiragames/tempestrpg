@@ -3,11 +3,15 @@ extends Node
 
 signal learned(skill: Resource)
 var _known: Dictionary = {}
+var _slots: Array[StringName] = [&"", &"", &""]
 
 func learn(skill: Resource) -> bool:
     if skill == null or skill.id == &"" or _known.has(skill.id):
         return false
     _known[skill.id] = skill
+    var empty := _slots.find(&"")
+    if empty >= 0:
+        _slots[empty] = skill.id
     learned.emit(skill)
     return true
 
@@ -19,3 +23,8 @@ func get_skill(id: StringName) -> Resource:
 
 func all_skills() -> Array:
     return _known.values()
+
+func skill_at_slot(index: int) -> Resource:
+    if index < 0 or index >= _slots.size():
+        return null
+    return get_skill(_slots[index])

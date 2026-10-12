@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/combat/health.gd" id="2"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/resources/magicule_pool.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/skills/skill_book.gd" id="5"]
 [ext_resource type="Script" path="res://scripts/absorption/absorption.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/inventory/dimensional_inventory.gd" id="7"]
 
 [sub_resource type="CircleShape2D" id="BodyShape"]
 radius = 6.0
@@ -33,6 +34,9 @@ script = ExtResource("5")
 
 [node name="Absorption" type="Node" parent="."]
 script = ExtResource("6")
+
+[node name="Inventory" type="Node" parent="."]
+script = ExtResource("7")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 limit_left = 0

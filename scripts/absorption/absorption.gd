@@ -29,6 +29,9 @@ func attempt_absorb() -> bool:
     if nearest.specimen == null or nearest.specimen.skill == null:
         status_changed.emit("No analyzable traits detected.")
         return false
+    if not player.get_node("Inventory").can_store():
+        status_changed.emit("Dimensional storage full. Discard a material first.")
+        return false
     if not player.get_node("Magicules").try_spend(magicule_cost):
         status_changed.emit("Absorption requires 12 Magicules.")
         return false
@@ -56,6 +59,9 @@ func _process(delta: float) -> void:
     time_left = maxf(0.0, time_left - delta)
     if time_left <= 0.0:
         var specimen: Resource = _target.specimen
+        if not get_parent().get_node("Inventory").add_specimen(specimen):
+            _cancel("Dimensional storage full. Specimen retained.")
+            return
         var new_skill: bool = get_parent().get_node("SkillBook").learn(specimen.skill)
         _target.queue_free()
         _target = null

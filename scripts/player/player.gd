@@ -23,6 +23,12 @@ func _unhandled_input(event: InputEvent) -> void:
         $MeleeAttack.attack(facing)
     elif event.is_action_pressed("absorb") and not event.is_echo():
         $Absorption.attempt_absorb()
+    elif not event.is_echo():
+        for index in range(3):
+            if event.is_action_pressed("skill_%d" % (index + 1)):
+                var skill: Resource = $SkillBook.skill_at_slot(index)
+                if skill != null:
+                    $MeleeAttack.attack_skill(facing, skill.id)
 
 func _draw() -> void:
     if has_node("Health") and $Health.current <= 0:
