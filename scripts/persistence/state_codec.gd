@@ -32,6 +32,7 @@ static func capture_player(actor: Node2D) -> Dictionary:
     return {
         "id": actor.character_id, "position": vector(actor.position), "facing": vector(actor.facing),
         "move_speed": actor.move_speed,
+        "form": {"id": actor.form, "cooldown": actor.form_cooldown},
         "exhaustion": {"active": actor.exhaustion_active, "remaining": actor.exhaustion_left},
         "health": {"maximum": health.maximum, "current": health.current, "immunity": health.immunity_left, "immunity_seconds": health.immunity_seconds},
         "magicules": {"maximum": pool.maximum, "current": pool.current, "regen": pool.regeneration_per_second, "regen_delay": pool.regeneration_delay, "delay": pool._delay_left, "enabled": pool.enabled},
@@ -46,6 +47,8 @@ static func apply_player(actor: Node2D, state: Dictionary, world: Node2D, replic
     actor.position = to_vector(state.position)
     actor.facing = to_vector(state.facing)
     actor.move_speed = state.move_speed
+    actor.apply_form(state.form.id)
+    actor.form_cooldown = state.form.cooldown
     actor.progression = state.progression.duplicate(true)
     actor.exhaustion_active = state.exhaustion.active
     actor.exhaustion_left = state.exhaustion.remaining

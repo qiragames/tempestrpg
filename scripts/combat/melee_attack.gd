@@ -21,7 +21,9 @@ func _process(delta: float) -> void:
     queue_redraw()
 
 func attack(facing: Vector2) -> bool:
-    return _strike(facing, damage, magicule_cost, cooldown)
+    # Mimic forms may strengthen the basic strike; skills keep their own damage.
+    var bonus: int = get_parent().form_strike_bonus() if get_parent().has_method("form_strike_bonus") else 0
+    return _strike(facing, damage + bonus, magicule_cost, cooldown)
 
 func attack_skill(facing: Vector2, skill_id: StringName) -> bool:
     var skill: Resource = get_parent().get_node("SkillBook").get_skill(skill_id)

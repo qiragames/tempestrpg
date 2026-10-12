@@ -57,6 +57,10 @@ skill_3={
 "events": [Object(InputEventKey,"physical_keycode":51)]
 }
 
+transform={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":84)]
+}
 absorb={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"physical_keycode":69)]

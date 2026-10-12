@@ -1,5 +1,7 @@
 extends CharacterBody2D
 @onready var session: Node = get_node("/root/GameSession")
+const AUTHORITY := preload("res://scripts/network/authority.gd")
+const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 ## Movement delegates health and attacks to reusable combat components.
 
 @export var move_speed: float = 95.0
@@ -13,10 +15,20 @@ var exhaustion_left: float = 0.0
 var remote_direction := Vector2.ZERO
 var last_input_msec: int = 0
 var progression: Dictionary = {"level": 1, "experience": 0, "race": "Slime", "quests": {}, "equipment": {}}
+## Current mimic form and the time until it can change again (host-owned, saved).
+var form: String = FORMS.BASE
+var form_cooldown: float = 0.0
 
 func _ready() -> void:
     $Camera2D.enabled = local_controlled
-    $Health.defeated.connect(func(): $Magicules.enabled = false)
+    # Each character resizes its own body when its form changes.
+    $CollisionShape2D.shape = $CollisionShape2D.shape.duplicate()
+    $Health.defeated.connect(func():
+        $Magicules.enabled = false
+        # Safe-form policy: defeat always returns to the base form.
+        apply_form(FORMS.BASE)
+        form_cooldown = 0.0
+    )
 
 func _physics_process(_delta: float) -> void:
     var direction := Vector2.ZERO
@@ -33,11 +45,63 @@ func _physics_process(_delta: float) -> void:
     if $Health.current <= 0 or is_exhausted():
         velocity = Vector2.ZERO
         return
-    velocity = direction * move_speed
+    velocity = direction * current_speed()
     if not direction.is_zero_approx():
         facing = direction
     move_and_slide()
     queue_redraw()
+
+func current_speed() -> float:
+    return move_speed * FORMS.FORMS[form].speed
+
+func form_strike_bonus() -> int:
+    return FORMS.FORMS[form].strike_bonus
+
+## Presentation and collision for a form; validation and costs live in try_transform.
+func apply_form(id: String) -> void:
+    form = id
+    $CollisionShape2D.shape.radius = FORMS.FORMS[id].radius
+    queue_redraw()
+
+## Host-side mimicry. Costs are paid only when the change succeeds; nothing is refilled.
+func try_transform(target: String) -> bool:
+    if not AUTHORITY.can_mutate(self) or not FORMS.FORMS.has(target) or target == form:
+        return false
+    if $Health.current <= 0 or is_exhausted() or form_cooldown > 0.0:
+        return false
+    if not FORMS.unlocked(target, $SkillBook.evidence):
+        session.notify_character(character_id, "Mimicry requires analyzing that creature first.")
+        return false
+    if FORMS.FORMS[target].radius > FORMS.FORMS[form].radius and not _room_for(FORMS.FORMS[target].radius):
+        session.notify_character(character_id, "Not enough room to change form here.")
+        return false
+    var cost: float = FORMS.FORMS[target].cost
+    if cost > 0.0 and not $Magicules.try_spend(cost):
+        return false
+    apply_form(target)
+    form_cooldown = FORMS.CHANGE_COOLDOWN
+    session.notify_character(character_id, "Mimicry: %s." % FORMS.FORMS[target].name)
+    session.queue_save()
+    return true
+
+func _room_for(radius: float) -> bool:
+    var circle := CircleShape2D.new()
+    circle.radius = radius
+    var query := PhysicsShapeQueryParameters2D.new()
+    query.shape = circle
+    query.transform = Transform2D(0.0, global_position)
+    query.collision_mask = 1
+    query.exclude = [get_rid()]
+    return get_world_2d().direct_space_state.intersect_shape(query, 1).is_empty()
+
+## The form T switches to: base when transformed, otherwise the first unlocked mimic form.
+func next_form() -> String:
+    if form != FORMS.BASE:
+        return FORMS.BASE
+    for id in FORMS.available($SkillBook.evidence):
+        if id != FORMS.BASE:
+            return id
+    return ""
 
 func is_exhausted() -> bool:
     return exhaustion_active
@@ -54,7 +118,10 @@ func begin_exhaustion(seconds: float) -> void:
     queue_redraw()
 
 func _process(delta: float) -> void:
-    if session.replica_world or not exhaustion_active or $Health.current <= 0:
+    if session.replica_world:
+        return
+    form_cooldown = maxf(0.0, form_cooldown - delta)
+    if not exhaustion_active or $Health.current <= 0:
         return
     exhaustion_left = maxf(0.0, exhaustion_left - delta)
     if exhaustion_left <= 0.0 and $Magicules.current >= $Magicules.maximum * 0.25:
@@ -65,6 +132,15 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
     if not local_controlled or input_blocked:
+        return
+    if event.is_action_pressed("transform") and not event.is_echo():
+        var target := next_form()
+        if target.is_empty():
+            session.notify_character(character_id, "No mimic form known yet. Analyze a creature first.")
+        elif session.active:
+            session.request_action("transform", {"form": target})
+        else:
+            try_transform(target)
         return
     if session.active:
         if event.is_action_pressed("restart") and not event.is_echo():
@@ -97,6 +173,17 @@ func _draw() -> void:
         draw_rect(Rect2(-5, -2, 10, 3), Color("78a6b4"))
         draw_rect(Rect2(-4, 2, 3, 1), Color("142c42"))
         draw_rect(Rect2(1, 2, 3, 1), Color("142c42"))
+        return
+    if form == "gnasher":
+        # Gnasher mimicry keeps the slime's cyan palette so it never reads as an enemy.
+        draw_rect(Rect2(-10, 3, 20, 5), Color(0.03, 0.12, 0.14, 0.5))
+        draw_rect(Rect2(-9, -8, 18, 14), Color("359caf"))
+        draw_rect(Rect2(-11, -12, 5, 8), Color("359caf"))
+        draw_rect(Rect2(6, -12, 5, 8), Color("359caf"))
+        draw_rect(Rect2(-7, -10, 14, 3), Color("73d7d5"))
+        draw_rect(Rect2(Vector2(-6, -4) + facing * 1.5, Vector2(3, 3)), Color("142c42"))
+        draw_rect(Rect2(Vector2(3, -4) + facing * 1.5, Vector2(3, 3)), Color("142c42"))
+        draw_rect(Rect2(-4, 2, 8, 3), Color("baf3e4"))
         return
     # Deliberately simple pixel placeholder, ready to replace with animated sprites.
     draw_rect(Rect2(-9, 3, 18, 5), Color(0.03, 0.12, 0.14, 0.5))

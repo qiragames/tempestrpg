@@ -123,7 +123,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.0 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 94.9 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](21_shrine.png)
@@ -156,9 +156,17 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 *Piercing Fang: long thrust that hits every creature in a line* (640x360)
 
 - [x] Piercing Fang activated from hotbar slot 3
-## 10. Multiplayer panel
+## 10. Mimicry: Gnasher Form
+- [x] T transforms into Gnasher Form
+- [x] Transformation cost 20 Magicules
 
-![F8 host/join panel](27_session_panel.png)
+![Gnasher Form: cyan mimic of the Gnasher, faster, stronger basic strike; HUD shows form and cooldown](27_gnasher_form.png)
+*Gnasher Form: cyan mimic of the Gnasher, faster, stronger basic strike; HUD shows form and cooldown* (640x360)
+
+- [x] T returns to the slime after the cooldown
+## 11. Multiplayer panel
+
+![F8 host/join panel](28_session_panel.png)
 *F8 host/join panel* (640x360)
 
 
@@ -194,5 +202,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Recovered 16.0 Magicules.
 - Analyzing Thornback Gnasher. Remain nearby.
 - Analysis complete. Common: Thorn Lash, Extra: Piercing Fang acquired.
+- Mimicry: Gnasher Form.
+- Mimicry: Slime.
 
-**Result: 0 failed checks, 27 screenshots.**
+**Result: 0 failed checks, 28 screenshots.**

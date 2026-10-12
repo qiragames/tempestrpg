@@ -4,7 +4,7 @@ A Godot **4.6.3** / GDScript prototype for a top-down pixel-art Isekai RPG.
 
 ## Play
 
-Open `project.godot` in Godot 4.6.3 and press **F5** to run the project. Move with **WASD / arrow keys**, strike with **Space / J**, absorb with **E**, use hotbar slots with **1–3** or a click, open storage with **I**, and use **F8** for Host/Join or **F9** for host save. **R** retries offline or respawns a defeated hosted character. Explore as a placeholder slime; trees, rocks, water, and the map edge have collision.
+Open `project.godot` in Godot 4.6.3 and press **F5** to run the project. Move with **WASD / arrow keys**, strike with **Space / J**, absorb with **E**, use hotbar slots with **1–3** or a click, open storage with **I**, and use **F8** for Host/Join or **F9** for host save. **T** switches mimic form, **R** retries offline or respawns a defeated hosted character. Explore as a placeholder slime; trees, rocks, water, and the map edge have collision.
 
 The game renders at a 640 × 360 base resolution (×2 = 1280 × 720 default window, ×3 = 1920 × 1080 fullscreen), integer scaling, nearest texture filtering, and a bounded player camera. Art is a procedural placeholder. One Forest Gnasher notices you within 180 pixels, chases at 55 pixels/second, and pauses for a 0.35-second bite windup. Dodge away while it turns orange. It recovers for 0.9 seconds before attacking again. Its basic AI can collide with terrain; pathfinding is not implemented.
 
@@ -62,8 +62,10 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/camp_growth.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/skill_catalogue.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/extra_skill.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/mimic_form.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
+python3 tests/network_forms.py
 "$GODOT_BIN" --headless --path . --quit-after 120
 ```
 
@@ -194,3 +196,7 @@ Every skill is listed in `scripts/skills/skill_catalogue.gd` with a stable ID, a
 Each character keeps its own **evidence**: which creatures it has analyzed and which trials, masteries and ascensions it has earned. The host grants skills only when that evidence satisfies a rule, so repeating an analysis or reconnecting does not duplicate unlocks. Save validation rejects knowledge that its saved evidence does not justify; this checks consistency of the host-owned save. Current skills: **Rending Bite** (Common, analyze a Forest Gnasher), **Thorn Lash** (Common, analyze the Thornback Gnasher: 14 damage, 8 Magicules, 0.5 s) and **Piercing Fang** (Extra: know both Commons and have analyzed a Thornback, in either order). Piercing Fang is a long thrust in your facing direction that hits **every** creature in a 64-pixel line for 26 damage (18 Magicules, 1.2 s cooldown); terrain still blocks it. The **Thornback Gnasher**, a spiny purple variant, waits in the far southeast corner at (880, 560); absorbing it stores a Thornback Quill. Unique/Ultimate stay locked until a trial (step 16) and ascension (later) exist. Hotbar slots are assigned by the host through an `assign_slot` request, and skills activate through a fixed effect list. Schema **v7** stores the evidence; older worlds rebuild it from the skills characters actually know. Tests: `tests/skill_catalogue.gd` (51 checks, including required known-skill consistency).
 
 Review fix: saved Extra/Unique/Ultimate skills must retain their required known skills as well as supporting evidence. This rejects inconsistent saves that kept an Extra while removing its Common prerequisites. Normal earned skills and schema v8 remain unchanged.
+
+## Mimicry: Gnasher Form
+
+After your character has analyzed a Forest Gnasher, press **T** to take **Gnasher Form** for **20 Magicules**: you move 30% faster and your basic strike deals 14 instead of 10 damage. Skills keep their own damage. Press **T** again to turn back into a slime for free. Changing form has a 2-second cooldown, shown next to the form name in the HUD. The Gnasher body is slightly larger, so you need a little room away from walls to transform; if there is none, nothing is charged. Transforming never restores HP or Magicules and is impossible while asleep, defeated or in a menu. Defeat always turns you back into a slime. Each character's form is saved (schema **v9**; older characters start as slimes) and every player sees it. Tests: `tests/mimic_form.gd` (30) and `python3 tests/network_forms.py` (17 real-process checks).

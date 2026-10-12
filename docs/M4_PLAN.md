@@ -45,7 +45,9 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 
 **Done evidence:** both Common skills and the Extra can actually be earned/used; unsupported combinations fail; two players cannot claim the same corpse twice; save/reload preserves claims and unlocks. Use placeholders until 19.
 
-## 15 — First mimic form (Codex)
+## 15 — First mimic form (Claude, next in order by user decision) — **Done**
+
+**Status 2026-10-13:** implemented on `claude/roadmap-15-mimic-form`. `FormCatalogue.FORMS` (`slime` base; `gnasher`: analysis `forest_gnasher`, cost 20, speed ×1.3, basic-strike +4, radius 8), `Player.try_transform` (host-only; unlocked, alive, awake, off cooldown, room for a larger body, cost paid on success), `transform` intent `{form}`, T key, `CHANGE_COOLDOWN` 2s, defeat reverts to base (respawn as slime), saved `form = {id, cooldown}` (schema v9). Visual form ID for step 19: `Player.form`. Placeholder: cyan Gnasher silhouette.
 
 **Goal/dependencies:** requires 13–14. Unlock one analyzed creature form, allow transform/revert with an explicit Magicule cost, and give it one bounded movement/attack difference.
 

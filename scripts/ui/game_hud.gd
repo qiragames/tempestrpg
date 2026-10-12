@@ -119,6 +119,8 @@ func _activate_slot(index: int) -> void:
 
 func _process(_delta: float) -> void:
     _recovery.visible = player.is_exhausted()
+    var shape: Dictionary = player.FORMS.FORMS[player.form]
+    $StrikeCost.text = "Strike: 8 Magicules · Form: %s%s" % [shape.name, " (%.1fs)" % player.form_cooldown if player.form_cooldown > 0.0 else " · T: mimic"]
     _recovery.text = "Recovering: %.1fs · need %.0f Magicules" % [player.exhaustion_left, player.get_node("Magicules").maximum * 0.25]
     for index in range(_slots.size()):
         var skill: Resource = player.get_node("SkillBook").skill_at_slot(index)

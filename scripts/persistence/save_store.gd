@@ -1,7 +1,8 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 8
+const VERSION := 9
+const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
 ## Initial saved state of the v8 encounter; matches scenes/world/forest.tscn.
 const THORNBACK := {"id": "thornback_1", "kind": "thornback", "position": [880.0, 560.0], "home": [880.0, 560.0], "difficulty": 1, "hp": 30, "maximum_hp": 30, "immunity": 0.0, "state": 0, "state_time": 0.0, "target": ""}
@@ -84,6 +85,12 @@ static func validate_player(state: Variant, id: String) -> bool:
         equipped[slot] = true
     # Every saved skill must follow from this character's own unlock evidence.
     if not SKILLS.evidence_valid(state.get("skill_evidence"), known) or not SKILLS.justified(known, state.skill_evidence):
+        return false
+    # The saved form must be unlocked by this character's evidence; defeated characters are always base.
+    var form = state.get("form")
+    if not form is Dictionary or form.size() != 2 or not form.get("id") is String or not FORMS.unlocked(form.id, state.skill_evidence) or not _number(form.get("cooldown"), 0, FORMS.CHANGE_COOLDOWN):
+        return false
+    if health.current == 0 and form.id != FORMS.BASE:
         return false
     var bag = state.get("inventory")
     if not bag is Dictionary or not _number(bag.get("capacity"), 1, 10000, true) or not bag.get("counts") is Dictionary:
@@ -243,12 +250,22 @@ static func migrate(data: Variant) -> Variant:
         if not data.get("enemies") is Array:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 8
         var present := false
         for enemy in data.enemies:
             present = present or (enemy is Dictionary and enemy.get("id") == THORNBACK.id)
         if not present:
             data.enemies.append(THORNBACK.duplicate(true))
+    # v9 adds each character's mimic form; everyone starts as the base form.
+    if data.get("version") == 8:
+        if not data.get("players") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = VERSION
+        for state in data.players.values():
+            if not state is Dictionary:
+                return null
+            state["form"] = state.get("form", {"id": FORMS.BASE, "cooldown": 0.0})
     return data
 
 static func _read(path: String) -> Dictionary:

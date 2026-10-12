@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**Current focus: M4 steps 15 (first mimic form), 17 (analysis assistant model) and 18 (asset preparation) are ready.** Step 14 is done (Claude): a Thornback Gnasher variant in the southeast corner, a second Common skill (Thorn Lash) and the first Extra skill (Piercing Fang: a line thrust that hits every creature in it), unlocked only when a character knows both Rending Bite and Thorn Lash with Thornback evidence, in either order. Schema v8 adds enemy kinds, the Thornback Quill material and the encounter to older worlds. Claude’s original 636 checks pass on Windows and Linux. Codex’s separate save-prerequisite correction passes 642 checks on Linux (447 local + 90 general network + 105 camp network) and awaits the user’s version choice; the visible playtest is Claude’s Windows evidence. Details: `docs/M4_PLAN.md`. Real LAN/WAN checks and final art/audio remain pending.
+**Current focus: M4 steps 16 (personal trial + first Unique), 17 (analysis assistant model) and 18 (asset preparation) are ready.** Step 15 is done (Claude): the first mimic form. A character that has analyzed a Forest Gnasher can press T to take Gnasher Form for 20 Magicules (30% faster movement, +4 basic-strike damage, slightly larger body) and press T again to revert for free after a 2-second cooldown. Transformation needs room, never refills HP/Magicules or ends exhaustion, and defeat always reverts to the slime. Schema v9 saves each character's form. 689 automated checks pass on Windows (477 local + 90 general + 105 camp + 17 form network) plus the visual playtest. Details: `docs/M4_PLAN.md`.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -136,15 +136,15 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 
 ## M4 approved steps
 
-**Approved by the user, 2026-10-12.** Detailed goals, files, authority/save contracts and completion evidence: `docs/M4_PLAN.md`. Steps 13 and 14 are Done; steps 15, 17 and 18 are Next; later steps remain Planned behind their prerequisites.
+**Approved by the user, 2026-10-12.** Detailed goals, files, authority/save contracts and completion evidence: `docs/M4_PLAN.md`. Steps 13–15 are Done; steps 16, 17 and 18 are Next; later steps remain Planned behind their prerequisites.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
 | Approve M4 plan | Done | M3 | User explicitly approved steps 13–24 on 2026-10-12 |
 | 13 Skill catalogue and unlock ledger | Done | Approve M4 plan | 48 catalogue checks + 4 new network checks: four-tier rule validation, per-character evidence, idempotent unlocks, forged/premature unlock and save rejection, host loadout intent, effect dispatch, eight separate ledgers, v6→v7 migration |
 | 14 Second specimen and Extra upgrade | Done | 13 | 37 checks: Thornback encounter, Thorn Lash, Piercing Fang in both unlock orders, line hits/LOS/cost/cooldown, contested corpse, quill/kind save, v7→v8 migration; visible showcase |
-| 15 First mimic form | Next | 13, 14 | Owned transform/revert, safe collision, no resource refill and replicated saved form |
-| 16 Personal trial and Unique gate | Planned | 13, 15 | One personal trial/Unique; mastery saved, Ultimate explicitly locked for future ascension |
+| 15 First mimic form | Done | 13, 14 | 30 local + 17 real-process checks: unlock by analysis, cost once, room check, no refills, exhaustion/menus/replicas blocked, defeat/respawn revert, per-character body, v8→v9 migration, replicated/saved/reloaded forms; visible showcase |
+| 16 Personal trial and Unique gate | Next | 13, 15 | One personal trial/Unique; mastery saved, Ultimate explicitly locked for future ascension |
 | 17 Analysis assistant model | Next | 13, 14 | Read-only factual traits/unlock/recovery advice isolated to each character |
 | 18 Prepare sprite, tileset and UI assets | Next | Approve M4 plan | Preserve originals; review transparent exports, pivots/atlases and nearest previews at x2/x3 |
 | 19 Character sprites and mimic presentation | Planned | 15, 16, 18 | Visible state/form/evolution animations; combat timing and client identity unchanged |
@@ -163,6 +163,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-13: Claude Code completed M4 step 15 (next step in order, user decision) on top of Codex's accepted step-14 save fix (`ca95570`, verified on Windows: 642 checks). Added `scripts/forms/form_catalogue.gd` (base Slime; Gnasher Form unlocked by Forest Gnasher analysis: 20 Magicules, ×1.3 speed, +4 basic strike, radius 8), player `try_transform` with room check and 2s change cooldown, `transform` host intent and T key, defeat-to-slime policy, HUD form line, schema v9. New `tests/mimic_form.gd` (30) and `tests/network_forms.py` (17 real-process checks); visual playtest shows Gnasher Form. 477 local + 212 network checks pass on Windows. Branch: `claude/roadmap-15-mimic-form`. Next: 16, 17, 18.
 
 - 2026-10-13: Codex reviewed step-14 `ce35b1d` and reproduced its 636 checks on Linux; verified 27 screenshot files/log links. Found and reproduced an inconsistent-save case allowing Piercing Fang without required known Commons. Separate branch `codex/fix-extra-skill-save-prerequisites` requires actual known prerequisites; 6 new regressions fail before/pass after, full fixed suite 642 checks plus startup passed. Acknowledgment published; Claude’s branch unchanged and user version selection pending.
 

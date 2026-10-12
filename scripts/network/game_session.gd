@@ -322,6 +322,12 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             return false
         var ally = world.entity_by_id(payload.id)
         return ally.try_name(actor, payload.name) if ally != null and ally.is_in_group("allies") else false
+    if action == "transform":
+        # Clients name the target form only; the host checks knowledge, room, cost and timers.
+        if payload.size() != 1 or not payload.get("form") is String or payload.form.length() > 32:
+            rejected_requests += 1
+            return false
+        return false if actor.input_blocked else actor.try_transform(payload.form)
     if action == "assign_slot":
         # Loadout is host-owned: clients name a slot and a skill ID; the book checks knowledge.
         var slot: Variant = payload.get("slot")

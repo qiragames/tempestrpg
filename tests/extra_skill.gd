@@ -129,7 +129,7 @@ func _run() -> void:
         players[other.character_id] = CODEC.capture_player(other)
         players[other.character_id]["token_hash"] = "b".repeat(64)
     data.merge({"version": STORE.VERSION, "world_id": "extra_world", "players": players, "progression": world.progression.duplicate(true)})
-    _check(STORE.VERSION == 8 and STORE.validate(data), "v8 world with Thornback, quills and Extra validates")
+    _check(STORE.VERSION >= 8 and STORE.validate(data), "World with Thornback, quills and Extra validates")
     _check(not data.enemies.any(func(enemy): return enemy.id == "thornback_1"), "Absorbed Thornback is consumed and absent from the save")
     _check(data.enemies.any(func(enemy): return enemy.id == "thornback_corpse" and enemy.kind == "thornback" and enemy.hp == 0), "Defeated, unabsorbed Thornback saved with its kind")
     var path := OS.get_temp_dir().path_join("tempestrpg-extra-" + Crypto.new().generate_random_bytes(8).hex_encode()) + "/world.json"
