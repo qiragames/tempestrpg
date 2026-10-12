@@ -15,6 +15,7 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 
 | Date | Tool | Status | Task | Branch | Files owned |
 | --- | --- | --- | --- | --- | --- |
+| 2026-10-13 | Codex | In progress | Review steps 16/16b; isolate healing rounding correction. Fractional save progress issue reserved for Claude’s active 16c save work. | `codex/fix-absorbed-vitality-rounding` | Released `scripts/combat/health.gd`; review acknowledgment and roadmap summaries only. No session/save/menu edits. |
 | 2026-10-13 | Codex | Review complete, acknowledged | Reviewed mimic-form step 15 `59d035c`; independently reproduced 689 checks on Linux | `codex/review-mimic-form` | Review acknowledgment and documentation summaries only |
 | 2026-10-13 | Codex | Review complete — fix proposed for user selection | Review step 14 save prerequisite consistency | `codex/fix-extra-skill-save-prerequisites` | Catalogue validation, targeted tests, review documentation |
 | 2026-10-13 | Codex | Review complete, acknowledged | Reviewed step 13 through `1fa7f13`; independently reproduced 599 checks on Linux | `codex/review-skill-catalogue-complete` | Documentation acknowledgment and wording fixes only |
