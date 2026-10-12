@@ -1,0 +1,127 @@
+# TempestRPG — Living Roadmap
+
+Last updated: 2026-10-12
+
+## Goal
+
+A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript. Explore, fight, absorb creatures and acquire skills, name and evolve allies, and grow a camp into a multi-race nation with trade, diplomacy, and army battles.
+
+## Current focus
+
+**Current milestone: combat and absorption (M1).** Basic combat is implemented: directional strike, shared health, attack cooldown, damage immunity, a chasing Forest Gnasher with a telegraphed bite, defeat, HUD feedback, and restart. Import, 17 foundation checks, 24 combat checks, and the main-scene run passed headlessly. **Next: Magicules and regeneration**, followed by absorption and analysis. Visual playtesting remains pending; this session cannot share a live game window.
+
+| Task | Status | Prerequisite | Completion evidence |
+| --- | --- | --- | --- |
+| Establish the game design brief | Done | User's GDD | Genre, core loop, progression rules agreed |
+| Choose engine and language | Done | Engine decision | Godot 4 + GDScript selected |
+| Create persistent roadmap | Done | GDD and engine | This file and agent update instructions |
+| Select and install a stable Godot 4 version | Done | Linux/cloud compatibility | Preinstalled Godot 4.6.3 verified; temporary-project import and GDScript/2D runtime checks passed |
+| Create the minimal Godot project | Done | Engine version | Actual project imported without errors in Godot 4.6.3 |
+| Define input, pixel scale, and scene structure | Done | Godot project | 480 × 320 viewport, player/camera/world scenes; movement and collision checks passed |
+| Validate startup and save reusable environment instructions | Done | Runnable project | 17 smoke checks passed, 120-frame main-scene run passed; tested install/start draft saved |
+
+## Current milestone tasks
+
+| Task | Status | Prerequisite | Completion evidence |
+| --- | --- | --- | --- |
+| Player health, strike, damage, enemy AI, and defeat | Done | Validated foundation | 24 combat checks passed; shared health and strike components, Forest Gnasher, HP feedback and restart |
+| Magicules as a shared resource with regeneration | Next | Validated foundation | Resource spending and recovery must be tested before marking Done |
+| Absorb a defeated creature, analyze it, acquire one Common Skill | Planned | Combat and Magicules | Defeat → absorb → analyze → acquisition must work end to end |
+| Skill hotbar, cooldowns, inventory storage, and System Voice | Planned | Absorption and analysis | Acquired skill must be selectable and usable with correct costs and feedback |
+
+## Milestones and dependencies
+
+Milestones are ordered by dependencies. Later phases remain provisional until the playable slice establishes scope and balance. No delivery dates have been estimated.
+
+### M0 — Development foundation · Done
+
+- Pin Godot version and establish project folders, input actions, and pixel rendering settings.
+- Build a small test scene with placeholder art and player movement.
+- Set up repeatable local/cloud validation and reusable installation/startup instructions.
+- Exit goal: the project opens, runs, and passes a meaningful headless smoke check.
+
+### M1 — Combat and absorption · Next, requires M0
+
+- Completed: player health, directional basic attack, chasing enemy, telegraphed bite, damage immunity, defeat, and restart (24 checks passed).
+- Add Magicules and regeneration as shared gameplay resources.
+- Absorb a defeated enemy, analyze it, and acquire one Common Skill.
+- Add a skill hotbar, cooldowns, inventory storage, and System Voice notifications.
+- Exit goal: movement → combat → defeat → absorption → skill use works end to end.
+
+### M2 — First ally and naming · Planned, requires M1
+
+- Recruit one nameless ally through a small encounter.
+- Name the ally with a visible Magicule cost and confirmation of the expected result.
+- Evolve its race, stats, and visual appearance; support depletion and recovery.
+- Add save/load for the player, learned skills, ally, and evolution state.
+- Exit goal: naming has a meaningful cost, evolution persists, and depletion cannot be bypassed by reload.
+
+### M3 — First settlement · Planned, requires M2
+
+- Establish a goblin camp with limited resources and a few buildable structures.
+- Assign allies to gathering, agriculture, and construction roles.
+- Connect exploration rewards to settlement production and growth.
+- Exit goal: a complete playable slice from exploration to an evolved ally contributing to the camp.
+
+### M4 — Progression and presentation · Planned, requires M3
+
+- Expand skill data across Common, Extra, Unique, and Ultimate tiers with explicit unlock rules.
+- Add analysis/assistant UI, selected skill combinations, and an initial mimic form.
+- Develop original regions, factions, sprites, audio, and combat VFX.
+- Balance naming costs, skill acquisition, and recovery against actual playtests.
+- Exit goal: the core slice is readable, enjoyable, and balanced before adding world scale.
+
+### M5 — Nation building and diplomacy · Planned, requires M4
+
+- Expand settlement services, citizen roles, trade routes, and faction relationships.
+- Add emissaries, diplomatic choices, and consequences.
+- Introduce settlement threats and a small defensive siege.
+- Exit goal: economy and diplomacy change the outcome of a playable conflict.
+
+### M6 — Armies and endgame · Planned, requires M5
+
+- Introduce squad commands, evolved citizen units, and larger invasions.
+- Develop major ascensions, Ultimate Skills, and apex encounters.
+- Validate performance, progression pacing, accessibility, and save compatibility.
+- Exit goal: late-game combat and nation management extend the established core loop reliably.
+
+## Design rules to preserve
+
+- Naming transfers a substantial amount of Magicules from the namer; repeated naming risks exhaustion or temporary sleep.
+- Evolution changes race, stats, and silhouette. It must have explicit prerequisites and balanced gains.
+- Absorption is followed by analysis; acquisition and mimicry need defined rules rather than granting unlimited power immediately.
+- Skills follow Common → Extra → Unique → Ultimate tiers. Strong abilities require appropriate progression.
+- The System Voice is cold and concise; the internal assistant exposes useful analysis and automation.
+- Citizens matter to the economy and military. Race-specific aptitudes are starting design ideas, not a substitute for individual roles.
+- Use placeholder assets for the initial slice; polish after the core loop works.
+
+## Open decisions and risks
+
+| Topic | Default or required decision | When needed |
+| --- | --- | --- |
+| Godot version | Godot 4.6.3 stable selected and verified | Done |
+| Pixel scale and camera | 480 × 320, integer scaling, bounded camera; final art resolution provisional | M0 complete |
+| Starting form | Slime/shapeshifter prototype consistent with absorption | M1 |
+| Naming balance | Define costs, reserves, exhaustion, and recovery; test exploit cases | M2 |
+| World identity | Develop original names, lore, and assets from the supplied inspirations | Before final content production |
+| Project scope | Ship a small playable slice before expanding to nation-scale simulation | M3 review |
+
+## Update contract
+
+Open `ROADMAP.html` for the graphical dependency map. Hover or click a title to view its purpose, completion criteria, prerequisites, and successors. Generate the view after roadmap edits with `python3 tools/build_roadmap.py`; it has no external dependencies or running server requirement.
+
+This file is the shared source of truth. At the beginning of project work, read it and select the nearest unmet prerequisite. After meaningful work, update task statuses, verified outcomes, blockers, and the next action. Mark work Done only with evidence. If priorities change, revise dependencies explicitly.
+
+Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
+
+## Progress log
+
+- 2026-10-12: Added modular combat components and the Forest Gnasher encounter. Import, 24 combat checks, 17 foundation checks, and a 120-frame main-scene run passed. Graph expanded with M1 task dependencies; combat marked Done, Magicules Next. Defeated creatures remain as a foundation for later absorption; no absorption or skills are implemented yet. Visual validation remains pending.
+
+- 2026-10-12: Created the actual Godot project, modular player/world scenes, placeholder clearing/slime, input, pixel rendering, collision, camera, HUD, and restart. Import succeeded; 17 integration checks and a 120-frame main-scene run passed. Repeated the saved setup commands successfully and saved updated install/start instructions. M0 complete for headless development; visual playtesting remains pending. The user requests visible test windows whenever supported. Next: basic combat and one enemy.
+
+- 2026-10-12: Verified the cloud-provided Godot 4.6.3 binary. Configured writable XDG directories outside the checkout; project import and headless GDScript, CharacterBody2D, scene serialization, and frame-processing checks passed using a temporary project. Repeated environment activation successfully; saved install/start instructions as a configuration draft (publication pending). Next: create the actual Godot project.
+
+- 2026-10-12: Added an interactive graphical roadmap with dependency arrows, hover/click details, status colors, and navigation to the next task. The view is generated from this document. Browser checks verified hover/click details, pinned selection, prerequisite/successor navigation, next-task navigation, keyboard focus, zoom, and a mobile layout. Engine and application setup remain pending.
+
+- 2026-10-12: Reviewed the supplied GDD, selected Godot 4/GDScript, and created the shared roadmap. GitHub read access was validated during onboarding. Application setup remains pending because no game project exists yet.
