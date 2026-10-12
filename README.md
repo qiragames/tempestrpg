@@ -59,12 +59,13 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/naming.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/settlement.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/ally_work.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/camp_growth.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
 "$GODOT_BIN" --headless --path . --quit-after 120
 ```
 
-The cloud checks validate import, 17 foundation checks, 24 combat checks, 27 Magicule checks, 32 drop checks, 26 absorption checks, 35 skills/storage checks, 32 persistence checks, 18 ally checks, 28 naming checks, 34 settlement checks, 35 worker checks, and 149 real multi-process networking checks (457 total). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. Visual playtesting is still pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
+The cloud checks validate import, 17 foundation checks, 24 combat checks, 27 Magicule checks, 32 drop checks, 26 absorption checks, 35 skills/storage checks, 32 persistence checks, 18 ally checks, 28 naming checks, 34 settlement checks, 35 worker checks, 48 camp-growth checks, and 191 real multi-process networking checks (547 total; also verified on Windows 11, where `python` replaces `python3`). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. Visual playtesting is still pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
 
 ## Structure
 
@@ -136,14 +137,33 @@ Approach each material deposit within 36 pixels, open **B**, and click **Gather 
 
 The camp menu shows current shared stock and disables unavailable actions. Hosted menus block only your own movement/actions; the world keeps running. The host saves founding, founder identity, stock, depleted deposits and construction together. Schema **v4** introduces these fields; older worlds retain their existing progress and gain the untouched camp. The reserved `progression.settlements` dictionary is separate from this implemented, validated first camp.
 
-Ally gathering/construction assignments are now available (see below); ongoing production, additional buildings and settlement bonuses are upcoming. This step provides one fixed hut recipe rather than free placement. Camp tests: `tests/settlement.gd` (34 checks) and `python3 tests/network_settlement.py` (63 checks). With 35 worker checks, all suites total **457 checks**; local visual and real LAN/WAN playtests remain pending.
+Ally gathering/construction assignments and camp growth are described below. Structures use fixed sites rather than free placement. Camp tests: `tests/settlement.gd` (34 checks), `tests/camp_growth.gd` (48 checks) and `python3 tests/network_settlement.py` (105 checks). All suites total **547 checks**; local visual and real LAN/WAN playtests remain pending.
 
 ## Ally work assignments
 
 After founding the camp, stand within 55 pixels of its flag and open **B**. Your named Hobgoblin must be within 100 pixels when starting work. Only its owner can command it. The bottom row provides:
 
 - **Ally: Gather** — walk to each remaining deposit and gather it after 3 seconds of work. Materials go directly into shared camp stock. It skips deposits another player has emptied and returns to Follow when none remain.
-- **Ally: Build** — available with 12 wood and 6 stone. The ally works at the camp for 4 seconds, then builds the hut and charges its recipe once. It waits if someone occupies the hut footprint; keep that area clear. A manual build safely ends the same job without a second charge.
+- **Ally: Build** — available when a structure is unlocked and funded (see Camp growth). The ally works at the camp for 4 seconds, then builds the first funded structure and charges its recipe once. It waits if someone occupies the hut footprint; keep that area clear. A manual build safely ends the same job without a second charge.
 - **Ally: Follow** — recall the worker and cancel unfinished work. Construction materials are paid on completion, so recall before completion spends nothing.
 
 Close the menu to let work run offline. Hosted menus keep work running. The menu shows the ally's current role, target and remaining work time. Assigned citizens continue working while their owner is disconnected/dead; the host world must remain running. Follow waits for the owner's return. Schema **v5** saves role, target, position and remaining job timer, and migrates earlier allies to Follow. Reload resumes the job without creating extra materials. Workers use straight-line movement with collision; navigation around complex obstacles is future work. Deposits remain finite, and a previously completed hut cannot be constructed again.
+
+## Camp growth: exploration and new buildings
+
+The three deposits near the flag only cover the hut. To grow the camp further, explore:
+
+- **Outlying deposits** — wood far east at **(700, 440)** near the second Gnasher, stone northeast at **(860, 200)** past the pond, and stone southwest at **(120, 560)**. 8 each. Walk there yourself and use **B → Gather nearby**; the materials go straight into shared camp stock. Allied workers only gather near the camp, so exploring is the player's job.
+- **Gnasher Essence offerings** — every absorbed Gnasher leaves one essence in your bag (I). At the flag, **B → Offer essence** moves one essence from your bag into shared camp stock.
+
+The camp menu has one build button per structure (stand within 55 pixels of the flag). The hut must come first; it unlocks the others:
+
+| Structure | Cost | Effect |
+| --- | --- | --- |
+| Goblin Hut | 12 wood + 6 stone | Unlocks the Storehouse and Essence Shrine |
+| Storehouse | 10 wood + 6 stone | Ally work takes half the time (gather 1.5 s, build 2 s) |
+| Essence Shrine | 8 stone + 2 essence | Within 60 pixels, Magicules regenerate twice as fast (after the normal 1.5 s delay); a faint ring shows the range |
+
+The menu header shows the **camp level** (1 when founded, +1 per structure, up to 4) and stock of wood, stone and essence. **Ally: Build** picks the first funded structure in the order above. All six deposits together give 24 wood and 24 stone, enough for every building with 2 wood and 4 stone left over. Each structure is built once and has collision.
+
+The host performs every gather, offering and build, so two players clicking at the same time cannot duplicate materials or essence. Schema **v6** saves essence, the offering count and the new structures; older worlds keep their progress and gain the untouched outlying deposits. Agriculture and free building placement are future work.

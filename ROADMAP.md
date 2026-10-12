@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**Current focus: M3 exploration and camp growth.** The evolved ally now gathers finite deposits automatically, constructs the hut over time, and can be recalled to Follow. Assignments, targets and remaining work survive host restart; shared costs/rewards resolve once. 457 checks passed headlessly (308 local + 149 networking). **Next: connect exploration rewards to settlement growth and add further recipes.** Art and real-network/visual deployment checks remain pending.
+**Current focus: M3 review and visual playtest.** Exploration now feeds the camp: three outlying deposits past the Gnashers are gathered by players, absorbed Gnasher Essence can be offered as a shared resource, and two new structures follow the hut — a Storehouse (halves ally work time) and an Essence Shrine (doubles nearby Magicule regeneration). Camp level shows growth. Schema v6 migrates older worlds. All checks pass headlessly on Windows (356 local + 191 networking). **Next: visually playtest the full explore → fight → absorb → name → camp slice on the user's PC (Claude has a display), then close M3 and start M4.** Agriculture, free placement and real-network checks remain pending.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -72,7 +72,8 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 - Completed first structure: found a camp with your evolved ally nearby; gather finite wood/stone into shared stock and build one Goblin Hut for 12 wood + 6 stone.
 - Verified: one transaction per deposit/structure, safe placement and collision, schema-v4 migration and host restart/client replication (34 local + 42 camp networking checks). Additional structures follow after the work-role loop.
 - Completed: owner commands for timed automatic gathering, hut construction and recall; job/target/timer save and replication, autonomous work while owner disconnects. Agriculture remains future work.
-- Connect exploration rewards to settlement production and growth.
+- Completed: exploration rewards feed camp growth — outlying player-only deposits, Gnasher Essence offerings, Storehouse and Essence Shrine recipes with real effects, camp level, schema-v6 migration (48 growth checks, 105 camp network checks).
+- Remaining before closing M3: visual playtest of the full slice; agriculture stays future work.
 - Exit goal: a complete playable slice from exploration to an evolved ally contributing to the camp.
 
 ### M4 — Progression and presentation · Planned, requires M3
@@ -131,7 +132,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 | --- | --- | --- | --- |
 | Found a shared camp, gather finite materials and build the first hut | Done | Named evolved ally and saved world | 34 settlement and 42 real-process camp network checks passed; schema-v4 migration and collision verified |
 | Assign the ally to gathering and construction work | Done | First camp and limited materials | 35 worker checks and 63 camp network checks passed: owner commands, jobs, conservation, recall and partial-job reload |
-| Connect exploration rewards and production to camp growth | Next | Ally work assignments | Playable adventure-to-settlement loop and additional structure recipes required |
+| Connect exploration rewards and production to camp growth | Done | Ally work assignments | 48 camp-growth checks and 105 camp network checks passed: outlying deposits, essence offerings, storehouse/shrine effects, concurrency, schema-v6 migration and reload |
 
 ## Update contract
 
@@ -142,6 +143,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-12: Claude Code completed roadmap step 11, exploration rewards and camp growth. Added three outlying deposits (player-gathered; workers stay near camp), host-side Gnasher Essence offerings, Storehouse (10 wood + 6 stone, halves ally work time) and Essence Shrine (8 stone + 2 essence, doubles Magicule regeneration within 60px), both unlocked by the hut; worker Build now picks the next funded structure; camp level shown in the B menu. Schema v6 with v5→v6 migration and conservation checks for essence. Windows validation: 356 local (incl. 48 new growth checks) + 191 network (86 general + 105 camp) checks plus main-scene startup. Branch: `claude/roadmap-11-camp-growth`. Next: visual playtest of the full slice, then M3 review.
 
 - 2026-10-12: Added shared `assets/` reference/source/game-art folders, common tool guidance and an index for the six supplied conversation images. Original image files are unavailable in the cloud and explicitly marked missing; source images still need to be supplied or added locally by Claude. No gameplay changes; Claude retains ownership of camp growth. Branch: `codex/shared-art-assets`.
 

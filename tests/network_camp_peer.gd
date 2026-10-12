@@ -52,6 +52,11 @@ func _run() -> void:
                 )
         else:
             world.get_node("GoblinAlly").set_physics_process(false)
+            if not options.has("reload"):
+                # Each guest brings one absorbed essence to offer.
+                session.player_joined.connect(func(actor: Node2D):
+                    actor.get_node("Inventory").add_specimen(load("res://data/specimens/forest_gnasher.tres"))
+                )
         _report({"ready": true, "camp": world.camp.state, "work": _work_state()})
     else:
         session.join_host("127.0.0.1", int(options.port), options.identity)
@@ -85,7 +90,8 @@ func _process(_delta: float) -> bool:
     var phase: String = FileAccess.get_file_as_string(options.phase)
     if phase == phase_seen or busy:
         return false
-    var positions := {"wood_1": Vector2(300, 350), "wood_2": Vector2(350, 300), "stone_1": Vector2(410, 350), "hut_1": Vector2(350, 350), "work_gather": Vector2(350, 350), "work_build": Vector2(350, 350)}
+    var positions := {"wood_1": Vector2(300, 350), "wood_2": Vector2(350, 300), "stone_1": Vector2(410, 350), "hut_1": Vector2(350, 350), "work_gather": Vector2(350, 350), "work_build": Vector2(350, 350),
+        "wood_3": Vector2(700, 440), "stone_2": Vector2(860, 200), "stone_3": Vector2(120, 560), "storehouse_1": Vector2(350, 350), "offer": Vector2(350, 350), "shrine_1": Vector2(350, 350)}
     if not positions.has(phase):
         return false
     if options.mode == "server":
@@ -102,16 +108,17 @@ func _process(_delta: float) -> bool:
 func _act(phase: String) -> void:
     var hud = world.get_node("HUD")
     hud._camp_dialog.open_dialog()
-    var operation := "build" if phase == "hut_1" else "gather"
-    var guard: bool = not world.camp.transact(world.get_local_player(), operation, phase)
+    var operation := "build" if world.camp.STRUCTURES.has(phase) else "offer" if phase == "offer" else "gather"
+    var target := "gnasher_essence" if phase == "offer" else phase
+    var guard: bool = not world.camp.transact(world.get_local_player(), operation, target)
     if phase.begins_with("work_"):
         var role := phase.trim_prefix("work_")
         guard = not world.get_node("GoblinAlly").assign_work(world.get_local_player(), role)
         session.request_action("ally_work", {"id": "ally_goblin_1", "role": role})
         session.request_action("ally_work", {"id": "ally_goblin_1", "role": role})
     else:
-        session.request_action("camp", {"operation": operation, "id": phase})
-        session.request_action("camp", {"operation": operation, "id": phase})
+        session.request_action("camp", {"operation": operation, "id": target})
+        session.request_action("camp", {"operation": operation, "id": target})
     var before: float = session.latest_snapshot.progression.world_time
     await create_timer(0.5).timeout
     _report({"phase": phase, "camp": world.camp.state, "guard": guard, "menu_local": not paused and session.latest_snapshot.progression.world_time > before, "work": _work_state()})

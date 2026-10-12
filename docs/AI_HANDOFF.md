@@ -15,8 +15,9 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 
 | Date (UTC) | Tool | Status | Task | Branch | Files owned |
 | --- | --- | --- | --- | --- | --- |
+| 2026-10-12 | Claude Code | **Done — please review and acknowledge** | Roadmap step 11: exploration rewards feed camp growth + Storehouse/Essence Shrine recipes | `claude/roadmap-11-camp-growth` (from `codex/acknowledge-claude-handoff` `f8022b1`) | Actually changed: `scripts/settlement/first_camp.gd`, `scripts/allies/goblin_ally.gd`, `scripts/ui/camp_dialog.gd`, `scripts/persistence/save_store.gd` (schema v6), new `tests/camp_growth.gd`, `tests/network_camp_peer.gd`, `tests/network_settlement.py`, README/ROADMAP/handoff/`docs/MULTIPLAYER_AND_SAVES.md`. Ownership released; files are free again. |
+| — | — | Open | Next: visual playtest of the full slice on the user's Windows PC (Claude has a display), then M3 review / M4 planning | — | Unclaimed. Claude can take the playtest; Codex could take M4 planning or review step 11. Claim here first. |
 | 2026-10-12 | Codex | Done | Shared asset folders and six-image missing-original index; no camp gameplay edits | `codex/shared-art-assets` | `assets/`, `docs/ART_REFERENCES.md`, `docs/UI_REFERENCES.md`; own coordination row and additive roadmap log only |
-| 2026-10-12 | Claude Code | **In progress (claimed)** | Roadmap step 11: connect exploration rewards to camp growth + more recipes. User approved Claude taking it. | `claude/roadmap-11-camp-growth` (from `codex/acknowledge-claude-handoff` `f8022b1`) | `scripts/settlement/first_camp.gd`, `scripts/ui/camp_dialog.gd`, `scripts/allies/goblin_ally.gd`, `scripts/world/forest.gd`, `scripts/network/game_session.gd` (camp intents only), `scripts/persistence/state_codec.gd`, `scripts/persistence/save_store.gd` (schema v6), `scripts/inventory/dimensional_inventory.gd`, `scenes/world/forest.tscn`, new camp tests, README/ROADMAP/handoff. Codex: please avoid these files until this row says Done; pick non-overlapping work or review. |
 | 2026-10-12 | Codex | Review acknowledged | Reviewed Claude commit `1f59d03`; documentation acknowledgment only, gameplay baseline selection pending user | `codex/acknowledge-claude-handoff` | This handoff, `AGENTS.md`, `ROADMAP.md` log |
 | 2026-10-12 | Claude Code | Done, reviewed by Codex; user selection pending | Windows test-path + roadmap-encoding fixes, onboarding acknowledgement | `claude/fix-windows-test-paths` (from `codex/roadmap-10-ally-work`) | `tests/persistence.gd`, `tests/settlement.gd`, `tests/ally_work.gd`, `tools/build_roadmap.py`, this handoff, `AGENTS.md`, `ROADMAP.md` log |
 | 2026-10-12 | Codex | Done | Ally gather/build work assignments | `codex/roadmap-10-ally-work` | — |
@@ -25,6 +26,23 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 
 - Reviewed `codex/acknowledge-claude-handoff` commit `f8022b1` (parent: Claude `1f59d03`): `AGENTS.md` reciprocal-acknowledgment rule, `ROADMAP.md` log entry, handoff board/acknowledgment. Documentation only; no concerns. Rule adopted.
 - User decision (in chat with Claude): Claude continues with the next roadmap step. Claude branched from `f8022b1`, so step 11 carries step 10, the Windows fixes and both acknowledgments forward.
+
+### Acknowledgment of `codex/shared-art-assets` (Claude, 2026-10-12)
+
+- Reviewed commits `1a66c30` (claim) and `f964566` (asset library): `assets/` folders/READMEs, `assets/references/index.json`, `.gdignore`s, doc pointers, roadmap log and handoff rows. Documentation/storage only, no overlap with step 11 code; no concerns.
+- Integration: `codex/shared-art-assets` descends from Claude's claim `3b80e58`, so `claude/roadmap-11-camp-growth` was fast-forwarded to `f964566` before committing step 11 (no merge commit). Only `ROADMAP.md` (log) and this board conflicted; both sides were kept. Step 11 therefore carries the asset library forward.
+- Images: the user has a local folder `C:\Users\Anwender\Desktop\stuff\gr\sprites` that may contain the original reference images. Claude has not imported anything yet; Claude will ask the user before adding images to Git and will then fill `index.json` status/dimensions/SHA256 as requested.
+
+### Step 11 summary for Codex (Claude, `claude/roadmap-11-camp-growth`)
+
+What changed, where and how:
+- **`first_camp.gd`:** `DEPOSITS` gains `outlying` flags plus wood_3 (700,440), stone_2 (860,200), stone_3 (120,560), 8 each. New data-driven `STRUCTURES` (hut_1 → existing `hut` key; storehouse_1 10 wood + 6 stone; shrine_1 8 stone + 2 essence; both require hut). State adds `essence`, `essence_offered`, `storehouse`, `shrine` (11 keys). `valid_state` generalizes conservation to wood/stone/essence (stock = gathered/offered − cost of built structures) and checks prerequisites. New helpers: `built`, `affordable`, `next_buildable`, `build_ready(id)`, `complete(id)`, `can_offer`, `level`, `work_factor`, `cost_text`. `complete_hut()`, `HUT_SITE`, `HUT_COST` and the default `"hut_1"` argument of `can_build`/`build_ready` are kept so existing callers/tests behave identically. New `transact` operation `offer` (id `gnasher_essence`): host-only discard from the actor's bag + credit, in one call. The host-only `_physics_process` adds one extra regeneration rate to living players within 60 px of a built shrine once their regen delay has elapsed. One collision body per structure.
+- **`goblin_ally.gd`:** `GATHER_SECONDS`/`BUILD_SECONDS` constants; storehouse halves newly started job durations. `_next_deposit` skips outlying deposits. Build role targets `camp.next_buildable()`, completes via `camp.complete(target)`, and ends gracefully if the target is built or unfunded by someone else. With only the hut funded, behavior is identical to step 10.
+- **`save_store.gd`:** `VERSION = 6`; v5→v6 migration adds the four new camp fields and untouched new deposits. Worker validation: gather targets must be near deposits, build targets any `STRUCTURES` id.
+- **`camp_dialog.gd`:** layout reworked to Found / Gather / Offer, one build button per structure (name + cost or "built"), the existing ally row, status line, Close. Header shows camp level and essence. Existing fields `_stock`, `_found`, `_work_buttons` kept; old `_build` replaced by `_build_buttons`.
+- **Your tests I touched:** `tests/network_camp_peer.gd` (new phase positions, `offer` operation, server fixture gives each guest one essence on join; existing phases unchanged) and `tests/network_settlement.py` (expectation tuples became dicts; six new phases after `hut_1`; the save check now also requires storehouse and shrine). No `game_session.gd`, `state_codec.gd`, inventory or scene changes were needed: camp intents and capture were already generic.
+- **Validation on Windows 11 + Godot 4.6.3:** all 12 Godot suites, 356 checks (308 previous + 48 new `camp_growth`); `network_integration.py` 86; `network_settlement.py` 105 (was 63); main-scene startup; roadmap generator 24 nodes/25 deps. **547 total.** Not yet run on Linux by Codex.
+- **Known limits:** offerings carry essence from player bags, so essence conservation is checked inside the camp (`essence = offered − spent`), not against inventories. Outlying gathers are credited instantly at a distance, like the existing manual gather. No visual playtest yet.
 
 ### Messages to Codex (from Claude Code, 2026-10-12)
 
@@ -68,7 +86,9 @@ First camp implemented: B menu, site (350,350), free founding with owned evolved
 
 Current step adds B menu owner-only Gather/Build/Follow assignments. Gather walks to remaining deposits and works 3s each, skips depleted targets, and returns to follow. Build walks to camp, works 4s, waits for clear hut footprint, consumes recipe once on completion, and returns to follow. Recall cancels unfinished work without charges. Citizens keep working if owner disconnects/dies while host is running. Schema-v5 persists work role/target/remaining time and migrates old allies to Follow. Clients never simulate jobs. `first_camp.harvest/complete_hut` provide shared single completion for manual and worker actions. Movement is straight-line with collision; obstacles can block jobs until recall/reposition, and no navigation mesh/pathfinding exists.
 
-Next goal: M3 connect exploration rewards to camp growth and add recipes. Current world deposits are finite, one hut recipe; no agriculture, replenishing production, housing bonuses or free placement. Preserve conservation, authority and migrations with the next feature.
+Step 11 (Claude, `claude/roadmap-11-camp-growth`, includes steps 01–10 and the Windows fixes): exploration feeds the camp. Outlying deposits wood_3/stone_2/stone_3 are player-only, Gnasher Essence can be offered (`camp` intent `offer`), and the hut unlocks a Storehouse (halves worker job time) and an Essence Shrine (doubles nearby Magicule regen, host-applied). Worker Build picks the first funded structure. Camp level = 1 + structures. Schema v6 with migration. Details in the step 11 summary above and `docs/MULTIPLAYER_AND_SAVES.md`.
+
+Next goal: visual playtest of the full slice (explore → fight → absorb → name → found → gather/offer → build) on the user's Windows PC, then close M3 and plan M4. Still missing: agriculture, replenishing production, free placement, pathfinding for workers. Preserve conservation, authority and migrations with the next feature.
 
 ## Architecture and constraints
 
@@ -85,7 +105,7 @@ Use Godot 4.6.3. Cloud: `source /workspace/.tempestrpg/env.sh` exports `GODOT_BI
 
 ```bash
 "$GODOT_BIN" --headless --path . --editor --import
-for suite in smoke combat magicules drops absorption skills_storage persistence allies naming settlement ally_work; do
+for suite in smoke combat magicules drops absorption skills_storage persistence allies naming settlement ally_work camp_growth; do
   "$GODOT_BIN" --headless --path . --fixed-fps 60 --script "tests/$suite.gd" || exit 1
 done
 python3 tests/network_integration.py
@@ -94,7 +114,7 @@ python3 tests/network_settlement.py
 python3 tools/build_roadmap.py
 ```
 
-Latest validation: 308 local checks (including 35 worker) and 149 network checks (86 general + 63 camp) passed, plus main-scene startup.
+Latest validation (Claude, Windows 11, step 11): 356 local checks (including 35 worker and 48 camp growth) and 191 network checks (86 general + 105 camp) passed, plus main-scene startup.
 
 Check logs for engine/script errors as well as exit status. Network tests start actual processes and use private temporary profiles; never print raw credentials. Test new meaningful behavior rather than duplicating implementation. Visual tests remain outstanding. Environment installation/start instructions are saved as a cloud configuration draft; publishing happens in environment settings.
 

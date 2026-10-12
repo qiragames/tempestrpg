@@ -4,6 +4,8 @@ const AUTHORITY := preload("res://scripts/network/authority.gd")
 const INTERACTION_RANGE := 40.0
 const NAMING_COST := 80.0
 const RECOVERY_SECONDS := 8.0
+const GATHER_SECONDS := 3.0
+const BUILD_SECONDS := 4.0
 @export var entity_id: String = "ally_goblin_1"
 var owner_id: String = ""
 var display_name: String = ""
@@ -84,7 +86,7 @@ func can_assign_work(actor: Node2D, role: String) -> bool:
         return false
     if role != "follow" and (not camp.state.founded or global_position.distance_to(camp.SITE) > 100):
         return false
-    if role == "build" and (camp.state.hut or camp.state.wood < camp.HUT_COST.wood or camp.state.stone < camp.HUT_COST.stone):
+    if role == "build" and camp.next_buildable().is_empty():
         return false
     if role == "gather" and _next_deposit().is_empty():
         return false
@@ -94,11 +96,17 @@ func assign_work(actor: Node2D, role: String) -> bool:
     if not AUTHORITY.can_mutate(self) or not can_assign_work(actor, role):
         return false
     work_role = role
-    work_target = _next_deposit() if role == "gather" else "hut_1" if role == "build" else ""
-    work_left = 3.0 if role == "gather" else 4.0 if role == "build" else 0.0
+    var camp = get_parent().camp
+    work_target = _next_deposit() if role == "gather" else camp.next_buildable() if role == "build" else ""
+    work_left = _work_seconds(role)
     get_node("/root/GameSession").notify_character(owner_id, "%s: %s assigned." % [display_name, role])
     get_node("/root/GameSession").queue_save()
     return true
+
+## A built storehouse shortens each job; the remaining time of a job in progress is kept.
+func _work_seconds(role: String) -> float:
+    var base := GATHER_SECONDS if role == "gather" else BUILD_SECONDS if role == "build" else 0.0
+    return base * get_parent().camp.work_factor()
 
 func _next_deposit() -> String:
     var camp = get_parent().camp
@@ -106,7 +114,8 @@ func _next_deposit() -> String:
     var distance := INF
     for id in camp.DEPOSITS:
         var current: float = global_position.distance_to(camp.DEPOSITS[id].position)
-        if camp.state.deposits[id] > 0 and current < distance:
+        # Outlying deposits are exploration rewards for players; workers stay near camp.
+        if camp.state.deposits[id] > 0 and not camp.DEPOSITS[id].outlying and current < distance:
             target = id
             distance = current
     return target
@@ -122,12 +131,13 @@ func _work_tick(delta: float) -> void:
     var camp = get_parent().camp
     if work_role == "gather" and (work_target.is_empty() or camp.state.deposits[work_target] == 0):
         work_target = _next_deposit()
-        work_left = 3.0
+        work_left = _work_seconds("gather")
         if work_target.is_empty():
             _finish_work("All nearby deposits gathered. Ally returning to follow.")
             return
-    if work_role == "build" and camp.state.hut:
-        _finish_work("Hut complete. Ally returning to follow.")
+    if work_role == "build" and not camp.affordable(work_target):
+        # Someone else finished this structure, or spent its materials first.
+        _finish_work("%s complete. Ally returning to follow." % camp.STRUCTURES[work_target].name if camp.built(work_target) else "Construction materials ran out. Ally returning to follow.")
         return
     var target: Vector2 = camp.DEPOSITS[work_target].position if work_role == "gather" else camp.SITE
     if global_position.distance_to(target) > 10:
@@ -135,7 +145,7 @@ func _work_tick(delta: float) -> void:
         move_and_slide()
         return
     var ray := PhysicsRayQueryParameters2D.create(global_position, target, 1)
-    if not get_world_2d().direct_space_state.intersect_ray(ray).is_empty() or (work_role == "build" and not camp.build_ready()):
+    if not get_world_2d().direct_space_state.intersect_ray(ray).is_empty() or (work_role == "build" and not camp.build_ready(work_target)):
         return
     work_left = maxf(0.0, work_left - delta)
     if work_left > 0:
@@ -144,8 +154,8 @@ func _work_tick(delta: float) -> void:
         if camp.harvest(work_target):
             get_node("/root/GameSession").notify_character(owner_id, "%s gathered materials for camp." % display_name)
         work_target = ""
-    elif camp.complete_hut():
-        _finish_work("Ally completed the Goblin Hut.")
+    elif camp.complete(work_target):
+        _finish_work("Ally completed the %s." % camp.STRUCTURES[work_target].name)
 
 func _physics_process(delta: float) -> void:
     if not AUTHORITY.can_mutate(self):

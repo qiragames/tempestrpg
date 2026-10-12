@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 5
+const VERSION := 6
 const CAMP := preload("res://scripts/settlement/first_camp.gd")
 const ALLY := preload("res://scripts/allies/goblin_ally.gd")
 const MAX_BYTES := 4 * 1024 * 1024
@@ -139,9 +139,9 @@ static func validate(data: Variant) -> bool:
         elif ally.name.is_empty() or not data.camp.founded:
             return false
         elif work.role == "gather":
-            if (work.target != "" and not CAMP.DEPOSITS.has(work.target)) or work.remaining > 3:
+            if (work.target != "" and (not CAMP.DEPOSITS.has(work.target) or CAMP.DEPOSITS[work.target].outlying)) or work.remaining > ALLY.GATHER_SECONDS:
                 return false
-        elif work.target != "hut_1":
+        elif not CAMP.STRUCTURES.has(work.target):
             return false
         if not ally.name.is_empty():
             if names.has(ally.name.to_lower()):
@@ -198,11 +198,22 @@ static func migrate(data: Variant) -> Variant:
         if not data.get("allies") is Array:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 5
         for ally in data.allies:
             if not ally is Dictionary:
                 return null
             ally["work"] = ally.get("work", {"role": "follow", "target": "", "remaining": 0.0})
+    # v6 adds untouched outlying deposits, essence stock and the storehouse/shrine.
+    if data.get("version") == 5:
+        if not data.get("camp") is Dictionary or not data.camp.get("deposits") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = VERSION
+        var fresh: Dictionary = CAMP.initial_state()
+        for key in ["essence", "essence_offered", "storehouse", "shrine"]:
+            data.camp[key] = data.camp.get(key, fresh[key])
+        for id in fresh.deposits:
+            data.camp.deposits[id] = data.camp.deposits.get(id, fresh.deposits[id])
     return data
 
 static func _read(path: String) -> Dictionary:

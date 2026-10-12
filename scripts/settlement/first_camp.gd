@@ -3,26 +3,55 @@ extends Node2D
 const AUTHORITY := preload("res://scripts/network/authority.gd")
 const SITE := Vector2(350, 350)
 const HUT_SITE := Vector2(380, 390)
+## Near deposits feed allied workers; outlying ones reward players who explore past the Gnashers.
 const DEPOSITS := {
-    "wood_1": {"position": Vector2(300, 350), "resource": "wood", "amount": 8},
-    "wood_2": {"position": Vector2(350, 300), "resource": "wood", "amount": 8},
-    "stone_1": {"position": Vector2(410, 350), "resource": "stone", "amount": 8},
+    "wood_1": {"position": Vector2(300, 350), "resource": "wood", "amount": 8, "outlying": false},
+    "wood_2": {"position": Vector2(350, 300), "resource": "wood", "amount": 8, "outlying": false},
+    "stone_1": {"position": Vector2(410, 350), "resource": "stone", "amount": 8, "outlying": false},
+    "wood_3": {"position": Vector2(700, 440), "resource": "wood", "amount": 8, "outlying": true},
+    "stone_2": {"position": Vector2(860, 200), "resource": "stone", "amount": 8, "outlying": true},
+    "stone_3": {"position": Vector2(120, 560), "resource": "stone", "amount": 8, "outlying": true},
 }
 const HUT_COST := {"wood": 12, "stone": 6}
+## Build order is the dictionary order. `key` is the boolean field in the saved camp state.
+const STRUCTURES := {
+    "hut_1": {"key": "hut", "name": "Goblin Hut", "site": HUT_SITE, "size": Vector2(36, 24), "cost": HUT_COST, "requires": ""},
+    "storehouse_1": {"key": "storehouse", "name": "Storehouse", "site": Vector2(400, 300), "size": Vector2(30, 20), "cost": {"wood": 10, "stone": 6}, "requires": "hut_1"},
+    "shrine_1": {"key": "shrine", "name": "Essence Shrine", "site": Vector2(300, 292), "size": Vector2(18, 18), "cost": {"stone": 8, "essence": 2}, "requires": "hut_1"},
+}
+const RESOURCES := ["wood", "stone", "essence"]
+const OFFER_ITEM := "gnasher_essence"
+const SHRINE_RANGE := 60.0
+## Extra regeneration near the shrine, as a multiple of the character's own rate.
+const SHRINE_BONUS := 1.0
+const STOREHOUSE_WORK_FACTOR := 0.5
 var state: Dictionary = initial_state()
-var _hut_shape: CollisionShape2D
+var _shapes: Dictionary = {}
 
 static func initial_state() -> Dictionary:
-    return {"id": "camp_1", "founded": false, "founder": "", "wood": 0, "stone": 0, "hut": false, "deposits": {"wood_1": 8, "wood_2": 8, "stone_1": 8}}
+    var deposits: Dictionary = {}
+    for id in DEPOSITS:
+        deposits[id] = DEPOSITS[id].amount
+    return {"id": "camp_1", "founded": false, "founder": "", "wood": 0, "stone": 0, "essence": 0, "essence_offered": 0, "hut": false, "storehouse": false, "shrine": false, "deposits": deposits}
+
+static func _whole(value: Variant, high: float = 1000000) -> bool:
+    return (value is float or value is int) and value >= 0 and value <= high and value == floor(value)
 
 static func valid_state(value: Variant, players: Dictionary) -> bool:
-    if not value is Dictionary or value.size() != 7 or value.get("id") != "camp_1" or not value.get("founded") is bool or not value.get("hut") is bool or not value.get("founder") is String:
+    if not value is Dictionary or value.size() != 11 or value.get("id") != "camp_1" or not value.get("founded") is bool or not value.get("founder") is String:
         return false
+    for id in STRUCTURES:
+        if not value.get(STRUCTURES[id].key) is bool:
+            return false
     if value.founded:
         if not players.has(value.founder):
             return false
-    elif not value.founder.is_empty() or value.hut:
+    elif not value.founder.is_empty() or value.hut or value.storehouse or value.shrine:
         return false
+    for id in STRUCTURES:
+        var requires: String = STRUCTURES[id].requires
+        if value[STRUCTURES[id].key] and not requires.is_empty() and not value[STRUCTURES[requires].key]:
+            return false
     if not value.get("deposits") is Dictionary or value.deposits.size() != DEPOSITS.size():
         return false
     for id in DEPOSITS:
@@ -31,34 +60,63 @@ static func valid_state(value: Variant, players: Dictionary) -> bool:
             return false
         if remaining != 0 and remaining != DEPOSITS[id].amount:
             return false
-    for resource in ["wood", "stone"]:
+    if not _whole(value.get("essence_offered")) or (not value.founded and value.essence_offered != 0):
+        return false
+    for resource in RESOURCES:
         var stock: Variant = value.get(resource)
         if not stock is float and not stock is int:
             return false
-        var harvested: int = 0
+        var income: int = int(value.essence_offered) if resource == "essence" else 0
         for id in DEPOSITS:
             if DEPOSITS[id].resource == resource:
-                harvested += DEPOSITS[id].amount - int(value.deposits[id])
+                income += DEPOSITS[id].amount - int(value.deposits[id])
+        for id in STRUCTURES:
+            if value[STRUCTURES[id].key]:
+                income -= STRUCTURES[id].cost.get(resource, 0)
         # Prevent edited/corrupt saves from duplicating finite resources.
-        if stock != harvested - (HUT_COST[resource] if value.hut else 0) or stock < 0:
+        if stock != income or stock < 0:
             return false
     return true
 
 func _ready() -> void:
-    var body := StaticBody2D.new()
-    body.position = HUT_SITE
-    _hut_shape = CollisionShape2D.new()
-    var shape := RectangleShape2D.new()
-    shape.size = Vector2(36, 24)
-    _hut_shape.shape = shape
-    _hut_shape.disabled = not state.hut
-    body.add_child(_hut_shape)
-    add_child(body)
+    for id in STRUCTURES:
+        var body := StaticBody2D.new()
+        body.position = STRUCTURES[id].site
+        var collider := CollisionShape2D.new()
+        var shape := RectangleShape2D.new()
+        shape.size = STRUCTURES[id].size
+        collider.shape = shape
+        collider.disabled = not state[STRUCTURES[id].key]
+        body.add_child(collider)
+        add_child(body)
+        _shapes[id] = collider
 
 func restore(value: Dictionary) -> void:
     state = value.duplicate(true)
-    _hut_shape.set_deferred("disabled", not state.hut)
+    for id in STRUCTURES:
+        _shapes[id].set_deferred("disabled", not state[STRUCTURES[id].key])
     queue_redraw()
+
+func built(id: String) -> bool:
+    return STRUCTURES.has(id) and state[STRUCTURES[id].key]
+
+func level() -> int:
+    if not state.founded:
+        return 0
+    var total := 1
+    for id in STRUCTURES:
+        total += 1 if built(id) else 0
+    return total
+
+func work_factor() -> float:
+    return STOREHOUSE_WORK_FACTOR if state.storehouse else 1.0
+
+static func cost_text(id: String) -> String:
+    var parts: Array = []
+    for resource in RESOURCES:
+        if STRUCTURES[id].cost.has(resource):
+            parts.append("%d %s" % [STRUCTURES[id].cost[resource], resource])
+    return " + ".join(parts)
 
 func can_reach(actor: Node2D, target: Vector2, distance: float) -> bool:
     if actor.get_node("Health").current <= 0 or actor.is_exhausted() or actor.global_position.distance_to(target) > distance:
@@ -84,41 +142,74 @@ func nearest_deposit(actor: Node2D) -> String:
             distance = current
     return closest
 
-func can_build(actor: Node2D) -> bool:
-    return can_reach(actor, SITE, 55) and build_ready()
+func affordable(id: String) -> bool:
+    if not STRUCTURES.has(id) or not state.founded or built(id):
+        return false
+    var requires: String = STRUCTURES[id].requires
+    if not requires.is_empty() and not built(requires):
+        return false
+    for resource in STRUCTURES[id].cost:
+        if state[resource] < STRUCTURES[id].cost[resource]:
+            return false
+    return true
 
-func build_ready() -> bool:
-    if not state.founded or state.hut or state.wood < HUT_COST.wood or state.stone < HUT_COST.stone:
+## First structure in build order that is unlocked and funded; footprint is checked at completion.
+func next_buildable() -> String:
+    for id in STRUCTURES:
+        if affordable(id):
+            return id
+    return ""
+
+func can_build(actor: Node2D, id: String = "hut_1") -> bool:
+    return can_reach(actor, SITE, 55) and build_ready(id)
+
+func build_ready(id: String = "hut_1") -> bool:
+    if not affordable(id):
         return false
     # Placement cannot trap a character or citizen. Dead players still respawn elsewhere.
+    var footprint := Rect2(STRUCTURES[id].site - STRUCTURES[id].size / 2 - Vector2(6, 8), STRUCTURES[id].size + Vector2(12, 16))
     for node in get_parent().get_children():
-        if (node.is_in_group("player") or node.is_in_group("allies") or node.is_in_group("enemies")) and Rect2(HUT_SITE - Vector2(24, 20), Vector2(48, 40)).has_point(node.position):
+        if (node.is_in_group("player") or node.is_in_group("allies") or node.is_in_group("enemies")) and footprint.has_point(node.position):
             if not node.is_in_group("enemies") or node.get_node("Health").current > 0:
                 return false
     return true
 
+func can_offer(actor: Node2D) -> bool:
+    return state.founded and can_reach(actor, SITE, 55) and actor.get_node("Inventory").entries().any(func(entry): return String(entry.id) == OFFER_ITEM)
+
 func transact(actor: Node2D, operation: String, id: String) -> bool:
     if not AUTHORITY.can_mutate(self):
         return false
+    var message := ""
     match operation:
         "found":
             if id != state.id or not can_found(actor):
                 return false
             state.founded = true
             state.founder = actor.character_id
+            message = "Camp founded."
         "gather":
             if not DEPOSITS.has(id) or state.deposits[id] <= 0 or not can_reach(actor, DEPOSITS[id].position, 36):
                 return false
             harvest(id)
+            message = "Materials added to shared camp stock."
         "build":
-            if id != "hut_1" or not can_build(actor):
+            if not STRUCTURES.has(id) or not can_build(actor, id):
                 return false
-            complete_hut()
+            complete(id)
+            message = "%s built. Shared materials consumed." % STRUCTURES[id].name
+        "offer":
+            # Discard and credit together on the host so an essence is never lost or counted twice.
+            if id != OFFER_ITEM or not can_offer(actor) or not actor.get_node("Inventory").discard(StringName(OFFER_ITEM)):
+                return false
+            state.essence += 1
+            state.essence_offered += 1
+            message = "Gnasher Essence offered to the camp."
         _:
             return false
     queue_redraw()
     var session := get_node("/root/GameSession")
-    session.notify_character(actor.character_id, "Camp founded." if operation == "found" else "Goblin hut built. Shared materials consumed." if operation == "build" else "Materials added to shared camp stock.")
+    session.notify_character(actor.character_id, message)
     session.queue_save()
     return true
 
@@ -131,16 +222,28 @@ func harvest(id: String) -> bool:
     get_node("/root/GameSession").queue_save()
     return true
 
-func complete_hut() -> bool:
-    if not AUTHORITY.can_mutate(self) or not build_ready():
+func complete(id: String) -> bool:
+    if not AUTHORITY.can_mutate(self) or not build_ready(id):
         return false
-    state.wood -= HUT_COST.wood
-    state.stone -= HUT_COST.stone
-    state.hut = true
-    _hut_shape.set_deferred("disabled", false)
+    for resource in STRUCTURES[id].cost:
+        state[resource] -= STRUCTURES[id].cost[resource]
+    state[STRUCTURES[id].key] = true
+    _shapes[id].set_deferred("disabled", false)
     queue_redraw()
     get_node("/root/GameSession").queue_save()
     return true
+
+func complete_hut() -> bool:
+    return complete("hut_1")
+
+func _physics_process(delta: float) -> void:
+    if not state.shrine or not AUTHORITY.can_mutate(self):
+        return
+    # Resting at the shrine doubles recovery once the character's normal regeneration delay has passed.
+    for actor in get_tree().get_nodes_in_group("player"):
+        var pool = actor.get_node("Magicules")
+        if actor.get_node("Health").current > 0 and pool.enabled and pool._delay_left <= 0 and actor.global_position.distance_to(STRUCTURES.shrine_1.site) <= SHRINE_RANGE:
+            pool.restore(pool.regeneration_per_second * SHRINE_BONUS * delta)
 
 func _draw() -> void:
     draw_arc(SITE, 21, 0, TAU, 20, Color("e1bf79") if state.founded else Color("a1a99b"), 2)
@@ -165,3 +268,15 @@ func _draw() -> void:
         draw_rect(Rect2(HUT_SITE+Vector2(-5, -2), Vector2(10, 14)), Color("292d2c"))
         draw_colored_polygon(PackedVector2Array([HUT_SITE+Vector2(-24, -10), HUT_SITE+Vector2(0, -34), HUT_SITE+Vector2(24, -10)]), Color("baa56a"))
         draw_line(HUT_SITE+Vector2(0, -32), HUT_SITE+Vector2(0, -11), Color("dec78b"), 2)
+    if state.storehouse:
+        var store: Vector2 = STRUCTURES.storehouse_1.site
+        draw_rect(Rect2(store-Vector2(15, 10), Vector2(30, 20)), Color("5f4a35"))
+        draw_rect(Rect2(store-Vector2(17, 13), Vector2(34, 5)), Color("8c7552"))
+        for x in [-10, -2, 6]:
+            draw_rect(Rect2(store+Vector2(x, -4), Vector2(5, 12)), Color("3e3024"))
+    if state.shrine:
+        var shrine: Vector2 = STRUCTURES.shrine_1.site
+        draw_arc(shrine, SHRINE_RANGE, 0, TAU, 32, Color(0.44, 0.89, 0.83, 0.25), 1)
+        draw_rect(Rect2(shrine-Vector2(9, 9), Vector2(18, 18)), Color("6f7a7e"))
+        draw_rect(Rect2(shrine-Vector2(5, 15), Vector2(10, 10)), Color("8e9b9f"))
+        draw_circle(shrine-Vector2(0, 10), 3, Color("71e4d4"))

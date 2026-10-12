@@ -59,21 +59,30 @@ try:
     clients = [start(f"guest_{i}", mode="client", port=udp_port, identity=WORK / f"identity_{i}.json") for i in range(2)]
     for _, path in clients:
         wait(path, "ready")
-    expectations = [("wood_1", 8, 0, False), ("wood_2", 16, 0, False), ("stone_1", 16, 8, False), ("hut_1", 4, 2, True)]
-    for phase, wood, stone, hut in expectations:
+    # Each phase: both guests send the same request twice at once; the host must apply it exactly once
+    # (offerings once per guest, since each guest carries one essence).
+    expectations = [
+        ("wood_1", dict(wood=8, stone=0, hut=False)), ("wood_2", dict(wood=16, stone=0)), ("stone_1", dict(wood=16, stone=8)),
+        ("hut_1", dict(wood=4, stone=2, hut=True, storehouse=False)),
+        ("wood_3", dict(wood=12, stone=2)), ("stone_2", dict(wood=12, stone=10)), ("stone_3", dict(wood=12, stone=18)),
+        ("storehouse_1", dict(wood=2, stone=12, storehouse=True)),
+        ("offer", dict(essence=2, essence_offered=2, shrine=False)),
+        ("shrine_1", dict(wood=2, stone=4, essence=0, essence_offered=2, shrine=True)),
+    ]
+    for phase, expected in expectations:
         (WORK / "phase").write_text(phase)
         results = [wait(path, "phase", phase) for _, path in clients]
         for result in results:
             check(result["guard"], "Replica rejects direct settlement mutation")
             check(result["menu_local"], "Camp menu keeps shared simulation running")
             state = result["camp"]
-            check(state["wood"] == wood and state["stone"] == stone and state["hut"] == hut, "Concurrent repeated actions resolve once and balance shared resources")
+            check(all(state[k] == v for k, v in expected.items()), f"{phase}: concurrent repeated actions resolve once and balance shared resources")
         check(results[0]["camp"] == results[1]["camp"], "Clients observe identical shared camp state")
     for i, (proc, _) in enumerate(clients):
         finish(proc, f"guest_{i}")
     finish(host, "host")
     saved = wait(report, "saved")
-    check(saved["camp"]["hut"] and all(v == 0 for v in saved["camp"]["deposits"].values()), "Host saves hut and depleted deposits together")
+    check(saved["camp"]["hut"] and saved["camp"]["storehouse"] and saved["camp"]["shrine"] and all(v == 0 for v in saved["camp"]["deposits"].values()), "Host saves structures and depleted deposits together")
     (WORK / "phase").unlink()
     udp_port = port()
     host, report = start("reload_host", mode="server", port=udp_port, save=save, reload="yes")
