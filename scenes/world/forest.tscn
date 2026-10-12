@@ -54,7 +54,7 @@ color = Color(0.04, 0.09, 0.12, 0.92)
 offset_left = 12.0
 offset_top = 301.0
 theme_override_font_sizes/font_size = 10
-text = "WASD Move  Space/J Strike  E Absorb  1-3 Skills  I Bag  R Retry"
+text = "WASD Move  Space Strike  E Absorb  F Ally  B Camp  I Bag  R Retry"
 
 [node name="Health" type="Label" parent="HUD"]
 offset_left = 12.0

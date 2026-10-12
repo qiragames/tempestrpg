@@ -15,6 +15,7 @@ var _entries: Array = []
 var _selection: StringName = &""
 var _paused_before_open: bool = false
 var _recovery: Label
+var _camp_dialog: Panel
 var _ally_dialog: Panel
 @onready var player = get_parent().get_node("Player")
 @onready var inventory = player.get_node("Inventory")
@@ -31,9 +32,11 @@ func _ready() -> void:
     _build_session_panel()
     _ally_dialog = load("res://scripts/ui/ally_dialog.gd").new()
     add_child(_ally_dialog)
+    _camp_dialog = load("res://scripts/ui/camp_dialog.gd").new()
+    add_child(_camp_dialog)
 
 func menu_open() -> bool:
-    return _modal.visible or _session_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible)
+    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _session_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible)
 
 func bind_player(actor: Node2D) -> void:
     if player == actor:
@@ -201,7 +204,7 @@ func close_inventory() -> void:
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and not event.echo:
         if event.keycode == KEY_F8:
-            if _modal.visible or _ally_dialog.visible:
+            if _modal.visible or _ally_dialog.visible or _camp_dialog.visible:
                 return
             _session_panel.visible = not _session_panel.visible
             player.input_blocked = _session_panel.visible

@@ -4,9 +4,10 @@
 
 1. Read `AGENTS.md`, `ROADMAP.md`, this file and relevant architecture/reference documents. Current user instructions take precedence.
 2. Run `git status --short`, `git branch --show-current`, and inspect recent commits. Fetch origin when network access is available. Check whether another session has uncommitted work before editing the same files.
-3. Continue from the latest completed feature branch: later branches carry earlier work forward. `main` may lag behind. Do not reset to main or merge without the user's instruction.
-4. State the task being taken and files likely to change in the current session. If another tool is working concurrently, coordinate ownership with the user or through an explicitly shared task record before overlapping edits. Markdown files are context, not an automatic lock or live communication channel.
-5. Complete one roadmap step, run meaningful checks, update roadmap/handoff, regenerate the graph, commit and push a separate descriptive branch. Preserve others' uncommitted work. Record failures honestly.
+3. Before each critical architecture/network/save/dependency/integration step and before committing, recheck GitHub branch heads with `git ls-remote --heads origin`, recent commits, local changes and this handoff. Fetch relevant new/changed branches explicitly: the default fetch can be restricted to one branch. Claude checks Codex work; Codex checks Claude work. Compare overlapping changes and coordinate before proceeding; unpushed changes in another checkout are not visible here.
+4. Continue from the latest completed feature branch: later branches carry earlier work forward. `main` may lag behind. Do not reset to main or merge without the user's instruction.
+5. State the task being taken and files likely to change in the current session. If another tool is working concurrently, coordinate ownership with the user or through an explicitly shared task record before overlapping edits. Markdown files are context, not an automatic lock or live communication channel.
+6. Complete one roadmap step, run meaningful checks, update roadmap/handoff, regenerate the graph, commit and push a separate descriptive branch. Preserve others' uncommitted work. Record failures honestly.
 
 ## User decisions
 
@@ -18,11 +19,13 @@ The user supplied a creature sprite chart, HUD, title, pause, inventory and fore
 
 ## Last completed gameplay step
 
-Branch: `codex/roadmap-08-naming-evolution` (includes steps 01–07). First ally recruited after defeating the western clearing Gnasher, then named via F dialogue. Naming costs 80 Magicules once and evolves Goblin → Hobgoblin (HP 30→60, power 4→8, follow speed 45→65, changed silhouette). Below 25% reserves, namer rests at least 8 seconds and until Magicules return to 25%. Other characters continue playing. Ally follows its stable owner; combat/gathering roles are not yet implemented.
+Branch: `codex/roadmap-09-first-camp` (includes steps 01–08). First ally recruited after defeating the western clearing Gnasher, then named via F dialogue. Naming costs 80 Magicules once and evolves Goblin → Hobgoblin (HP 30→60, power 4→8, follow speed 45→65, changed silhouette). Below 25% reserves, namer rests at least 8 seconds and until Magicules return to 25%. Other characters continue playing. Ally follows its stable owner; combat/gathering roles are not yet implemented.
 
 Schema v3 saves/replicates ownership, name, race, stats, position, resource costs and exhaustion timer. Legacy v0/v1/v2 saves migrate. Disconnect pauses character simulation; reconnect/reload preserves paid costs and recovery. Respawn retains exhaustion while restoring health, avoiding a dead/sleeping lock.
 
-Next goal: M3 first settlement. Begin with a small persistent goblin camp and limited resources before assigning gathering/construction roles. Define authority, world-owned resource/structure IDs and schema migration before implementation. Do not claim reserved settlement dictionaries already constitute a playable settlement.
+First camp implemented: B menu, site (350,350), free founding with owned evolved ally within 80 pixels, living/awake actor within 55 pixels. Shared finite wood_1/wood_2 (8 each), stone_1 (8), gather range 36; hut_1 costs 12 wood/6 stone and has collision/safe footprint checks. Top-level schema-v4 camp state is separate from reserved progression.settlements; migration preserves prior worlds. Host-only transactions prevent concurrent duplication, clients receive collision/state, saves retain depletion and construction.
+
+Next goal: M3 ally work assignments for gathering/construction, then exploration/production and additional structures. First camp currently has manual gathering and one fixed hut recipe; no automatic workers, economy tick, housing bonuses or free placement yet. Extend authority, IDs, conservation and migrations with the next feature.
 
 ## Architecture and constraints
 
@@ -39,15 +42,16 @@ Use Godot 4.6.3. Cloud: `source /workspace/.tempestrpg/env.sh` exports `GODOT_BI
 
 ```bash
 "$GODOT_BIN" --headless --path . --editor --import
-for suite in smoke combat magicules drops absorption skills_storage persistence allies naming; do
+for suite in smoke combat magicules drops absorption skills_storage persistence allies naming settlement; do
   "$GODOT_BIN" --headless --path . --fixed-fps 60 --script "tests/$suite.gd" || exit 1
 done
 python3 tests/network_integration.py
+python3 tests/network_settlement.py
 "$GODOT_BIN" --headless --path . --quit-after 120
 python3 tools/build_roadmap.py
 ```
 
-Latest validation: 239 local checks (including 28 naming) and 86 network checks passed, plus main-scene startup.
+Latest validation: 273 local checks (including 34 settlement) and 128 network checks (86 general + 42 camp) passed, plus main-scene startup.
 
 Check logs for engine/script errors as well as exit status. Network tests start actual processes and use private temporary profiles; never print raw credentials. Test new meaningful behavior rather than duplicating implementation. Visual tests remain outstanding. Environment installation/start instructions are saved as a cloud configuration draft; publishing happens in environment settings.
 

@@ -24,7 +24,7 @@ N0 is implemented for desktop/LAN testing. The host owns simulation, admits seve
 
 Save actual implemented fields first and extend the schema with each new feature. The references' sample levels, gear, currency, and quests are not default saved data. Party-wide and personal quest state must be modeled separately before quest implementation.
 
-The host owns world saves. Version 3 uses stable definition IDs, validated primitive fields, draft-version defaults/migration, atomic replacement, and a previous valid backup. Extend this schema with each later feature. Do not serialize runtime node paths, object IDs, physics handles, network peers, or arbitrary executable resources as save identity. Persist related reward/corpse/inventory changes in one consistent world snapshot. Write atomically with a recoverable previous save so a crash cannot truncate the only copy. Support autosave, explicit save, clean shutdown, and clear handling of a corrupt or incompatible save. User saves and reconnect credentials stay out of Git.
+The host owns world saves. Version 4 uses stable definition IDs, validated primitive fields, draft-version defaults/migration, atomic replacement, and a previous valid backup. Extend this schema with each later feature. Do not serialize runtime node paths, object IDs, physics handles, network peers, or arbitrary executable resources as save identity. Persist related reward/corpse/inventory changes in one consistent world snapshot. Write atomically with a recoverable previous save so a crash cannot truncate the only copy. Support autosave, explicit save, clean shutdown, and clear handling of a corrupt or incompatible save. User saves and reconnect credentials stay out of Git.
 
 ## Multiplayer-aware gameplay and UI
 
@@ -45,3 +45,9 @@ Disconnect preserves the character’s last authoritative state and releases any
 ## Ally naming and recovery
 
 Host validates ally owner, living/awake namer, range/terrain, unique valid name and 80-Magicule reserves. Naming/evolution/cost happen once; repeated or competing requests cannot spend twice. World-owned ally records retain stable owner ID, name, race, stats and position. Character-owned exhaustion retains its remaining minimum 8-second timer plus 25% resource threshold. Schema v0/v1/v2 migration supplies missing fields. Dead characters can respawn with exhaustion retained; disconnected characters do not recover until reconnect.
+
+## First camp
+
+The top-level `camp` record owns stable site/deposit/structure IDs, founded/founder, shared wood/stone, remaining finite deposits and built-hut state. It is distinct from the earlier reserved settlement progression dictionary. Deposits are fixed definitions: wood_1/wood_2 = 8 each, stone_1 = 8, hut_1 costs 12 wood + 6 stone. Validation enforces conservation of gathered/spent stock, valid founder identity and construction prerequisites. v3→v4 migration introduces an untouched camp.
+
+Clients request only operation and target ID. The host checks living/awake actor, distance, terrain, owner-linked evolved ally for founding, remaining deposits, recipe funds, single construction and unobstructed footprint. Related stock/deposit/hut changes occur once in a host transaction and one world snapshot. A disconnected founder retains identity and the camp remains shared. Camp menus behave like inventory: local blocking online, scene pause offline. Built terrain collision is reconstructed on restore and clients. 34 settlement checks and 42 dedicated real-process networking checks verify the new loop, in addition to prior suites.

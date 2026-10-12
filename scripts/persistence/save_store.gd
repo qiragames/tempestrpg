@@ -1,7 +1,8 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 3
+const VERSION := 4
+const CAMP := preload("res://scripts/settlement/first_camp.gd")
 const ALLY := preload("res://scripts/allies/goblin_ally.gd")
 const MAX_BYTES := 4 * 1024 * 1024
 const CODEC := preload("res://scripts/persistence/state_codec.gd")
@@ -107,6 +108,8 @@ static func validate(data: Variant) -> bool:
         var hash_value = data.players[id].get("token_hash", "")
         if not hash_value is String or (id != "host" and (hash_value.length() != 64 or not hash_value.is_valid_hex_number(false))):
             return false
+    if not CAMP.valid_state(data.get("camp"), data.players):
+        return false
     if not data.get("progression") is Dictionary or not _plain(data.progression):
         return false
     if not data.get("enemies") is Array or data.enemies.size() > 1024 or not data.get("pickups") is Array or data.pickups.size() > 1024:
@@ -169,11 +172,15 @@ static func migrate(data: Variant) -> Variant:
         if not data.get("players") is Dictionary:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 3
         for state in data.players.values():
             if not state is Dictionary:
                 return null
             state["exhaustion"] = state.get("exhaustion", {"active": false, "remaining": 0.0})
+    if data.get("version") == 3:
+        data = data.duplicate(true)
+        data.version = VERSION
+        data["camp"] = data.get("camp", CAMP.initial_state())
     return data
 
 static func _read(path: String) -> Dictionary:

@@ -299,6 +299,11 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
         return true
     if actor.get_node("Health").current <= 0:
         return false
+    if action == "camp":
+        if payload.size() != 2 or not payload.get("operation") is String or not payload.get("id") is String or payload.operation.length() > 16 or payload.id.length() > 64:
+            rejected_requests += 1
+            return false
+        return world.camp.transact(actor, payload.operation, payload.id)
     if action == "recruit":
         if payload.size() != 1 or not payload.get("id") is String or payload.id.length() > 64:
             rejected_requests += 1

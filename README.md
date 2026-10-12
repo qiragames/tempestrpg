@@ -57,7 +57,9 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/persistence.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/allies.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/naming.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/settlement.gd
 python3 tests/network_integration.py
+python3 tests/network_settlement.py
 "$GODOT_BIN" --headless --path . --quit-after 120
 ```
 
@@ -124,3 +126,13 @@ Naming leaves a namer below 25% reserves asleep for at least **8 seconds**, and 
 ## Working with Codex and Claude Code
 
 Both tools follow `AGENTS.md` and `docs/AI_HANDOFF.md`; Claude Code starts from `CLAUDE.md`. The handoff records implemented behavior, architecture, validation and the next task. Update it after either tool completes work and coordinate concurrent file ownership before overlapping edits.
+
+## First goblin camp
+
+Press **B** to open the camp menu. Close it to move between targets; offline menus pause the game. The camp site is the flag at **(350, 350)**, west of spawn. After naming your ally and recovering, bring it near the flag and click **Found camp** within 55 pixels. Founding is free; the camp belongs to the shared world.
+
+Approach each material deposit within 36 pixels, open **B**, and click **Gather nearby materials**. Two wood piles at **(300, 350)** and **(350, 300)** supply 8 wood each; the stone deposit at **(410, 350)** supplies 8 stone. Anyone can contribute, including before founding. Deposits are finite and emptied only once. Return to the flag, open **B**, and confirm **Build hut: 12 wood + 6 stone**. The hut appears southeast of the flag with real collision; move characters/allies clear of its footprint if construction is blocked. Remaining shared stock is 4 wood and 2 stone after gathering all deposits and building.
+
+The camp menu shows current shared stock and disables unavailable actions. Hosted menus block only your own movement/actions; the world keeps running. The host saves founding, founder identity, stock, depleted deposits and construction together. Schema **v4** introduces these fields; older worlds retain their existing progress and gain the untouched camp. The reserved `progression.settlements` dictionary is separate from this implemented, validated first camp.
+
+Ally gathering/construction assignments, production, additional buildings and settlement bonuses are upcoming. This step provides one fixed hut recipe rather than free placement. Camp tests: `tests/settlement.gd` (34 checks) and `python3 tests/network_settlement.py` (42 checks). All suites total **401 checks**; local visual and real LAN/WAN playtests remain pending.

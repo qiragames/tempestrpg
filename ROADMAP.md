@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**Current focus: M3 first settlement.** M2 recruitment, confirmed 80-Magicule naming, Hobgoblin evolution and saved exhaustion/recovery are complete. 325 checks passed headlessly: 239 gameplay/persistence checks and 86 real-process networking checks. **Next: a small persistent goblin camp with limited resources, then gathering/construction roles.** Art and real-network/visual deployment checks remain pending.
+**Current focus: M3 ally work roles.** The first camp now has finite shared wood/stone deposits, founding with an evolved ally, and one buildable Goblin Hut with terrain collision. Host-only transactions and schema-v4 migration/save/replication are verified. 401 checks passed headlessly (273 local + 128 networking). **Next: assign the ally to gathering/construction, then connect exploration rewards to camp growth.** Art and real-network/visual deployment checks remain pending.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -69,7 +69,8 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 
 ### M3 — First settlement · Next, requires M2
 
-- Establish a goblin camp with limited resources and a few buildable structures.
+- Completed first structure: found a camp with your evolved ally nearby; gather finite wood/stone into shared stock and build one Goblin Hut for 12 wood + 6 stone.
+- Verified: one transaction per deposit/structure, safe placement and collision, schema-v4 migration and host restart/client replication (34 local + 42 camp networking checks). Additional structures follow after the work-role loop.
 - Assign allies to gathering, agriculture, and construction roles.
 - Connect exploration rewards to settlement production and growth.
 - Exit goal: a complete playable slice from exploration to an evolved ally contributing to the camp.
@@ -124,6 +125,14 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 | Recruit and follow a nameless goblin with persistent ownership | Done | Hosted multiplayer and saves | 18 ally checks and 73 network checks passed, including concurrent claims and reload |
 | Name and evolve the ally with saved Magicule costs and exhaustion | Done | Recruited ally | 28 naming and 86 network checks passed: preview, single cost/evolution, recovery, migration and reconnect |
 
+## Settlement tasks
+
+| Task | Status | Prerequisite | Completion evidence |
+| --- | --- | --- | --- |
+| Found a shared camp, gather finite materials and build the first hut | Done | Named evolved ally and saved world | 34 settlement and 42 real-process camp network checks passed; schema-v4 migration and collision verified |
+| Assign the ally to gathering and construction work | Next | First camp and limited materials | Citizen role authority, production rules, saved assignments and contribution feedback required |
+| Connect exploration rewards and production to camp growth | Planned | Ally work assignments | Playable adventure-to-settlement loop and additional structure recipes required |
+
 ## Update contract
 
 Open `ROADMAP.html` for the graphical dependency map. Hover or click a title to view its purpose, completion criteria, prerequisites, and successors. Generate the view after roadmap edits with `python3 tools/build_roadmap.py`; it has no external dependencies or running server requirement.
@@ -133,6 +142,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-12: Added the shared first camp, finite deposits, evolved-ally founding requirement, one costed hut with collision, B camp UI, validated schema-v4 migration and host save/replication. 401 checks passed headlessly (273 local + 86 prior network + 42 camp network), plus main-scene startup. Reinforced reciprocal Claude/Codex checks before critical steps and commits. Branch: `codex/roadmap-09-first-camp`. Next: ally work assignments.
 
 - 2026-10-12: Completed naming/evolution and persistent exhaustion; 325 total checks passed headlessly (239 local + 86 network), plus main-scene startup. Added Claude Code entry point and shared AI handoff/common collaboration rules. Branch: `codex/roadmap-08-naming-evolution`. Next: M3 first persistent camp.
 
