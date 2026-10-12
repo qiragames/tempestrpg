@@ -4,6 +4,9 @@ extends CharacterBody2D
 @export var move_speed: float = 95.0
 var facing := Vector2.DOWN
 
+func _ready() -> void:
+    $Health.defeated.connect(func(): $Magicules.enabled = false)
+
 func _physics_process(_delta: float) -> void:
     if $Health.current <= 0:
         velocity = Vector2.ZERO

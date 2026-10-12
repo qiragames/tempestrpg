@@ -3,6 +3,7 @@ extends Node2D
 
 @export var damage: int = 10
 @export var cooldown: float = 0.4
+@export var magicule_cost: float = 8.0
 var cooldown_left: float = 0.0
 var flash_left: float = 0.0
 var direction := Vector2.DOWN
@@ -14,6 +15,8 @@ func _process(delta: float) -> void:
 
 func attack(facing: Vector2) -> bool:
     if cooldown_left > 0.0 or get_parent().get_node("Health").current <= 0:
+        return false
+    if not get_parent().get_node("Magicules").try_spend(magicule_cost):
         return false
     direction = facing.normalized()
     cooldown_left = cooldown

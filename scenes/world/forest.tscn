@@ -52,3 +52,25 @@ offset_left = 12.0
 offset_top = 44.0
 theme_override_font_sizes/font_size = 12
 text = "HP 100 / 100"
+
+[node name="Magicules" type="Label" parent="HUD"]
+offset_left = 12.0
+offset_top = 62.0
+theme_override_colors/font_color = Color(0.65, 0.92, 0.86, 1)
+theme_override_font_sizes/font_size = 12
+text = "Magicules 100.0 / 100"
+
+[node name="MagiculeBar" type="ProgressBar" parent="HUD"]
+offset_left = 12.0
+offset_top = 81.0
+offset_right = 142.0
+offset_bottom = 89.0
+mouse_filter = 2
+value = 100.0
+show_percentage = false
+
+[node name="StrikeCost" type="Label" parent="HUD"]
+offset_left = 12.0
+offset_top = 92.0
+theme_override_font_sizes/font_size = 10
+text = "Strike: 8 Magicules · Recover: 6/s"

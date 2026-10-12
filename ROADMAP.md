@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript. Explore, fig
 
 ## Current focus
 
-**Current milestone: combat and absorption (M1).** Basic combat is implemented: directional strike, shared health, attack cooldown, damage immunity, a chasing Forest Gnasher with a telegraphed bite, defeat, HUD feedback, and restart. Import, 17 foundation checks, 24 combat checks, and the main-scene run passed headlessly. **Next: Magicules and regeneration**, followed by absorption and analysis. Visual playtesting remains pending; this session cannot share a live game window.
+**Current milestone: combat and absorption (M1).** Combat and the shared Magicule pool are implemented. Aura-assisted strikes cost 8 from a 100-point reserve; regeneration is 6/second after a 1.5-second spending delay. The HUD shows current reserves, unaffordable strikes fail cleanly, and defeat stops recovery. Import, 17 foundation checks, 24 combat checks, 27 Magicule checks, and the main-scene run passed headlessly. **Next: absorption and analysis of the defeated Forest Gnasher.** The supplied sprite chart is recorded for later integration; procedural art remains in use and visual playtesting remains pending.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -25,8 +25,8 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript. Explore, fig
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
 | Player health, strike, damage, enemy AI, and defeat | Done | Validated foundation | 24 combat checks passed; shared health and strike components, Forest Gnasher, HP feedback and restart |
-| Magicules as a shared resource with regeneration | Next | Validated foundation | Resource spending and recovery must be tested before marking Done |
-| Absorb a defeated creature, analyze it, acquire one Common Skill | Planned | Combat and Magicules | Defeat → absorb → analyze → acquisition must work end to end |
+| Magicules as a shared resource with regeneration | Done | Validated foundation | 27 Magicule checks passed: spending, failure, delay, regeneration, depletion, HUD, defeat and restart |
+| Absorb a defeated creature, analyze it, acquire one Common Skill | Next | Combat and Magicules | Defeat → absorb → analyze → acquisition must work end to end |
 | Skill hotbar, cooldowns, inventory storage, and System Voice | Planned | Absorption and analysis | Acquired skill must be selectable and usable with correct costs and feedback |
 
 ## Milestones and dependencies
@@ -43,7 +43,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 ### M1 — Combat and absorption · Next, requires M0
 
 - Completed: player health, directional basic attack, chasing enemy, telegraphed bite, damage immunity, defeat, and restart (24 checks passed).
-- Add Magicules and regeneration as shared gameplay resources.
+- Completed: shared Magicules, aura-strike spending, delayed regeneration, numeric/bar HUD, depletion and recovery (27 checks passed).
 - Absorb a defeated enemy, analyze it, and acquire one Common Skill.
 - Add a skill hotbar, cooldowns, inventory storage, and System Voice notifications.
 - Exit goal: movement → combat → defeat → absorption → skill use works end to end.
@@ -115,6 +115,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-12: Added a reusable Magicule pool with validated spending/restoration, delayed regeneration, HUD feedback, defeat handling, and resource costs on strikes. 27 Magicule checks, 24 combat checks, and 17 foundation checks passed; main scene runs headlessly. Branch: `codex/roadmap-02-magicules`. Recorded the supplied sprite chart in `docs/ART_REFERENCES.md`; clean sprite import remains future work. Next: absorption and analysis.
 
 - 2026-10-12: Added modular combat components and the Forest Gnasher encounter. Import, 24 combat checks, 17 foundation checks, and a 120-frame main-scene run passed. Graph expanded with M1 task dependencies; combat marked Done, Magicules Next. Defeated creatures remain as a foundation for later absorption; no absorption or skills are implemented yet. Visual validation remains pending.
 

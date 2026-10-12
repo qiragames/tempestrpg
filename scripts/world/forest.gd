@@ -7,6 +7,16 @@ const ROCKS: Array[Rect2] = [Rect2(440, 250, 32, 24), Rect2(304, 400, 40, 24)]
 const TREES: Array[Vector2] = [Vector2(160, 144), Vector2(240, 192), Vector2(352, 112), Vector2(544, 160), Vector2(816, 288), Vector2(176, 464), Vector2(576, 496), Vector2(752, 480)]
 
 func _ready() -> void:
+    _magicules_changed($Player/Magicules.current, $Player/Magicules.maximum)
+    _health_changed($Player/Health.current, $Player/Health.maximum)
+    $Player/Magicules.changed.connect(_magicules_changed)
+    $Player/Magicules.depleted.connect(func():
+        $HUD/SystemVoice.text = "[System] Magicules depleted. Allow aura to recover."
+    )
+    $Player/Magicules.spend_rejected.connect(func(_cost: float):
+        if $Player/Health.current > 0:
+            $HUD/SystemVoice.text = "[System] Insufficient Magicules. Strike unavailable."
+    )
     $Player/Health.changed.connect(_health_changed)
     $Player/Health.defeated.connect(func():
         $HUD/SystemVoice.text = "[System] Vital signs depleted. Press R to retry."
@@ -26,6 +36,11 @@ func _ready() -> void:
 
 func _health_changed(current: int, maximum: int) -> void:
     $HUD/Health.text = "HP %d / %d" % [current, maximum]
+
+func _magicules_changed(current: float, maximum: float) -> void:
+    $HUD/Magicules.text = "Magicules %.1f / %.0f" % [current, maximum]
+    $HUD/MagiculeBar.value = current
+    $HUD/MagiculeBar.max_value = maximum
 
 func _add_obstacle(rect: Rect2) -> void:
     var body := StaticBody2D.new()
