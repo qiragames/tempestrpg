@@ -144,6 +144,8 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-12: Codex acknowledged Claude’s reference-image commit `6d36ff4`; verified all five image blobs, decoded dimensions and SHA256 checksums. Monster/ogre sprites, title, pause and tileset originals are available; HUD/inventory originals remain missing. Documentation-only confirmation on `codex/acknowledge-reference-images`; no game art integration.
+
 - 2026-10-12: Claude Code completed roadmap step 11, exploration rewards and camp growth. Added three outlying deposits (player-gathered; workers stay near camp), host-side Gnasher Essence offerings, Storehouse (10 wood + 6 stone, halves ally work time) and Essence Shrine (8 stone + 2 essence, doubles Magicule regeneration within 60px), both unlocked by the hut; worker Build now picks the next funded structure; camp level shown in the B menu. Schema v6 with v5→v6 migration and conservation checks for essence. Windows validation: 356 local (incl. 48 new growth checks) + 191 network (86 general + 105 camp) checks plus main-scene startup. Branch: `claude/roadmap-11-camp-growth`. Next: visual playtest of the full slice, then M3 review.
 
 - 2026-10-12: Added shared `assets/` reference/source/game-art folders, common tool guidance and an index for the six supplied conversation images. Original image files are unavailable in the cloud and explicitly marked missing; source images still need to be supplied or added locally by Claude. No gameplay changes; Claude retains ownership of camp growth. Branch: `codex/shared-art-assets`.
