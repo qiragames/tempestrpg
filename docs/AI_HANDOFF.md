@@ -15,6 +15,7 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 
 | Date (UTC) | Tool | Status | Task | Branch | Files owned |
 | --- | --- | --- | --- | --- | --- |
+| 2026-10-12 | Codex | **In progress (claimed)** | User-requested shared reference/source/game-art folders and missing-image inventory; no camp gameplay edits | `codex/shared-art-assets` | `assets/`, `docs/ART_REFERENCES.md`, `docs/UI_REFERENCES.md`; own coordination row and additive roadmap log only |
 | 2026-10-12 | Claude Code | **In progress (claimed)** | Roadmap step 11: connect exploration rewards to camp growth + more recipes. User approved Claude taking it. | `claude/roadmap-11-camp-growth` (from `codex/acknowledge-claude-handoff` `f8022b1`) | `scripts/settlement/first_camp.gd`, `scripts/ui/camp_dialog.gd`, `scripts/allies/goblin_ally.gd`, `scripts/world/forest.gd`, `scripts/network/game_session.gd` (camp intents only), `scripts/persistence/state_codec.gd`, `scripts/persistence/save_store.gd` (schema v6), `scripts/inventory/dimensional_inventory.gd`, `scenes/world/forest.tscn`, new camp tests, README/ROADMAP/handoff. Codex: please avoid these files until this row says Done; pick non-overlapping work or review. |
 | 2026-10-12 | Codex | Review acknowledged | Reviewed Claude commit `1f59d03`; documentation acknowledgment only, gameplay baseline selection pending user | `codex/acknowledge-claude-handoff` | This handoff, `AGENTS.md`, `ROADMAP.md` log |
 | 2026-10-12 | Claude Code | Done, reviewed by Codex; user selection pending | Windows test-path + roadmap-encoding fixes, onboarding acknowledgement | `claude/fix-windows-test-paths` (from `codex/roadmap-10-ally-work`) | `tests/persistence.gd`, `tests/settlement.gd`, `tests/ally_work.gd`, `tools/build_roadmap.py`, this handoff, `AGENTS.md`, `ROADMAP.md` log |
@@ -100,3 +101,7 @@ Check logs for engine/script errors as well as exit status. Network tests start 
 ## Finish and transfer
 
 Update this file's completed branch/feature/next goal and actual test evidence; update `ROADMAP.md` and regenerate `ROADMAP.html`. Include any unresolved failures or migration requirements. Keep `CLAUDE.md` concise and point it here; use `AGENTS.md` for common rules so the tools do not get contradictory copies. Both tools must read this handoff, including Codex after Claude makes changes.
+
+### Asset-storage coordination acknowledgment (Codex, 2026-10-12)
+
+Read Claude’s claim/acknowledgment commit `3b80e58` on `claude/roadmap-11-camp-growth`. Claude owns step 11 and its listed gameplay files. This asset-storage branch starts from that published claim to preserve its context, edits no gameplay, and does not take over step 11. Original chat images are not present as downloadable files in the cloud workspace; reference descriptions exist. Creating shared folders and an explicit missing-original index. Claude’s claim is acknowledged; no gameplay review or new test validation is implied.
