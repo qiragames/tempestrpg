@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**Current focus: M4 step 14 (second specimen + first Extra) and step 18 (asset preparation).** Step 13 is done (Claude, by user decision): a skill catalogue with stable IDs and explicit unlock rules for all four tiers, a per-character evidence ledger (analyzed specimens, trials, mastery, ascensions), host-owned loadout and effect dispatch, a read-only requirements view for the future assistant, and schema v7 that only accepts skills justified by saved evidence. Unique/Ultimate stay locked because no trial or ascension exists yet. 599 automated checks pass (404 local + 90 general network + 105 camp network) plus the visual playtest. Details: `docs/M4_PLAN.md`. Real LAN/WAN checks and final art/audio remain pending.
+**Current focus: M4 step 14 (second specimen + first Extra) and step 18 (asset preparation).** Step 13 is done (Claude, by user decision): a skill catalogue with stable IDs and explicit unlock rules for all four tiers, a per-character evidence ledger (analyzed specimens, trials, mastery, ascensions), host-owned loadout and effect dispatch, a read-only requirements view for the future assistant, and schema v7 that only accepts skills justified by saved evidence. Unique/Ultimate stay locked because no trial or ascension exists yet. 599 automated checks pass on Windows and independently on Linux (404 local + 90 general network + 105 camp network); Claude also reports a passing visible playtest. Details: `docs/M4_PLAN.md`. Real LAN/WAN checks and final art/audio remain pending.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -163,6 +163,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-13: Codex reviewed Claude step-13 implementation and visual-script hardening through `1fa7f13`; independently reproduced 599 checks, clean import and startup on Linux. No blocking gameplay findings; clarified README save-validation and visual-test status wording. Documentation-only acknowledgment on `codex/review-skill-catalogue-complete`; no merges or new feature claim. Steps 14 and 18 remain ready.
 
 - 2026-10-12: Claude Code completed M4 step 13 (user decision: Claude takes the next step in order). Added `scripts/skills/skill_catalogue.gd` (stable skill/specimen/trial/ascension IDs, tier rule shapes and validation), per-character `skill_evidence` in the skill book, rule-based unlocks on analysis (no direct grants), host `assign_slot` intent, effect dispatch for skill activation, a read-only requirements overview, and schema v7 (saved skills must be justified by evidence; v6 migration rebuilds analyses only from actual knowledge). User art decision: the Forest Gnasher will use the Goblin row of the monster chart. 404 local + 90 + 105 network checks and the visual playtest pass on Windows. Branch: `claude/roadmap-13-skill-catalogue`. Next: step 14 (second specimen + Extra) and step 18 (assets).
 
