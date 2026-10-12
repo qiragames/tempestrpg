@@ -11,7 +11,7 @@ var _paused_before: bool = false
 @onready var session: Node = get_node("/root/GameSession")
 
 func _ready() -> void:
-    position = Vector2(70, 80)
+    position = Vector2(150, 75)
     size = Vector2(340, 210)
     add_theme_stylebox_override("panel", hud._panel_style())
     _title = hud._label("NAMELESS GOBLIN", Vector2(12, 10), Vector2(260, 24), self, 14)

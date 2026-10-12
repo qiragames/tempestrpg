@@ -12,37 +12,37 @@ var _paused_before: bool = false
 @onready var session: Node = get_node("/root/GameSession")
 
 func _ready() -> void:
-    position = Vector2(50, 20)
-    size = Vector2(380, 290)
+    position = Vector2(116, 18)
+    size = Vector2(408, 324)
     add_theme_stylebox_override("panel", hud._panel_style())
-    hud._label("THE FIRST GOBLIN CAMP", Vector2(12, 8), Vector2(356, 22), self, 15)
-    _stock = hud._label("", Vector2(12, 32), Vector2(356, 18), self, 11)
-    _hint = hud._label("", Vector2(12, 52), Vector2(356, 56), self, 10)
-    _found = hud._button("Found camp", Vector2(12, 112), Vector2(114, 26), self)
+    hud._label("THE FIRST GOBLIN CAMP", Vector2(12, 8), Vector2(384, 22), self, 15)
+    _stock = hud._label("", Vector2(12, 32), Vector2(384, 18), self, 11)
+    _hint = hud._label("", Vector2(12, 54), Vector2(384, 72), self, 10)
+    _found = hud._button("Found camp", Vector2(12, 132), Vector2(124, 26), self)
     _found.pressed.connect(func(): _request("found", "camp_1"))
-    _gather = hud._button("Gather nearby", Vector2(132, 112), Vector2(114, 26), self)
+    _gather = hud._button("Gather nearby", Vector2(142, 132), Vector2(124, 26), self)
     _gather.pressed.connect(func():
         var id: String = hud.get_parent().camp.nearest_deposit(hud.player)
         if not id.is_empty():
             _request("gather", id)
     )
-    _offer = hud._button("Offer essence", Vector2(252, 112), Vector2(116, 26), self)
+    _offer = hud._button("Offer essence", Vector2(272, 132), Vector2(124, 26), self)
     _offer.pressed.connect(func(): _request("offer", "gnasher_essence"))
     var camp_script = load("res://scripts/settlement/first_camp.gd")
     var index := 0
     for id in camp_script.STRUCTURES:
-        var button: Button = hud._button("", Vector2(12 + index * 120, 144), Vector2(114 if index < 2 else 116, 34), self)
+        var button: Button = hud._button("", Vector2(12 + index * 130, 164), Vector2(124, 34), self)
         button.add_theme_font_size_override("font_size", 9)
         button.pressed.connect(_request.bind("build", id))
         _build_buttons[id] = button
         index += 1
     for role_index in range(3):
         var role: String = ["gather", "build", "follow"][role_index]
-        var button: Button = hud._button(["Ally: Gather", "Ally: Build", "Ally: Follow"][role_index], Vector2(12 + role_index * 120, 184), Vector2(114 if role_index < 2 else 116, 26), self)
+        var button: Button = hud._button(["Ally: Gather", "Ally: Build", "Ally: Follow"][role_index], Vector2(12 + role_index * 130, 204), Vector2(124, 26), self)
         button.pressed.connect(_assign.bind(role))
         _work_buttons[role] = button
-    _work_status = hud._label("", Vector2(12, 214), Vector2(356, 36), self, 10)
-    var close: Button = hud._button("Close", Vector2(266, 254), Vector2(102, 26), self)
+    _work_status = hud._label("", Vector2(12, 236), Vector2(384, 36), self, 10)
+    var close: Button = hud._button("Close", Vector2(294, 286), Vector2(102, 26), self)
     close.pressed.connect(close_dialog)
     hide()
 
@@ -97,7 +97,7 @@ func _refresh() -> void:
     elif not camp.state.hut:
         _hint.text = "Build the Goblin Hut first; it unlocks the Storehouse and Shrine.\nKeep building footprints clear of characters."
     else:
-        _hint.text = "Explore for more: wood far east (700, 440), stone northeast (860, 200)\nand southwest (120, 560). Absorbed Gnasher Essence can be offered.\nStorehouse halves ally work time; the Shrine doubles nearby regen."
+        _hint.text = "Explore for more: wood far east (700, 440), stone northeast (860, 200)\nand southwest (200, 540). Absorbed Gnasher Essence can be offered.\nStorehouse halves ally work time; the Shrine doubles nearby regen."
     _found.text = "Camp established" if camp.state.founded else "Found camp (free)"
     _found.disabled = not camp.can_found(hud.player)
     _gather.disabled = camp.nearest_deposit(hud.player).is_empty()

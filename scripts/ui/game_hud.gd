@@ -23,6 +23,9 @@ var _ally_dialog: Panel
 func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
     get_parent().system_message.connect(record_event)
+    # Translucent panels keep the stat block and analysis text readable over any terrain.
+    _backdrop(Rect2(6, 42, 206, 88))
+    _backdrop(Rect2(446, 42, 188, 80))
     _recovery = _label("", Vector2(12, 110), Vector2(300, 30), self, 11)
     _build_hotbar()
     _build_inventory()
@@ -56,6 +59,16 @@ func _panel_style() -> StyleBoxFlat:
     style.set_corner_radius_all(3)
     return style
 
+## Drawn behind the scene's HUD labels (just after the top bar).
+func _backdrop(rect: Rect2) -> void:
+    var back := ColorRect.new()
+    back.position = rect.position
+    back.size = rect.size
+    back.color = Color(0.04, 0.09, 0.12, 0.55)
+    back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    add_child(back)
+    move_child(back, 1)
+
 func _button(text: String, position: Vector2, size: Vector2, parent: Node) -> Button:
     var button := Button.new()
     button.text = text
@@ -79,15 +92,19 @@ func _label(text: String, position: Vector2, size: Vector2, parent: Node, font_s
 
 func _build_hotbar() -> void:
     for index in range(3):
-        var button := _button("%d: Empty" % (index + 1), Vector2(172 + index * 99, 252), Vector2(95, 38), self)
+        var button := _button("%d: Empty" % (index + 1), Vector2(174 + index * 99, 294), Vector2(95, 38), self)
         button.focus_mode = Control.FOCUS_NONE
         button.pressed.connect(_activate_slot.bind(index))
         _slots.append(button)
+    _backdrop(Rect2(6, 246, 162, 90))
     _log = RichTextLabel.new()
-    _log.position = Vector2(12, 230)
-    _log.size = Vector2(150, 62)
+    _log.position = Vector2(12, 250)
+    _log.size = Vector2(154, 84)
     _log.add_theme_font_size_override("normal_font_size", 9)
+    # Newest lines stay visible; no scrollbar over the play area.
     _log.scroll_following = true
+    _log.scroll_active = false
+    _log.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(_log)
 
 func _activate_slot(index: int) -> void:
@@ -122,6 +139,8 @@ func record_event(message: String) -> void:
     _log.text = "\n".join(_events)
 
 func _build_inventory() -> void:
+    # Centered 440x240 frame; children are placed relative to its top-left corner.
+    var o := Vector2(100, 60)
     _modal = Control.new()
     _modal.name = "InventoryPanel"
     _modal.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -131,30 +150,30 @@ func _build_inventory() -> void:
     backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     _modal.add_child(backdrop)
     var frame := Panel.new()
-    frame.position = Vector2(20, 38)
+    frame.position = o
     frame.size = Vector2(440, 240)
     frame.add_theme_stylebox_override("panel", _panel_style())
     _modal.add_child(frame)
-    _label("DIMENSIONAL STORAGE", Vector2(32, 46), Vector2(280, 20), _modal, 15)
-    _capacity = _label("", Vector2(34, 72), Vector2(190, 16), _modal, 10)
-    _label("MATERIAL DETAILS", Vector2(248, 74), Vector2(188, 16), _modal, 10)
+    _label("DIMENSIONAL STORAGE", o + Vector2(12, 8), Vector2(280, 20), _modal, 15)
+    _capacity = _label("", o + Vector2(14, 34), Vector2(190, 16), _modal, 10)
+    _label("MATERIAL DETAILS", o + Vector2(228, 36), Vector2(188, 16), _modal, 10)
     _items = ItemList.new()
-    _items.position = Vector2(34, 94)
+    _items.position = o + Vector2(14, 56)
     _items.size = Vector2(198, 122)
     _items.add_theme_font_size_override("font_size", 12)
     _items.item_selected.connect(_select_item)
     _modal.add_child(_items)
-    _details = _label("", Vector2(248, 96), Vector2(192, 115), _modal)
-    _discard = _button("Discard 1", Vector2(248, 224), Vector2(118, 30), _modal)
+    _details = _label("", o + Vector2(228, 58), Vector2(192, 115), _modal)
+    _discard = _button("Discard 1", o + Vector2(228, 186), Vector2(118, 30), _modal)
     _discard.pressed.connect(func():
         if session.active:
             session.request_action("discard", {"id": String(_selection)})
         else:
             inventory.discard(_selection)
     )
-    _close = _button("Close", Vector2(368, 44), Vector2(80, 26), _modal)
+    _close = _button("Close", o + Vector2(348, 6), Vector2(80, 26), _modal)
     _close.pressed.connect(close_inventory)
-    _label("I / Esc: close · Multiplayer continues while browsing", Vector2(34, 256), Vector2(400, 16), _modal, 10)
+    _label("I / Esc: close · Multiplayer continues while browsing", o + Vector2(14, 218), Vector2(400, 16), _modal, 10)
     _modal.hide()
 
 func _refresh_inventory() -> void:
@@ -235,7 +254,7 @@ var _session_panel: Panel
 
 func _build_session_panel() -> void:
     _session_panel = Panel.new()
-    _session_panel.position = Vector2(70, 90)
+    _session_panel.position = Vector2(150, 105)
     _session_panel.size = Vector2(340, 150)
     _session_panel.add_theme_stylebox_override("panel", _panel_style())
     add_child(_session_panel)

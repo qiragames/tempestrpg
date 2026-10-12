@@ -10,7 +10,7 @@ const DEPOSITS := {
     "stone_1": {"position": Vector2(410, 350), "resource": "stone", "amount": 8, "outlying": false},
     "wood_3": {"position": Vector2(700, 440), "resource": "wood", "amount": 8, "outlying": true},
     "stone_2": {"position": Vector2(860, 200), "resource": "stone", "amount": 8, "outlying": true},
-    "stone_3": {"position": Vector2(120, 560), "resource": "stone", "amount": 8, "outlying": true},
+    "stone_3": {"position": Vector2(200, 540), "resource": "stone", "amount": 8, "outlying": true},
 }
 const HUT_COST := {"wood": 12, "stone": 6}
 ## Build order is the dictionary order. `key` is the boolean field in the saved camp state.

@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**Current focus: M3 review and visual playtest.** Exploration now feeds the camp: three outlying deposits past the Gnashers are gathered by players, absorbed Gnasher Essence can be offered as a shared resource, and two new structures follow the hut — a Storehouse (halves ally work time) and an Essence Shrine (doubles nearby Magicule regeneration). Camp level shows growth. Schema v6 migrates older worlds. All checks pass headlessly on Windows (356 local + 191 networking). **Next: visually playtest the full explore → fight → absorb → name → camp slice on the user's PC (Claude has a display), then close M3 and start M4.** Agriculture, free placement and real-network checks remain pending.
+**Current focus: M4 planning.** M3 is complete: a visible, automated playtest on the user's Windows PC played the whole first slice — fight, absorb, learn Rending Bite, recruit and name the goblin, recover, found the camp, let the ally gather and build, explore all three outlying deposits (fighting the second Gnasher with Rending Bite), offer essence and build the Storehouse and Essence Shrine (camp level 4) — with 22 screenshots in `docs/playtest/`. The base resolution is now **640×360** (×3 = 1920×1080, the user's target; ×2 = 1280×720 window). Visual issues found in the playtest were fixed. All 547 automated checks plus the playtest pass. **Next: Codex drafts the M4 step plan for user approval.** Real-network checks, final art and audio remain pending.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -17,7 +17,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 | Create persistent roadmap | Done | GDD and engine | This file and agent update instructions |
 | Select and install a stable Godot 4 version | Done | Linux/cloud compatibility | Preinstalled Godot 4.6.3 verified; temporary-project import and GDScript/2D runtime checks passed |
 | Create the minimal Godot project | Done | Engine version | Actual project imported without errors in Godot 4.6.3 |
-| Define input, pixel scale, and scene structure | Done | Godot project | 480 × 320 viewport, player/camera/world scenes; movement and collision checks passed |
+| Define input, pixel scale, and scene structure | Done | Godot project | 480 × 320 viewport (now 640 × 360, step 12), player/camera/world scenes; movement and collision checks passed |
 | Validate startup and save reusable environment instructions | Done | Runnable project | 17 smoke checks passed, 120-frame main-scene run passed; tested install/start draft saved |
 
 ## Current milestone tasks
@@ -67,13 +67,13 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 - Completed: schema-v3 migration, saved/replicated ally evolution and per-character exhaustion, including respawn without bypassing sleep; 28 naming and 86 network checks passed.
 - Exit goal: naming has a meaningful cost, evolution persists, and depletion cannot be bypassed by reload.
 
-### M3 — First settlement · Next, requires M2
+### M3 — First settlement · Done, requires M2
 
 - Completed first structure: found a camp with your evolved ally nearby; gather finite wood/stone into shared stock and build one Goblin Hut for 12 wood + 6 stone.
 - Verified: one transaction per deposit/structure, safe placement and collision, schema-v4 migration and host restart/client replication (34 local + 42 camp networking checks). Additional structures follow after the work-role loop.
 - Completed: owner commands for timed automatic gathering, hut construction and recall; job/target/timer save and replication, autonomous work while owner disconnects. Agriculture remains future work.
 - Completed: exploration rewards feed camp growth — outlying player-only deposits, Gnasher Essence offerings, Storehouse and Essence Shrine recipes with real effects, camp level, schema-v6 migration (48 growth checks, 105 camp network checks).
-- Remaining before closing M3: visual playtest of the full slice; agriculture stays future work.
+- Completed: visible automated playtest of the full slice on Windows (`tests/visual_playtest.gd`, 22 screenshots in `docs/playtest/`); 640×360 base resolution; HUD/menu readability fixes. Agriculture moves to later settlement work.
 - Exit goal: a complete playable slice from exploration to an evolved ally contributing to the camp.
 
 ### M4 — Progression and presentation · Planned, requires M3
@@ -113,7 +113,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 | Topic | Default or required decision | When needed |
 | --- | --- | --- |
 | Godot version | Godot 4.6.3 stable selected and verified | Done |
-| Pixel scale and camera | 480 × 320, integer scaling, bounded camera; final art resolution provisional | M0 complete |
+| Pixel scale and camera | 640 × 360 base (user target 1920 × 1080 = ×3), integer scaling, bounded camera, 1280 × 720 default window | Step 12 done |
 | Starting form | Slime/shapeshifter prototype consistent with absorption | M1 |
 | Naming balance | 80 cost, 25% recovery reserve, minimum 8-second sleep verified; tune through playtesting | M2 complete |
 | World identity | Develop original names, lore, and assets from the supplied inspirations | Before final content production |
@@ -143,6 +143,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-12: Claude Code completed roadmap step 12 and closed M3. Switched base resolution 480×320 → 640×360 (user decision; 1920×1080 = ×3) with a 1280×720 window and re-centered HUD, hotbar, event log, inventory, camp, ally and host/join panels. Added `tests/visual_playtest.gd`, a visible automated run of the whole slice using real input actions, with 22 screenshots and a log in `docs/playtest/`. Fixes from the playtest: camp-menu help text overlapping buttons (larger menu), event-log scrollbar/cut-off lines, unreadable stats/analysis text over terrain (translucent backing panels), player hidden under the log at the map's bottom-left corner (southwest stone moved to (200, 540)). All 547 checks plus the playtest pass on Windows. Branch: `claude/roadmap-12-visual-playtest`. Next: Codex drafts the M4 plan.
 
 - 2026-10-12: Codex reviewed Claude image additions `3d839e3`/`758ccc6`. All seven originals now pass independent image decoding/dimension/SHA256 checks. Corrected stale missing-image documentation and retained earlier review acknowledgments on `codex/review-complete-reference-library`. No gameplay edits, integration or new gameplay test run. Visible playtest remains next.
 

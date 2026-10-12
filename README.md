@@ -6,7 +6,7 @@ A Godot **4.6.3** / GDScript prototype for a top-down pixel-art Isekai RPG.
 
 Open `project.godot` in Godot 4.6.3 and press **F5** to run the project. Move with **WASD / arrow keys**, strike with **Space / J**, absorb with **E**, use hotbar slots with **1–3** or a click, open storage with **I**, and use **F8** for Host/Join or **F9** for host save. **R** retries offline or respawns a defeated hosted character. Explore as a placeholder slime; trees, rocks, water, and the map edge have collision.
 
-The initial foundation uses a 480 × 320 viewport, integer scaling, nearest texture filtering, and a bounded player camera. Art is a procedural placeholder. One Forest Gnasher notices you within 180 pixels, chases at 55 pixels/second, and pauses for a 0.35-second bite windup. Dodge away while it turns orange. It recovers for 0.9 seconds before attacking again. Its basic AI can collide with terrain; pathfinding is not implemented.
+The game renders at a 640 × 360 base resolution (×2 = 1280 × 720 default window, ×3 = 1920 × 1080 fullscreen), integer scaling, nearest texture filtering, and a bounded player camera. Art is a procedural placeholder. One Forest Gnasher notices you within 180 pixels, chases at 55 pixels/second, and pauses for a 0.35-second bite windup. Dodge away while it turns orange. It recovers for 0.9 seconds before attacking again. Its basic AI can collide with terrain; pathfinding is not implemented.
 
 The player has 100 HP and 0.65-second damage immunity. Bites deal 12 damage; aura-assisted directional strikes deal 10 damage, cost **8 Magicules**, and have a 0.4-second cooldown. A strike spends its cost even if it misses. The shared Magicule pool starts at **100**, regenerates **6 per second** after **1.5 seconds** without successful spending, and is shown as a number and bar. Unaffordable strikes fail without damage or cooldown; moving remains free so you can retreat and recover. Cooldown rejection does not spend resources or postpone recovery. Defeat stops recovery; restarting restores the pool.
 
@@ -153,7 +153,7 @@ Close the menu to let work run offline. Hosted menus keep work running. The menu
 
 The three deposits near the flag only cover the hut. To grow the camp further, explore:
 
-- **Outlying deposits** — wood far east at **(700, 440)** near the second Gnasher, stone northeast at **(860, 200)** past the pond, and stone southwest at **(120, 560)**. 8 each. Walk there yourself and use **B → Gather nearby**; the materials go straight into shared camp stock. Allied workers only gather near the camp, so exploring is the player's job.
+- **Outlying deposits** — wood far east at **(700, 440)** near the second Gnasher, stone northeast at **(860, 200)** past the pond, and stone southwest at **(200, 540)**. 8 each. Walk there yourself and use **B → Gather nearby**; the materials go straight into shared camp stock. Allied workers only gather near the camp, so exploring is the player's job.
 - **Gnasher Essence offerings** — every absorbed Gnasher leaves one essence in your bag (I). At the flag, **B → Offer essence** moves one essence from your bag into shared camp stock.
 
 The camp menu has one build button per structure (stand within 55 pixels of the flag). The hut must come first; it unlocks the others:
@@ -167,3 +167,13 @@ The camp menu has one build button per structure (stand within 55 pixels of the 
 The menu header shows the **camp level** (1 when founded, +1 per structure, up to 4) and stock of wood, stone and essence. **Ally: Build** picks the first funded structure in the order above. All six deposits together give 24 wood and 24 stone, enough for every building with 2 wood and 4 stone left over. Each structure is built once and has collision.
 
 The host performs every gather, offering and build, so two players clicking at the same time cannot duplicate materials or essence. Schema **v6** saves essence, the offering count and the new structures; older worlds keep their progress and gain the untouched outlying deposits. Agriculture and free building placement are future work.
+
+## Visual playtest
+
+On a computer with a display, run the automated playtest **without** `--headless`. A window opens and plays the whole first slice by itself, using the real input actions for movement, strikes, absorb, Rending Bite and the B/I/F/F8 menus: fight → absorb → recruit/name → recover → found camp → ally gathers and builds → explore all outlying deposits (and fight the second Gnasher) → offer essence → Storehouse and Shrine.
+
+```bash
+godot --path . --script tests/visual_playtest.gd
+```
+
+It saves 22 screenshots plus `log.md` (checklist, captions and system messages) to `docs/playtest/` and exits with code 1 if any check fails. Don't minimize the window while it runs; covering it with other windows is fine. Menu buttons are pressed programmatically, and offline (sandbox) mode is used; hosted play is covered by the network suites.

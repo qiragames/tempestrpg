@@ -91,7 +91,7 @@ func _process(_delta: float) -> bool:
     if phase == phase_seen or busy:
         return false
     var positions := {"wood_1": Vector2(300, 350), "wood_2": Vector2(350, 300), "stone_1": Vector2(410, 350), "hut_1": Vector2(350, 350), "work_gather": Vector2(350, 350), "work_build": Vector2(350, 350),
-        "wood_3": Vector2(700, 440), "stone_2": Vector2(860, 200), "stone_3": Vector2(120, 560), "storehouse_1": Vector2(350, 350), "offer": Vector2(350, 350), "shrine_1": Vector2(350, 350)}
+        "wood_3": Vector2(700, 440), "stone_2": Vector2(860, 200), "stone_3": Vector2(200, 540), "storehouse_1": Vector2(350, 350), "offer": Vector2(350, 350), "shrine_1": Vector2(350, 350)}
     if not positions.has(phase):
         return false
     if options.mode == "server":
