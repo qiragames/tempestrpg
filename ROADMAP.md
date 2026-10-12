@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**Current focus: M4 planning.** M3 is complete: a visible, automated playtest on the user's Windows PC played the whole first slice — fight, absorb, learn Rending Bite, recruit and name the goblin, recover, found the camp, let the ally gather and build, explore all three outlying deposits (fighting the second Gnasher with Rending Bite), offer essence and build the Storehouse and Essence Shrine (camp level 4) — with 22 screenshots in `docs/playtest/`. The base resolution is now **640×360** (×3 = 1920×1080, the user's target; ×2 = 1280×720 window). Visual issues found in the playtest were fixed. All 547 automated checks plus the playtest pass. **Next: Codex drafts the M4 step plan for user approval.** Real-network checks, final art and audio remain pending.
+**Current focus: approve the proposed M4 plan.** Claude completed step 12: 640×360 UI layout and a visible automated full-slice playtest with 22 screenshots in `docs/playtest/`. Codex reviewed the delivered changes/captures and independently reproduced all 547 headless checks on Linux. **Steps 13–24 are proposed in `docs/M4_PLAN.md`, with tier rules, prerequisites, host/save requirements and Claude/Codex ownership. No M4 implementation has started; user approval is pending.** Real LAN/WAN checks and final art/audio integration remain pending.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -134,6 +134,26 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 | Assign the ally to gathering and construction work | Done | First camp and limited materials | 35 worker checks and 63 camp network checks passed: owner commands, jobs, conservation, recall and partial-job reload |
 | Connect exploration rewards and production to camp growth | Done | Ally work assignments | 48 camp-growth checks and 105 camp network checks passed: outlying deposits, essence offerings, storehouse/shrine effects, concurrency, schema-v6 migration and reload |
 
+## M4 proposed steps
+
+**Proposed — awaiting user approval.** Detailed goals, files, authority/save contracts and completion evidence: `docs/M4_PLAN.md`. All numbered steps remain Planned until approved.
+
+| Task | Status | Prerequisite | Completion evidence |
+| --- | --- | --- | --- |
+| Approve M4 plan | Next | M3 | Pending explicit user approval; no M4 implementation authorized by the draft |
+| 13 Skill catalogue and unlock ledger | Planned | Approve M4 plan | Stable tiers/evidence/activation contract, legacy migration and per-character authority checks |
+| 14 Second specimen and Extra upgrade | Planned | 13 | Earn and use second Common plus one Extra; concurrent claims and saved unlocks verified |
+| 15 First mimic form | Planned | 13, 14 | Owned transform/revert, safe collision, no resource refill and replicated saved form |
+| 16 Personal trial and Unique gate | Planned | 13, 15 | One personal trial/Unique; mastery saved, Ultimate explicitly locked for future ascension |
+| 17 Analysis assistant model | Planned | 13, 14 | Read-only factual traits/unlock/recovery advice isolated to each character |
+| 18 Prepare sprite, tileset and UI assets | Planned | Approve M4 plan | Preserve originals; review transparent exports, pivots/atlases and nearest previews at x2/x3 |
+| 19 Character sprites and mimic presentation | Planned | 15, 16, 18 | Visible state/form/evolution animations; combat timing and client identity unchanged |
+| 20 Forest and village tiles/props | Planned | 18, 19 | All routes/deposits remain reachable; visual depth, collision/LOS and camp restore pass |
+| 21 HUD, assistant and storage UI | Planned | 17, 18, 20 | Live values, per-client inventory, focus/contrast/modal rules and x2/x3 visual evidence |
+| 22 Title and pause flow | Planned | 21 | Real New/Continue/Join/Resume/Quit paths, host saves, guest disconnect and corrupt-save handling |
+| 23 Audio and combat/analysis VFX | Planned | 16, 19, 21 | Clear cues, mute/reduced effects, no duplicate snapshot audio or gameplay timing change |
+| 24 Balance and M4 acceptance | Planned | 14, 15, 16, 17, 20, 21, 22, 23 | Visible user feedback, measured costs/recovery, eight-player/save checks and scoped LAN validation |
+
 ## Update contract
 
 Open `ROADMAP.html` for the graphical dependency map. Hover or click a title to view its purpose, completion criteria, prerequisites, and successors. Generate the view after roadmap edits with `python3 tools/build_roadmap.py`; it has no external dependencies or running server requirement.
@@ -143,6 +163,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-12: Codex reviewed Claude step-12 `41a9558`, verified 22 decodable 640×360 screenshots/log links, inspected representative menus/camp captures and reproduced 547 headless checks plus startup on Linux. Drafted proposed M4 steps 13–24, approval gate, tier rules and parallel file ownership in `docs/M4_PLAN.md` and this roadmap. Branch `codex/m4-plan`; no gameplay implementation or merge. User approval pending.
 
 - 2026-10-12: Claude Code completed roadmap step 12 and closed M3. Switched base resolution 480×320 → 640×360 (user decision; 1920×1080 = ×3) with a 1280×720 window and re-centered HUD, hotbar, event log, inventory, camp, ally and host/join panels. Added `tests/visual_playtest.gd`, a visible automated run of the whole slice using real input actions, with 22 screenshots and a log in `docs/playtest/`. Fixes from the playtest: camp-menu help text overlapping buttons (larger menu), event-log scrollbar/cut-off lines, unreadable stats/analysis text over terrain (translucent backing panels), player hidden under the log at the map's bottom-left corner (southwest stone moved to (200, 540)). All 547 checks plus the playtest pass on Windows. Branch: `claude/roadmap-12-visual-playtest`. Next: Codex drafts the M4 plan.
 
