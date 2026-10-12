@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**Current focus: approve the proposed M4 plan.** Claude completed step 12: 640×360 UI layout and a visible automated full-slice playtest with 22 screenshots in `docs/playtest/`. Codex reviewed the delivered changes/captures and independently reproduced all 547 headless checks on Linux. **Steps 13–24 are proposed in `docs/M4_PLAN.md`, with tier rules, prerequisites, host/save requirements and Claude/Codex ownership. No M4 implementation has started; user approval is pending.** Real LAN/WAN checks and final art/audio integration remain pending.
+**Current focus: M4 approved — skill foundations and art preparation are ready.** The user approved steps 13–24 on 2026-10-12. Step 13 (Codex: skill catalogue/unlock ledger) and step 18 (Claude: asset preparation only) can start in parallel after ownership claims. The detailed scope, tier rules, dependencies and host/save contracts are in `docs/M4_PLAN.md`. No M4 gameplay implementation has started yet. The accepted step-12 baseline has 547 passing headless checks and Claude’s 22 visible-playtest captures. Real LAN/WAN checks and final art/audio integration remain pending.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -76,7 +76,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 - Completed: visible automated playtest of the full slice on Windows (`tests/visual_playtest.gd`, 22 screenshots in `docs/playtest/`); 640×360 base resolution; HUD/menu readability fixes. Agriculture moves to later settlement work.
 - Exit goal: a complete playable slice from exploration to an evolved ally contributing to the camp.
 
-### M4 — Progression and presentation · Planned, requires M3
+### M4 — Progression and presentation · Next, requires M3
 
 - Expand skill data across Common, Extra, Unique, and Ultimate tiers with explicit unlock rules.
 - Add analysis/assistant UI, selected skill combinations, and an initial mimic form.
@@ -134,19 +134,19 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 | Assign the ally to gathering and construction work | Done | First camp and limited materials | 35 worker checks and 63 camp network checks passed: owner commands, jobs, conservation, recall and partial-job reload |
 | Connect exploration rewards and production to camp growth | Done | Ally work assignments | 48 camp-growth checks and 105 camp network checks passed: outlying deposits, essence offerings, storehouse/shrine effects, concurrency, schema-v6 migration and reload |
 
-## M4 proposed steps
+## M4 approved steps
 
-**Proposed — awaiting user approval.** Detailed goals, files, authority/save contracts and completion evidence: `docs/M4_PLAN.md`. All numbered steps remain Planned until approved.
+**Approved by the user, 2026-10-12.** Detailed goals, files, authority/save contracts and completion evidence: `docs/M4_PLAN.md`. Steps 13 and 18 are Next; later steps remain Planned behind their prerequisites.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
-| Approve M4 plan | Next | M3 | Pending explicit user approval; no M4 implementation authorized by the draft |
-| 13 Skill catalogue and unlock ledger | Planned | Approve M4 plan | Stable tiers/evidence/activation contract, legacy migration and per-character authority checks |
+| Approve M4 plan | Done | M3 | User explicitly approved steps 13–24 on 2026-10-12 |
+| 13 Skill catalogue and unlock ledger | Next | Approve M4 plan | Stable tiers/evidence/activation contract, legacy migration and per-character authority checks |
 | 14 Second specimen and Extra upgrade | Planned | 13 | Earn and use second Common plus one Extra; concurrent claims and saved unlocks verified |
 | 15 First mimic form | Planned | 13, 14 | Owned transform/revert, safe collision, no resource refill and replicated saved form |
 | 16 Personal trial and Unique gate | Planned | 13, 15 | One personal trial/Unique; mastery saved, Ultimate explicitly locked for future ascension |
 | 17 Analysis assistant model | Planned | 13, 14 | Read-only factual traits/unlock/recovery advice isolated to each character |
-| 18 Prepare sprite, tileset and UI assets | Planned | Approve M4 plan | Preserve originals; review transparent exports, pivots/atlases and nearest previews at x2/x3 |
+| 18 Prepare sprite, tileset and UI assets | Next | Approve M4 plan | Preserve originals; review transparent exports, pivots/atlases and nearest previews at x2/x3 |
 | 19 Character sprites and mimic presentation | Planned | 15, 16, 18 | Visible state/form/evolution animations; combat timing and client identity unchanged |
 | 20 Forest and village tiles/props | Planned | 18, 19 | All routes/deposits remain reachable; visual depth, collision/LOS and camp restore pass |
 | 21 HUD, assistant and storage UI | Planned | 17, 18, 20 | Live values, per-client inventory, focus/contrast/modal rules and x2/x3 visual evidence |
@@ -163,6 +163,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-12: User explicitly approved the M4 plan (steps 13–24). Recorded approval in plan/handoff/graph; steps 13 (Codex skill foundations) and 18 (Claude asset preparation) are ready in parallel. Later steps retain their dependencies and require ownership claims before edits. Commit/push on `codex/m4-plan`; no implementation or branch merge in this approval update.
 
 - 2026-10-12: Codex reviewed Claude step-12 `41a9558`, verified 22 decodable 640×360 screenshots/log links, inspected representative menus/camp captures and reproduced 547 headless checks plus startup on Linux. Drafted proposed M4 steps 13–24, approval gate, tier rules and parallel file ownership in `docs/M4_PLAN.md` and this roadmap. Branch `codex/m4-plan`; no gameplay implementation or merge. User approval pending.
 

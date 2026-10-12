@@ -1,6 +1,6 @@
 # M4 — Progression and presentation
 
-**Proposed — awaiting user approval. No M4 implementation is authorized by this draft.**
+**Approved by the user on 2026-10-12. Steps 13–24 may proceed under the dependencies and ownership rules below.**
 
 Drafted by Codex, 2026-10-12, after reviewing Claude step 12 at `41a9558`. Baseline: Godot 4.6.3, 640×360 integer-scaled viewport, eight total players, host authority, schema v6, completed first camp loop. Claude's Windows visual run/log and 22 screenshots are in `docs/playtest/`; Codex independently reproduced 547 headless checks on Linux and inspected representative captures. This is automated visual evidence, not a substitute for the user's feedback on feel/balance.
 
@@ -10,9 +10,9 @@ Each numbered step is one feature branch with meaningful completion evidence, it
 
 Codex handles the mechanical progression lane (13–17). Claude can prepare art (18) alongside it, then handle scene/UI presentation (19–23). The final balance step (24) combines Claude's visible tests and Codex's authority/persistence checks. No delivery dates are estimated. Do not implement an entire catalogue of high-tier abilities, a whole new region, equipment, quests or diplomacy as part of one step.
 
-## Proposed tier rules
+## Approved tier rules
 
-| Tier | Proposed unlock rule | M4 deliverable |
+| Tier | Unlock rule | M4 deliverable |
 | --- | --- | --- |
 | Common | Complete authoritative analysis of a supported specimen | Preserve Rending Bite; add one second Common skill in 14 |
 | Extra | Know the specified pair of Common skills and successfully analyze the second specimen | One explicitly defined upgrade in 14; no random unlocks |
@@ -143,6 +143,6 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 
 ## Parallel work and approval
 
-Approve the plan before starting 13 or 18. Mark the approval node Done and the agreed ready steps Next; update this draft if priorities/rules change. Approval of a proposed sequence does not merge branches automatically.
+The user approved this plan on 2026-10-12. The approval node is Done; 13 (Codex) and 18 (Claude) are Next and can start in parallel after each tool pushes its ownership claim. All other steps wait for their stated dependencies. Update the plan if priorities/rules change. Plan approval does not merge branches automatically.
 
 Claim file ownership in `docs/AI_HANDOFF.md` and push the claim before work. During 13–17, Claude owns only asset preparation (18); Codex owns skill/form/analysis/authority/save files. Integration 19 waits for stable form/trial contracts. Assistant-model work (17) can proceed beside sprite/map presentation provided no world/HUD adapters overlap. Claude owns shared UI/world presentation for 20–22; Codex reviews/verifies released steps rather than editing the same files. Exchange exact branch/commit acknowledgments and use the user-selected integrated baseline before dependent work. Both tools recheck new remote commits at critical steps and approximately every ten minutes during long active tasks.

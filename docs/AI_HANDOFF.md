@@ -15,7 +15,7 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 
 | Date (UTC) | Tool | Status | Task | Branch | Files owned |
 | --- | --- | --- | --- | --- | --- |
-| 2026-10-12 | Codex | Done — proposed plan awaiting user approval | Reviewed step 12; drafted M4 steps 13–24 and approval gate; no gameplay implementation | `codex/m4-plan` (from Claude `41a9558`) | `ROADMAP.md`, `tools/build_roadmap.py`, `ROADMAP.html`, `docs/M4_PLAN.md`, own handoff entries |
+| 2026-10-12 | Codex | Done — plan approved by the user | Reviewed step 12; drafted M4 steps 13–24 and approval gate; no gameplay implementation | `codex/m4-plan` (from Claude `41a9558`) | `ROADMAP.md`, `tools/build_roadmap.py`, `ROADMAP.html`, `docs/M4_PLAN.md`, own handoff entries |
 | 2026-10-12 | Claude Code | Done, reviewed and acknowledged by Codex | Roadmap step 12: base resolution 480×320 → **640×360** (user decision: target 1920×1080 = ×3; 1280×720 window = ×2), HUD/menu relayout, visible automated full-slice playtest with 22 screenshots, playtest fixes, M3 closed. | `claude/roadmap-12-visual-playtest` (from `codex/review-complete-reference-library` `60c1f08`) | Actually changed: `project.godot`, `scenes/world/forest.tscn` (HUD offsets), `scripts/ui/game_hud.gd`, `scripts/ui/camp_dialog.gd`, `scripts/ui/ally_dialog.gd`, `scripts/settlement/first_camp.gd` (stone_3 position only), `tests/network_camp_peer.gd` (stone_3 position), new `tests/visual_playtest.gd`, `docs/playtest/`, README/ROADMAP/handoff/`docs/MULTIPLAYER_AND_SAVES.md`. Ownership released. |
 | 2026-10-12 | Codex | Review acknowledged | Verified all seven originals for Claude `758ccc6`, corrected stale availability notes and retained prior review acknowledgments | `codex/review-complete-reference-library` | Reference documentation/handoff/roadmap only |
 | 2026-10-12 | Claude Code | Done, acknowledged by Codex | Added all 7 original reference images to `assets/references/` (monster chart, new ogre sheet, tileset, title, pause, inventory .webp, gameplay HUD); index updated with status/size/SHA256. Nothing listed is missing now. Codex: fetch `claude/reference-images` to use them. Requested by the user so Codex can use them. | `claude/reference-images` (from `claude/roadmap-11-camp-growth`) | `assets/references/**`, `assets/README.md`, `docs/ART_REFERENCES.md`, this row |
@@ -24,6 +24,12 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 | 2026-10-12 | Codex | Review acknowledged | Reviewed Claude commit `1f59d03`; documentation acknowledgment only, gameplay baseline selection pending user | `codex/acknowledge-claude-handoff` | This handoff, `AGENTS.md`, `ROADMAP.md` log |
 | 2026-10-12 | Claude Code | Done, reviewed by Codex; user selection pending | Windows test-path + roadmap-encoding fixes, onboarding acknowledgement | `claude/fix-windows-test-paths` (from `codex/roadmap-10-ally-work`) | `tests/persistence.gd`, `tests/settlement.gd`, `tests/ally_work.gd`, `tools/build_roadmap.py`, this handoff, `AGENTS.md`, `ROADMAP.md` log |
 | 2026-10-12 | Codex | Done | Ally gather/build work assignments | `codex/roadmap-10-ally-work` | — |
+
+### M4 approval and ready work (Codex, 2026-10-12)
+
+The user explicitly approved the shown plan for steps 13–24 and requested that it be committed so Claude can start. Approval is recorded in `docs/M4_PLAN.md`, `ROADMAP.md` and the dependency graph on `codex/m4-plan`. This supersedes earlier draft/awaiting-approval notes; the sequence and scope are now approved. No implementation was done in this approval update and neither tool has claimed step 13 or 18 yet.
+
+Claude: fetch the latest `codex/m4-plan` and start **18 — asset preparation**, after pushing your claim for `assets/source/`, `assets/game/`, asset metadata/preparation notes. Preserve original reference images. Do not edit gameplay/UI/world integration files until their numbered dependent steps are ready. Codex's first ready task is **13 — skill catalogue/unlock ledger**; it owns skills/data/authority/save contracts after its own claim. The lanes can run in parallel without sharing implementation files. Review and acknowledge exact commits, then use the user-selected baseline for dependent integration. Plan approval does not itself merge branches.
 
 ### Step 12 review and M4 draft acknowledgment (Codex, 2026-10-12)
 

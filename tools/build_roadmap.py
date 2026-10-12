@@ -36,20 +36,20 @@ if len(ally_rows) != 2:
     raise ValueError("Ally progression mapping changed.")
 for i, (task, status, prerequisite, evidence) in enumerate(ally_rows):
     nodes.append(dict(id=["recruitment", "naming_evolution"][i], title=["Recruit the first ally", "Naming + evolution + recovery"][i], status=status.lower(), deps=[["network_saves"], ["recruitment"]][i], what=task.strip(), why=["Build relationships and persistent character-owned citizens before naming and settlement roles.", "Balance evolved allies against the namer's finite Magicules, with recovery that survives saves and reconnects."][i], evidence=evidence.strip(), x=300, y=1410+i*115, phase="M2"))
-camp_rows = re.findall(r"^\| ([^|]+) \| (Done|Next|Planned) \| ([^|]+) \| ([^|]+) \|$", source.split("## Settlement tasks")[1].split("## M4 proposed steps")[0], re.M)
+camp_rows = re.findall(r"^\| ([^|]+) \| (Done|Next|Planned) \| ([^|]+) \| ([^|]+) \|$", source.split("## Settlement tasks")[1].split("## M4 approved steps")[0], re.M)
 if len(camp_rows) != 3:
     raise ValueError("Settlement task mapping changed.")
 for i, (task, status, prerequisite, evidence) in enumerate(camp_rows):
     nodes.append(dict(id=["first_camp", "ally_work", "camp_growth"][i], title=["Found camp + build first hut", "Ally work assignments", "Exploration + camp growth"][i], status=status.lower(), deps=[["M2"], ["first_camp"], ["ally_work"]][i], what=task.strip(), why=["Give evolved allies a persistent home and introduce shared finite resources and construction costs.", "Make citizens contribute through explicit saved roles before expanding the economy.", "Connect adventuring and settlement production into a complete playable growth loop."][i], evidence=evidence.strip(), x=300, y=1755+i*115, phase="M3"))
-m4_rows = re.findall(r"^\| ([^|]+) \| (Done|Next|Planned) \| ([^|]+) \| ([^|]+) \|$", source.split("## M4 proposed steps")[1].split("## Update contract")[0], re.M)
+m4_rows = re.findall(r"^\| ([^|]+) \| (Done|Next|Planned) \| ([^|]+) \| ([^|]+) \|$", source.split("## M4 approved steps")[1].split("## Update contract")[0], re.M)
 if len(m4_rows) != 13:
-    raise ValueError("M4 proposal mapping changed.")
+    raise ValueError("M4 step mapping changed.")
 for i, (task, status, prerequisite, evidence) in enumerate(m4_rows):
     mid = "m4_approval" if i == 0 else "m4_" + task.split()[0]
     deps = ["M3"] if i == 0 else ["m4_approval" if d.strip() == "Approve M4 plan" else "m4_" + d.strip() for d in prerequisite.split(",")]
     x = 300 if i == 0 else 155 if i <= 5 else 445 if i == 6 else 300
     y = 2215 if i == 0 else 2330 if i == 6 else 2330 + (i - 1) * 115
-    nodes.append(dict(id=mid, title=task.strip(), status=status.lower(), deps=deps, what="Proposed M4 task; implementation awaits user approval. " + task.strip(), why="Build a bounded progression/presentation slice while preserving authority and old saves. See docs/M4_PLAN.md for ownership, scope and tier rules.", evidence=evidence.strip(), x=x, y=y, phase="M4 proposal"))
+    nodes.append(dict(id=mid, title=task.strip(), status=status.lower(), deps=deps, what=("Approved by the user on 2026-10-12. " if i == 0 else "Approved M4 step; follow prerequisites and claim file ownership before implementation. ") + task.strip(), why="Build a bounded progression/presentation slice while preserving authority and old saves. See docs/M4_PLAN.md for ownership, scope and tier rules.", evidence=evidence.strip(), x=x, y=y, phase="M4"))
 combat_why = ["Make encounters playable before awarding skills from defeated creatures.", "Provide the shared resource that constrains skills, absorption, and later naming.", "Reward harder encounters with larger Magicule drops while preserving full-pool overflow.", "Turn a defeated creature into analyzed properties and one learnable Common Skill.", "Let the player use acquired skills and manage their rewards; complete the core loop."]
 for i, row in enumerate(combat_rows):
     task, status, prerequisite, evidence = (s.strip() for s in row)
