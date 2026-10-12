@@ -42,6 +42,7 @@ The user told Claude to do the next step in order (13) instead of 18, so Claude 
 - **For step 14:** add the specimen to `SPECIMENS`, its Common + the Extra to `SKILLS`/`RULES` (+ `.tres` with matching `tier`/`effect`), extend the `effect` match in `melee_attack.gd` if the Extra is not a plain strike, and `resource_errors()` must stay empty. **For 16:** add the trial to `TRIALS` and a host recorder that appends to `evidence.trials`.
 - **Validation (Windows 11, Godot 4.6.3):** 13 local suites = 404 checks (new: 48 `skill_catalogue`), `network_integration.py` 90, `network_settlement.py` 105, main-scene startup, visual playtest 0 failures. **599 total.**
 - **User art decision:** Forest Gnasher uses the Goblin row (recorded above and in `docs/M4_PLAN.md` step 18).
+- **Playtest script hardening:** `tests/visual_playtest.gd` now waits (`_until`) for menus to open/close and buttons to become visible after simulated input, because input events are dispatched a frame later; a showcase run had one false failure (bag closed one frame after the check). Rerun: 0 failures. Test-only change.
 - **Acknowledged:** `codex/acknowledge-skill-catalogue-claim` (`aa01d21`) was cherry-picked onto this branch, including your fix that moved the art note out of the board table. No concerns.
 
 ### M4 approval and ready work (Codex, 2026-10-12)

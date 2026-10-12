@@ -27,6 +27,15 @@ func _check(ok: bool, message: String) -> void:
         failures += 1
     _log("- [%s] %s" % ["x" if ok else " ", message])
 
+## Input events are dispatched on a later frame; wait briefly for the expected state.
+func _until(condition: Callable, seconds: float = 1.0) -> bool:
+    var start := Time.get_ticks_msec()
+    while not condition.call():
+        if Time.get_ticks_msec() - start > seconds * 1000:
+            return false
+        await process_frame
+    return true
+
 func _wait(seconds: float) -> void:
     await create_timer(seconds, true, false, true).timeout
 
@@ -129,6 +138,7 @@ func _absorb(enemy: Node2D) -> bool:
     return not is_instance_valid(enemy) or enemy.is_queued_for_deletion() or not enemy.is_in_group("absorbable_creatures")
 
 func _click(button: BaseButton) -> bool:
+    await _until(func(): return button.is_visible_in_tree())
     if button.disabled or not button.is_visible_in_tree():
         return false
     button.pressed.emit()
@@ -171,14 +181,14 @@ func _run() -> void:
     _check(pickup_count >= 1 or messages.any(func(m): return m.begins_with("Recovered")), "Defeat dropped a Magicule pickup (collected on the spot when standing next to it)")
     await _shot("skill_learned", "Hotbar shows Rending Bite with cost")
     await _tap("inventory")
-    _check(paused and hud._modal.visible, "I opens the bag and pauses offline play")
+    _check(await _until(func(): return paused and hud._modal.visible), "I opens the bag and pauses offline play")
     await _shot("inventory", "Dimensional storage with Gnasher Essence")
     await _tap("inventory")
-    _check(not paused, "I closes the bag")
+    _check(await _until(func(): return not paused and not hud._modal.visible), "I closes the bag")
     _log("## 4. Recruit and name the goblin")
     _check(await _walk_to(ally.position + Vector2(24, 0), 6.0, 20.0), "Walked west to the goblin")
     await _tap("interact")
-    _check(hud._ally_dialog.visible, "F opens the ally dialog")
+    _check(await _until(func(): return hud._ally_dialog.visible), "F opens the ally dialog")
     await _shot("recruit", "Ally dialog before recruitment")
     _check(await _click(hud._ally_dialog._recruit) and ally.owner_id == player.character_id, "Recruited the goblin")
     await _tap("interact")
