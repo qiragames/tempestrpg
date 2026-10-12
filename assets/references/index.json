@@ -29,9 +29,12 @@
       "id": "gameplay_hud",
       "title": "Gameplay HUD",
       "path": "assets/references/ui/gameplay_hud_reference.png",
-      "source": "User-provided conversation image, 2026-10-12",
-      "status": "missing_original",
-      "notes": "Portrait/stats, minimap, quests, assistant panel, hotbar and event log. Not among the files found on the user's PC; the pause-menu reference shows a similar HUD behind its overlay.",
+      "source": "User-provided image (sent to Claude in chat), added by Claude 2026-10-12",
+      "status": "available",
+      "width": 1024,
+      "height": 572,
+      "sha256": "b6c7310e4ec4ee7c734158eadff50c45b614610664ab3db4df88b0589ccdd6f7",
+      "notes": "Top-left portrait with name/level/class, HP/MAG/EXP bars and buff icons; top-right zone name, day/time and round runic minimap with compass; right-side parchment quest list and Great Sage assistant panel; bottom-left event log (Voice of the World/Combat/System); bottom-center hotbar (1-6, Q, E) with skill icons and EXP strip. Sample names/stats/quests are illustrative, not game data.",
       "documentation": "docs/UI_REFERENCES.md"
     },
     {
