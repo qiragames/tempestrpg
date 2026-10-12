@@ -75,10 +75,15 @@ try:
         check(result["no_credentials"], "Replication must omit reconnect credential hashes")
     check(sum(len(r["state"]["skill_ids"]) for r in results) == 1, "Concurrent absorption must acquire a corpse once")
     check(sum(sum(r["state"]["inventory"]["counts"].values()) for r in results) == 1, "Concurrent absorption must award one material")
-    check(abs(sum(r["state"]["magicules"]["current"] for r in results) - 188) < 0.01, "Two paid attacks, one absorption, and one shared drop must balance without duplicate rewards")
+    check(abs(sum(r["pre_naming"] for r in results) - 188) < 0.01, "Two paid attacks, one absorption, and one shared drop must balance without duplicate rewards")
     owner = results[0]["allies"][0]["owner"]
     check(owner in {r["state"]["id"] for r in results}, "Concurrent recruitment must assign one connected character")
     check(all(r["allies"][0]["owner"] == owner for r in results), "All clients must observe the same ally ownership")
+    check(abs(sum(r["state"]["magicules"]["current"] for r in results) - 108) < 0.01, "Concurrent/repeated naming charges exactly one 80-Magicule cost")
+    for result in results:
+        ally = result["allies"][0]
+        check(ally["name"] == "Aster" and ally["race"] == "Hobgoblin" and ally["maximum_hp"] == 60 and ally["power"] == 8, "All clients observe the same evolved ally")
+        check(result["state"]["exhaustion"]["active"] == (result["state"]["id"] == owner), "Only the authoritative namer enters recovery")
     time.sleep(0.3)
     server_stop.touch()
     saved = wait_report(server_report, lambda d: d.get("saved"))
@@ -99,9 +104,16 @@ try:
     for proc, _ in resumed:
         finish(proc)
     for before, after in zip(results, restored):
-        for field in ["id", "position", "health", "magicules", "skill_ids", "slots", "inventory", "progression"]:
+        for field in ["id", "position", "health", "skill_ids", "slots", "inventory", "progression"]:
             check(before["state"][field] == after["state"][field], f"Reconnect must restore {field}")
+        before_pool = before["state"]["magicules"]
+        after_pool = after["state"]["magicules"]
+        check(all(after_pool[k] == before_pool[k] for k in before_pool if k != "delay"), "Reconnect restores resource amounts and parameters")
+        check(0 <= after_pool["delay"] <= before_pool["delay"], "Regeneration delay resumes without resetting")
         check(after["allies"][0]["owner"] == owner, "Ally ownership must survive host reload and character reconnect")
+        check(after["state"]["exhaustion"]["active"] == before["state"]["exhaustion"]["active"], "Reconnect preserves exhaustion")
+        check(after["state"]["exhaustion"]["remaining"] <= before["state"]["exhaustion"]["remaining"], "Reload never resets the recovery timer")
+        check(after["allies"][0]["name"] == "Aster" and after["allies"][0]["race"] == "Hobgoblin", "Named evolution survives host restart")
         check(after["world"]["settlements"]["camp"]["wood"] == 7, "Shared settlement state must survive reload")
     # A valid character ID with an invalid credential must be rejected.
     profile = json.loads((WORK / "identity_0.json").read_text())

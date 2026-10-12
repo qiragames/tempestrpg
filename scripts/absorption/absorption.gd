@@ -17,7 +17,7 @@ func attempt_absorb() -> bool:
     if not AUTHORITY.can_mutate(self):
         return false
     var player := get_parent() as Node2D
-    if player.get_node("Health").current <= 0 or active:
+    if player.get_node("Health").current <= 0 or player.is_exhausted() or active:
         return false
     var nearest: Node2D
     var distance: float = range_pixels + 1.0

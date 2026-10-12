@@ -10,13 +10,13 @@ The initial foundation uses a 480 × 320 viewport, integer scaling, nearest text
 
 The player has 100 HP and 0.65-second damage immunity. Bites deal 12 damage; aura-assisted directional strikes deal 10 damage, cost **8 Magicules**, and have a 0.4-second cooldown. A strike spends its cost even if it misses. The shared Magicule pool starts at **100**, regenerates **6 per second** after **1.5 seconds** without successful spending, and is shown as a number and bar. Unaffordable strikes fail without damage or cooldown; moving remains free so you can retreat and recover. Cooldown rejection does not spend resources or postpone recovery. Defeat stops recovery; restarting restores the pool.
 
-The two starting enemies have 30 HP each and visible health bars. Strike range and obstruction checks prevent attacks through terrain. Defeated creatures remain available for absorption; a defeated player must restart. Naming and naming-induced sleep remain planned. The shared resource component is ready to support their future costs; current numbers are prototype balance values.
+The two starting enemies have 30 HP each and visible health bars. Strike range and obstruction checks prevent attacks through terrain. Defeated creatures remain available for absorption; a defeated player must restart. Naming can cause temporary sleep; current numbers are prototype balance values.
 
 ## Absorption and analysis
 
 After defeating the Gnasher, stand within 36 pixels of its body and press **E**. Analysis costs **12 Magicules** and takes **1.2 seconds** beside an unobstructed specimen. The analysis panel shows progress; completion consumes the body and learns the **Common Skill Rending Bite**. Duplicate specimens do not stack the same learned skill. Leaving range, moving behind terrain, or being defeated interrupts analysis: its cost is spent, but the corpse remains available. Magicule drops are independent of corpse absorption.
 
-Skill/specimen definitions live in `data/skills` and `data/specimens`. Hosted characters persist their acquired skills and materials. The initial offline sandbox remains session-local; R resets that sandbox. Hosted multiplayer/save foundations are implemented (N0); ally/naming progression is next (M2).
+Skill/specimen definitions live in `data/skills` and `data/specimens`. Hosted characters persist their acquired skills and materials. The initial offline sandbox remains session-local; R resets that sandbox. Hosted multiplayer/save foundations are implemented (N0); first-ally naming/evolution is implemented (M2).
 
 ## Skill hotbar and dimensional storage
 
@@ -55,11 +55,13 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/absorption.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/skills_storage.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/persistence.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/allies.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/naming.gd
 python3 tests/network_integration.py
 "$GODOT_BIN" --headless --path . --quit-after 120
 ```
 
-The cloud checks validate import, 17 foundation checks, 24 combat checks, 27 Magicule checks, 32 drop checks, 26 absorption checks, 35 skills/storage checks, 32 persistence checks, and 68 real multi-process networking checks. These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. Visual playtesting is still pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
+The cloud checks validate import, 17 foundation checks, 24 combat checks, 27 Magicule checks, 32 drop checks, 26 absorption checks, 35 skills/storage checks, 32 persistence checks, 18 ally checks, 28 naming checks, and 86 real multi-process networking checks (325 total). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. Visual playtesting is still pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
 
 ## Structure
 
@@ -113,6 +115,12 @@ Architecture and future persistence requirements: `docs/MULTIPLAYER_AND_SAVES.md
 
 ## First ally
 
-A nameless goblin waits west of the starting point at (220, 360). Defeat the clearing’s first Gnasher, approach within 40 pixels, and press **F**. The dialog shows its actual stats and a **Recruit** button. Recruitment is free; naming is a separate upcoming action. The goblin follows its owner with terrain collision, waits if that character disconnects/dies, and retains ownership when the character reconnects. Other players cannot steal it, and simultaneous claims resolve once on the host. Its placeholder appearance is a small green goblin; combat orders/pathfinding come later.
+A nameless goblin waits west of the starting point at (220, 360). Defeat the clearing’s first Gnasher, approach within 40 pixels, and press **F**. The dialog shows its actual stats and a **Recruit** button. Recruitment is free. Enter a name in the same dialog and explicitly confirm the **80-Magicule** cost to evolve it into a Hobgoblin (HP 60, power 8, follow speed 65, larger armored silhouette). Naming is permanent and only the owner can do it. The goblin follows its owner with terrain collision, waits if that character disconnects/dies, and retains ownership when the character reconnects. Other players cannot steal it, and simultaneous claims resolve once on the host. Its placeholder appearance is a small green goblin; combat orders/pathfinding come later.
 
-Schema version **2** adds allied entities and stable ownership. Version-1 worlds migrate by introducing the unclaimed goblin, while retaining their characters and world progress. Allied positions and ownership replicate and save with the world. Validation rejects unknown owners and duplicate entity IDs. `tests/allies.gd` adds 18 checks; the network runner now has 73 checks including concurrent recruitment/reload.
+Schema version **3** includes allied entities, stable ownership, naming/evolution, and per-character exhaustion. Version-1 worlds migrate by introducing the unclaimed goblin, while retaining their characters and world progress. Allied positions and ownership replicate and save with the world. Validation rejects unknown owners and duplicate entity IDs. `tests/allies.gd` adds 18 checks; `tests/naming.gd` adds 28.
+
+Naming leaves a namer below 25% reserves asleep for at least **8 seconds**, and until reserves reach 25%. Movement, attacks and absorption stop; regeneration continues while alive. Other players continue playing. Exhaustion, its remaining timer, and paid costs survive host save/reload and reconnect. Disconnected characters stop simulating; respawn preserves exhaustion. Offline dialogs pause recovery until closed; hosted dialogs only block that character’s input. Allies currently follow rather than fight.
+
+## Working with Codex and Claude Code
+
+Both tools follow `AGENTS.md` and `docs/AI_HANDOFF.md`; Claude Code starts from `CLAUDE.md`. The handoff records implemented behavior, architecture, validation and the next task. Update it after either tool completes work and coordinate concurrent file ownership before overlapping edits.

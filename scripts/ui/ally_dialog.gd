@@ -4,20 +4,28 @@ var ally_id: String = ""
 var _title: Label
 var _details: Label
 var _recruit: Button
+var _name_field: LineEdit
 var _close: Button
 var _paused_before: bool = false
 @onready var hud = get_parent()
 @onready var session: Node = get_node("/root/GameSession")
 
 func _ready() -> void:
-    position = Vector2(70, 120)
-    size = Vector2(340, 150)
+    position = Vector2(70, 80)
+    size = Vector2(340, 210)
     add_theme_stylebox_override("panel", hud._panel_style())
     _title = hud._label("NAMELESS GOBLIN", Vector2(12, 10), Vector2(260, 24), self, 14)
-    _details = hud._label("", Vector2(12, 39), Vector2(316, 66), self, 11)
-    _recruit = hud._button("Recruit", Vector2(12, 108), Vector2(170, 28), self)
-    _recruit.pressed.connect(func(): session.request_action("recruit", {"id": ally_id}))
-    _close = hud._button("Close", Vector2(190, 108), Vector2(138, 28), self)
+    _details = hud._label("", Vector2(12, 39), Vector2(316, 88), self, 11)
+    _recruit = hud._button("Recruit", Vector2(12, 168), Vector2(170, 28), self)
+    _name_field = LineEdit.new()
+    _name_field.position = Vector2(12, 130)
+    _name_field.size = Vector2(316, 28)
+    _name_field.max_length = 24
+    _name_field.placeholder_text = "Ally name (2-24 characters)"
+    _name_field.add_theme_font_size_override("font_size", 11)
+    add_child(_name_field)
+    _recruit.pressed.connect(_confirm)
+    _close = hud._button("Close", Vector2(190, 168), Vector2(138, 28), self)
     _close.pressed.connect(close_dialog)
     hide()
 
@@ -35,6 +43,7 @@ func open_nearest() -> void:
         hud.record_event("No ally nearby. Find the goblin to the west.")
         return
     ally_id = closest.entity_id
+    _name_field.text = ""
     _paused_before = get_tree().paused
     if session.active:
         hud.player.input_blocked = true
@@ -57,8 +66,23 @@ func _refresh() -> void:
     var ours: bool = ally.owner_id == hud.player.character_id
     _title.text = "NAMELESS GOBLIN" if ally.display_name.is_empty() else ally.display_name
     _details.text = "%s · HP %d · Power %d\n%s" % [ally.race, ally.maximum_hp, ally.power, "Joined you. The goblin will follow." if ours else "Already follows another player." if not ally.owner_id.is_empty() else "Defeat the clearing's Gnasher, then offer your friendship."]
-    _recruit.text = "Ally recruited" if ours else "Recruit"
-    _recruit.disabled = not ally.owner_id.is_empty() or not ally.can_reach(hud.player) or not ally.threat_cleared() or hud.player.get_node("Health").current <= 0
+    var naming: bool = ours and ally.display_name.is_empty()
+    _name_field.visible = naming
+    if naming:
+        _details.text = "Joined you. Name → Hobgoblin: HP 30 → 60, power 4 → 8.\nCost: 80 Magicules. Below 25% reserves: sleep for at least 8s, until reserves reach 25%."
+    _recruit.text = "Confirm: 80 Magicules" if naming else "Ally recruited" if ours else "Recruit"
+    _recruit.disabled = not ally.can_reach(hud.player) or hud.player.get_node("Health").current <= 0 or hud.player.is_exhausted()
+    if naming:
+        _recruit.disabled = _recruit.disabled or not ally.valid_name(_name_field.text.strip_edges()) or hud.player.get_node("Magicules").current < ally.NAMING_COST
+    else:
+        _recruit.disabled = _recruit.disabled or not ally.owner_id.is_empty() or not ally.threat_cleared()
+
+func _confirm() -> void:
+    var ally = hud.get_parent().entity_by_id(ally_id)
+    if ally != null and ally.owner_id == hud.player.character_id:
+        session.request_action("name_ally", {"id": ally_id, "name": _name_field.text})
+    else:
+        session.request_action("recruit", {"id": ally_id})
 
 func close_dialog() -> void:
     if not visible:

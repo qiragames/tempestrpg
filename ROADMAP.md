@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**Current focus: M2 ally progression.** The nameless goblin can be recruited after the clearing threat is defeated. It follows its stable character owner, waits through disconnect/death, and replicates/persists with the world. 284 checks passed headlessly, including 18 ally checks and 73 networking checks. **Next: naming, Hobgoblin evolution, and saved Magicule exhaustion/recovery.** Art and real-network/visual deployment checks remain pending.
+**Current focus: M3 first settlement.** M2 recruitment, confirmed 80-Magicule naming, Hobgoblin evolution and saved exhaustion/recovery are complete. 325 checks passed headlessly: 239 gameplay/persistence checks and 86 real-process networking checks. **Next: a small persistent goblin camp with limited resources, then gathering/construction roles.** Art and real-network/visual deployment checks remain pending.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -59,15 +59,15 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 - Passed: 68 real-process networking checks and 32 persistence checks; one host plus seven guests, ninth-player rejection, save/reload/reconnect, invalid credentials, corrupt save recovery. LAN/WAN, encryption, latency and visual playtests remain future validation.
 - Exit goal: verified locally with 8-player capacity and restored character/world state; real network deployment remains a follow-up check.
 
-### M2 — First ally and naming · Next, requires N0
+### M2 — First ally and naming · Done, requires N0
 
 - Completed: recruit a nameless goblin after defeating the clearing threat; stable ownership, follow behavior, host-only claims and save/reconnect (18 ally checks plus network coverage).
-- Name the ally with a visible Magicule cost and confirmation of the expected result.
-- Evolve its race, stats, and visual appearance; support depletion and recovery.
-- Extend N0 multiplayer/save foundations to persist recruited allies, naming costs, race evolution, and depletion/recovery state.
+- Completed: cost preview and explicit confirmation, 80-Magicule naming, owner/range/name validation and single evolution.
+- Completed: Goblin → Hobgoblin, stats/silhouette changes, minimum 8-second sleep below 25% reserves, recovery at 25%.
+- Completed: schema-v3 migration, saved/replicated ally evolution and per-character exhaustion, including respawn without bypassing sleep; 28 naming and 86 network checks passed.
 - Exit goal: naming has a meaningful cost, evolution persists, and depletion cannot be bypassed by reload.
 
-### M3 — First settlement · Planned, requires M2
+### M3 — First settlement · Next, requires M2
 
 - Establish a goblin camp with limited resources and a few buildable structures.
 - Assign allies to gathering, agriculture, and construction roles.
@@ -113,7 +113,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 | Godot version | Godot 4.6.3 stable selected and verified | Done |
 | Pixel scale and camera | 480 × 320, integer scaling, bounded camera; final art resolution provisional | M0 complete |
 | Starting form | Slime/shapeshifter prototype consistent with absorption | M1 |
-| Naming balance | Define costs, reserves, exhaustion, and recovery; test exploit cases | M2 |
+| Naming balance | 80 cost, 25% recovery reserve, minimum 8-second sleep verified; tune through playtesting | M2 complete |
 | World identity | Develop original names, lore, and assets from the supplied inspirations | Before final content production |
 | Project scope | Ship a small playable slice before expanding to nation-scale simulation | M3 review |
 
@@ -122,7 +122,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
 | Recruit and follow a nameless goblin with persistent ownership | Done | Hosted multiplayer and saves | 18 ally checks and 73 network checks passed, including concurrent claims and reload |
-| Name and evolve the ally with saved Magicule costs and exhaustion | Next | Recruited ally | Cost preview, single evolution, resource spending, recovery, save/reload and multiplayer validation required |
+| Name and evolve the ally with saved Magicule costs and exhaustion | Done | Recruited ally | 28 naming and 86 network checks passed: preview, single cost/evolution, recovery, migration and reconnect |
 
 ## Update contract
 
@@ -133,6 +133,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-12: Completed naming/evolution and persistent exhaustion; 325 total checks passed headlessly (239 local + 86 network), plus main-scene startup. Added Claude Code entry point and shared AI handoff/common collaboration rules. Branch: `codex/roadmap-08-naming-evolution`. Next: M3 first persistent camp.
 
 - 2026-10-12: Added the first goblin, threat-gated recruitment, stable ownership, collision-aware following, interaction UI and schema-v2 migration/save/replication. 18 ally checks and 73 network checks passed alongside 193 previous local checks (284 total). Branch: `codex/roadmap-07-first-ally`. Naming/evolution/recovery is next.
 

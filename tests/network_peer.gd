@@ -134,6 +134,10 @@ func _run() -> void:
     await _wait(1.6)
     session.request_action("recruit", {"id": "ally_goblin_1"})
     await _wait(0.2)
+    var pre_naming: float = actor.get_node("Magicules").current
+    session.request_action("name_ally", {"id": "ally_goblin_1", "name": "Aster"})
+    session.request_action("name_ally", {"id": "ally_goblin_1", "name": "Aster"})
+    await _wait(0.25)
     var hud = world.get_node("HUD")
     hud.open_inventory()
     var time_before: float = session.latest_snapshot.progression.world_time
@@ -145,6 +149,6 @@ func _run() -> void:
     var secrets_absent: bool = true
     for state in snapshot.players.values():
         secrets_absent = secrets_absent and not state.has("token_hash")
-    _report({"moved": moved, "guards": guards, "menu_local": local_menu, "no_credentials": secrets_absent, "state": CODEC.capture_player(actor), "allies": snapshot.allies})
+    _report({"pre_naming": pre_naming, "moved": moved, "guards": guards, "menu_local": local_menu, "no_credentials": secrets_absent, "state": CODEC.capture_player(actor), "allies": snapshot.allies})
     session.stop_session(false)
     quit(0)

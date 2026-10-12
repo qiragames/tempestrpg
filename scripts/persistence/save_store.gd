@@ -1,7 +1,8 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 2
+const VERSION := 3
+const ALLY := preload("res://scripts/allies/goblin_ally.gd")
 const MAX_BYTES := 4 * 1024 * 1024
 const CODEC := preload("res://scripts/persistence/state_codec.gd")
 
@@ -46,6 +47,11 @@ static func validate_player(state: Variant, id: String) -> bool:
     if not state is Dictionary or state.get("id") != id or not _id(id):
         return false
     if not _position(state.get("position")) or not _number(state.get("move_speed"), 1, 1000):
+        return false
+    var exhaustion = state.get("exhaustion")
+    if not exhaustion is Dictionary or not exhaustion.get("active") is bool or not _number(exhaustion.get("remaining"), 0, 60):
+        return false
+    if not exhaustion.active and exhaustion.remaining != 0:
         return false
     var facing = state.get("facing")
     if not facing is Array or facing.size() != 2 or not _number(facing[0], -1, 1) or not _number(facing[1], -1, 1):
@@ -108,13 +114,23 @@ static func validate(data: Variant) -> bool:
     var ids: Dictionary = {}
     if not data.get("allies") is Array or data.allies.size() > 256:
         return false
+    var names: Dictionary = {}
     for ally in data.allies:
         if not ally is Dictionary or not _id(ally.get("id")) or ids.has(ally.id) or not _position(ally.get("position")) or not _id(ally.get("owner"), true):
             return false
         if not ally.owner.is_empty() and not data.players.has(ally.owner):
             return false
-        if ally.get("name") != "" or ally.get("race") != "Goblin" or ally.get("maximum_hp") != 30 or ally.get("power") != 4 or ally.get("speed") != 45:
+        if not ally.get("name") is String:
             return false
+        if ally.name.is_empty():
+            if ally.get("race") != "Goblin" or ally.get("maximum_hp") != 30 or ally.get("power") != 4 or ally.get("speed") != 45:
+                return false
+        elif not ALLY.valid_name(ally.name) or ally.owner.is_empty() or ally.get("race") != "Hobgoblin" or ally.get("maximum_hp") != 60 or ally.get("power") != 8 or ally.get("speed") != 65:
+            return false
+        if not ally.name.is_empty():
+            if names.has(ally.name.to_lower()):
+                return false
+            names[ally.name.to_lower()] = true
         ids[ally.id] = true
     for enemy in data.enemies:
         if not enemy is Dictionary or not _id(enemy.get("id")) or ids.has(enemy.id) or enemy.get("kind") != "gnasher" or not _position(enemy.get("position")) or not _position(enemy.get("home")):
@@ -147,8 +163,17 @@ static func migrate(data: Variant) -> Variant:
             state["slots"] = state.get("slots", [state.get("skill_ids", [])[0] if not state.get("skill_ids", []).is_empty() else "", "", ""])
     if data.get("version") == 1:
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 2
         data["allies"] = data.get("allies", [{"id": "ally_goblin_1", "position": [220.0, 360.0], "owner": "", "name": "", "race": "Goblin", "maximum_hp": 30, "power": 4, "speed": 45.0}])
+    if data.get("version") == 2:
+        if not data.get("players") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = VERSION
+        for state in data.players.values():
+            if not state is Dictionary:
+                return null
+            state["exhaustion"] = state.get("exhaustion", {"active": false, "remaining": 0.0})
     return data
 
 static func _read(path: String) -> Dictionary:

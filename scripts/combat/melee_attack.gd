@@ -28,7 +28,7 @@ func attack_skill(facing: Vector2, skill_id: StringName) -> bool:
 func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float) -> bool:
     if not AUTHORITY.can_mutate(self):
         return false
-    if cooldown_left > 0.0 or get_parent().get_node("Health").current <= 0:
+    if cooldown_left > 0.0 or get_parent().get_node("Health").current <= 0 or get_parent().is_exhausted():
         return false
     if not get_parent().get_node("Magicules").try_spend(cost):
         return false

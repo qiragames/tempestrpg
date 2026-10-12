@@ -14,6 +14,7 @@ var _events: Array[String] = []
 var _entries: Array = []
 var _selection: StringName = &""
 var _paused_before_open: bool = false
+var _recovery: Label
 var _ally_dialog: Panel
 @onready var player = get_parent().get_node("Player")
 @onready var inventory = player.get_node("Inventory")
@@ -21,6 +22,7 @@ var _ally_dialog: Panel
 func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
     get_parent().system_message.connect(record_event)
+    _recovery = _label("", Vector2(12, 110), Vector2(300, 30), self, 11)
     _build_hotbar()
     _build_inventory()
     inventory.changed.connect(_refresh_inventory)
@@ -96,6 +98,8 @@ func _activate_slot(index: int) -> void:
             player.get_node("MeleeAttack").attack_skill(player.facing, skill.id)
 
 func _process(_delta: float) -> void:
+    _recovery.visible = player.is_exhausted()
+    _recovery.text = "Recovering: %.1fs · need %.0f Magicules" % [player.exhaustion_left, player.get_node("Magicules").maximum * 0.25]
     for index in range(_slots.size()):
         var skill: Resource = player.get_node("SkillBook").skill_at_slot(index)
         var button := _slots[index]
@@ -106,7 +110,7 @@ func _process(_delta: float) -> void:
         var cooldown: float = player.get_node("MeleeAttack").cooldown_left
         button.text = "%d: %s\n%s" % [index + 1, skill.display_name, "%.1fs" % cooldown if cooldown > 0.0 else "%.0f Magicules" % skill.magicule_cost]
         button.tooltip_text = "%s · %s\n%d damage · %.1fs cooldown" % [skill.tier, skill.display_name, skill.damage, skill.cooldown]
-        button.disabled = get_tree().paused or player.input_blocked or (session.replica_world and not session.active) or player.get_node("Health").current <= 0 or cooldown > 0.0 or player.get_node("Magicules").current < skill.magicule_cost
+        button.disabled = player.is_exhausted() or get_tree().paused or player.input_blocked or (session.replica_world and not session.active) or player.get_node("Health").current <= 0 or cooldown > 0.0 or player.get_node("Magicules").current < skill.magicule_cost
 
 func record_event(message: String) -> void:
     _events.append(message)

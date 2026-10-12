@@ -4,7 +4,7 @@ User requirement, 2026-10-12: friends connect to the user's machine, which hosts
 
 ## Current state and order
 
-N0 is implemented for desktop/LAN testing. The host owns simulation, admits seven guests, verifies per-world reconnect credentials, and saves/restores characters and world entities. The offline sandbox remains session-local; choose Host/Join with F8 to use persistent hosted play. Real processes verified host/client movement, shared claims, reconnect after host restart, forged identity rejection, eight-player capacity, and local UI without global pause. Internet connectivity, encrypted transport, visual playtesting, and high-latency/performance tuning remain unverified or unimplemented. M2 ally/naming progression comes next.
+N0 is implemented for desktop/LAN testing. The host owns simulation, admits seven guests, verifies per-world reconnect credentials, and saves/restores characters and world entities. The offline sandbox remains session-local; choose Host/Join with F8 to use persistent hosted play. Real processes verified host/client movement, shared claims, reconnect after host restart, forged identity rejection, eight-player capacity, and local UI without global pause. Internet connectivity, encrypted transport, visual playtesting, and high-latency/performance tuning remain unverified or unimplemented. M2 recruitment, naming/evolution and exhaustion are implemented.
 
 ## Authority and identity
 
@@ -24,7 +24,7 @@ N0 is implemented for desktop/LAN testing. The host owns simulation, admits seve
 
 Save actual implemented fields first and extend the schema with each new feature. The references' sample levels, gear, currency, and quests are not default saved data. Party-wide and personal quest state must be modeled separately before quest implementation.
 
-The host owns world saves. Version 1 uses stable definition IDs, validated primitive fields, draft-version defaults/migration, atomic replacement, and a previous valid backup. Extend this schema with each later feature. Do not serialize runtime node paths, object IDs, physics handles, network peers, or arbitrary executable resources as save identity. Persist related reward/corpse/inventory changes in one consistent world snapshot. Write atomically with a recoverable previous save so a crash cannot truncate the only copy. Support autosave, explicit save, clean shutdown, and clear handling of a corrupt or incompatible save. User saves and reconnect credentials stay out of Git.
+The host owns world saves. Version 3 uses stable definition IDs, validated primitive fields, draft-version defaults/migration, atomic replacement, and a previous valid backup. Extend this schema with each later feature. Do not serialize runtime node paths, object IDs, physics handles, network peers, or arbitrary executable resources as save identity. Persist related reward/corpse/inventory changes in one consistent world snapshot. Write atomically with a recoverable previous save so a crash cannot truncate the only copy. Support autosave, explicit save, clean shutdown, and clear handling of a corrupt or incompatible save. User saves and reconnect credentials stay out of Git.
 
 ## Multiplayer-aware gameplay and UI
 
@@ -41,3 +41,7 @@ Passed: 161 existing gameplay checks, 32 persistence checks, and 68 real-process
 Network tests use loopback on one machine; the encounter fixtures isolate networking from the separately tested enemy AI. They do not establish real WAN connectivity, latency behavior, visual quality, or eight players simultaneously fighting under adverse network conditions. Full snapshots are a first implementation; later transport/prediction/performance work should preserve host authority and save ownership.
 
 Disconnect preserves the character’s last authoritative state and releases any pending absorption reservation. Reload/reconnect interrupts unfinished channels without refunding their paid cost. Drops/corpses and inventories restore from the same snapshot. Saved dead characters remain dead until an authorized per-character respawn; rejoining never supplies free HP/resources. Respawn preserves inventory, knowledge, progression and existing Magicules.
+
+## Ally naming and recovery
+
+Host validates ally owner, living/awake namer, range/terrain, unique valid name and 80-Magicule reserves. Naming/evolution/cost happen once; repeated or competing requests cannot spend twice. World-owned ally records retain stable owner ID, name, race, stats and position. Character-owned exhaustion retains its remaining minimum 8-second timer plus 25% resource threshold. Schema v0/v1/v2 migration supplies missing fields. Dead characters can respawn with exhaustion retained; disconnected characters do not recover until reconnect.

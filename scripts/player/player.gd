@@ -8,6 +8,8 @@ var character_id: String = "host"
 var local_controlled: bool = true
 var network_controlled: bool = false
 var input_blocked: bool = false
+var exhaustion_active: bool = false
+var exhaustion_left: float = 0.0
 var remote_direction := Vector2.ZERO
 var last_input_msec: int = 0
 var progression: Dictionary = {"level": 1, "experience": 0, "race": "Slime", "quests": {}, "equipment": {}}
@@ -22,11 +24,13 @@ func _physics_process(_delta: float) -> void:
         direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
     elif network_controlled and not input_blocked and Time.get_ticks_msec() - last_input_msec < 350:
         direction = remote_direction
+    if is_exhausted():
+        direction = Vector2.ZERO
     if session.replica_world:
         if local_controlled:
             session.send_move(direction)
         return
-    if $Health.current <= 0:
+    if $Health.current <= 0 or is_exhausted():
         velocity = Vector2.ZERO
         return
     velocity = direction * move_speed
@@ -34,6 +38,30 @@ func _physics_process(_delta: float) -> void:
         facing = direction
     move_and_slide()
     queue_redraw()
+
+func is_exhausted() -> bool:
+    return exhaustion_active
+
+func begin_exhaustion(seconds: float) -> void:
+    if session.replica_world:
+        return
+    if $Absorption.active:
+        $Absorption._cancel("Analysis interrupted by exhaustion.")
+    exhaustion_active = true
+    exhaustion_left = maxf(exhaustion_left, seconds)
+    velocity = Vector2.ZERO
+    remote_direction = Vector2.ZERO
+    queue_redraw()
+
+func _process(delta: float) -> void:
+    if session.replica_world or not exhaustion_active or $Health.current <= 0:
+        return
+    exhaustion_left = maxf(0.0, exhaustion_left - delta)
+    if exhaustion_left <= 0.0 and $Magicules.current >= $Magicules.maximum * 0.25:
+        exhaustion_active = false
+        session.notify_character(character_id, "Aura stabilized. Recovery complete.")
+        session.queue_save()
+        queue_redraw()
 
 func _unhandled_input(event: InputEvent) -> void:
     if not local_controlled or input_blocked:
@@ -63,6 +91,12 @@ func configure_replica() -> void:
 func _draw() -> void:
     if has_node("Health") and $Health.current <= 0:
         draw_rect(Rect2(-8, 2, 16, 4), Color("447c88"))
+        return
+    if exhaustion_active:
+        draw_rect(Rect2(-9, 0, 18, 6), Color("477f91"))
+        draw_rect(Rect2(-5, -2, 10, 3), Color("78a6b4"))
+        draw_rect(Rect2(-4, 2, 3, 1), Color("142c42"))
+        draw_rect(Rect2(1, 2, 3, 1), Color("142c42"))
         return
     # Deliberately simple pixel placeholder, ready to replace with animated sprites.
     draw_rect(Rect2(-9, 3, 18, 5), Color(0.03, 0.12, 0.14, 0.5))

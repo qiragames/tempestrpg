@@ -14,3 +14,5 @@
 - Cloud tasks already have isolated checkouts. Use the existing checkout; do not create a worktree unless the user explicitly requests one.
 
 - The user wants to see the window used for testing. Open the actual game/browser test view when supported. This cloud session currently has no display or live desktop-sharing capability: clearly identify headless checks and do not imply the user can watch an invisible game window. Provide actual captures when a renderer/display is available, or a project package for local playtesting.
+
+- Codex and Claude Code share this project. Read `docs/AI_HANDOFF.md` at session start, verify the actual branch/working tree, and update the handoff at step completion. `CLAUDE.md` points Claude Code to these same rules. Coordinate concurrent file ownership before overlapping edits; repository documents do not provide a live lock. Preserve the other session's uncommitted work.

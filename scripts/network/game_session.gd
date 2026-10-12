@@ -305,12 +305,18 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             return false
         var ally = world.entity_by_id(payload.id)
         return ally.try_recruit(actor) if ally != null and ally.is_in_group("allies") else false
+    if action == "name_ally":
+        if payload.size() != 2 or not payload.get("id") is String or payload.id.length() > 64 or not payload.get("name") is String or payload.name.length() > 64:
+            rejected_requests += 1
+            return false
+        var ally = world.entity_by_id(payload.id)
+        return ally.try_name(actor, payload.name) if ally != null and ally.is_in_group("allies") else false
     if action == "discard":
         if payload.size() != 1 or not payload.get("id") is String or payload.id.length() > 64:
             rejected_requests += 1
             return false
         return actor.get_node("Inventory").discard(StringName(payload.id))
-    if actor.input_blocked:
+    if actor.input_blocked or actor.is_exhausted():
         return false
     if not payload.is_empty():
         rejected_requests += 1
