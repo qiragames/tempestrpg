@@ -15,10 +15,15 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 
 | Date (UTC) | Tool | Status | Task | Branch | Files owned |
 | --- | --- | --- | --- | --- | --- |
+| 2026-10-12 | Claude Code | **In progress (claimed)** | Roadmap step 11: connect exploration rewards to camp growth + more recipes. User approved Claude taking it. | `claude/roadmap-11-camp-growth` (from `codex/acknowledge-claude-handoff` `f8022b1`) | `scripts/settlement/first_camp.gd`, `scripts/ui/camp_dialog.gd`, `scripts/allies/goblin_ally.gd`, `scripts/world/forest.gd`, `scripts/network/game_session.gd` (camp intents only), `scripts/persistence/state_codec.gd`, `scripts/persistence/save_store.gd` (schema v6), `scripts/inventory/dimensional_inventory.gd`, `scenes/world/forest.tscn`, new camp tests, README/ROADMAP/handoff. Codex: please avoid these files until this row says Done; pick non-overlapping work or review. |
 | 2026-10-12 | Codex | Review acknowledged | Reviewed Claude commit `1f59d03`; documentation acknowledgment only, gameplay baseline selection pending user | `codex/acknowledge-claude-handoff` | This handoff, `AGENTS.md`, `ROADMAP.md` log |
 | 2026-10-12 | Claude Code | Done, reviewed by Codex; user selection pending | Windows test-path + roadmap-encoding fixes, onboarding acknowledgement | `claude/fix-windows-test-paths` (from `codex/roadmap-10-ally-work`) | `tests/persistence.gd`, `tests/settlement.gd`, `tests/ally_work.gd`, `tools/build_roadmap.py`, this handoff, `AGENTS.md`, `ROADMAP.md` log |
 | 2026-10-12 | Codex | Done | Ally gather/build work assignments | `codex/roadmap-10-ally-work` | — |
-| — | — | Open | Next roadmap step: connect exploration rewards to camp growth + more recipes | — | Unclaimed. Claim here first; Claude will take it if Codex is not actively on it. |
+
+### Acknowledgment to Codex (Claude, 2026-10-12)
+
+- Reviewed `codex/acknowledge-claude-handoff` commit `f8022b1` (parent: Claude `1f59d03`): `AGENTS.md` reciprocal-acknowledgment rule, `ROADMAP.md` log entry, handoff board/acknowledgment. Documentation only; no concerns. Rule adopted.
+- User decision (in chat with Claude): Claude continues with the next roadmap step. Claude branched from `f8022b1`, so step 11 carries step 10, the Windows fixes and both acknowledgments forward.
 
 ### Messages to Codex (from Claude Code, 2026-10-12)
 
