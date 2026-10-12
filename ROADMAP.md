@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript. Explore, fig
 
 ## Current focus
 
-**Current milestone: combat and absorption (M1).** Combat and the shared Magicule pool are implemented. Aura-assisted strikes cost 8 from a 100-point reserve; regeneration is 6/second after a 1.5-second spending delay. The HUD shows current reserves, unaffordable strikes fail cleanly, and defeat stops recovery. Import, 17 foundation checks, 24 combat checks, 27 Magicule checks, and the main-scene run passed headlessly. **Next: absorption and analysis of the defeated Forest Gnasher.** The supplied sprite chart is recorded for later integration; procedural art remains in use and visual playtesting remains pending.
+**Current milestone: combat and absorption (M1).** Combat, Magicule spending/regeneration, and difficulty-scaled enemy drops are implemented. Easy/Standard/Elite enemies drop 8/16/32 Magicules; nearby pickups preserve overflow and cannot be collected through terrain or after player defeat. Import, 17 foundation, 24 combat, 27 Magicule, and 32 drop checks passed headlessly. **Next: absorption and analysis of a defeated creature.** Sprite, HUD, title-screen, and pause-screen references are documented; art/menu integration and visual playtesting remain pending.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -26,7 +26,8 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript. Explore, fig
 | --- | --- | --- | --- |
 | Player health, strike, damage, enemy AI, and defeat | Done | Validated foundation | 24 combat checks passed; shared health and strike components, Forest Gnasher, HP feedback and restart |
 | Magicules as a shared resource with regeneration | Done | Validated foundation | 27 Magicule checks passed: spending, failure, delay, regeneration, depletion, HUD, defeat and restart |
-| Absorb a defeated creature, analyze it, acquire one Common Skill | Next | Combat and Magicules | Defeat → absorb → analyze → acquisition must work end to end |
+| Difficulty-scaled Magicule drops and proximity collection | Done | Combat and Magicules | 32 checks passed: tier stats/rewards, one drop per defeat, collection, overflow, obstruction and restart |
+| Absorb a defeated creature, analyze it, acquire one Common Skill | Next | Combat, Magicules and drops | Defeat → absorb → analyze → acquisition must work end to end |
 | Skill hotbar, cooldowns, inventory storage, and System Voice | Planned | Absorption and analysis | Acquired skill must be selectable and usable with correct costs and feedback |
 
 ## Milestones and dependencies
@@ -44,6 +45,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 
 - Completed: player health, directional basic attack, chasing enemy, telegraphed bite, damage immunity, defeat, and restart (24 checks passed).
 - Completed: shared Magicules, aura-strike spending, delayed regeneration, numeric/bar HUD, depletion and recovery (27 checks passed).
+- Completed user-requested addition: difficulty-scaled Magicule drops with proximity collection and overflow preservation (32 checks passed).
 - Absorb a defeated enemy, analyze it, and acquire one Common Skill.
 - Add a skill hotbar, cooldowns, inventory storage, and System Voice notifications.
 - Exit goal: movement → combat → defeat → absorption → skill use works end to end.
@@ -115,6 +117,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-12: Added user-requested enemy difficulty and Magicule pickups: Easy 8, Standard 16, Elite 32; health, bite damage and speed scale with tier. Corpses remain for future absorption; pickups preserve overflow, block collection through terrain, and drop only once. 32 drop checks and 68 previous checks passed. Branch: `codex/roadmap-03-magicule-drops`. Documented the incoming title/pause art references. Absorption remains the next step.
 
 - 2026-10-12: Added a reusable Magicule pool with validated spending/restoration, delayed regeneration, HUD feedback, defeat handling, and resource costs on strikes. 27 Magicule checks, 24 combat checks, and 17 foundation checks passed; main scene runs headlessly. Branch: `codex/roadmap-02-magicules`. Recorded the supplied sprite chart in `docs/ART_REFERENCES.md`; clean sprite import remains future work. Next: absorption and analysis.
 

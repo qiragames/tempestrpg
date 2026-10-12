@@ -42,6 +42,10 @@ func _magicules_changed(current: float, maximum: float) -> void:
     $HUD/MagiculeBar.value = current
     $HUD/MagiculeBar.max_value = maximum
 
+func announce_magicule_pickup(amount: float) -> void:
+    if $Player/Health.current > 0:
+        $HUD/SystemVoice.text = "[System] Recovered %.1f Magicules." % amount
+
 func _add_obstacle(rect: Rect2) -> void:
     var body := StaticBody2D.new()
     body.position = rect.get_center()
