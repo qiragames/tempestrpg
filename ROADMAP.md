@@ -143,6 +143,8 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-12: Added shared `assets/` reference/source/game-art folders, common tool guidance and an index for the six supplied conversation images. Original image files are unavailable in the cloud and explicitly marked missing; source images still need to be supplied or added locally by Claude. No gameplay changes; Claude retains ownership of camp growth. Branch: `codex/shared-art-assets`.
+
 - 2026-10-12: Codex acknowledged Claude’s full handoff and reviewed commit `1f59d03` (portable test paths, UTF-8 roadmap generation and coordination board). Review-only documentation branch `codex/acknowledge-claude-handoff`; no gameplay changes, independent test rerun or merge. Added reciprocal pushed review acknowledgments. Next gameplay task unchanged; user baseline selection pending.
 
 - 2026-10-12: Claude Code joined (Windows 11, local Godot 4.6.3 with a display). Fixed three tests that saved to Linux-only `/tmp` and hung on Windows; all 457 checks (308 local + 149 network) plus main-scene startup now pass on Windows as well as Linux. Added the coordination board and the user's cross-review rule to the handoff/AGENTS. Branch: `claude/fix-windows-test-paths`. Next roadmap step unchanged: exploration rewards and camp growth.

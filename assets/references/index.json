@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "references": [
+    {
+      "id": "monster_animations",
+      "title": "Monster animation chart",
+      "path": "assets/references/sprites/monster_animation_reference.png",
+      "source": "User-provided conversation image, 2026-10-12",
+      "status": "missing_original",
+      "notes": "Ogre, Orc, Goblin, Skeleton, Slime, Dark Knight, Necromancer and Devil; idle, walk, attack and death examples.",
+      "documentation": "docs/ART_REFERENCES.md"
+    },
+    {
+      "id": "gameplay_hud",
+      "title": "Gameplay HUD",
+      "path": "assets/references/ui/gameplay_hud_reference.png",
+      "source": "User-provided conversation image, 2026-10-12",
+      "status": "missing_original",
+      "notes": "Portrait/stats, minimap, quests, assistant panel, hotbar and event log.",
+      "documentation": "docs/UI_REFERENCES.md"
+    },
+    {
+      "id": "title_screen",
+      "title": "Title screen",
+      "path": "assets/references/ui/title_screen_reference.png",
+      "source": "User-provided conversation image, 2026-10-12",
+      "status": "missing_original",
+      "notes": "Storm and castle backdrop, Tempest RPG logo and framed menu.",
+      "documentation": "docs/UI_REFERENCES.md"
+    },
+    {
+      "id": "pause_menu",
+      "title": "Pause menu",
+      "path": "assets/references/ui/pause_menu_reference.png",
+      "source": "User-provided conversation image, 2026-10-12",
+      "status": "missing_original",
+      "notes": "Dimmed game view, central menu and player/zone summary.",
+      "documentation": "docs/UI_REFERENCES.md"
+    },
+    {
+      "id": "inventory",
+      "title": "Inventory and equipment",
+      "path": "assets/references/ui/inventory_reference.png",
+      "source": "User-provided conversation image, 2026-10-12",
+      "status": "missing_original",
+      "notes": "Equipment paper doll, categorized bag and item details.",
+      "documentation": "docs/UI_REFERENCES.md"
+    },
+    {
+      "id": "forest_goblin_tileset",
+      "title": "Forest and goblin village tileset",
+      "path": "assets/references/world/forest_goblin_village_reference.png",
+      "source": "User-provided conversation image, 2026-10-12",
+      "status": "missing_original",
+      "notes": "Terrain, foliage, modular buildings and village props.",
+      "documentation": "docs/ART_REFERENCES.md"
+    }
+  ]
+}

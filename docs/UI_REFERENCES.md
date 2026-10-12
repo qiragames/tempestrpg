@@ -37,3 +37,7 @@ When implemented, freeze gameplay physics, enemy timers, resource regeneration, 
 The user supplied a three-column inventory overlay on 2026-10-12: Equipped on the left with a character paper doll and equipment slots; Bag in the middle with item stacks, currency, and capacity; Item Details on the right with icon, rarity, description, stats, and Equip/Discard actions. Category tabs: All, Gear, Usables, Materials, Quest Items. Dark panels, gold trim, purple accents, selection borders, and a close button match the other references.
 
 Start with actual absorbed materials and readable item details in a small dimensional-storage panel. Introduce equipment, usable items, rarity, currency, capacity, and quest-item tabs only alongside their real gameplay systems. Keep all counts and details data-driven; the reference's items, sample currency, stats, and player are examples rather than starting inventory. Full equipment and paper-doll UI belongs to a later inventory/equipment step. Preserve keyboard navigation and dynamic text, and pause gameplay while a modal inventory is open.
+
+## Shared image storage
+
+Both Claude Code and Codex use `assets/README.md` and `assets/references/index.json`. The index records the intended original-image paths and their actual availability; all six conversation images currently need their original files added. Preserve originals under `assets/references/`, working art under `assets/source/`, and prepared textures under `assets/game/`. Descriptions alone do not supply image bytes.
