@@ -75,11 +75,11 @@ func _refresh() -> void:
     var naming: bool = ours and ally.display_name.is_empty()
     _name_field.visible = naming
     if naming:
-        _details.text = "Joined you. Name → Hobgoblin: HP 30 → 60, power 4 → 8.\nCost: 80 Magicules. Below 25% reserves: sleep for at least 8s, until reserves reach 25%."
-    _recruit.text = "Confirm: 80 Magicules" if naming else "Ally recruited" if ours else "Recruit"
+        _details.text = "Joined you. Name → Hobgoblin: HP 30 → 60, power 4 → 8.\nCost: %d Magicules (80%% of your maximum). Below 25%% reserves: sleep for at least 8s, until reserves reach 25%%." % int(ally.naming_cost(hud.player))
+    _recruit.text = ("Confirm: %d Magicules" % int(ally.naming_cost(hud.player))) if naming else "Ally recruited" if ours else "Recruit"
     _recruit.disabled = not ally.can_reach(hud.player) or hud.player.get_node("Health").current <= 0 or hud.player.is_exhausted()
     if naming:
-        _recruit.disabled = _recruit.disabled or not ally.valid_name(_name_field.text.strip_edges()) or hud.player.get_node("Magicules").current < ally.NAMING_COST
+        _recruit.disabled = _recruit.disabled or not ally.valid_name(_name_field.text.strip_edges()) or hud.player.get_node("Magicules").current < ally.naming_cost(hud.player)
     else:
         _recruit.disabled = _recruit.disabled or not ally.owner_id.is_empty() or not ally.threat_cleared()
 

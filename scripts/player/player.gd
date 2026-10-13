@@ -42,6 +42,12 @@ func race() -> String:
 func race_stats() -> Dictionary:
     return RACES.stats(race())
 
+func can_mimic() -> bool:
+    return RACES.can_mimic(race(), int(progression.get("level", 1)))
+
+func mimic_hint() -> String:
+    return "%ss learn mimicry at level %d." % [race(), int(race_stats().mimic_level)]
+
 ## Character creation (host only): set the race and its base stats at full health and Magicules.
 func choose_race(id: String) -> bool:
     if not RACES.valid(id) or not AUTHORITY.can_mutate(self):
@@ -58,7 +64,7 @@ func choose_race(id: String) -> bool:
     $Magicules.maximum = stats.magicules + TREE.stat_bonus(nodes, "magicules") + gear_bonus("magicules")
     $Magicules._current = $Magicules.maximum
     $Magicules.changed.emit($Magicules.current, $Magicules.maximum)
-    if not stats.mimic and form != FORMS.BASE:
+    if not can_mimic() and form != FORMS.BASE:
         apply_form(FORMS.BASE)
     queue_redraw()
     return true
@@ -302,8 +308,8 @@ func apply_form(id: String) -> void:
 func try_transform(target: String) -> bool:
     if not AUTHORITY.can_mutate(self) or not FORMS.FORMS.has(target) or target == form:
         return false
-    if not race_stats().mimic:
-        session.notify_character(character_id, "Only Slimes can take mimic forms.")
+    if not can_mimic():
+        session.notify_character(character_id, mimic_hint())
         return false
     if $Health.current <= 0 or is_exhausted() or form_cooldown > 0.0:
         return false
@@ -377,8 +383,8 @@ func _unhandled_input(event: InputEvent) -> void:
         return
     if event.is_action_pressed("transform") and not event.is_echo():
         var target := next_form()
-        if not race_stats().mimic:
-            session.notify_character(character_id, "Only Slimes can take mimic forms.")
+        if not can_mimic():
+            session.notify_character(character_id, mimic_hint())
         elif target.is_empty():
             session.notify_character(character_id, "No mimic form known yet. Analyze a creature first.")
         elif session.active:

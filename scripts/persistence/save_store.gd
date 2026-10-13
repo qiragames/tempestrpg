@@ -123,7 +123,7 @@ static func validate_player(state: Variant, id: String) -> bool:
         if slot != "" and not slot in granted and not TREE.activated(slot, progression.tree.active):
             return false
     # Apply the same Slime-only mimic gate to restored state and network snapshots.
-    if form.id != FORMS.BASE and not RACES.stats(progression.race).mimic:
+    if form.id != FORMS.BASE and not RACES.can_mimic(progression.race, int(progression.level)):
         return false
     if not progression.get("quests") is Dictionary or not progression.get("equipment") is Dictionary:
         return false

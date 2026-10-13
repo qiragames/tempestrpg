@@ -172,7 +172,7 @@ func _process(_delta: float) -> void:
     var weapon: Dictionary = player.equipped_weapon()
     if not weapon.is_empty():
         $StrikeCost.text = "%s: %d dmg, 8 Magicules · %s" % [GEAR.WEAPONS[GEAR.BASES[weapon.base].weapon].name, int(weapon.stats.damage), GEAR.WEAPONS[GEAR.BASES[weapon.base].weapon].text]
-    elif player.race_stats().mimic:
+    elif player.can_mimic():
         $StrikeCost.text = "Strike: 8 Magicules · Form: %s%s" % [shape.name, " (%.1fs)" % player.form_cooldown if player.form_cooldown > 0.0 else " · T: mimic"]
     else:
         $StrikeCost.text = "Strike: 8 Magicules · %s: %s" % [player.race(), player.race_stats().ability.get_slice(":", 0).to_lower()]

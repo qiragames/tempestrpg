@@ -2,7 +2,11 @@ extends CharacterBody2D
 ## Citizens belong to stable character IDs; disconnecting never transfers ownership.
 const AUTHORITY := preload("res://scripts/network/authority.gd")
 const INTERACTION_RANGE := 40.0
-const NAMING_COST := 80.0
+## Naming drains 80% of the namer's maximum Magicules (user decision: every race can name).
+const NAMING_SHARE := 0.8
+
+static func naming_cost(actor: Node) -> float:
+    return roundf(actor.get_node("Magicules").maximum * NAMING_SHARE)
 const RECOVERY_SECONDS := 8.0
 const GATHER_SECONDS := 3.0
 const BUILD_SECONDS := 4.0
@@ -62,8 +66,9 @@ func try_name(actor: Node2D, value: String) -> bool:
         if not ally.display_name.is_empty() and ally.display_name.to_lower() == name_value.to_lower():
             session.notify_character(owner_id, "That ally name is already in use.")
             return false
-    if not actor.get_node("Magicules").try_spend(NAMING_COST):
-        session.notify_character(owner_id, "Naming requires 80 Magicules.")
+    var cost: float = naming_cost(actor)
+    if not actor.get_node("Magicules").try_spend(cost):
+        session.notify_character(owner_id, "Naming requires %d Magicules (80%% of your maximum)." % int(cost))
         return false
     # A single host-side transaction: resource transfer, name, race and base stats.
     display_name = name_value
@@ -74,7 +79,7 @@ func try_name(actor: Node2D, value: String) -> bool:
     if actor.get_node("Magicules").current < actor.get_node("Magicules").maximum * 0.25:
         actor.begin_exhaustion(RECOVERY_SECONDS)
     queue_redraw()
-    session.notify_character(owner_id, "%s evolved into a Hobgoblin. 80 Magicules transferred." % display_name)
+    session.notify_character(owner_id, "%s evolved into a Hobgoblin. %d Magicules transferred." % [display_name, int(cost)])
     session.queue_save()
     return true
 

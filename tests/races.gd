@@ -47,7 +47,7 @@ func _hit(actor: Node2D, id: String, skill: StringName = &"") -> int:
 func _run() -> void:
     # --- Catalogue
     _check(RACES.ORDER == ["Slime", "Human", "Demon"] and RACES.valid("Human") and not RACES.valid("Orc") and not RACES.valid(3) and RACES.DEFAULT == "Slime", "Three playable races; unknown names are invalid")
-    _check(RACES.RACES.Slime.mimic and not RACES.RACES.Human.mimic and not RACES.RACES.Demon.mimic, "Only Slimes can take mimic forms")
+    _check(RACES.can_mimic("Slime", 1) and not RACES.can_mimic("Demon", 4) and RACES.can_mimic("Demon", 5) and not RACES.can_mimic("Human", 19) and RACES.can_mimic("Human", 20), "Mimicry: Slimes from level 1, Demons from 5, Humans from 20 (endgame)")
     _check(RACES.RACES.Slime.absorb_time < RACES.RACES.Human.absorb_time and RACES.RACES.Slime.absorb_heal > RACES.RACES.Demon.absorb_heal, "Everyone absorbs; the Slime absorbs fastest and heals most")
     world = load("res://scenes/world/forest.tscn").instantiate()
     root.add_child(world)
@@ -63,6 +63,11 @@ func _run() -> void:
     _check(actor.choose_race("Human") and actor.race() == "Human" and actor.get_node("Health").maximum == 120 and actor.get_node("Health").current == 120 and actor.get_node("Magicules").maximum == 70.0 and actor.get_node("Magicules").current == 70.0, "Human: HP 120, Magicules 70, at full")
     _check(actor.choose_race("Demon") and actor.get_node("Health").maximum == 90 and actor.get_node("Magicules").maximum == 130.0 and actor.move_speed == 100.0, "Demon: HP 90, Magicules 130, a little faster")
     _check(not actor.choose_race("Orc") and actor.race() == "Demon", "Unknown races are refused")
+    var ally_script = load("res://scripts/allies/goblin_ally.gd")
+    actor.choose_race("Human")
+    var human_cost: float = ally_script.naming_cost(actor)
+    actor.choose_race("Demon")
+    _check(human_cost == 56.0 and ally_script.naming_cost(actor) == 104.0, "Naming costs 80% of max Magicules: Human 56 (affordable at level 1), Demon 104")
     # --- Basic strike: Human weapon mastery
     actor.choose_race("Slime")
     var slime_hit := _hit(actor, "r_slime")
@@ -111,7 +116,7 @@ func _run() -> void:
     # --- Mimicry is Slime-only
     actor.choose_race("Human")
     messages.clear()
-    _check(not actor.try_transform("gnasher") and actor.form == "slime" and messages.any(func(m): return m.contains("Only Slimes")), "Humans cannot mimic, even with the analysis")
+    _check(not actor.try_transform("gnasher") and actor.form == "slime" and messages.any(func(m): return m.contains("Humans learn mimicry at level 20")), "Humans cannot mimic, even with the analysis")
     actor.choose_race("Slime")
     actor.form_cooldown = 0.0
     _ready_to_act(actor)
@@ -120,6 +125,19 @@ func _run() -> void:
     _check(actor.form == "slime", "Becoming a non-Slime drops any mimic form")
     await _frames(1)
     _check(world.get_node("HUD").get_node("StrikeCost").text.contains("Demon: dark affinity"), "HUD shows the racial ability instead of mimic controls")
+    # Mimicry unlocks by level for the other races (user decision 2026-10-13).
+    actor.gain_experience(500 - int(actor.progression.experience), "test")
+    actor.form_cooldown = 0.0
+    _ready_to_act(actor)
+    _check(actor.progression.level == 5 and actor.try_transform("gnasher") and actor.form == "gnasher", "A level-5 Demon can mimic")
+    actor.choose_race("Human")
+    actor.form_cooldown = 0.0
+    _check(not actor.try_transform("gnasher"), "A level-5 Human still cannot")
+    actor.gain_experience(999999, "test")
+    actor.form_cooldown = 0.0
+    _ready_to_act(actor)
+    _check(actor.progression.level == 20 and actor.try_transform("gnasher"), "At the level-20 endgame a Human can mimic too")
+    actor.choose_race("Demon")
     # Clients cannot pick races.
     var session: Node = root.get_node("GameSession")
     session.replica_world = true

@@ -246,11 +246,11 @@ Press **K** to open your race's **skill tree**. Every level (level 1 included) g
 
 When you create a world (or join a friend's world for the first time) you choose your race:
 
-- **Slime** — HP 100, Magicules 100. Absorbs fastest and gains the full absorbed vitality; the only race that can take **mimic forms**.
+- **Slime** — HP 100, Magicules 100. Absorbs fastest and gains the full absorbed vitality; takes **mimic forms** from the start.
 - **Human** — HP 120, Magicules 70. **Weapon mastery:** +4 strike damage and every attack recovers 25% faster.
 - **Demon** — HP 90, Magicules 130, a little faster. **Dark affinity:** skills deal 25% more damage and drain 20% of the damage dealt back as HP.
 
-Everyone can absorb creatures and learn their skills; Humans and Demons just take longer (1.8 s instead of 1.2 s) and heal half as much from it. Your race is kept with your character in that world. The art is placeholder until the sprite step. Tests: `tests/races.gd` (30).
+Everyone can absorb creatures and learn their skills; Humans and Demons just take longer (1.8 s instead of 1.2 s) and heal half as much from it. **Mimicry** comes to every race: Slimes from level 1, Demons from level 5, Humans only at the endgame (level 20). **Naming** an ally costs **80% of your maximum Magicules** (Slime 80, Human 56, Demon 104), so every race can name its first ally. Your race is kept with your character in that world. The art is placeholder until the sprite step. Tests: `tests/races.gd` (30).
 
 ## Experience and levels
 
