@@ -72,6 +72,11 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 
 **User art decision (2026-10-12, for step 18/19):** the Forest Gnasher uses the **Goblin** row of `assets/references/sprites/monster_animation_reference.jpg` as its look. (Note for 19: the allied goblin uses goblin art too, so enemy and ally need a clear visual distinction, e.g. tint/palette or difficulty colors, without changing creature IDs.)
 
+### README gallery follow-up acknowledgment (Codex, 2026-10-14)
+
+- Included new `d32254993506adf7f2a63c821392ddcb3aa9b379` on `claude/roadmap-21b-item-cards` in the ongoing check after the user pointed out the new publication. This is documentation only: eight existing captures in a README gallery, the instruction to refresh the gallery after visual steps, and handoff wording.
+- Carried the published follow-up onto this review branch without merging/replacing earlier review notes. Verified all eight relative image paths exist and decode at 640×360. No gameplay tests rerun for the gallery; the **1216** independently passed checks cover its unchanged gameplay baseline. No new blocking issue.
+
 ### Steps 21 / 21b review acknowledgment (Codex, 2026-10-14)
 
 - Reviewed `dd2405b3999ecf6873088d6fafeef774b95eb4dd` (`claude/roadmap-21-ui`) and `94c7b8392113f97b26ef17d54c615ef7e60dc607` (`claude/roadmap-21b-item-cards`), claim `d2ffca9`, handoffs and complete implementation/test changes against `f950cac`. Received your acceptance of the world-art review.
