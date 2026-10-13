@@ -2,11 +2,22 @@
 
 A Godot **4.6.3** / GDScript prototype for a top-down pixel-art Isekai RPG.
 
+## Screenshots
+
+Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 54 captures are in `docs/playtest/` with `docs/playtest/log.md`.
+
+<table>
+<tr><td align="center"><img src="docs/playtest/23_camp_overview.png" width="400" alt="The first goblin camp: hut, storehouse, shrine and forge"><br><sub>The first goblin camp: hut, storehouse, shrine and forge</sub></td><td align="center"><img src="docs/playtest/04_combat.png" width="400" alt="Fighting a Gnasher on the road"><br><sub>Fighting a Gnasher on the road</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/42_equipment.png" width="400" alt="Equipment window with an item card"><br><sub>Equipment window with an item card</sub></td><td align="center"><img src="docs/playtest/54_races.png" width="400" alt="Slime, Human and Demon"><br><sub>Slime, Human and Demon</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/13_camp_menu.png" width="400" alt="Camp menu"><br><sub>Camp menu</sub></td><td align="center"><img src="docs/playtest/07_skill_tree.png" width="400" alt="Skill tree"><br><sub>Skill tree</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/29_fusion_done.png" width="400" alt="Skill fusion"><br><sub>Skill fusion</sub></td><td align="center"><img src="docs/playtest/01_title_menu.png" width="400" alt="Title menu"><br><sub>Title menu</sub></td></tr>
+</table>
+
 ## Play
 
 Open `project.godot` in Godot 4.6.3 and press **F5** to run the project. The game opens at the **title menu**: create a **New World** (name and optional seed), **Load World** from your saves, or **Join a Friend**. In a world, move with **WASD / arrow keys**, strike with **Space / J**, absorb with **E**, use hotbar slots with **1–4** or a click, open storage with **I**, open the skill tree with **K**, press **Esc** for the pause menu (Resume, Open to friends, Save, Save & quit to title) and **F9** to save. **T** switches mimic form, **R** retries offline or respawns a defeated hosted character. Explore as a placeholder slime; trees, rocks, water, and the map edge have collision.
 
-The game renders at a 640 × 360 base resolution (×2 = 1280 × 720 default window, ×3 = 1920 × 1080 fullscreen), integer scaling, nearest texture filtering, and a bounded player camera. Art is a procedural placeholder. One Forest Gnasher notices you within 180 pixels, chases at 55 pixels/second, and pauses for a 0.35-second bite windup. Dodge away while it turns orange. It recovers for 0.9 seconds before attacking again. Its basic AI can collide with terrain; pathfinding is not implemented.
+The game renders at a 640 × 360 base resolution (×2 = 1280 × 720 default window, ×3 = 1920 × 1080 fullscreen), integer scaling, nearest texture filtering, and a bounded player camera. Characters, creatures, the clearing and the interface use real pixel art (see Art below). One Forest Gnasher notices you within 180 pixels, chases at 55 pixels/second, and pauses for a 0.35-second bite windup. Dodge away while it turns orange. It recovers for 0.9 seconds before attacking again. Its basic AI can collide with terrain; pathfinding is not implemented.
 
 The player has 100 HP and 0.65-second damage immunity. Bites deal 12 damage; aura-assisted directional strikes deal 10 damage, cost **8 Magicules**, and have a 0.4-second cooldown. A strike spends its cost even if it misses. The shared Magicule pool starts at **100**, regenerates **6 per second** after **1.5 seconds** without successful spending, and is shown as a number and bar. Unaffordable strikes fail without damage or cooldown; moving remains free so you can retreat and recover. Cooldown rejection does not spend resources or postpone recovery. Defeat stops recovery; restarting restores the pool.
 
