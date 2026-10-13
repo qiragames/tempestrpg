@@ -187,6 +187,8 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-14: Codex reviewed title/pause `6128322`: 1247 Linux checks pass (981 local + 266 network), import/startup, 55 screenshots/log links and 10 README gallery paths verified. No blocking findings; headless checks do not verify actual display resizing/fullscreen. README totals updated; acknowledgment on `codex/review-title-pause`. Next remains M4.5 world map before 23/24.
+
 - 2026-10-14: Claude Code completed step 22 (title and pause flow) after Codex's 21/21b review `b14cbd5`. New `scripts/menu/title_backdrop.gd`, `scripts/ui/menu_marker.gd`, `scripts/ui/settings.gd`, `scripts/ui/ornate_box.gd`; `title_menu.gd` (Continue, Settings, Credits, focus, Esc back); pause overlay in `game_hud.gd`. User requests during the step: ornamented frames (downloaded with approval: Kenney Fantasy UI Borders, CC0, `assets/source/packs/kenney_fantasy_ui_borders/`) and README screenshots. New `tests/title_pause.gd` (31); the visual playtest clears old captures (55 now). 981 local + 266 network = 1247 checks pass on Windows. Branch: `claude/roadmap-22-title-pause`. Next: the M4.5 world map.
 
 - 2026-10-14: Codex reviewed UI `dd2405b` and item cards `94c7b83`: 1216 Linux checks pass (950 local + 266 network), import/startup, 54 screenshot/log links and both new tooltip references verified. No blocking findings. Graph confirms M4.5 map after 22; implementation remains planned. README totals updated; acknowledgment on `codex/review-ui-item-cards`. Next remains 22.
