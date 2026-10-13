@@ -11,6 +11,11 @@ const TIER_STATS := {
 }
 const PICKUP_SCENE := preload("res://scenes/pickups/magicule_pickup.tscn")
 const LEVELING := preload("res://scripts/progression/leveling.gd")
+const SPRITES := preload("res://scripts/visual/sprite_library.gd")
+## Tier tints: Easy creatures look paler, Elites redder and a little larger.
+const TIER_TINT := {0: Color(0.82, 1.0, 0.82), 1: Color.WHITE, 2: Color(1.0, 0.72, 0.72)}
+var body_sprite: AnimatedSprite2D
+var _last_position := Vector2.INF
 @export var difficulty: Difficulty = Difficulty.STANDARD
 @export var specimen: Resource = preload("res://data/specimens/forest_gnasher.tres")
 ## Stable saved creature kind; selects the scene on restore (see StateCodec.ENEMY_SCENES).
@@ -36,6 +41,8 @@ func _ready() -> void:
         entity_id = "enemy_" + Crypto.new().generate_random_bytes(16).hex_encode()
     set_difficulty(difficulty)
     home = global_position
+    body_sprite = SPRITES.make(kind if SPRITES.has_set(kind) else "gnasher")
+    add_child(body_sprite)
     health.changed.connect(func(_current: int, _maximum: int): queue_redraw())
     health.defeated.connect(_defeat)
 
@@ -145,7 +152,31 @@ func _nearest_player() -> CharacterBody2D:
             distance = candidate
     return nearest
 
+## Runs on every peer (replicas only see positions and state).
+func _process(_delta: float) -> void:
+    if not is_instance_valid(body_sprite):
+        return
+    var moved: bool = _last_position != Vector2.INF and position.distance_to(_last_position) > 0.05
+    if moved:
+        body_sprite.flip_h = position.x < _last_position.x
+    elif is_instance_valid(target):
+        body_sprite.flip_h = target.position.x < position.x
+    _last_position = position
+    body_sprite.scale = Vector2.ONE * (1.15 if difficulty == Difficulty.ELITE else 1.0)
+    if state == State.DEFEATED:
+        body_sprite.modulate = Color(0.5, 1.0, 1.0) if being_analyzed else Color(0.85, 0.85, 0.85)
+        SPRITES.play(body_sprite, "death")
+        return
+    # The wind-up flashes red so players can read the coming bite.
+    body_sprite.modulate = Color(1.0, 0.45, 0.4) if state == State.WINDUP else TIER_TINT[difficulty]
+    SPRITES.play(body_sprite, "run" if moved or state == State.CHASE else "idle")
+
 func _draw() -> void:
+    if is_instance_valid(body_sprite):
+        if state != State.DEFEATED and is_instance_valid(health):
+            draw_rect(Rect2(-12, -24, 24, 3), Color("352d36"))
+            draw_rect(Rect2(-12, -24, 24.0 * health.current / health.maximum, 3), Color("c6d58a"))
+        return
     if state == State.DEFEATED:
         draw_rect(Rect2(-10, 0, 20, 5), Color("71e4d4") if being_analyzed else Color("656653"))
         return

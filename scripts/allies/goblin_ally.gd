@@ -21,8 +21,32 @@ var work_role: String = "follow"
 var work_target: String = ""
 var work_left: float = 0.0
 
+const SPRITES := preload("res://scripts/visual/sprite_library.gd")
+var body_sprite: AnimatedSprite2D
+var _body_set: String = ""
+var _last_position := Vector2.INF
+var _moving_time: float = 0.0
+
 func _ready() -> void:
     add_to_group("allies")
+    _body_set = "hobgoblin" if race == "Hobgoblin" else "goblin"
+    body_sprite = SPRITES.make(_body_set)
+    add_child(body_sprite)
+
+## Runs on every peer; naming evolves the goblin's look into the armored Hobgoblin.
+func _process(delta: float) -> void:
+    if not is_instance_valid(body_sprite):
+        return
+    var wanted := "hobgoblin" if race == "Hobgoblin" else "goblin"
+    if wanted != _body_set:
+        _body_set = wanted
+        body_sprite.sprite_frames = SPRITES.frames(wanted)
+    var moved: bool = _last_position != Vector2.INF and position.distance_to(_last_position) > 0.05
+    if moved:
+        body_sprite.flip_h = position.x < _last_position.x
+    _last_position = position
+    _moving_time = 0.15 if moved else maxf(0.0, _moving_time - delta)
+    SPRITES.play(body_sprite, "run" if _moving_time > 0.0 else "idle")
 
 func can_reach(actor: Node2D) -> bool:
     if actor.global_position.distance_to(global_position) > INTERACTION_RANGE:
@@ -175,6 +199,10 @@ func _physics_process(delta: float) -> void:
         move_and_slide()
 
 func _draw() -> void:
+    if is_instance_valid(body_sprite):
+        # Owner marker at the feet: cyan once it serves a character, sand while unclaimed.
+        draw_circle(Vector2(0, 10), 2, Color("71e4d4") if not owner_id.is_empty() else Color("d7b16d"))
+        return
     if race == "Hobgoblin":
         draw_rect(Rect2(-7, -20, 14, 11), Color("749f66"))
         draw_rect(Rect2(-11, -16, 4, 5), Color("749f66"))

@@ -9,7 +9,7 @@
 ![New World: name and seed (numbers or any text, empty = random)](02_new_world.png)
 *New World: name and seed (numbers or any text, empty = random)* (640x360)
 
-Automated, visible run on Windows. Viewport (640.0, 360.0), window (1250, 720). Movement, combat, absorb, skills and menus use the real input actions; menu buttons are pressed programmatically.
+Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). Movement, combat, absorb, skills and menus use the real input actions; menu buttons are pressed programmatically.
 
 ## 1. Spawn
 - [x] Base resolution is 640x360
@@ -294,7 +294,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1250, 720). 
 *A closed chest (gold lock) at a point of interest* (640x360)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Rare Travel Boots
+- [x] The chest gave an Uncommon-or-better item: Uncommon Spirit Amulet
 
 ![Chest opened (lid up) and the item announced](49_chest_open.png)
 *Chest opened (lid up) and the item announced* (640x360)
@@ -381,7 +381,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1250, 720). 
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +60 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Rare Field Scythe.
+- Trial reward: Rare Padded Vest.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +20 XP (defeat).
@@ -397,7 +397,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1250, 720). 
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Rare Travel Boots.
+- Chest opened: Uncommon Spirit Amulet.
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 

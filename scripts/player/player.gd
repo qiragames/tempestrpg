@@ -6,6 +6,9 @@ const LEVELING := preload("res://scripts/progression/leveling.gd")
 const RACES := preload("res://scripts/races/race_catalogue.gd")
 const TREE := preload("res://scripts/skills/skill_tree.gd")
 const GEAR := preload("res://scripts/items/gear_catalogue.gd")
+const SPRITES := preload("res://scripts/visual/sprite_library.gd")
+## Mimic forms show the creature's body tinted in the character's own colours (never an enemy look).
+const MIMIC_TINT := Color(0.62, 1.0, 1.0)
 ## Movement delegates health and attacks to reusable combat components.
 
 @export var move_speed: float = 95.0
@@ -25,7 +28,16 @@ var gear: Dictionary = {"items": [], "cooldowns": {}}
 var form: String = FORMS.BASE
 var form_cooldown: float = 0.0
 
+## Animated body (step 19); presentation only. `_body_set` is the sheet set currently shown.
+var body_sprite: AnimatedSprite2D
+var _body_set: String = ""
+var _last_position := Vector2.INF
+var _moving_time: float = 0.0
+
 func _ready() -> void:
+    body_sprite = SPRITES.make(_body_id())
+    add_child(body_sprite)
+    _body_set = _body_id()
     $Camera2D.enabled = local_controlled
     # Each character resizes its own body when its form changes.
     $CollisionShape2D.shape = $CollisionShape2D.shape.duplicate()
@@ -38,6 +50,39 @@ func _ready() -> void:
 
 func race() -> String:
     return progression.get("race", RACES.DEFAULT)
+
+## Which sheet set draws this character: its race, or the creature it mimics.
+func _body_id() -> String:
+    if form != FORMS.BASE:
+        return "gnasher"
+    return {"Slime": "slime", "Human": "human", "Demon": "demon"}.get(race(), "slime")
+
+## Runs on every peer: replicas only see positions, so movement is read from position changes.
+func _animate(delta: float) -> void:
+    if not is_instance_valid(body_sprite):
+        return
+    var wanted := _body_id()
+    if wanted != _body_set:
+        _body_set = wanted
+        body_sprite.sprite_frames = SPRITES.frames(wanted)
+    var moved: bool = _last_position != Vector2.INF and position.distance_to(_last_position) > 0.05
+    _last_position = position
+    # A short grace keeps the walk cycle steady when snapshots arrive unevenly.
+    _moving_time = 0.15 if moved else maxf(0.0, _moving_time - delta)
+    var walking: bool = _moving_time > 0.0
+    body_sprite.modulate = MIMIC_TINT if form != FORMS.BASE else Color.WHITE
+    if exhaustion_active:
+        body_sprite.modulate = Color(0.55, 0.65, 0.9)
+    if SPRITES.is_side(_body_set):
+        body_sprite.flip_h = facing.x < 0.0
+        SPRITES.play(body_sprite, "death" if $Health.current <= 0 else ("run" if walking else "idle"))
+        return
+    if $Health.current <= 0:
+        SPRITES.play(body_sprite, "dead")
+        return
+    var direction := SPRITES.direction_name(facing)
+    var attacking: bool = has_node("MeleeAttack") and $MeleeAttack.flash_left > 0.0
+    SPRITES.play(body_sprite, ("attack_" if attacking and _body_set != "slime" else ("walk_" if walking else "idle_")) + direction)
 
 func race_stats() -> Dictionary:
     return RACES.stats(race())
@@ -362,6 +407,7 @@ func begin_exhaustion(seconds: float) -> void:
     queue_redraw()
 
 func _process(delta: float) -> void:
+    _animate(delta)
     if session.replica_world:
         return
     form_cooldown = maxf(0.0, form_cooldown - delta)
@@ -467,6 +513,9 @@ func _draw_gear() -> void:
                 draw_line(Vector2(9, -8), Vector2(9, 6), Color(0.9, 0.9, 0.85, 0.7), 1.0)
 
 func _draw_body() -> void:
+    # The animated body replaces these placeholder shapes; they remain only as a fallback.
+    if is_instance_valid(body_sprite):
+        return
     if has_node("Health") and $Health.current <= 0:
         draw_rect(Rect2(-8, 2, 16, 4), Color("447c88"))
         return

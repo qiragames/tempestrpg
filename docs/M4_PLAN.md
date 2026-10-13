@@ -91,7 +91,9 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 
 **Done evidence:** inspect slime, goblin/Hobgoblin and Gnasher/form candidates, one small forest atlas/props set and reusable frame/icon pieces; nearest-filter export preview at ×2 and ×3; originals/index checksums retained. Actual scene integration is 19–22.
 
-## 19 — Character/enemy sprites and mimic presentation (Claude)
+## 19 — Character/enemy sprites and mimic presentation (Claude) — **Done**
+
+**Status 2026-10-13:** integrated on `claude/roadmap-19-character-sprites` via `scripts/visual/sprite_library.gd`. Bodies are `AnimatedSprite2D` children drawn behind each node's own `_draw` (bars, gear, markers). Movement is read from position changes on every peer, so clients need no new replicated fields. Weapon/gear looks remain the 17e/17f overlay shapes for now; the size gap between Pixel Crawler creatures (~26 px) and Ninja characters (16 px) is recorded for step 24.
 
 **Goal/dependencies:** requires 15–16 and 18 so gameplay/form contracts are stable. Bind prepared art to idle/walk/attack/death, evolution and transform states.
 

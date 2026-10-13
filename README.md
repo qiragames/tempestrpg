@@ -75,6 +75,7 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/gear.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/weapons.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/gear_sources.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/sprites.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
 python3 tests/network_forms.py
@@ -222,6 +223,10 @@ After your character has analyzed a Forest Gnasher, press **T** to take **Gnashe
 A stone stands in the north at **(480, 100)**. Once your character knows **Piercing Fang**, stand at the stone and press **F** to begin the **Proving Trial**: three trial creatures appear, and you have **60 seconds** to defeat them all while staying inside the faint circle. A banner at the top shows the creatures left and the time. Other players may help, but **only the character who started the trial is credited**. The trial fails if you are defeated, leave the circle, disconnect or run out of time, and you can simply try again. Trial creatures drop nothing and cannot be analyzed. A trial in progress is not saved: a host restart cancels it.
 
 Completing it teaches the first **Unique** skill, **Predator Focus** (placeholder name), which goes into the new **4th hotbar slot (key 4)**. It costs 25 Magicules: your **next analysis within 20 seconds** reaches twice as far (72 px) and completes in 0.3 s instead of 1.2 s. It is used up when that analysis begins, so interrupting it gives nothing back, and it cannot be stacked. **Ultimate** skills stay locked until an ascension exists (planned for M6). Schema **v10** stores the fourth slot and an armed focus. Tests: `tests/trial_unique.gd` (40) and `python3 tests/network_trial.py` (22 real-process checks).
+
+## Art
+
+Characters and creatures use real pixel-art sprites (step 19): the Slime, Human and Demon walk, idle, attack and fall in four directions; Gnashers, Thornbacks, your goblin ally and the evolved Hobgoblin run and idle and play a death animation. Mimic forms show the creature's body in your own colours, Elite creatures are reddish and a little larger, and a Gnasher flashes red right before it bites. Terrain, buildings and menus still use placeholder shapes until steps 20–21. Art credits: `CREDITS.md`. Tests: `tests/sprites.gd` (24).
 
 ## Finding gear
 
