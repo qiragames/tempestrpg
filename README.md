@@ -4,12 +4,12 @@ A Godot **4.6.3** / GDScript prototype for a top-down pixel-art Isekai RPG.
 
 ## Screenshots
 
-Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 63 captures are in `docs/playtest/` with `docs/playtest/log.md`.
+Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 64 captures are in `docs/playtest/` with `docs/playtest/log.md`.
 
 <table>
-<tr><td align="center"><img src="docs/playtest/63_world_map.png" width="400" alt="Coast capture; map overlay missing in this playtest"><br><sub>Coast capture — map overlay needs a corrected playtest capture</sub></td><td align="center"><img src="docs/playtest/60_harrowmere.png" width="400" alt="Harrowmere, the town island"><br><sub>Harrowmere, the town island</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/58_mirror_lake.png" width="400" alt="Mirror Lake and the keep ruins"><br><sub>Mirror Lake and the keep ruins</sub></td><td align="center"><img src="docs/playtest/61_cinder_crater.png" width="400" alt="Cinder Crater"><br><sub>Cinder Crater</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/57_thornwood.png" width="400" alt="Thornwood"><br><sub>Thornwood</sub></td><td align="center"><img src="docs/playtest/01_title_menu.png" width="400" alt="Title screen"><br><sub>Title screen</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/64_world_map.png" width="400" alt="World map (M): the archipelago"><br><sub>World map (M): the archipelago</sub></td><td align="center"><img src="docs/playtest/63_thornwood_creatures.png" width="400" alt="Thornwood: Gnashers, a wood deposit and a chest"><br><sub>Thornwood: Gnashers, a wood deposit and a chest</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/60_harrowmere.png" width="400" alt="Harrowmere, the town island"><br><sub>Harrowmere, the town island</sub></td><td align="center"><img src="docs/playtest/58_mirror_lake.png" width="400" alt="Mirror Lake and the keep ruins"><br><sub>Mirror Lake and the keep ruins</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/61_cinder_crater.png" width="400" alt="Cinder Crater"><br><sub>Cinder Crater</sub></td><td align="center"><img src="docs/playtest/01_title_menu.png" width="400" alt="Title screen"><br><sub>Title screen</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/52_pause_open.png" width="400" alt="Pause overlay"><br><sub>Pause overlay</sub></td><td align="center"><img src="docs/playtest/24_camp_overview.png" width="400" alt="The first goblin camp"><br><sub>The first goblin camp</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/05_combat.png" width="400" alt="Fighting a Gnasher"><br><sub>Fighting a Gnasher</sub></td><td align="center"><img src="docs/playtest/43_equipment.png" width="400" alt="Equipment window with an item card"><br><sub>Equipment window with an item card</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/55_races.png" width="400" alt="Slime, Human and Demon"><br><sub>Slime, Human and Demon</sub></td><td align="center"><img src="docs/playtest/08_skill_tree.png" width="400" alt="Skill tree"><br><sub>Skill tree</sub></td></tr>
@@ -17,7 +17,7 @@ Current state of this branch, captured by the visible playtest (`tests/visual_pl
 
 ## The world
 
-The First Clearing is the start of an archipelago of about 10 × 11 screens (M4.5a): **Verdant Isle** with Thornwood (dense forest), Mirror Lake (a bridge to the ruined keep on its islet), Cinder Crater (ash, boulders, a lava pool) and its beaches; **Harrowmere**, the walled-town island across a long bridge; **Ambervale**, the autumn continent, and the volcanic **Emberreach Isles** across the sea (reachable once ferries and ships exist). The clearing's roads continue as paths, the HUD names the region you are in, and **M** (or the pause menu) opens the world map with your position. Coasts, lakes and lava block movement; bridges carry you across. Tests: `tests/world_map.gd` (23).
+The First Clearing is the start of an archipelago of about 10 × 11 screens (M4.5a): **Verdant Isle** with Thornwood (dense forest), Mirror Lake (a bridge to the ruined keep on its islet), Cinder Crater (ash, boulders, a lava pool) and its beaches; **Harrowmere**, the walled-town island across a long bridge; **Ambervale**, the autumn continent, and the volcanic **Emberreach Isles** across the sea (reachable once ferries and ships exist). The clearing's roads continue as paths, the HUD names the region you are in, and **M** (or the pause menu) opens the world map with your position. Coasts, lakes and lava block movement; bridges carry you across. The regions have their own content (M4.5b): 13 creatures that respawn (easy Gnashers in the meadows and on the beach, Gnashers and a Thornback in Thornwood and by Mirror Lake, Elites in Cinder Crater; Harrowmere is peaceful), six richer deposits (Thornwood wood, crater and lakeshore stone, meadow wood) that explorers gather into the camp's stock, and five chests — the keep's and the crater's give Rare or Epic gear. Tests: `tests/world_map.gd` (23), `tests/region_content.gd` (21).
 
 ## Play
 
@@ -98,6 +98,7 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/item_card.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/title_pause.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/world_map.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/region_content.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
 python3 tests/network_forms.py

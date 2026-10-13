@@ -315,4 +315,8 @@ func _near_landmark(tile: Vector2i) -> bool:
     for landmark in LANDMARKS:
         if Vector2(tile).distance_to(landmark[1]) < 5.0:
             return true
+    # Region content (M4.5b): creatures, deposits and chests stand in the open.
+    for spot in preload("res://scripts/world/region_content.gd").spots():
+        if Vector2(tile).distance_to(spot) < 3.0:
+            return true
     return Vector2(tile).distance_to(MAP.AREAS[1][0]) < 9.0

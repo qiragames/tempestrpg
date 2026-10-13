@@ -140,9 +140,11 @@ static func data() -> Dictionary:
                 if _norm(point, area[0], area[1]) + wobble * 0.6 < 1.0:
                     ground[index] = area[3]
                     land_region[index] = area[2]
-            if _norm(point, LAKE[0], LAKE[1]) + wobble * 0.4 < 1.0 and _norm(point, LAKE_ISLET[0], LAKE_ISLET[1]) >= 1.0:
-                lake[index] = 1
+            if _norm(point, LAKE[0], LAKE[1]) + wobble * 0.4 < 1.0:
+                # The lake and its islet (the keep) are Mirror Lake.
                 land_region[index] = Region.MIRROR_LAKE
+                if _norm(point, LAKE_ISLET[0], LAKE_ISLET[1]) >= 1.0:
+                    lake[index] = 1
             # The clearing's pond (its own collision rectangle; water drawn just inside it).
             if layout.POND.grow(-1).has_point(to_world(point)):
                 lake[index] = 1

@@ -6,6 +6,8 @@ signal system_message(message: String)
 const LAYOUT := preload("res://scripts/world/world_layout.gd")
 const ART := preload("res://scripts/visual/world_art.gd")
 const WORLD_MAP := preload("res://scripts/world/world_map.gd")
+const REGION := preload("res://scripts/world/region_content.gd")
+const CODEC := preload("res://scripts/persistence/state_codec.gd")
 ## The archipelago around the clearing (M4.5a): ground tiles, coasts, props, collisions.
 var terrain: Node2D
 ## The First Clearing (the start of the archipelago; see WorldMap for the whole world).
@@ -51,6 +53,16 @@ func _ready() -> void:
     bind_local_player(local_player)
     for enemy in [$ForestGnasher, $SecondGnasher, $ThornbackGnasher]:
         wire_enemy(enemy)
+    # M4.5b: the regions' creatures (fixed homes and IDs; saves and snapshots restore them).
+    for entry in REGION.CREATURES:
+        var creature = load(CODEC.ENEMY_SCENES[entry[1]]).instantiate()
+        creature.entity_id = entry[0]
+        creature.difficulty = entry[3]
+        creature.position = REGION.at(entry[2])
+        add_child(creature)
+        creature.home = creature.position
+        creature.set_difficulty(entry[3])
+        wire_enemy(creature)
     _add_obstacle(POND)
     # The clearing no longer ends at its edges: the archipelago surrounds it (world edges are
     # ocean and are closed by the terrain).
@@ -69,6 +81,8 @@ func _ready() -> void:
 ## the camp; loaded saves and client snapshots restore those from saved state instead.
 func apply_layout(seed: int, fresh: bool) -> void:
     layout = LAYOUT.generate(seed)
+    # The fixed region chests (M4.5b) follow the seeded three.
+    layout.chests = layout.chests + REGION.chests()
     camp.set_sites(layout.deposits)
     trial.stone = layout.stone
     trial.queue_redraw()
@@ -121,7 +135,8 @@ func open_chest(actor: Node2D, id: String) -> bool:
     if actor.gear.items.size() >= actor.GEAR.MAX_ITEMS:
         session.notify_character(actor.character_id, "Gear bag full. Make room before opening the chest.")
         return false
-    var item: Dictionary = SOURCES.roll_chest(loot_rng)
+    # The keep's and the crater's chests use the trial's better odds (Rare or Epic).
+    var item: Dictionary = SOURCES.roll_trial(loot_rng) if REGION.is_rich_chest(id) else SOURCES.roll_chest(loot_rng)
     actor.add_item(item)
     actor.progression["chests"] = actor.progression.get("chests", []) + [id]
     session.notify_character(actor.character_id, "Chest opened: %s." % actor.GEAR.display_name(item))

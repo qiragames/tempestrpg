@@ -98,7 +98,7 @@ func _run() -> void:
         if layout.deposits.keys() != CAMP.DEPOSITS.keys() or layout.creatures.keys() != LAYOUT.CREATURE_IDS:
             problems.ids.append(seed)
         var totals := {"wood": 0, "stone": 0}
-        for id in layout.deposits:
+        for id in CAMP.SEEDED_DEPOSITS:
             var deposit: Dictionary = layout.deposits[id]
             totals[deposit.resource] += deposit.amount
             if deposit.resource != CAMP.DEPOSITS[id].resource or deposit.outlying != CAMP.DEPOSITS[id].outlying or (not deposit.outlying and deposit.amount != CAMP.DEPOSITS[id].amount) or (deposit.outlying and (deposit.amount < 8 or deposit.amount > 12)):
@@ -127,7 +127,7 @@ func _run() -> void:
                     problems.spacing.append(seed)
         for rect in _obstacles(layout).slice(1):
             var bad: bool = rect.grow(6).has_point(LAYOUT.SPAWN) or rect.grow(10).has_point(CAMP.SITE) or rect.intersects(LAYOUT.ROADS[0]) or rect.intersects(LAYOUT.ROADS[1]) or rect.grow(20).has_point(layout.stone)
-            for id in layout.deposits:
+            for id in CAMP.SEEDED_DEPOSITS:
                 bad = bad or rect.grow(12).has_point(layout.deposits[id].position)
             for id in CAMP.STRUCTURES:
                 bad = bad or rect.intersects(Rect2(CAMP.STRUCTURES[id].site - CAMP.STRUCTURES[id].size / 2, CAMP.STRUCTURES[id].size))
@@ -139,7 +139,7 @@ func _run() -> void:
                     problems.trial.append(seed)
         var seen := _reachable(layout)
         var targets: Array = [CAMP.SITE, layout.stone, layout.ally]
-        for id in layout.deposits:
+        for id in CAMP.SEEDED_DEPOSITS:
             targets.append(layout.deposits[id].position)
         for id in layout.creatures:
             targets.append(layout.creatures[id].position)
@@ -183,6 +183,8 @@ func _run() -> void:
     _check(session.start_host(24620, path, false, meta) == OK, "Solo world hosted with seed 777")
     await _frames()
     var expected := LAYOUT.generate(777)
+    # The world adds the fixed region chests (M4.5b) after the seeded three.
+    expected.chests = expected.chests + preload("res://scripts/world/region_content.gd").chests()
     var placed := true
     for id in expected.creatures:
         var enemy: Node2D = world.entity_by_id(id)

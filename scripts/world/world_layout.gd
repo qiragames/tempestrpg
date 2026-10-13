@@ -28,6 +28,8 @@ const CLASSIC := {
 }
 ## Chests (17g) are drawn after everything else, so adding them did not move older layouts.
 const CHEST_IDS := ["chest_1", "chest_2", "chest_3"]
+## Every chest a character can have opened: the seeded three plus the fixed region chests (M4.5b).
+const ALL_CHEST_IDS := ["chest_1", "chest_2", "chest_3", "chest_thornwood", "chest_keep", "chest_crater", "chest_harrowmere", "chest_beach"]
 ## Candidate spots for points of interest. Each keeps the trial arena and its spawns inside the map.
 const STONE_SPOTS: Array[Vector2] = [Vector2(480, 100), Vector2(170, 120), Vector2(800, 520), Vector2(150, 520)]
 const ALLY_SPOTS: Array[Vector2] = [Vector2(220, 360), Vector2(260, 420), Vector2(250, 250), Vector2(440, 430)]
@@ -87,6 +89,10 @@ static func generate(seed: int) -> Dictionary:
         , func() -> Vector2: return _anywhere(rng))
         deposits[id] = {"position": point, "resource": CAMP.DEPOSITS[id].resource, "amount": rng.randi_range(8, 12), "outlying": true}
         outlying.append([point, 0.0])
+    # Region deposits (M4.5b) are fixed in every world; appended without any random draw.
+    for id in CAMP.DEPOSITS:
+        if not id in CAMP.SEEDED_DEPOSITS:
+            deposits[id] = CAMP.DEPOSITS[id].duplicate()
     taken.append_array(outlying)
     layout.deposits = deposits
     layout.creatures = creatures

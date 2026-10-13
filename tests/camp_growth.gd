@@ -1,6 +1,7 @@
 extends SceneTree
 const CODEC := preload("res://scripts/persistence/state_codec.gd")
 const STORE := preload("res://scripts/persistence/save_store.gd")
+const CAMP := preload("res://scripts/settlement/first_camp.gd")
 var checks := 0
 var failures := 0
 func _initialize() -> void:
@@ -34,7 +35,7 @@ func _run() -> void:
         enemy.set_physics_process(false)
     ally.set_physics_process(false)
     await _frames()
-    _check(camp.state.deposits.size() == 6 and camp.state.deposits.wood_3 == 8 and camp.state.deposits.stone_2 == 8 and camp.state.deposits.stone_3 == 8, "Three outlying deposits begin untouched")
+    _check(camp.state.deposits.size() == CAMP.DEPOSITS.size() and camp.state.deposits.wood_3 == 8 and camp.state.deposits.stone_2 == 8 and camp.state.deposits.stone_3 == 8, "Three outlying deposits begin untouched")
     _check(camp.level() == 0 and camp.state.essence == 0, "Unfounded camp has no level or essence")
     _check(_gather_at(camp, actor, "wood_3") and camp.state.wood == 8 and camp.state.deposits.wood_3 == 0, "Explorers gather outlying wood into shared stock")
     # Founding fixture: named, evolved ally beside the flag.
@@ -117,7 +118,7 @@ func _run() -> void:
     camp.restore(camp.initial_state())
     CODEC.apply_entities(world, loaded.data, false)
     ally.set_physics_process(false)
-    _check(camp.state == loaded.data.camp and camp.state.deposits.size() == 6 and camp.state.storehouse and camp.state.shrine and camp.state.essence_offered == 2, "Reload restores structures, essence and outlying deposits")
+    _check(camp.state == loaded.data.camp and camp.state.deposits.size() == CAMP.DEPOSITS.size() and camp.state.storehouse and camp.state.shrine and camp.state.essence_offered == 2, "Reload restores structures, essence and outlying deposits")
     var bad := document.duplicate(true)
     bad.camp.essence = 5
     _check(not STORE.validate(bad), "Fabricated essence stock rejected")

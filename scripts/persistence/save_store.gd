@@ -1,13 +1,14 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 19
+const VERSION := 20
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
 ## Initial saved state of the v8 encounter; matches scenes/world/forest.tscn.
 const THORNBACK := {"id": "thornback_1", "kind": "thornback", "position": [880.0, 560.0], "home": [880.0, 560.0], "difficulty": 1, "hp": 30, "maximum_hp": 30, "immunity": 0.0, "state": 0, "state_time": 0.0, "target": ""}
 const CAMP := preload("res://scripts/settlement/first_camp.gd")
 const LAYOUT := preload("res://scripts/world/world_layout.gd")
+const REGION := preload("res://scripts/world/region_content.gd")
 const LEVELING := preload("res://scripts/progression/leveling.gd")
 const RACES := preload("res://scripts/races/race_catalogue.gd")
 const TREE := preload("res://scripts/skills/skill_tree.gd")
@@ -135,7 +136,7 @@ static func validate_player(state: Variant, id: String) -> bool:
     if not GEAR.valid_gear(state.get("gear"), progression.equipment):
         return false
     # Chests opened by this character (v19): IDs are the same in every seed.
-    if not SOURCES.valid_opened(progression.get("chests"), LAYOUT.CHEST_IDS):
+    if not SOURCES.valid_opened(progression.get("chests"), LAYOUT.ALL_CHEST_IDS):
         return false
     return true
 
@@ -478,13 +479,25 @@ static func migrate(data: Variant) -> Variant:
         if not data.get("players") is Dictionary or not data.get("camp") is Dictionary:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 19
         data["loot"] = []
         data.camp["forge"] = false
         for state in data.players.values():
             if not state is Dictionary or not state.get("progression") is Dictionary:
                 return null
             state.progression["chests"] = []
+    # v20 (M4.5b): the regions' content. Untouched region deposits and fresh region creatures are
+    # added to older worlds (nothing else changes; opened chests stay as they are).
+    if data.get("version") == 19:
+        if not data.get("camp") is Dictionary or not data.camp.get("deposits") is Dictionary or not data.get("enemies") is Array:
+            return null
+        data = data.duplicate(true)
+        data.version = VERSION
+        for id in REGION.deposits():
+            data.camp.deposits[id] = data.camp.deposits.get(id, REGION.deposits()[id].amount)
+        for entry in REGION.CREATURES:
+            if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == entry[0]):
+                data.enemies.append(REGION.fresh_enemy(entry))
     return data
 
 static func _read(path: String) -> Dictionary:

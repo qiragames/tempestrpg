@@ -565,7 +565,10 @@ func _run() -> void:
         layouts.append(world.layout)
         await _wait(0.2)
         await _shot("seed_" + seed_text.replace(" ", "_"), "Seed \"%s\" (%d): deposits, creatures, trial stone, ally, %d trees and %d rocks placed from the seed" % [seed_text, seed, world.layout.trees.size(), world.layout.rocks.size()])
-    _check(layouts[0] != layouts[1] and layouts[0] == load("res://scripts/world/world_layout.gd").generate(layouts[0].seed), "Different seeds lay out different worlds; the same seed repeats exactly")
+    # The world adds the fixed region chests (M4.5b) after the seeded three.
+    var regenerated: Dictionary = load("res://scripts/world/world_layout.gd").generate(layouts[0].seed)
+    regenerated.chests = regenerated.chests + preload("res://scripts/world/region_content.gd").chests()
+    _check(layouts[0] != layouts[1] and layouts[0] == regenerated, "Different seeds lay out different worlds; the same seed repeats exactly")
     _log("## 14. Playable races")
     # Slime, Human and Demon side by side (placeholder silhouettes until step 19).
     world.get_local_player().get_node("Camera2D").zoom = Vector2(2, 2)
@@ -586,8 +589,10 @@ func _run() -> void:
     _check(lineup[0].get_node("Health").maximum == 120 and lineup[1].get_node("Magicules").maximum == 130.0, "Human and Demon are created with their own stats")
     await _shot("races", "Playable races, left to right: Slime, Human, Demon (placeholder looks)")
     _log("## 15. The archipelago (M4.5a)")
-    # The seed showcase above replaced the world: use the current world's HUD.
+    # The seed showcase above replaced the world and hid its HUD: use it and show it again
+    # (Codex review of M4.5a: the map capture showed only the coast).
     hud = world.get_node("HUD")
+    hud.show()
     for extra in lineup:
         extra.queue_free()
     var walker = world.get_local_player()
@@ -602,11 +607,17 @@ func _run() -> void:
     for stop in [["thornwood", Vector2(104, 92), "Thornwood: dense forest west of the clearing"], ["mirror_lake", Vector2(246, 80), "Mirror Lake: the bridge to the ruined keep on its islet"], ["harrowmere_bridge", Vector2(300, 92), "The bridge to Harrowmere"], ["harrowmere", Vector2(346, 94), "Harrowmere: the walled-town island"], ["cinder_crater", Vector2(256, 175), "Cinder Crater: ash, boulders and a lava pool"], ["sunfall_beach", Vector2(186, 190), "Sunfall Beach: the south coast; Ambervale lies across the strait"]]:
         walker.position = map_script.to_world(stop[1])
         await _wait(0.3)
-        _check(hud.get_node("Title").text == map_script.region_name(walker.position).to_upper(), "HUD region name at %s" % stop[0])
+        _check(hud.get_node("Title").is_visible_in_tree() and hud.get_node("Title").text == map_script.region_name(walker.position).to_upper(), "HUD shows the region name at %s" % stop[0])
         await _shot(stop[0], stop[2])
+    # M4.5b: the regions have their own creatures, deposits and chests.
+    var region := preload("res://scripts/world/region_content.gd")
+    _check(region.creature_ids().all(func(id): return world.entity_by_id(id) != null), "All %d region creatures are in the world" % region.CREATURES.size())
+    walker.position = region.at(Vector2(104, 98))
+    await _wait(0.4)
+    await _shot("thornwood_creatures", "Thornwood's Gnashers (one Elite) near a wood deposit and the Thornwood chest")
     hud.world_map.open()
     await _wait(0.3)
-    _check(hud.world_map.visible and paused, "M opens the world map")
+    _check(hud.visible and hud.world_map.is_visible_in_tree() and paused, "M opens the world map (HUD and map window visible)")
     await _shot("world_map", "World map (M): Verdant Isle with the clearing, Thornwood, Mirror Lake, Cinder Crater; Harrowmere by bridge; Ambervale and the Emberreach Isles across the sea")
     hud.world_map.close()
     for file in DirAccess.get_files_at(temp_worlds):

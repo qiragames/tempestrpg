@@ -82,7 +82,7 @@ try:
         finish(proc, f"guest_{i}")
     finish(host, "host")
     saved = wait(report, "saved")
-    check(saved["camp"]["hut"] and saved["camp"]["storehouse"] and saved["camp"]["shrine"] and all(v == 0 for v in saved["camp"]["deposits"].values()), "Host saves structures and depleted deposits together")
+    check(saved["camp"]["hut"] and saved["camp"]["storehouse"] and saved["camp"]["shrine"] and all(saved["camp"]["deposits"][k] == 0 for k in ["wood_1", "wood_2", "stone_1", "wood_3", "stone_2", "stone_3"]) and saved["camp"]["deposits"]["stone_crater_1"] == 12, "Host saves structures and depleted deposits together")
     (WORK / "phase").unlink()
     udp_port = port()
     host, report = start("reload_host", mode="server", port=udp_port, save=save, reload="yes")

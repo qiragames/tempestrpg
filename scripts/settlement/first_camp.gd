@@ -13,7 +13,17 @@ const DEPOSITS := {
     "wood_3": {"position": Vector2(700, 440), "resource": "wood", "amount": 8, "outlying": true},
     "stone_2": {"position": Vector2(860, 200), "resource": "stone", "amount": 8, "outlying": true},
     "stone_3": {"position": Vector2(200, 540), "resource": "stone", "amount": 8, "outlying": true},
+    # M4.5b: deposits in the archipelago's regions (fixed in every world, appended after the
+    # seeded ones; positions = RegionContent tiles). Thornwood, Cinder Crater, Mirror Lake, meadow.
+    "wood_thornwood_1": {"position": Vector2(-1080, 8), "resource": "wood", "amount": 12, "outlying": true},
+    "wood_thornwood_2": {"position": Vector2(-568, -280), "resource": "wood", "amount": 12, "outlying": true},
+    "stone_crater_1": {"position": Vector2(1352, 1320), "resource": "stone", "amount": 12, "outlying": true},
+    "stone_crater_2": {"position": Vector2(1768, 968), "resource": "stone", "amount": 12, "outlying": true},
+    "stone_lakeshore_1": {"position": Vector2(1160, -120), "resource": "stone", "amount": 10, "outlying": true},
+    "wood_meadow_1": {"position": Vector2(648, 1320), "resource": "wood", "amount": 10, "outlying": true},
 }
+## Deposit IDs placed by the world seed (the rest are fixed region deposits).
+const SEEDED_DEPOSITS := ["wood_1", "wood_2", "stone_1", "wood_3", "stone_2", "stone_3"]
 const HUT_COST := {"wood": 12, "stone": 6}
 ## Build order is the dictionary order. `key` is the boolean field in the saved camp state.
 const STRUCTURES := {
