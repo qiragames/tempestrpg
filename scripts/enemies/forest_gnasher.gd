@@ -116,7 +116,8 @@ func _defeat() -> void:
 func _drop_magicules() -> void:
     var pickup = PICKUP_SCENE.instantiate()
     pickup.amount = TIER_STATS[difficulty].drop
-    pickup.entity_id = "drop_" + entity_id
+    # Respawned creatures reuse their ID, so each drop gets its own suffix.
+    pickup.entity_id = "drop_%s_%s" % [entity_id, Crypto.new().generate_random_bytes(4).hex_encode()]
     pickup.position = position
     var world := get_parent()
     if world.has_method("announce_magicule_pickup"):

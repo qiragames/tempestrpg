@@ -9,6 +9,7 @@ const POND := LAYOUT.POND
 
 var camp: Node2D
 var trial: Node2D
+var respawner: Node
 var local_player: CharacterBody2D
 var progression: Dictionary = {"quests": {}, "settlements": {}, "world_time": 0.0}
 ## The current seed's layout. Seed 0 (the reference map) until a hosted world applies its own.
@@ -22,6 +23,9 @@ func _ready() -> void:
     trial = load("res://scripts/trials/proving_trial.gd").new()
     trial.name = "ProvingTrial"
     add_child(trial)
+    respawner = load("res://scripts/world/respawner.gd").new()
+    respawner.name = "Respawner"
+    add_child(respawner)
     local_player = $Player
     session.bind_world(self)
     bind_local_player(local_player)
@@ -55,7 +59,8 @@ func apply_layout(seed: int, fresh: bool) -> void:
         camp.restore(camp.initial_state(layout.deposits))
         for id in layout.creatures:
             var enemy: Node2D = entity_by_id(id)
-            if enemy != null:
+            # Only untouched creatures are placed; one already hurt or defeated keeps its state.
+            if enemy != null and enemy.state != enemy.State.DEFEATED and enemy.get_node("Health").current == enemy.get_node("Health").maximum:
                 enemy.position = layout.creatures[id].position
                 enemy.home = enemy.position
                 enemy.set_difficulty(layout.creatures[id].difficulty)
@@ -106,6 +111,7 @@ func wire_enemy(enemy: Node2D) -> void:
         return
     enemy.set_meta("world_wired", true)
     enemy.get_node("Health").defeated.connect(session.queue_save)
+    enemy.get_node("Health").defeated.connect(func(): respawner.schedule(enemy))
     enemy.get_node("Health").defeated.connect(func():
         if get_local_player().get_node("Health").current > 0:
             _announce("Threat neutralized. Specimen retained." if enemy.specimen != null else "Threat neutralized.")

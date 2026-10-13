@@ -113,11 +113,12 @@ static func capture_entities(world: Node2D) -> Dictionary:
             pickups.append({"id": node.entity_id, "position": vector(node.position), "amount": node.amount})
         elif node.is_in_group("allies"):
             allies.append({"id": node.entity_id, "position": vector(node.position), "owner": node.owner_id, "name": node.display_name, "race": node.race, "maximum_hp": node.maximum_hp, "power": node.power, "speed": node.follow_speed, "work": {"role": node.work_role, "target": node.work_target, "remaining": node.work_left}})
-    return {"enemies": enemies, "pickups": pickups, "allies": allies, "camp": world.camp.state.duplicate(true), "trial": world.trial.state.duplicate(true)}
+    return {"enemies": enemies, "pickups": pickups, "allies": allies, "camp": world.camp.state.duplicate(true), "trial": world.trial.state.duplicate(true), "respawns": world.respawner.capture()}
 
 static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> void:
     world.camp.restore(data.camp)
     world.trial.restore(data.get("trial"))
+    world.respawner.restore(data.get("respawns", []))
     var wanted: Dictionary = {}
     for state in data.get("allies", []):
         wanted[state.id] = true

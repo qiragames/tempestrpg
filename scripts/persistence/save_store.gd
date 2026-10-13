@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 16
+const VERSION := 17
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
 ## Initial saved state of the v8 encounter; matches scenes/world/forest.tscn.
@@ -11,6 +11,7 @@ const LAYOUT := preload("res://scripts/world/world_layout.gd")
 const LEVELING := preload("res://scripts/progression/leveling.gd")
 const RACES := preload("res://scripts/races/race_catalogue.gd")
 const TREE := preload("res://scripts/skills/skill_tree.gd")
+const RESPAWNER := preload("res://scripts/world/respawner.gd")
 const ALLY := preload("res://scripts/allies/goblin_ally.gd")
 const MAX_BYTES := 4 * 1024 * 1024
 const CODEC := preload("res://scripts/persistence/state_codec.gd")
@@ -202,6 +203,16 @@ static func validate(data: Variant) -> bool:
             return false
         if (enemy.hp == 0) != (enemy.state == 4):
             return false
+    # Pending respawns (v17): known kinds, never for a living creature, one entry per ID.
+    if not data.get("respawns") is Array or data.respawns.size() > RESPAWNER.MAX_PENDING:
+        return false
+    var respawning: Dictionary = {}
+    for entry in data.respawns:
+        if not entry is Dictionary or entry.size() != 5 or not _id(entry.get("id")) or respawning.has(entry.id) or not CODEC.ENEMY_SCENES.has(entry.get("kind")) or not _number(entry.get("difficulty"), 0, 2, true) or not _position(entry.get("home")) or not _number(entry.get("remaining"), 0, RESPAWNER.RESPAWN_SECONDS):
+            return false
+        if data.enemies.any(func(enemy): return enemy.id == entry.id and enemy.hp > 0):
+            return false
+        respawning[entry.id] = true
     for pickup in data.pickups:
         if not pickup is Dictionary or not _id(pickup.get("id")) or ids.has(pickup.id) or not _position(pickup.get("position")) or not _number(pickup.get("amount"), 0.000001, 1000000):
             return false
@@ -379,7 +390,7 @@ static func migrate(data: Variant) -> Variant:
         if not data.get("players") is Dictionary:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 16
         for state in data.players.values():
             if not state is Dictionary or not state.get("skill_ids") is Array or not state.get("slots") is Array or not state.get("progression") is Dictionary or not state.progression.get("tree") is Dictionary:
                 return null
@@ -402,6 +413,25 @@ static func migrate(data: Variant) -> Variant:
                         state.progression["skill_points"] = int(state.progression.get("skill_points", 0)) + 1
                     tree.active.erase(fused)
                     tree.free.erase(fused)
+    # v17 (17d2): creatures respawn. Seeded creatures that were absorbed (missing) or lie defeated
+    # get a pending respawn at their home, so older worlds are not left empty.
+    if data.get("version") == 16:
+        if not data.get("enemies") is Array:
+            return null
+        data = data.duplicate(true)
+        data.version = VERSION
+        var layout: Dictionary = LAYOUT.generate(LAYOUT.seed_of(data.meta) if data.get("meta") is Dictionary else 0)
+        var respawns: Array = []
+        for id in LAYOUT.CREATURE_IDS:
+            var saved: Variant = null
+            for enemy in data.enemies:
+                if enemy is Dictionary and enemy.get("id") == id:
+                    saved = enemy
+            if saved != null and saved.get("hp") != 0:
+                continue
+            var spot: Dictionary = layout.creatures[id]
+            respawns.append({"id": id, "kind": "thornback" if id.begins_with("thornback") else "gnasher", "difficulty": int(saved.difficulty) if saved != null else int(spot.difficulty), "home": saved.home if saved != null else [spot.position.x, spot.position.y], "remaining": RESPAWNER.RESPAWN_SECONDS})
+        data["respawns"] = respawns
     return data
 
 static func _read(path: String) -> Dictionary:

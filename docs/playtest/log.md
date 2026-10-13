@@ -221,17 +221,31 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 ![Unique skill: Predator Focus armed from the hotbar](37_predator_focus.png)
 *Unique skill: Predator Focus armed from the hotbar* (640x360)
 
+## 11a. Creature respawning
+- [x] The first Gnasher is waiting to respawn (or is already back)
+- gnasher_1 had already respawned during the run
+- [x] The Forest Gnasher respawned at its home
+- [x] Walked back along the road to the respawned Gnasher
+
+![Respawned Forest Gnasher back at its home spot](38_respawned.png)
+*Respawned Forest Gnasher back at its home spot* (640x360)
+
+
+![Fighting: strike arc and enemy health bar](39_respawn_fight.png)
+*Fighting: strike arc and enemy health bar* (640x360)
+
+- [x] Defeating it again earns XP again
 ## 11b. Experience and levels
-- [x] Reached level 3 (150 XP, 0 skill points) from defeats, absorptions and the trial
-- [x] HUD title bar shows the level: Lv 3 · XP 150 / 300
+- [x] Reached level 3 (170 XP, 0 skill points) from defeats, absorptions and the trial
+- [x] HUD title bar shows the level: Lv 3 · XP 170 / 300
 - [x] The System Voice announced a level-up
 
-![Level, XP and unspent skill points in the top-right of the HUD](38_level_hud.png)
+![Level, XP and unspent skill points in the top-right of the HUD](40_level_hud.png)
 *Level, XP and unspent skill points in the top-right of the HUD* (640x360)
 
-- (XP assistance: +150 XP to reach level 4 for a skill point)
+- (XP assistance: +130 XP to reach level 4 for a skill point)
 
-![Skill tree: Gel Vitality bought (+10 max HP)](39_tree_node.png)
+![Skill tree: Gel Vitality bought (+10 max HP)](41_tree_node.png)
 *Skill tree: Gel Vitality bought (+10 max HP)* (640x360)
 
 - [x] Bought a stat node: Gel Vitality +10 max HP
@@ -239,29 +253,29 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - [x] World is hosted solo and saved, no port open
 - [x] Esc opens the pause menu and freezes the solo world
 
-![Pause menu while playing solo: Resume, Open to friends, Save, Save & quit](40_pause_solo.png)
+![Pause menu while playing solo: Resume, Open to friends, Save, Save & quit](42_pause_solo.png)
 *Pause menu while playing solo: Resume, Open to friends, Save, Save & quit* (640x360)
 
 - [x] Open to friends starts listening without a restart
 
-![Pause menu after Open to friends: port and LAN address for friends](41_pause_open.png)
+![Pause menu after Open to friends: port and LAN address for friends](43_pause_open.png)
 *Pause menu after Open to friends: port and LAN address for friends* (640x360)
 
 - [x] Esc resumes
 ## 13. Seeded worlds
 
-![Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed](42_seed_goblin_camp.png)
+![Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed](44_seed_goblin_camp.png)
 *Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed* (640x360)
 
 
-![Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed](43_seed_tempest.png)
+![Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed](45_seed_tempest.png)
 *Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed* (640x360)
 
 - [x] Different seeds lay out different worlds; the same seed repeats exactly
 ## 14. Playable races
 - [x] Human and Demon are created with their own stats
 
-![Playable races, left to right: Slime, Human, Demon (placeholder looks)](44_races.png)
+![Playable races, left to right: Slime, Human, Demon (placeholder looks)](46_races.png)
 *Playable races, left to right: Slime, Human, Demon (placeholder looks)* (640x360)
 
 
@@ -319,12 +333,15 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - +60 XP (trial). Level 3 reached: +1 skill point.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
-- +150 XP (showcase assistance). Level 4 reached: +1 skill point.
+- +20 XP (defeat).
+- Threat neutralized. Specimen retained.
+- Recovered 16.0 Magicules.
+- +130 XP (showcase assistance). Level 4 reached: +1 skill point.
 - Skill tree: Gel Vitality. +10 max HP
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 
 The bot retreated 1 time(s) to let Magicules recover.
-XP assistance for skill points: 150 XP in total (the slice has three creatures and no respawns yet).
+XP assistance for skill points: 130 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 44 screenshots.**
+**Result: 0 failed checks, 46 screenshots.**

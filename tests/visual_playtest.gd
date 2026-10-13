@@ -52,7 +52,8 @@ func _shot(name: String, caption: String) -> void:
     _log("\n![%s](%s)\n*%s* (%dx%d)\n" % [caption, file, caption, image.get_width(), image.get_height()])
 
 ## 17c: open the skill tree with K and press a button: activate a learned skill or buy a node.
-## The slice has only three creatures (no respawns yet), so the bot is given any missing XP; logged.
+## Creatures respawn after 60 s (17d2); waiting for enough of them would make the run very long,
+## so the bot is still given any missing XP for points; logged.
 func _use_tree(id: String, shot: String = "", caption: String = "") -> bool:
     if int(player.progression.skill_points) < 1:
         var need: int = 25 * (player.progression.level + 1) * player.progression.level - int(player.progression.experience)
@@ -418,6 +419,21 @@ func _run() -> void:
     await _tap("skill_%d" % (player.get_node("SkillBook")._slots.find(&"predator_focus") + 1))
     _check(await _until(func(): return player.get_node("Absorption").focus_left > 0.0), "Its hotbar slot arms Predator Focus")
     await _shot("predator_focus", "Unique skill: Predator Focus armed from the hotbar")
+    _log("## 11a. Creature respawning")
+    # Defeated creatures return at their home after 60 s; the showcase shortens the wait for one.
+    var respawner = world.respawner
+    var already_back: bool = world.entity_by_id("gnasher_1") != null and world.entity_by_id("gnasher_1").get_node("Health").current > 0
+    _check(respawner.scheduled("gnasher_1") or already_back, "The first Gnasher is waiting to respawn (or is already back)")
+    _log("- gnasher_1 %s" % ("had already respawned during the run" if already_back else "was still waiting; the wait is shortened"))
+    for entry in respawner.pending:
+        if entry.id == "gnasher_1":
+            entry.remaining = 0.2
+    var xp_before_respawn: int = player.progression.experience
+    _check(await _until(func(): return world.entity_by_id("gnasher_1") != null and world.entity_by_id("gnasher_1").get_node("Health").current > 0, 8.0), "The Forest Gnasher respawned at its home")
+    var reborn: Node2D = world.entity_by_id("gnasher_1")
+    _check(await _walk_to(Vector2(480, 130), 10.0, 20.0) and await _walk_to(Vector2(484, 340), 10.0, 20.0) and await _walk_to(reborn.position + Vector2(-60, 0), 10.0, 20.0), "Walked back along the road to the respawned Gnasher")
+    await _shot("respawned", "Respawned Forest Gnasher back at its home spot")
+    _check(await _fight(reborn, true, "respawn_fight") and player.progression.experience > xp_before_respawn, "Defeating it again earns XP again")
     _log("## 11b. Experience and levels")
     var progress: Dictionary = player.progression
     _check(progress.level >= 3 and progress.skill_points + preload("res://scripts/skills/skill_tree.gd").spent(progress.tree) == progress.level, "Reached level %d (%d XP, %d skill points) from defeats, absorptions and the trial" % [progress.level, progress.experience, progress.skill_points])
@@ -489,7 +505,7 @@ func _run() -> void:
     for message in messages:
         _log("- %s" % message)
     _log("\nThe bot retreated %d time(s) to let Magicules recover." % retreats)
-    _log("XP assistance for skill points: %d XP in total (the slice has three creatures and no respawns yet)." % xp_assist)
+    _log("XP assistance for skill points: %d XP in total (creatures respawn after 60 s; the showcase does not wait to farm them)." % xp_assist)
     _log("\n**Result: %d failed checks, %d screenshots.**" % [failures, shots])
     var file := FileAccess.open(OUT.path_join("log.md"), FileAccess.WRITE)
     file.store_string("\n".join(lines) + "\n")
