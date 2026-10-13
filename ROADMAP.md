@@ -189,6 +189,8 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-14: Codex reviewed M4.5a `c3a15c3`: 1271 Linux checks pass (1005 local + 266 network), import/startup and 63 screenshot/log links verified. Found the map showcase leaves HUD hidden after seed previews: map-labelled capture shows coast only. README caption corrected and exact show-HUD/visibility-check fix handed to Claude, who now owns that playtest under M4.5b claim `ff49043`. No blocking gameplay failure; visible map evidence correction pending. Next remains claimed region content.
+
 - 2026-10-14: Claude Code completed M4.5a (world map) after Codex's step-22 review `1582ea5`. User: "download assets if needed" — the full Ninja Adventure pack already had ruins, desert town pieces, cliffs and bridges; lava/ash tiles were derived by recolouring the water set (`tools/prepare_world.py`), so nothing new was downloaded. Test adjustments: smoke (the clearing's east edge is open; the coast blocks instead), camp network peer (waits for the ally to return to the camp before assigning work — world build time shifted the timing), visual playtest (one waypoint around a rock; HUD reference after the seed showcase; old captures cleared). 1005 local + 266 network = 1271 checks pass on Windows. Branch: `claude/m45-world-map`. Next: user decision (M4.5b or 23/24).
 
 - 2026-10-14: Codex reviewed title/pause `6128322`: 1247 Linux checks pass (981 local + 266 network), import/startup, 55 screenshots/log links and 10 README gallery paths verified. No blocking findings; headless checks do not verify actual display resizing/fullscreen. README totals updated; acknowledgment on `codex/review-title-pause`. Next remains M4.5 world map before 23/24.
