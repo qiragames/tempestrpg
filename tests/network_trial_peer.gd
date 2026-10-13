@@ -38,7 +38,7 @@ func _run() -> void:
             # The first guest qualifies (knows Piercing Fang); the second only helps.
             session.player_joined.connect(func(actor: Node2D):
                 joined += 1
-                actor.position = world.trial.STONE + Vector2(joined * 16 - 24, 24)
+                actor.position = world.trial.stone + Vector2(joined * 16 - 24, 24)
                 if joined == 1:
                     actor.get_node("SkillBook").record_analysis(&"forest_gnasher")
                     actor.get_node("SkillBook").record_analysis(&"thornback_gnasher")

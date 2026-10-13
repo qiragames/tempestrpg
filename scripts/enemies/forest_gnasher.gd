@@ -33,14 +33,20 @@ func _ready() -> void:
     add_to_group("enemies")
     if entity_id.is_empty():
         entity_id = "enemy_" + Crypto.new().generate_random_bytes(16).hex_encode()
+    set_difficulty(difficulty)
+    home = global_position
+    health.changed.connect(func(_current: int, _maximum: int): queue_redraw())
+    health.defeated.connect(_defeat)
+
+## Apply a tier's stats at full health (fresh creatures; restores set health from the save).
+func set_difficulty(value: int) -> void:
+    difficulty = value
     var stats: Dictionary = TIER_STATS[difficulty]
     health.maximum = stats.health
     health.current = health.maximum
     damage = stats.damage
     speed = stats.speed
-    home = global_position
-    health.changed.connect(func(_current: int, _maximum: int): queue_redraw())
-    health.defeated.connect(_defeat)
+    queue_redraw()
 
 func _physics_process(delta: float) -> void:
     if not AUTHORITY.can_mutate(self):

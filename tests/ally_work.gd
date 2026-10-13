@@ -57,7 +57,7 @@ func _run() -> void:
     _check(ally.work_role == "gather" and ally.work_target == "wood_1" and ally.work_left == 3, "Gather assignment selects nearest finite deposit")
     _check(not ally.assign_work(actor, "gather") and ally.work_left == 3, "Repeated assignments cannot reset progress")
     dialog.close_dialog()
-    ally.position = camp.DEPOSITS.wood_1.position
+    ally.position = camp.sites.wood_1.position
     ally._physics_process(1)
     _check(ally.work_left == 2 and camp.state.wood == 0, "Gathering takes time before reward")
     var saved: Dictionary = CODEC.capture_entities(world)
@@ -85,11 +85,11 @@ func _run() -> void:
     ally._physics_process(0)
     _check(ally.work_target == "wood_2", "Worker selects next remaining deposit")
     _check(camp.transact(guest, "gather", "wood_2") == false, "Manual claims still require range")
-    guest.position = camp.DEPOSITS.wood_2.position
+    guest.position = camp.sites.wood_2.position
     _check(camp.transact(guest, "gather", "wood_2"), "Another player can finish the worker's target")
     ally._physics_process(0)
     _check(ally.work_target == "stone_1" and camp.state.wood == 16, "Worker skips depleted target without duplicating reward")
-    ally.position = camp.DEPOSITS.stone_1.position
+    ally.position = camp.sites.stone_1.position
     ally._physics_process(3)
     ally._physics_process(0)
     _check(ally.work_role == "follow" and camp.state.stone == 8, "Gather job ends when all deposits are empty")

@@ -112,10 +112,10 @@ func _next_deposit() -> String:
     var camp = get_parent().camp
     var target := ""
     var distance := INF
-    for id in camp.DEPOSITS:
-        var current: float = global_position.distance_to(camp.DEPOSITS[id].position)
+    for id in camp.sites:
+        var current: float = global_position.distance_to(camp.sites[id].position)
         # Outlying deposits are exploration rewards for players; workers stay near camp.
-        if camp.state.deposits[id] > 0 and not camp.DEPOSITS[id].outlying and current < distance:
+        if camp.state.deposits[id] > 0 and not camp.sites[id].outlying and current < distance:
             target = id
             distance = current
     return target
@@ -139,7 +139,7 @@ func _work_tick(delta: float) -> void:
         # Someone else finished this structure, or spent its materials first.
         _finish_work("%s complete. Ally returning to follow." % camp.STRUCTURES[work_target].name if camp.built(work_target) else "Construction materials ran out. Ally returning to follow.")
         return
-    var target: Vector2 = camp.DEPOSITS[work_target].position if work_role == "gather" else camp.SITE
+    var target: Vector2 = camp.sites[work_target].position if work_role == "gather" else camp.SITE
     if global_position.distance_to(target) > 10:
         velocity = global_position.direction_to(target) * follow_speed
         move_and_slide()

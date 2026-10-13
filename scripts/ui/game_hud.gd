@@ -336,7 +336,7 @@ func _refresh_pause() -> void:
         var addresses: Array = session.lan_addresses()
         _pause_status.text = "\"%s\" · open to friends on UDP %d · %d/8 players\nJoin with: %s" % [session.world_meta.get("name", "World"), session.listen_port, session.owners.size(), ", ".join(addresses) if not addresses.is_empty() else "your IP address"]
     else:
-        _pause_status.text = "\"%s\" · seed %d · playing solo\nOpen to friends lets up to 7 friends join." % [session.world_meta.get("name", "World"), int(session.world_meta.get("seed", 0))]
+        _pause_status.text = "\"%s\" · %s · playing solo\nOpen to friends lets up to 7 friends join." % [session.world_meta.get("name", "World"), load("res://scripts/world/world_layout.gd").describe(session.world_meta)]
     _pause_buttons.open.disabled = not hosting or session.listening
     _pause_buttons.open.text = "Open to friends" if not session.listening else "Open to friends (on)"
     _pause_buttons.save.disabled = not hosting

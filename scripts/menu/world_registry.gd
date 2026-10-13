@@ -2,6 +2,7 @@ extends RefCounted
 ## Save slots: one world file per slot in user://worlds/, each carrying its own meta
 ## (name, seed, created, last played). Listing validates and migrates like loading does.
 const STORE := preload("res://scripts/persistence/save_store.gd")
+const LAYOUT := preload("res://scripts/world/world_layout.gd")
 const DEFAULT_DIR := "user://worlds"
 const MAX_SEED := 2147483647
 const NAME_LENGTH := 32
@@ -14,12 +15,13 @@ static func clean_name(value: String) -> String:
     return text.substr(0, NAME_LENGTH).strip_edges()
 
 ## Seeds like Minecraft: numbers are used directly, any other text is hashed, empty is random.
+## Seed 0 is the hand-made reference map; a random seed is never 0.
 static func parse_seed(value: String) -> int:
     var text := value.strip_edges()
     if text.is_empty():
         var rng := RandomNumberGenerator.new()
         rng.randomize()
-        return rng.randi() & MAX_SEED
+        return rng.randi_range(1, MAX_SEED)
     if text.is_valid_int():
         return absi(text.to_int()) % (MAX_SEED + 1)
     return text.hash() & MAX_SEED
@@ -44,7 +46,7 @@ static func new_world_path(name: String, directory: String = DEFAULT_DIR) -> Str
 
 static func new_meta(name: String, seed: int) -> Dictionary:
     var now := int(Time.get_unix_time_from_system())
-    return {"name": clean_name(name) if not clean_name(name).is_empty() else "New World", "seed": seed, "created": now, "last_played": now}
+    return {"name": clean_name(name) if not clean_name(name).is_empty() else "New World", "seed": seed, "seeded": true, "created": now, "last_played": now}
 
 ## Every world file, newest first. Unreadable files are listed as damaged instead of hidden.
 static func list(directory: String = DEFAULT_DIR) -> Array:
@@ -58,9 +60,9 @@ static func list(directory: String = DEFAULT_DIR) -> Array:
         var path := directory.path_join(file)
         var result: Dictionary = STORE.load_world(path)
         if not result.ok:
-            worlds.append({"path": path, "file": file, "ok": false, "name": file.get_basename(), "seed": 0, "last_played": 0})
+            worlds.append({"path": path, "file": file, "ok": false, "name": file.get_basename(), "seed": 0, "map": "", "last_played": 0})
             continue
         var meta: Dictionary = result.data.get("meta", {})
-        worlds.append({"path": path, "file": file, "ok": true, "recovered": result.recovered, "name": meta.get("name", file.get_basename()), "seed": int(meta.get("seed", 0)), "last_played": int(meta.get("last_played", 0))})
+        worlds.append({"path": path, "file": file, "ok": true, "recovered": result.recovered, "name": meta.get("name", file.get_basename()), "seed": int(meta.get("seed", 0)), "map": LAYOUT.describe(meta), "last_played": int(meta.get("last_played", 0))})
     worlds.sort_custom(func(a, b): return a.last_played > b.last_played)
     return worlds

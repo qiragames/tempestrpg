@@ -19,7 +19,7 @@ func _document(world: Node2D, actor: Node2D) -> Dictionary:
     data.merge({"version": STORE.VERSION, "world_id": "growth_test", "players": {"host": CODEC.capture_player(actor)}, "progression": world.progression.duplicate(true)})
     return data
 func _gather_at(camp: Node2D, actor: Node2D, id: String) -> bool:
-    actor.position = camp.DEPOSITS[id].position
+    actor.position = camp.sites[id].position
     return camp.transact(actor, "gather", id)
 func _run() -> void:
     var world = load("res://scenes/world/forest.tscn").instantiate()

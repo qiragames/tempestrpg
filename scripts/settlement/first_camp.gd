@@ -4,6 +4,8 @@ const AUTHORITY := preload("res://scripts/network/authority.gd")
 const SITE := Vector2(350, 350)
 const HUT_SITE := Vector2(380, 390)
 ## Near deposits feed allied workers; outlying ones reward players who explore past the Gnashers.
+## Reference (seed 0) table. Each world's actual table comes from its seed (WorldLayout) as `sites`;
+## the IDs, resources and near/outlying split are the same in every world.
 const DEPOSITS := {
     "wood_1": {"position": Vector2(300, 350), "resource": "wood", "amount": 8, "outlying": false},
     "wood_2": {"position": Vector2(350, 300), "resource": "wood", "amount": 8, "outlying": false},
@@ -25,19 +27,21 @@ const SHRINE_RANGE := 60.0
 ## Extra regeneration near the shrine, as a multiple of the character's own rate.
 const SHRINE_BONUS := 1.0
 const STOREHOUSE_WORK_FACTOR := 0.5
+## This world's deposits (positions/amounts depend on the seed).
+var sites: Dictionary = DEPOSITS
 var state: Dictionary = initial_state()
 var _shapes: Dictionary = {}
 
-static func initial_state() -> Dictionary:
+static func initial_state(table: Dictionary = DEPOSITS) -> Dictionary:
     var deposits: Dictionary = {}
-    for id in DEPOSITS:
-        deposits[id] = DEPOSITS[id].amount
+    for id in table:
+        deposits[id] = table[id].amount
     return {"id": "camp_1", "founded": false, "founder": "", "wood": 0, "stone": 0, "essence": 0, "essence_offered": 0, "hut": false, "storehouse": false, "shrine": false, "deposits": deposits}
 
 static func _whole(value: Variant, high: float = 1000000) -> bool:
     return (value is float or value is int) and value >= 0 and value <= high and value == floor(value)
 
-static func valid_state(value: Variant, players: Dictionary) -> bool:
+static func valid_state(value: Variant, players: Dictionary, table: Dictionary = DEPOSITS) -> bool:
     if not value is Dictionary or value.size() != 11 or value.get("id") != "camp_1" or not value.get("founded") is bool or not value.get("founder") is String:
         return false
     for id in STRUCTURES:
@@ -52,13 +56,13 @@ static func valid_state(value: Variant, players: Dictionary) -> bool:
         var requires: String = STRUCTURES[id].requires
         if value[STRUCTURES[id].key] and not requires.is_empty() and not value[STRUCTURES[requires].key]:
             return false
-    if not value.get("deposits") is Dictionary or value.deposits.size() != DEPOSITS.size():
+    if not value.get("deposits") is Dictionary or value.deposits.size() != table.size():
         return false
-    for id in DEPOSITS:
+    for id in table:
         var remaining: Variant = value.deposits.get(id)
         if not remaining is float and not remaining is int:
             return false
-        if remaining != 0 and remaining != DEPOSITS[id].amount:
+        if remaining != 0 and remaining != table[id].amount:
             return false
     if not _whole(value.get("essence_offered")) or (not value.founded and value.essence_offered != 0):
         return false
@@ -67,9 +71,9 @@ static func valid_state(value: Variant, players: Dictionary) -> bool:
         if not stock is float and not stock is int:
             return false
         var income: int = int(value.essence_offered) if resource == "essence" else 0
-        for id in DEPOSITS:
-            if DEPOSITS[id].resource == resource:
-                income += DEPOSITS[id].amount - int(value.deposits[id])
+        for id in table:
+            if table[id].resource == resource:
+                income += table[id].amount - int(value.deposits[id])
         for id in STRUCTURES:
             if value[STRUCTURES[id].key]:
                 income -= STRUCTURES[id].cost.get(resource, 0)
@@ -90,6 +94,11 @@ func _ready() -> void:
         body.add_child(collider)
         add_child(body)
         _shapes[id] = collider
+
+## Switch to this world's deposit table (from its seed). Restore or reset `state` afterwards.
+func set_sites(table: Dictionary) -> void:
+    sites = table
+    queue_redraw()
 
 func restore(value: Dictionary) -> void:
     state = value.duplicate(true)
@@ -135,9 +144,9 @@ func can_found(actor: Node2D) -> bool:
 func nearest_deposit(actor: Node2D) -> String:
     var closest := ""
     var distance := 36.1
-    for id in DEPOSITS:
-        var current: float = actor.global_position.distance_to(DEPOSITS[id].position)
-        if state.deposits[id] > 0 and current < distance and can_reach(actor, DEPOSITS[id].position, 36):
+    for id in sites:
+        var current: float = actor.global_position.distance_to(sites[id].position)
+        if state.deposits[id] > 0 and current < distance and can_reach(actor, sites[id].position, 36):
             closest = id
             distance = current
     return closest
@@ -189,7 +198,7 @@ func transact(actor: Node2D, operation: String, id: String) -> bool:
             state.founder = actor.character_id
             message = "Camp founded."
         "gather":
-            if not DEPOSITS.has(id) or state.deposits[id] <= 0 or not can_reach(actor, DEPOSITS[id].position, 36):
+            if not sites.has(id) or state.deposits[id] <= 0 or not can_reach(actor, sites[id].position, 36):
                 return false
             harvest(id)
             message = "Materials added to shared camp stock."
@@ -214,9 +223,9 @@ func transact(actor: Node2D, operation: String, id: String) -> bool:
     return true
 
 func harvest(id: String) -> bool:
-    if not AUTHORITY.can_mutate(self) or not DEPOSITS.has(id) or state.deposits[id] <= 0:
+    if not AUTHORITY.can_mutate(self) or not sites.has(id) or state.deposits[id] <= 0:
         return false
-    state[DEPOSITS[id].resource] += state.deposits[id]
+    state[sites[id].resource] += state.deposits[id]
     state.deposits[id] = 0
     queue_redraw()
     get_node("/root/GameSession").queue_save()
@@ -253,11 +262,11 @@ func _draw() -> void:
     else:
         draw_line(SITE+Vector2(0, 7), SITE+Vector2(0, -21), Color("b6a378"), 2)
         draw_rect(Rect2(SITE+Vector2(1, -21), Vector2(14, 9)), Color("8da69d"))
-    for id in DEPOSITS:
-        var point: Vector2 = DEPOSITS[id].position
+    for id in sites:
+        var point: Vector2 = sites[id].position
         if state.deposits[id] == 0:
             draw_rect(Rect2(point-Vector2(4, 2), Vector2(8, 4)), Color("514c3b"))
-        elif DEPOSITS[id].resource == "wood":
+        elif sites[id].resource == "wood":
             for offset in [-4, 0, 4]:
                 draw_rect(Rect2(point+Vector2(-9, offset-2), Vector2(18, 4)), Color("a48254"))
                 draw_rect(Rect2(point+Vector2(-8, offset-1), Vector2(3, 2)), Color("d2b579"))

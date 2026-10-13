@@ -1,12 +1,13 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 12
+const VERSION := 13
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
 ## Initial saved state of the v8 encounter; matches scenes/world/forest.tscn.
 const THORNBACK := {"id": "thornback_1", "kind": "thornback", "position": [880.0, 560.0], "home": [880.0, 560.0], "difficulty": 1, "hp": 30, "maximum_hp": 30, "immunity": 0.0, "state": 0, "state_time": 0.0, "target": ""}
 const CAMP := preload("res://scripts/settlement/first_camp.gd")
+const LAYOUT := preload("res://scripts/world/world_layout.gd")
 const ALLY := preload("res://scripts/allies/goblin_ally.gd")
 const MAX_BYTES := 4 * 1024 * 1024
 const CODEC := preload("res://scripts/persistence/state_codec.gd")
@@ -113,7 +114,7 @@ static func validate_player(state: Variant, id: String) -> bool:
     return true
 
 static func valid_meta(meta: Variant) -> bool:
-    if not meta is Dictionary or meta.size() != 4 or not meta.get("name") is String:
+    if not meta is Dictionary or meta.size() != 5 or not meta.get("name") is String or not meta.get("seeded") is bool:
         return false
     var name: String = meta.name
     if name.strip_edges().is_empty() or name.length() > 32 or name != name.strip_edges():
@@ -134,10 +135,12 @@ static func validate(data: Variant) -> bool:
         var hash_value = data.players[id].get("token_hash", "")
         if not hash_value is String or (id != "host" and (hash_value.length() != 64 or not hash_value.is_valid_hex_number(false))):
             return false
-    if not CAMP.valid_state(data.get("camp"), data.players):
-        return false
     # World meta (save-slot name, seed, dates). Written by every hosted world; optional for hand-built test documents.
     if data.has("meta") and not valid_meta(data.meta):
+        return false
+    # The camp's deposits (positions/amounts) come from the seed; no meta means the reference map.
+    var deposits: Dictionary = LAYOUT.generate(LAYOUT.seed_of(data.meta)).deposits if data.has("meta") else CAMP.DEPOSITS
+    if not CAMP.valid_state(data.get("camp"), data.players, deposits):
         return false
     if not data.get("progression") is Dictionary or not _plain(data.progression):
         return false
@@ -168,7 +171,7 @@ static func validate(data: Variant) -> bool:
         elif ally.name.is_empty() or not data.camp.founded:
             return false
         elif work.role == "gather":
-            if (work.target != "" and (not CAMP.DEPOSITS.has(work.target) or CAMP.DEPOSITS[work.target].outlying)) or work.remaining > ALLY.GATHER_SECONDS:
+            if (work.target != "" and (not deposits.has(work.target) or deposits[work.target].outlying)) or work.remaining > ALLY.GATHER_SECONDS:
                 return false
         elif not CAMP.STRUCTURES.has(work.target):
             return false
@@ -306,7 +309,7 @@ static func migrate(data: Variant) -> Variant:
     # v12: save-slot meta. Older single-slot worlds get a neutral name and seed 0.
     if data.get("version") == 11:
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 12
         data["meta"] = data.get("meta", {"name": "Earlier world", "seed": 0, "created": 0, "last_played": 0})
         # Fractional healing progress is saved from v12 on (Codex review of 16b).
         if not data.get("players") is Dictionary:
@@ -315,6 +318,15 @@ static func migrate(data: Variant) -> Variant:
             if not state is Dictionary or not state.get("health") is Dictionary:
                 return null
             state.health["regen_carry"] = state.health.get("regen_carry", 0.0)
+    # v13 lays worlds out from their seed (16d). Existing worlds were generated on the reference
+    # map, so they keep it: `seeded: false` (their seed is still shown and kept).
+    if data.get("version") == 12:
+        if data.has("meta") and not data.meta is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = VERSION
+        if data.has("meta"):
+            data.meta["seeded"] = data.meta.get("seeded", false)
     return data
 
 static func _read(path: String) -> Dictionary:

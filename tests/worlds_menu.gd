@@ -145,8 +145,10 @@ func _run() -> void:
     var legacy := data.duplicate(true)
     legacy.version = 11
     legacy.erase("meta")
+    # Real v11 worlds were generated on the reference map (seeded layouts arrive in v13).
+    legacy.camp = load("res://scripts/settlement/first_camp.gd").initial_state()
     var migrated: Dictionary = STORE.migrate(legacy)
-    _check(STORE.validate(migrated) and migrated.meta.name == "Earlier world" and migrated.meta.seed == 0, "v11 worlds gain neutral meta")
+    _check(STORE.validate(migrated) and migrated.meta.name == "Earlier world" and migrated.meta.seed == 0 and migrated.meta.seeded == false, "v11 worlds gain neutral meta and keep the original map")
     for file in DirAccess.get_files_at(dir):
         DirAccess.remove_absolute(dir.path_join(file))
     DirAccess.remove_absolute(dir)

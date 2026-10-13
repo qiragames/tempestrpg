@@ -12,6 +12,7 @@ const CREATURE := preload("res://scenes/enemies/forest_gnasher.tscn")
 const ID := "proving_trial"
 const DISPLAY_NAME := "Proving Trial"
 const REQUIRED_SKILL := &"piercing_fang"
+## Reference (seed 0) stone. Each world places it from its seed as `stone`.
 const STONE := Vector2(480, 100)
 const START_RANGE := 40.0
 const ARENA_RADIUS := 150.0
@@ -19,6 +20,8 @@ const DURATION := 60.0
 const SPAWNS: Array[Vector2] = [Vector2(-70, 40), Vector2(0, 70), Vector2(70, 40)]
 ## Replicated runtime state; never written to world saves.
 var state: Dictionary = idle_state()
+
+var stone: Vector2 = STONE
 
 static func idle_state() -> Dictionary:
     return {"active": false, "owner": "", "time_left": 0.0, "remaining": 0}
@@ -28,7 +31,7 @@ func restore(value: Variant) -> void:
     queue_redraw()
 
 func near(actor: Node2D) -> bool:
-    return actor.global_position.distance_to(STONE) <= START_RANGE
+    return actor.global_position.distance_to(stone) <= START_RANGE
 
 func creatures() -> Array:
     return get_tree().get_nodes_in_group("trial_creatures").filter(func(node): return not node.is_queued_for_deletion())
@@ -63,7 +66,7 @@ func try_start(actor: Node2D) -> bool:
         creature.difficulty = 0
         creature.specimen = null
         creature.drops_rewards = false
-        creature.position = STONE + SPAWNS[index]
+        creature.position = stone + SPAWNS[index]
         creature.add_to_group("trial_creatures")
         world.add_child(creature)
         world.wire_enemy(creature)
@@ -82,7 +85,7 @@ func _physics_process(delta: float) -> void:
         _finish(false, "")
     elif owner.get_node("Health").current <= 0:
         _finish(false, "Trial failed: you were defeated.")
-    elif owner.global_position.distance_to(STONE) > ARENA_RADIUS:
+    elif owner.global_position.distance_to(stone) > ARENA_RADIUS:
         _finish(false, "Trial failed: you left the circle.")
     elif alive.is_empty():
         _finish(true, "")
@@ -109,7 +112,7 @@ func _finish(success: bool, message: String) -> void:
 
 func _draw() -> void:
     # Placeholder stone and arena circle.
-    draw_arc(STONE, ARENA_RADIUS, 0, TAU, 48, Color(0.9, 0.8, 0.45, 0.35 if state.active else 0.12), 1)
-    draw_rect(Rect2(STONE - Vector2(8, 14), Vector2(16, 20)), Color("6d6f78"))
-    draw_rect(Rect2(STONE - Vector2(6, 12), Vector2(12, 3)), Color("9c9fa8"))
-    draw_circle(STONE + Vector2(0, -3), 2.5, Color("f0d27a") if state.active else Color("b9a46a"))
+    draw_arc(stone, ARENA_RADIUS, 0, TAU, 48, Color(0.9, 0.8, 0.45, 0.35 if state.active else 0.12), 1)
+    draw_rect(Rect2(stone - Vector2(8, 14), Vector2(16, 20)), Color("6d6f78"))
+    draw_rect(Rect2(stone - Vector2(6, 12), Vector2(12, 3)), Color("9c9fa8"))
+    draw_circle(stone + Vector2(0, -3), 2.5, Color("f0d27a") if state.active else Color("b9a46a"))

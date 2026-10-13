@@ -132,7 +132,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.0 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.1 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](23_shrine.png)
@@ -215,6 +215,16 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 *Pause menu after Open to friends: port and LAN address for friends* (640x360)
 
 - [x] Esc resumes
+## 13. Seeded worlds
+
+![Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed](37_seed_goblin_camp.png)
+*Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed* (640x360)
+
+
+![Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed](38_seed_tempest.png)
+*Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed* (640x360)
+
+- [x] Different seeds lay out different worlds; the same seed repeats exactly
 
 ## System messages seen
 
@@ -264,4 +274,4 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 
 The bot retreated 1 time(s) to let Magicules recover.
 
-**Result: 0 failed checks, 36 screenshots.**
+**Result: 0 failed checks, 38 screenshots.**

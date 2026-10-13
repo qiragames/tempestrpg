@@ -1,17 +1,19 @@
 extends Node2D
 @onready var session: Node = get_node("/root/GameSession")
 signal system_message(message: String)
-## A deterministic placeholder map: visual obstacles and collisions share geometry.
-
+## A placeholder map with a fixed scheme (roads, pond, camp); the world's seed lays out deposits,
+## creatures, points of interest and decorations (see WorldLayout). Visuals and collisions share geometry.
+const LAYOUT := preload("res://scripts/world/world_layout.gd")
 const WORLD_SIZE := Vector2(960, 640)
-const POND := Rect2(624, 112, 160, 96)
-const ROCKS: Array[Rect2] = [Rect2(440, 250, 32, 24), Rect2(304, 400, 40, 24)]
-const TREES: Array[Vector2] = [Vector2(160, 144), Vector2(240, 192), Vector2(352, 112), Vector2(544, 160), Vector2(816, 288), Vector2(176, 464), Vector2(576, 496), Vector2(752, 480)]
+const POND := LAYOUT.POND
 
 var camp: Node2D
 var trial: Node2D
 var local_player: CharacterBody2D
 var progression: Dictionary = {"quests": {}, "settlements": {}, "world_time": 0.0}
+## The current seed's layout. Seed 0 (the reference map) until a hosted world applies its own.
+var layout: Dictionary = LAYOUT.generate(0)
+var _decorations: Node2D
 
 func _ready() -> void:
     camp = load("res://scripts/settlement/first_camp.gd").new()
@@ -26,14 +28,41 @@ func _ready() -> void:
     for enemy in [$ForestGnasher, $SecondGnasher, $ThornbackGnasher]:
         wire_enemy(enemy)
     _add_obstacle(POND)
-    for rock in ROCKS:
-        _add_obstacle(rock)
-    for tree in TREES:
-        _add_obstacle(Rect2(tree + Vector2(-6, 4), Vector2(12, 12)))
     for border in [Rect2(-16, 0, 16, 640), Rect2(960, 0, 16, 640), Rect2(0, -16, 960, 16), Rect2(0, 640, 960, 16)]:
         _add_obstacle(border)
+    _decorations = Node2D.new()
+    _decorations.name = "Decorations"
+    add_child(_decorations)
+    apply_layout(0, false)
     # Start the world chosen in the title menu (or on the command line), if any.
     session.call_deferred("launch_pending")
+
+## Lay the world out from its seed. `fresh` also places the starting creatures and ally and resets
+## the camp; loaded saves and client snapshots restore those from saved state instead.
+func apply_layout(seed: int, fresh: bool) -> void:
+    layout = LAYOUT.generate(seed)
+    camp.set_sites(layout.deposits)
+    trial.stone = layout.stone
+    trial.queue_redraw()
+    for child in _decorations.get_children():
+        _decorations.remove_child(child)
+        child.queue_free()
+    for rock in layout.rocks:
+        _add_obstacle(rock, _decorations)
+    for tree in layout.trees:
+        _add_obstacle(Rect2(tree + Vector2(-6, 4), Vector2(12, 12)), _decorations)
+    if fresh:
+        camp.restore(camp.initial_state(layout.deposits))
+        for id in layout.creatures:
+            var enemy: Node2D = entity_by_id(id)
+            if enemy != null:
+                enemy.position = layout.creatures[id].position
+                enemy.home = enemy.position
+                enemy.set_difficulty(layout.creatures[id].difficulty)
+        var ally: Node2D = entity_by_id(LAYOUT.ALLY_ID)
+        if ally != null:
+            ally.position = layout.ally
+    queue_redraw()
 
 func get_local_player() -> CharacterBody2D:
     return local_player if is_instance_valid(local_player) else $Player
@@ -132,7 +161,7 @@ func announce_magicule_pickup(amount: float, character_id: String = "") -> void:
     elif get_local_player().get_node("Health").current > 0:
         _announce("Recovered %.1f Magicules." % amount)
 
-func _add_obstacle(rect: Rect2) -> void:
+func _add_obstacle(rect: Rect2, parent: Node = self) -> void:
     var body := StaticBody2D.new()
     body.position = rect.get_center()
     var collider := CollisionShape2D.new()
@@ -140,7 +169,7 @@ func _add_obstacle(rect: Rect2) -> void:
     shape.size = rect.size
     collider.shape = shape
     body.add_child(collider)
-    add_child(body)
+    parent.add_child(body)
 
 func _unhandled_input(event: InputEvent) -> void:
     if event.is_action_pressed("restart") and not session.active:
@@ -161,11 +190,11 @@ func _draw() -> void:
     for x in range(640, 770, 32):
         draw_rect(Rect2(x, 144, 12, 2), Color("57909d"))
         draw_rect(Rect2(x + 8, 176, 16, 2), Color("57909d"))
-    for rock in ROCKS:
+    for rock in layout.rocks:
         draw_rect(rock.grow(2), Color("243c3a"))
         draw_rect(rock, Color("72817b"))
         draw_rect(Rect2(rock.position + Vector2(4, 3), Vector2(rock.size.x - 8, 5)), Color("a0aaa0"))
-    for tree in TREES:
+    for tree in layout.trees:
         draw_rect(Rect2(tree + Vector2(-6, 0), Vector2(12, 16)), Color("655348"))
         draw_rect(Rect2(tree + Vector2(-20, -20), Vector2(40, 26)), Color("193d34"))
         draw_rect(Rect2(tree + Vector2(-15, -30), Vector2(30, 24)), Color("32634b"))

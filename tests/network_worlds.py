@@ -64,6 +64,8 @@ try:
     guest, guest_report = start("guest", mode="client", port=udp, identity=WORK / "identity.json")
     joined = wait(guest_report, "joined")
     check(joined["meta"].get("name") == "Friends Test", "The friend receives the world's name")
+    check(ready["layout"]["seed"] == 4242 and (ready["layout"]["stone"] != "(480.0, 100.0)" or ready["layout"]["wood_3"] != "(700.0, 440.0)"), "The host lays out the new world from its seed")
+    check(joined["layout"] == ready["layout"], "The friend sees the same seeded deposits, trial stone and decorations as the host")
     check("host" in joined["players"] and joined["id"] in joined["players"], "Host and friend share the world")
     finish(guest, "guest")
     finish(host, "host")

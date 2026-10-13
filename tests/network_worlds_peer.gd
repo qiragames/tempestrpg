@@ -15,6 +15,9 @@ func _report(data: Dictionary) -> void:
     var file := FileAccess.open(options.report, FileAccess.WRITE)
     file.store_string(JSON.stringify(data))
     file.close()
+## What a player sees of the seeded layout (16d), comparable between host and friend.
+func _layout() -> Dictionary:
+    return {"seed": world.layout.seed, "stone": str(world.trial.stone), "wood_3": str(world.camp.sites.wood_3.position), "trees": str(world.layout.trees), "decorations": world.get_node("Decorations").get_child_count()}
 func _run() -> void:
     session = root.get_node("GameSession")
     world = load("res://scenes/world/forest.tscn").instantiate()
@@ -28,14 +31,14 @@ func _run() -> void:
             _report({"error": "Solo host could not start"})
             quit(1)
             return
-        _report({"ready": true, "listening": session.listening, "offline_peer": session.multiplayer.multiplayer_peer is OfflineMultiplayerPeer, "records": session.records.keys(), "meta": session.world_meta})
+        _report({"ready": true, "listening": session.listening, "offline_peer": session.multiplayer.multiplayer_peer is OfflineMultiplayerPeer, "records": session.records.keys(), "meta": session.world_meta, "layout": _layout()})
     else:
         session.join_host("127.0.0.1", int(options.port), options.identity)
         await session.character_assigned
         while session.latest_snapshot.is_empty():
             await process_frame
         await create_timer(0.3).timeout
-        _report({"joined": true, "id": session.local_character_id, "meta": session.latest_snapshot.get("meta", {}), "players": session.latest_snapshot.players.keys()})
+        _report({"joined": true, "id": session.local_character_id, "meta": session.latest_snapshot.get("meta", {}), "players": session.latest_snapshot.players.keys(), "layout": _layout()})
 func _process(_delta: float) -> bool:
     if Time.get_ticks_msec() > deadline:
         _report({"error": "Worlds integration timed out"})

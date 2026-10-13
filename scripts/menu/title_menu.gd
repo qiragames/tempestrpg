@@ -126,7 +126,7 @@ func refresh_worlds() -> void:
     _world_list.clear()
     for world in _worlds:
         var when: String = Time.get_datetime_string_from_unix_time(world.last_played, true) if world.last_played > 0 else "never"
-        _world_list.add_item("%s · seed %d · %s" % [world.name, world.seed, when] if world.ok else "%s · damaged, cannot load" % world.name)
+        _world_list.add_item("%s · %s · %s" % [world.name, world.map, when] if world.ok else "%s · damaged, cannot load" % world.name)
     if not _worlds.is_empty():
         _world_list.select(0)
     _play.disabled = not _selected_ok()

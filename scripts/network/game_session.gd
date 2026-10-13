@@ -7,6 +7,7 @@ signal session_failed(message: String)
 const MAX_PLAYERS := 8
 const DEFAULT_PORT := 24560
 const CODEC := preload("res://scripts/persistence/state_codec.gd")
+const LAYOUT := preload("res://scripts/world/world_layout.gd")
 const STORE := preload("res://scripts/persistence/save_store.gd")
 var active: bool = false
 var replica_world: bool = false
@@ -126,12 +127,16 @@ func start_host(port: int = DEFAULT_PORT, path: String = "user://worlds/forest.j
     world_id = loaded.get("world_id", new_id("world_"))
     world_meta = loaded.get("meta", meta if not meta.is_empty() else {"name": path.get_file().get_basename().capitalize(), "seed": 0, "created": int(Time.get_unix_time_from_system()), "last_played": 0}).duplicate(true)
     world_meta.last_played = int(Time.get_unix_time_from_system())
+    # New worlds are laid out from their seed; migrated ones say `seeded: false`.
+    world_meta["seeded"] = world_meta.get("seeded", true)
     records = loaded.get("players", {}).duplicate(true)
     owners = {1: "host"}
     local_character_id = "host"
     var host_actor = world.get_local_player()
     host_actor.character_id = "host"
     host_actor.local_controlled = true
+    # Seed 0 is the reference map (also every world saved before seeds existed).
+    world.apply_layout(LAYOUT.seed_of(world_meta), loaded.is_empty())
     if not loaded.is_empty():
         world.progression = loaded.progression.duplicate(true)
         CODEC.apply_entities(world, loaded, false)
@@ -540,6 +545,10 @@ func _snapshot(data: Dictionary, revision: int) -> void:
     _received_revision = revision
     latest_snapshot = data
     world.progression = data.progression.duplicate(true)
+    # The host's seed lays out deposits, the trial stone and decorations locally.
+    var seed: int = LAYOUT.seed_of(data.get("meta", {}))
+    if seed != world.layout.seed:
+        world.apply_layout(seed, false)
     var wanted: Dictionary = {}
     for id in data.players:
         wanted[id] = true
