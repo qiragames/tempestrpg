@@ -1,6 +1,7 @@
 extends Control
 ## Equipment window (opened from the bag). Left: the six slots (click to take an item off).
-## Middle: owned items in rarity colours. Right: details and Equip. G uses a ready gear active.
+## Middle: owned items in rarity colours. Right: the item card (hovered or selected item) and
+## Equip. G uses a ready gear active.
 ## Styled after the inventory reference (step 21): gold-trimmed frame, item icons per base and rarity.
 const GEAR := preload("res://scripts/items/gear_catalogue.gd")
 const UI := preload("res://scripts/ui/ui_style.gd")
@@ -16,6 +17,9 @@ var _equip: Button
 var _totals: Label
 var _close: Button
 var _selected: String = ""
+## Item card (21b) for the hovered item, else the selected one.
+var card: PanelContainer
+var _hovered: String = ""
 var _paused_before_open: bool = false
 
 func _init(owner_hud: CanvasLayer) -> void:
@@ -43,18 +47,29 @@ func _init(owner_hud: CanvasLayer) -> void:
         button.alignment = HORIZONTAL_ALIGNMENT_LEFT
         button.expand_icon = false
         button.pressed.connect(_unequip.bind(slot))
+        button.mouse_entered.connect(func(): _hovered = hud.player.progression.get("equipment", {}).get(slot, ""))
+        button.mouse_exited.connect(func(): _hovered = "")
         _slot_buttons[slot] = button
     _items = ItemList.new()
     _items.position = ORIGIN + Vector2(194, 38)
     _items.size = Vector2(188, 176)
     _items.add_theme_font_size_override("font_size", 10)
     _items.item_selected.connect(func(index): _selected = _owned()[index].id; refresh())
+    _items.gui_input.connect(func(event: InputEvent):
+        if event is InputEventMouseMotion:
+            var index: int = _items.get_item_at_position(event.position, true)
+            _hovered = _owned()[index].id if index >= 0 and index < _owned().size() else ""
+    )
+    _items.mouse_exited.connect(func(): _hovered = "")
     add_child(_items)
     _details = hud._label("", ORIGIN + Vector2(394, 38), Vector2(176, 150), self, 10)
-    _equip = hud._button("Equip", ORIGIN + Vector2(394, 190), Vector2(176, 24), self)
+    card = load("res://scripts/ui/item_card.gd").new()
+    card.position = ORIGIN + Vector2(394, 36)
+    add_child(card)
+    _equip = hud._button("Equip", ORIGIN + Vector2(394, 262), Vector2(176, 24), self)
     _equip.pressed.connect(_equip_selected)
-    _totals = hud._label("", ORIGIN + Vector2(12, 222), Vector2(556, 30), self, 10)
-    hud._label("Click a slot to take an item off · G: use a gear active · I / Esc: close", ORIGIN + Vector2(12, 270), Vector2(500, 16), self, 9)
+    _totals = hud._label("", ORIGIN + Vector2(12, 224), Vector2(372, 40), self, 10)
+    hud._label("Click a slot to take an item off · G: use a gear active · I / Esc: close", ORIGIN + Vector2(12, 270), Vector2(372, 16), self, 9)
     hide()
 
 func _owned() -> Array:
@@ -111,12 +126,20 @@ func refresh() -> void:
     var selected: Dictionary = player.item_by_id(_selected)
     if selected.is_empty():
         _details.text = "No gear yet. Gear comes from creatures, chests and the camp forge (later steps)." if owned.is_empty() else "Select an item to see its stats."
+        _details.show()
         _equip.disabled = true
     else:
         var worn: String = _worn_slot(selected.id)
+        # Plain-text details stay available (tests, screen readers); the card shows them.
         _details.text = "%s\n%s\n\n%s" % [GEAR.display_name(selected), "Worn: " + SLOT_NAMES[worn] if not worn.is_empty() else "In the bag", GEAR.describe(selected)]
+        _details.hide()
         _equip.disabled = not worn.is_empty() and worn == target_slot(selected)
         _equip.text = "Equip (%s)" % SLOT_NAMES[target_slot(selected)]
+    var carded: Dictionary = player.item_by_id(_hovered) if not _hovered.is_empty() else {}
+    if carded.is_empty():
+        carded = selected
+    var place: String = _worn_slot(carded.get("id", ""))
+    card.show_item(carded, ("Worn: " + SLOT_NAMES[place]) if not place.is_empty() else "In the bag")
     var parts: Array = []
     for stat in GEAR.STATS:
         var value: float = player.gear_bonus(stat)

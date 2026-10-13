@@ -78,6 +78,7 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/sprites.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/world_art.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/ui_style.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/item_card.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
 python3 tests/network_forms.py
@@ -228,7 +229,7 @@ Completing it teaches the first **Unique** skill, **Predator Focus** (placeholde
 
 ## Art
 
-Characters and creatures use real pixel-art sprites (step 19): the Slime, Human and Demon walk, idle, attack and fall in four directions; Gnashers, Thornbacks, your goblin ally and the evolved Hobgoblin run and idle and play a death animation. Mimic forms show the creature's body in your own colours, Elite creatures are reddish and a little larger, and a Gnasher flashes red right before it bites. The clearing itself uses real tiles and props (step 20): grass, dirt roads, the pond, trees and boulders, the hut, storehouse, shrine, forge and campfire, deposits and chests; you walk behind tree canopies and buildings. The HUD and every window use one dark/gold theme after the reference (step 21): a status card with your portrait and HP, Magicule and XP bars, the cyan analysis box, a framed hotbar with key badges, and item/gear icons in the bag and equipment window. Art credits: `CREDITS.md`. Tests: `tests/sprites.gd` (24), `tests/world_art.gd` (16), `tests/ui_style.gd` (17).
+Characters and creatures use real pixel-art sprites (step 19): the Slime, Human and Demon walk, idle, attack and fall in four directions; Gnashers, Thornbacks, your goblin ally and the evolved Hobgoblin run and idle and play a death animation. Mimic forms show the creature's body in your own colours, Elite creatures are reddish and a little larger, and a Gnasher flashes red right before it bites. The clearing itself uses real tiles and props (step 20): grass, dirt roads, the pond, trees and boulders, the hut, storehouse, shrine, forge and campfire, deposits and chests; you walk behind tree canopies and buildings. The HUD and every window use one dark/gold theme after the reference (step 21): a status card with your portrait and HP, Magicule and XP bars, the cyan analysis box, a framed hotbar with key badges, and item/gear icons in the bag and equipment window. Gear details are item cards (step 21b): framed in the rarity colour with badges, DPS and attack speed for weapons, green bonuses and red penalties with their roll ranges, passives and the active; hover an item or a worn slot to preview it. Art credits: `CREDITS.md`. Tests: `tests/sprites.gd` (24), `tests/world_art.gd` (16), `tests/ui_style.gd` (17), `tests/item_card.gd` (15).
 
 ## Finding gear
 

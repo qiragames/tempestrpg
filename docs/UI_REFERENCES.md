@@ -38,6 +38,10 @@ The user supplied a three-column inventory overlay on 2026-10-12: Equipped on th
 
 Start with actual absorbed materials and readable item details in a small dimensional-storage panel. Introduce equipment, usable items, rarity, currency, capacity, and quest-item tabs only alongside their real gameplay systems. Keep all counts and details data-driven; the reference's items, sample currency, stats, and player are examples rather than starting inventory. Full equipment and paper-doll UI belongs to a later inventory/equipment step. Preserve keyboard navigation and dynamic text, and pause gameplay while a modal inventory is open.
 
+## Item tooltip reference
+
+On 2026-10-14 the user supplied two weapon tooltips (`assets/references/ui/item_tooltip_reference_rare.png`, `item_tooltip_reference_mythic.png`) as the look for item details: a card framed in the rarity colour, the icon in a rarity-coloured frame, the name in the rarity colour with rarity and type badges, a large DPS figure with attack speed and damage, stat lines with green bonuses and red penalties and their roll ranges. Lower rarities show fewer lines. Implemented in step 21b (`scripts/ui/item_card.gd`) with the game's real data only; attribute requirements, class type and combat level requirements in the reference are not game systems and are not shown.
+
 ## Shared image storage
 
 Both Claude Code and Codex use `assets/README.md` and `assets/references/index.json`. All seven indexed originals are available in Git, including the gameplay HUD and inventory. The index records paths, dimensions and SHA256 checksums. Preserve originals under `assets/references/`, working art under `assets/source/`, and prepared textures under `assets/game/`. Descriptions alone do not supply image bytes.

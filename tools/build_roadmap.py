@@ -92,9 +92,9 @@ for index, (mid, title, status_text, body) in enumerate(milestones):
 expansion = re.search(r"### M4\.5 — (.*?) · ([^\n]+)\n(.*?)(?=\n### |\n## |\Z)", source, re.S)
 if expansion:
     title, status_text, body = expansion.groups()
-    nodes.append(dict(id="M4.5", title=title, status="planned", deps=["m4_17g"],
+    nodes.append(dict(id="M4.5", title=title, status="planned", deps=["m4_22"],
                       what=body.strip(), why="Expand the proven gear and exploration systems into original regions and travel.",
-                      evidence="Planned only; implementation order awaits user confirmation. Currency/quest-dependent travel needs those systems first.",
+                      evidence="User decision 2026-10-14: the world map comes right after step 22 (before 23/24). Ferries and own ships need currency/quests first.",
                       x=300, y=max(node["y"] for node in nodes)+115, phase="M4.5"))
 if len(nodes) != 24 + len(m4_rows) + int(expansion is not None):
     raise ValueError("Milestone structure changed: review the graph mapping.")

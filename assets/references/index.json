@@ -84,6 +84,28 @@
       "sha256": "58b48168bee04fd2595edbb5b8dc89847a82805d7da6284f529859ade91199b6",
       "notes": "Terrain/auto-tiles (grass, dirt path, cobblestone, cliff, stairs), trees/foliage/rocks/stumps, modular thatched roofs/walls/palisades/gates and two huts, props (barrels, crates, stalls, campfires, cauldrons, well, ladders, torches, tents, fences).",
       "documentation": "docs/ART_REFERENCES.md"
+    },
+    {
+      "id": "item_tooltip_reference_rare",
+      "title": "Item tooltip reference (rare dagger)",
+      "path": "assets/references/ui/item_tooltip_reference_rare.png",
+      "source": "User-provided screenshot in chat 2026-10-14, added by Claude",
+      "status": "available",
+      "width": 381,
+      "height": 639,
+      "sha256": "95fac15f82631298694a2a615545f655a6ff6fc129a883836a2fb1669e1accf3",
+      "notes": "Rarity-framed weapon card: icon in rarity frame, name in rarity colour, rarity/type badges, DPS and attack speed, damage ranges, attribute requirements, class/level requirements, stat lines green/red with roll ranges. Requirements/class/level are not game systems yet."
+    },
+    {
+      "id": "item_tooltip_reference_mythic",
+      "title": "Item tooltip reference (mythic dagger)",
+      "path": "assets/references/ui/item_tooltip_reference_mythic.png",
+      "source": "User-provided screenshot in chat 2026-10-14, added by Claude",
+      "status": "available",
+      "width": 374,
+      "height": 602,
+      "sha256": "fa30a4b24cee4ae7849edb207e1a036752548665f554e1bc6fd6cc57584e1a69",
+      "notes": "Same card at the highest rarity (magenta frame) with an element badge and more stat lines; lower rarities show fewer lines (user, 2026-10-14)."
     }
   ],
   "packs": [
