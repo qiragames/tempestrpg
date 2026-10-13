@@ -16,6 +16,7 @@ var messages: Array[String] = []
 var failures := 0
 var shots := 0
 var retreats := 0
+var xp_assist := 0
 
 func _initialize() -> void:
     call_deferred("_run")
@@ -49,6 +50,30 @@ func _shot(name: String, caption: String) -> void:
     var file := "%02d_%s.png" % [shots, name]
     image.save_png(ProjectSettings.globalize_path(OUT.path_join(file)))
     _log("\n![%s](%s)\n*%s* (%dx%d)\n" % [caption, file, caption, image.get_width(), image.get_height()])
+
+## 17c: open the skill tree with K and press a button: activate a learned skill or buy a node.
+## The slice has only three creatures (no respawns yet), so the bot is given any missing XP; logged.
+func _use_tree(id: String, shot: String = "", caption: String = "") -> bool:
+    if int(player.progression.skill_points) < 1:
+        var need: int = 25 * (player.progression.level + 1) * player.progression.level - int(player.progression.experience)
+        player.gain_experience(need, "showcase assistance")
+        xp_assist += need
+        _log("- (XP assistance: +%d XP to reach level %d for a skill point)" % [need, player.progression.level])
+    await _tap("skill_tree")
+    if not await _until(func(): return hud.skill_tree.visible and paused):
+        return false
+    await _wait(0.2)
+    var learned: Array = player.get_node("SkillBook").evidence_ids()
+    if hud.skill_tree._node_buttons.has(id):
+        hud.skill_tree._node_buttons[id].pressed.emit()
+    else:
+        hud.skill_tree._activate_buttons[learned.find(id)].pressed.emit()
+    await _wait(0.3)
+    if not shot.is_empty():
+        await _shot(shot, caption)
+    await _tap("skill_tree")
+    var closed: bool = await _until(func(): return not hud.skill_tree.visible and not paused)
+    return closed and (id in player.progression.tree.nodes or player.get_node("SkillBook").is_active(StringName(id)))
 
 func _tap(action: String) -> void:
     for pressed in [true, false]:
@@ -131,6 +156,10 @@ func _fight(enemy: Node2D, use_skill: bool, shot_name: String) -> bool:
         var skill_ready: bool = use_skill and player.get_node("SkillBook").skill_at_slot(0) != null and player.get_node("Magicules").current >= 12
         await _tap("skill_1" if skill_ready else "attack")
         await _wait(0.45 if not skill_ready else 0.85)
+        if not is_instance_valid(player) or not is_instance_valid(enemy):
+            # The trial cleared its creatures (or the showcase moved on) while this swing was waiting.
+            _release_moves()
+            return is_instance_valid(player)
     _release_moves()
     return true
 
@@ -221,7 +250,9 @@ func _run() -> void:
     await _shot("defeated", "Gnasher defeated; Magicule drop beside the corpse")
     _log("## 3. Absorb and analyze")
     _check(await _absorb(gnasher), "Absorbed the corpse")
-    _check(player.get_node("SkillBook").skill_at_slot(0) != null, "Learned Rending Bite into hotbar slot 1")
+    _check(player.get_node("SkillBook").skill_at_slot(0) == null, "Rending Bite learned, waiting for activation")
+    _check(await _use_tree("rending_bite", "skill_tree", "Skill tree (K): the Slime tree on the left, learned skills on the right; Rending Bite activated with the level-1 point"), "Activated Rending Bite in the skill tree (K)")
+    _check(player.get_node("SkillBook").skill_at_slot(0) != null, "Activated Rending Bite sits in hotbar slot 1")
     _check(pickup_count >= 1 or messages.any(func(m): return m.begins_with("Recovered")), "Defeat dropped a Magicule pickup (collected on the spot when standing next to it)")
     await _shot("skill_learned", "Hotbar shows Rending Bite with cost")
     await _tap("inventory")
@@ -327,6 +358,7 @@ func _run() -> void:
     var skills = player.get_node("SkillBook")
     _check(skills.knows(&"thorn_lash") and skills.knows(&"piercing_fang"), "Learned Thorn Lash (Common) and Piercing Fang (Extra)")
     _check(messages.any(func(m): return m.contains("Extra: Piercing Fang acquired")), "System Voice announced the Extra skill")
+    _check(await _use_tree("thorn_lash") and await _use_tree("piercing_fang"), "Activated Thorn Lash and Piercing Fang in the skill tree")
     await _shot("extra_unlocked", "Hotbar: Rending Bite, Thorn Lash and Piercing Fang")
     pool._current = pool.maximum
     player.get_node("MeleeAttack").cooldown_left = 0.0
@@ -370,15 +402,18 @@ func _run() -> void:
     _check(messages.any(func(m): return m.contains("Unique: Predator Focus acquired")), "System Voice announced the Unique skill")
     pool._current = pool.maximum
     player.get_node("MeleeAttack").cooldown_left = 0.0
+    _check(await _use_tree("predator_focus"), "Activated Predator Focus in the skill tree")
     await _tap("skill_4")
     _check(await _until(func(): return player.get_node("Absorption").focus_left > 0.0), "Slot 4 arms Predator Focus")
     await _shot("predator_focus", "Unique skill: Predator Focus armed from hotbar slot 4")
     _log("## 11b. Experience and levels")
     var progress: Dictionary = player.progression
-    _check(progress.level >= 3 and progress.skill_points == progress.level - 1, "Reached level %d (%d XP, %d skill points) from defeats, absorptions and the trial" % [progress.level, progress.experience, progress.skill_points])
+    _check(progress.level >= 3 and progress.skill_points + preload("res://scripts/skills/skill_tree.gd").spent(progress.tree) == progress.level, "Reached level %d (%d XP, %d skill points) from defeats, absorptions and the trial" % [progress.level, progress.experience, progress.skill_points])
     _check(hud._level.text.begins_with("Lv %d" % progress.level), "HUD title bar shows the level: %s" % hud._level.text)
     _check(messages.any(func(m): return m.contains("Level 2 reached")), "The System Voice announced a level-up")
     await _shot("level_hud", "Level, XP and unspent skill points in the top-right of the HUD")
+    var hp_before: int = player.get_node("Health").maximum
+    _check(await _use_tree("slime_vitality", "tree_node", "Skill tree: Gel Vitality bought (+10 max HP)") and player.get_node("Health").maximum == hp_before + 10, "Bought a stat node: Gel Vitality +10 max HP")
     _log("## 12. Pause menu and Open to friends")
     # Turn this sandbox into a solo-hosted world (as the title menu does), then use Esc.
     # This sandbox was played on the reference map, so it is hosted as an unseeded world (16d).
@@ -442,6 +477,7 @@ func _run() -> void:
     for message in messages:
         _log("- %s" % message)
     _log("\nThe bot retreated %d time(s) to let Magicules recover." % retreats)
+    _log("XP assistance for skill points: %d XP in total (the slice has three creatures and no respawns yet)." % xp_assist)
     _log("\n**Result: %d failed checks, %d screenshots.**" % [failures, shots])
     var file := FileAccess.open(OUT.path_join("log.md"), FileAccess.WRITE)
     file.store_string("\n".join(lines) + "\n")

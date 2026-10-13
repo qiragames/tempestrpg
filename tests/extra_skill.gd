@@ -44,6 +44,14 @@ func _guest(id: String, at: Vector2) -> Node2D:
     guest.position = at
     world.add_child(guest)
     return guest
+## 17c: learned skills must be activated in the skill tree (earning levels for points if needed).
+func _activate_learned(actor: Node) -> void:
+    for id in actor.get_node("SkillBook").evidence_ids():
+        if id in actor.progression.tree.active:
+            continue
+        while int(actor.progression.skill_points) < 1:
+            actor.gain_experience(25 * (actor.progression.level + 1) * actor.progression.level - int(actor.progression.experience), "test")
+        actor.activate_skill(id)
 func _run() -> void:
     world = load("res://scenes/world/forest.tscn").instantiate()
     root.add_child(world)
@@ -65,14 +73,15 @@ func _run() -> void:
     _check(CATALOGUE.RULES.piercing_fang == {"tier": "Extra", "requires": ["rending_bite", "thorn_lash"], "analysis": "thornback_gnasher"}, "Piercing Fang needs Rending Bite + Thorn Lash and a Thornback analysis")
     # Order A: Thornback first. Only the Common is earned; the Extra needs Rending Bite too.
     _check(await _analyze(actor, thornback), "Thornback analysis completes")
-    _check(book.knows(&"thorn_lash") and not book.knows(&"piercing_fang") and book.skill_at_slot(0).id == &"thorn_lash", "Thorn Lash learned alone; no Extra without Rending Bite")
-    _check(messages.back() == "Analysis complete. Common: Thorn Lash acquired.", "System Voice names the new Common skill")
+    _check(book.knows(&"thorn_lash") and not book.knows(&"piercing_fang") and book.skill_at_slot(0) == null and not book.is_active(&"thorn_lash"), "Thorn Lash learned alone (inactive until activated); no Extra without Rending Bite")
+    _check(messages.back() == "Analysis complete. Common: Thorn Lash acquired. Activate it in the skill tree (K).", "System Voice names the new Common skill")
     _check(bag.entries().any(func(entry): return entry.id == &"thornback_quill" and entry.name == "Thornback Quill"), "Thornback Quill stored in the bag")
     var gnasher = world.entity_by_id("gnasher_1")
     _check(await _analyze(actor, gnasher), "Forest Gnasher analysis completes")
     _check(book.knows(&"rending_bite") and book.knows(&"piercing_fang"), "Knowing both Commons with Thornback evidence unlocks the Extra")
-    _check(messages.back() == "Analysis complete. Common: Rending Bite, Extra: Piercing Fang acquired.", "One analysis reports both new skills in tier order")
-    _check(book.skill_at_slot(1).id == &"rending_bite" and book.skill_at_slot(2).id == &"piercing_fang", "New skills fill the remaining hotbar slots")
+    _check(messages.back() == "Analysis complete. Common: Rending Bite, Extra: Piercing Fang acquired. Activate them in the skill tree (K).", "One analysis reports both new skills in tier order")
+    _activate_learned(actor)
+    _check(book.skill_at_slot(0).id == &"thorn_lash" and book.skill_at_slot(1).id == &"rending_bite" and book.skill_at_slot(2).id == &"piercing_fang", "Activated skills fill the hotbar in learned order")
     var again = _spawn(THORNBACK, "thornback_test_a", Vector2(700, 600))
     _check(await _analyze(actor, again) and book.known_ids().size() == 3 and messages.back().contains("already known"), "Repeat analysis adds no skill")
     # Order B: Rending Bite first, then one Thornback analysis grants Common and Extra together.

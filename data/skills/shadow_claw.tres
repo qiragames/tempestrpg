@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/skills/skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"shadow_claw"
+display_name = "Shadow Claw"
+tier = "Common"
+description = "Rake the target with claws of condensed shadow."
+damage = 22
+magicule_cost = 10.0
+cooldown = 0.8
+effect = &"strike"

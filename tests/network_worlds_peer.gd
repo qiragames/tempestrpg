@@ -42,7 +42,14 @@ func _run() -> void:
         while session.latest_snapshot.is_empty():
             await process_frame
         await create_timer(0.3).timeout
-        _report({"joined": true, "id": session.local_character_id, "meta": session.latest_snapshot.get("meta", {}), "players": session.latest_snapshot.players.keys(), "layout": _layout(), "race": session.latest_snapshot.players[session.local_character_id].progression.race, "max_hp": session.latest_snapshot.players[session.local_character_id].health.maximum, "magicules": session.latest_snapshot.players[session.local_character_id].magicules.maximum})
+        # 17c: buy a tree node through the host (and try another race's node, which must fail).
+        var tree_before: Dictionary = session.latest_snapshot.players[session.local_character_id].progression.duplicate(true)
+        if options.has("buy"):
+            session.request_action("tree", {"operation": "buy", "id": "slime_vitality"})
+            session.request_action("tree", {"operation": "buy", "id": options.buy})
+            await create_timer(0.5).timeout
+        var mine: Dictionary = session.latest_snapshot.players[session.local_character_id]
+        _report({"joined": true, "points_before": tree_before.skill_points, "points": mine.progression.skill_points, "nodes": mine.progression.tree.nodes, "id": session.local_character_id, "meta": session.latest_snapshot.get("meta", {}), "players": session.latest_snapshot.players.keys(), "layout": _layout(), "race": session.latest_snapshot.players[session.local_character_id].progression.race, "max_hp": session.latest_snapshot.players[session.local_character_id].health.maximum, "magicules": session.latest_snapshot.players[session.local_character_id].magicules.maximum})
 func _process(_delta: float) -> bool:
     if Time.get_ticks_msec() > deadline:
         _report({"error": "Worlds integration timed out"})

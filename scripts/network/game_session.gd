@@ -432,6 +432,12 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             rejected_requests += 1
             return false
         return false if actor.input_blocked else actor.try_transform(payload.form)
+    if action == "tree":
+        # Clients name a node to buy or a learned skill to activate; the host checks race, order and points.
+        if payload.size() != 2 or not payload.get("operation") in ["buy", "activate"] or not payload.get("id") is String or payload.id.length() > 64:
+            rejected_requests += 1
+            return false
+        return actor.buy_node(payload.id) if payload.operation == "buy" else actor.activate_skill(payload.id)
     if action == "assign_slot":
         # Loadout is host-owned: clients name a slot and a skill ID; the book checks knowledge.
         var slot: Variant = payload.get("slot")

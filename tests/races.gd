@@ -74,6 +74,7 @@ func _run() -> void:
     _check(is_equal_approx(slime_recovery, 0.4) and is_equal_approx(human_recovery, 0.3), "Human attacks recover 25% faster (0.3 s instead of 0.4 s)")
     # --- Skills: Demon skill power and drain
     actor.get_node("SkillBook")._known[&"rending_bite"] = load("res://data/skills/rending_bite.tres")
+    actor.progression.tree.active.append("rending_bite")
     var human_skill := _hit(actor, "r_human_skill", &"rending_bite")
     actor.choose_race("Demon")
     actor.get_node("Health").current = 50

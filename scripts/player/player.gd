@@ -4,6 +4,7 @@ const AUTHORITY := preload("res://scripts/network/authority.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const LEVELING := preload("res://scripts/progression/leveling.gd")
 const RACES := preload("res://scripts/races/race_catalogue.gd")
+const TREE := preload("res://scripts/skills/skill_tree.gd")
 ## Movement delegates health and attacks to reusable combat components.
 
 @export var move_speed: float = 95.0
@@ -16,7 +17,7 @@ var exhaustion_active: bool = false
 var exhaustion_left: float = 0.0
 var remote_direction := Vector2.ZERO
 var last_input_msec: int = 0
-var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 0, "race": "Slime", "quests": {}, "equipment": {}}
+var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "race": "Slime", "quests": {}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}}
 ## Current mimic form and the time until it can change again (host-owned, saved).
 var form: String = FORMS.BASE
 var form_cooldown: float = 0.0
@@ -44,17 +45,72 @@ func choose_race(id: String) -> bool:
         return false
     var stats: Dictionary = RACES.stats(id)
     progression["race"] = id
-    move_speed = stats.move_speed
-    $Health.maximum = stats.hp
-    $Health.current = stats.hp
+    # Base stats plus any bought tree upgrades, so re-applying never loses purchased stats.
+    var nodes: Array = progression.get("tree", {}).get("nodes", [])
+    move_speed = stats.move_speed + TREE.stat_bonus(nodes, "speed")
+    $Health.maximum = stats.hp + int(TREE.stat_bonus(nodes, "hp"))
+    $Health.current = $Health.maximum
     $Health.changed.emit($Health.current, $Health.maximum)
-    $Magicules.maximum = stats.magicules
-    $Magicules._current = stats.magicules
+    $Magicules.maximum = stats.magicules + TREE.stat_bonus(nodes, "magicules")
+    $Magicules._current = $Magicules.maximum
     $Magicules.changed.emit($Magicules.current, $Magicules.maximum)
     if not stats.mimic and form != FORMS.BASE:
         apply_form(FORMS.BASE)
     queue_redraw()
     return true
+
+## Host-only skill-tree purchase: one point for a stat upgrade or a new skill.
+func buy_node(id: String) -> bool:
+    if not AUTHORITY.can_mutate(self):
+        return false
+    var problem: String = TREE.buy_problem(progression, id)
+    if not problem.is_empty():
+        session.notify_character(character_id, problem)
+        return false
+    var node: Dictionary = TREE.NODES[id]
+    progression["skill_points"] = int(progression.skill_points) - TREE.COST
+    progression.tree.nodes.append(id)
+    if node.has("skill"):
+        $SkillBook.grant_tree_skill(StringName(node.skill))
+    else:
+        _apply_stat(node.stat, node.amount)
+    session.notify_character(character_id, "Skill tree: %s. %s" % [node.name, TREE.describe_node(id)])
+    session.queue_save()
+    return true
+
+## Host-only: spend a point so a skill learned by absorbing or a trial can be used and slotted.
+func activate_skill(id: String) -> bool:
+    if not AUTHORITY.can_mutate(self):
+        return false
+    var problem: String = TREE.activate_problem(progression, $SkillBook.evidence_ids(), id)
+    if not problem.is_empty():
+        session.notify_character(character_id, problem)
+        return false
+    progression["skill_points"] = int(progression.skill_points) - TREE.ACTIVATE_COST
+    progression.tree.active.append(id)
+    $SkillBook.auto_slot(StringName(id))
+    session.notify_character(character_id, "Skill activated: %s." % $SkillBook.get_skill(StringName(id)).display_name)
+    session.queue_save()
+    return true
+
+func tree_strike_bonus() -> int:
+    return int(TREE.stat_bonus(progression.get("tree", {}).get("nodes", []), "strike"))
+
+func _apply_stat(stat: String, amount: float) -> void:
+    match stat:
+        "hp":
+            $Health.maximum += int(amount)
+            if $Health.current > 0:
+                $Health.current += int(amount)
+            $Health.changed.emit($Health.current, $Health.maximum)
+        "magicules":
+            $Magicules.maximum += amount
+            $Magicules._current += amount
+            $Magicules.changed.emit($Magicules.current, $Magicules.maximum)
+        "regen":
+            $Magicules.regeneration_per_second += amount
+        "speed":
+            move_speed += amount
 
 ## Host-only experience award; tells the character about XP and any level-up.
 func gain_experience(amount: int, reason: String) -> void:

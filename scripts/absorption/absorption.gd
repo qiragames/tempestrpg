@@ -103,7 +103,7 @@ func _process(delta: float) -> void:
             status_changed.emit("Analysis complete. %s: %s already known." % [specimen.skill.tier, specimen.skill.display_name])
         else:
             var names: Array = gained.map(func(skill): return "%s: %s" % [skill.tier, skill.display_name])
-            status_changed.emit("Analysis complete. %s acquired." % ", ".join(names))
+            status_changed.emit("Analysis complete. %s acquired. Activate %s in the skill tree (K)." % [", ".join(names), "it" if names.size() == 1 else "them"])
 
 func _cancel(message: String) -> void:
     if active:

@@ -13,6 +13,14 @@ func _check(ok: bool, message: String) -> void:
         push_error(message)
 func _evidence(analyzed: Array = [], trials: Array = [], mastery: Array = [], ascensions: Array = []) -> Dictionary:
     return {"analyzed": analyzed, "trials": trials, "mastery": mastery, "ascensions": ascensions}
+## 17c: learned skills must be activated in the skill tree (earning levels for points if needed).
+func _activate_learned(actor: Node) -> void:
+    for id in actor.get_node("SkillBook").evidence_ids():
+        if id in actor.progression.tree.active:
+            continue
+        while int(actor.progression.skill_points) < 1:
+            actor.gain_experience(25 * (actor.progression.level + 1) * actor.progression.level - int(actor.progression.experience), "test")
+        actor.activate_skill(id)
 func _run() -> void:
     # Real catalogue.
     _check(CATALOGUE.resource_errors().is_empty(), "Shipped catalogue and skill resources are consistent: %s" % [CATALOGUE.resource_errors()])
@@ -70,7 +78,9 @@ func _run() -> void:
     _check(book.record_analysis(&"forest_gnasher").is_empty() and book.known_ids().is_empty(), "Client replicas cannot record evidence or unlock")
     session.replica_world = false
     var gained: Array = book.record_analysis(&"forest_gnasher")
-    _check(gained.size() == 1 and gained[0].id == &"rending_bite" and book.skill_at_slot(0).id == &"rending_bite", "Analysis evidence unlocks Rending Bite into slot 1")
+    _check(gained.size() == 1 and gained[0].id == &"rending_bite" and book.skill_at_slot(0) == null, "Analysis evidence unlocks Rending Bite (inactive until activated)")
+    _activate_learned(actor)
+    _check(book.skill_at_slot(0).id == &"rending_bite", "Activating Rending Bite places it in slot 1")
     _check(book.record_analysis(&"forest_gnasher").is_empty() and book.evidence.analyzed == ["forest_gnasher"] and book.known_ids().size() == 1, "Repeated analysis is idempotent")
     var overview: Array = book.describe()
     _check(overview.size() == CATALOGUE.RULES.size() and overview[0].known and overview[0].requirements[0].met, "Read-only overview reports known skills and met requirements")

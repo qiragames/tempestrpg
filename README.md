@@ -69,6 +69,7 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/seeded_worlds.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/leveling.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/races.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/skill_tree.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
 python3 tests/network_forms.py
@@ -217,6 +218,10 @@ A stone stands in the north at **(480, 100)**. Once your character knows **Pierc
 
 Completing it teaches the first **Unique** skill, **Predator Focus** (placeholder name), which goes into the new **4th hotbar slot (key 4)**. It costs 25 Magicules: your **next analysis within 20 seconds** reaches twice as far (72 px) and completes in 0.3 s instead of 1.2 s. It is used up when that analysis begins, so interrupting it gives nothing back, and it cannot be stacked. **Ultimate** skills stay locked until an ascension exists (planned for M6). Schema **v10** stores the fourth slot and an armed focus. Tests: `tests/trial_unique.gd` (40) and `python3 tests/network_trial.py` (22 real-process checks).
 
+## Skill tree
+
+Press **K** to open your race's **skill tree**. Every level (level 1 included) gives **one skill point**. Spend points on stat upgrades (more HP or Magicules, faster Magicule recovery, speed, strike damage); every third node is a **new skill** — Slime: Acid Splash and Engulf, Human: Power Slash and Lunge, Demon: Shadow Claw and Dark Lance. Rows unlock in order. Skills you learn by **absorbing** creatures or from **trials** are listed on the right and must be **activated with a point** before you can use them; activated skills go to the next free hotbar slot. Your tree is saved with your character (schema **v15**). Placeholder layout until the UI step. Tests: `tests/skill_tree.gd` (34).
+
 ## Playable races
 
 When you create a world (or join a friend's world for the first time) you choose your race:
@@ -229,7 +234,7 @@ Everyone can absorb creatures and learn their skills; Humans and Demons just tak
 
 ## Experience and levels
 
-You earn **XP** for the defeating blow on a creature (Easy 10, Standard 20, Elite 40), for every completed **absorption** (5 / 10 / 20) and for completing the **trial** (60). Levels need 50, 150, 300, 500 … total XP, up to **level 20** for now. Each level gives **one skill point**, which you will spend in the skill tree (coming in step 17c). The top-right of the HUD shows your level, XP toward the next level and unspent points, and the System Voice announces level-ups. Only the player who earns XP gets it; trial creatures give no XP of their own. Saved with your character (schema **v14**). Tests: `tests/leveling.gd` (29).
+You earn **XP** for the defeating blow on a creature (Easy 10, Standard 20, Elite 40), for every completed **absorption** (5 / 10 / 20) and for completing the **trial** (60). Levels need 50, 150, 300, 500 … total XP, up to **level 20** for now. Each level (level 1 included) gives **one skill point** for the skill tree (K). The top-right of the HUD shows your level, XP toward the next level and unspent points, and the System Voice announces level-ups. Only the player who earns XP gets it; trial creatures give no XP of their own. Saved with your character (schema **v14**). Tests: `tests/leveling.gd` (29).
 
 ## Healing: absorbed vitality
 

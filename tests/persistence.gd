@@ -19,7 +19,7 @@ func _run() -> void:
     current_scene = world
     var player = world.get_local_player()
     player.position = Vector2(300, 340)
-    player.progression = {"level": 4, "experience": 320, "skill_points": 3, "race": "Slime", "quests": {"intro": {"stage": 2}}, "equipment": {}}
+    player.progression = {"level": 4, "experience": 320, "skill_points": 4, "race": "Slime", "quests": {"intro": {"stage": 2}}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}}
     player.get_node("Magicules").try_spend(30)
     player.get_node("Health").take_damage(23)
     player.get_node("SkillBook").record_analysis(&"forest_gnasher")
@@ -51,6 +51,7 @@ func _run() -> void:
     var second := saved.duplicate(true)
     second.players.host.progression.level = 5
     second.players.host.progression.experience = 520
+    second.players.host.progression.skill_points = 5
     _check(STORE.write_world(path, second) == OK and FileAccess.file_exists(path + ".bak"), "Second save must preserve a backup")
     var file := FileAccess.open(path, FileAccess.WRITE)
     file.store_string("{truncated")

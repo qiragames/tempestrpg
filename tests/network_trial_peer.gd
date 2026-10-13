@@ -91,5 +91,10 @@ func _act() -> void:
     while session.latest_snapshot.get("trial", {}).get("active", false) and Time.get_ticks_msec() - start < 6000:
         await process_frame
     await create_timer(0.4).timeout
+    # 17c: the Unique is learned but must be activated in the skill tree (via the host) before use.
+    var slotted_before: bool = "predator_focus" in session.latest_snapshot.players[me].slots
+    if qualified:
+        session.request_action("tree", {"operation": "activate", "id": "predator_focus"})
+        await create_timer(0.4).timeout
     var mine: Dictionary = session.latest_snapshot.players[me]
-    _report({"phase": true, "id": me, "qualified": qualified, "guard": guard, "during": during, "creatures": creatures, "trials": mine.skill_evidence.trials, "skills": mine.skill_ids, "slots": mine.slots, "after_active": session.latest_snapshot.trial.active, "progression": mine.progression, "hud_level": world.get_node("HUD")._level.text})
+    _report({"phase": true, "id": me, "qualified": qualified, "guard": guard, "during": during, "creatures": creatures, "trials": mine.skill_evidence.trials, "skills": mine.skill_ids, "slots": mine.slots, "after_active": session.latest_snapshot.trial.active, "progression": mine.progression, "slotted_before": slotted_before, "hud_level": world.get_node("HUD")._level.text})

@@ -28,6 +28,14 @@ func _input(action: StringName) -> void:
     event.pressed = false
     Input.parse_input_event(event)
 
+## 17c: learned skills must be activated in the skill tree (earning levels for points if needed).
+func _activate_learned(actor: Node) -> void:
+    for id in actor.get_node("SkillBook").evidence_ids():
+        if id in actor.progression.tree.active:
+            continue
+        while int(actor.progression.skill_points) < 1:
+            actor.gain_experience(25 * (actor.progression.level + 1) * actor.progression.level - int(actor.progression.experience), "test")
+        actor.activate_skill(id)
 func _run() -> void:
     var world: Node2D = load("res://scenes/world/forest.tscn").instantiate()
     root.add_child(world)
@@ -63,7 +71,10 @@ func _run() -> void:
     await _frames(75)
     _check(not is_instance_valid(enemy) and book.knows(&"rending_bite"), "Real absorb input must complete analysis and acquisition")
     _check(bag.total_units() == 1 and bag.entries()[0].id == &"gnasher_essence", "Completed analysis must retain one essence material")
-    _check(book.skill_at_slot(0).id == &"rending_bite" and not hud._slots[0].disabled, "Acquired skill must auto-equip to the first hotbar slot")
+    _check(book.skill_at_slot(0) == null, "An acquired skill waits for activation in the skill tree")
+    _activate_learned(player)
+    await _frames(1)
+    _check(book.skill_at_slot(0).id == &"rending_bite" and not hud._slots[0].disabled, "The activated skill equips to the first hotbar slot")
     _check(hud._slots[0].text.contains("Rending Bite") and hud._log.text.contains("acquired"), "HUD must show the learned skill and acquisition event")
 
     second.position = Vector2(504, 340)

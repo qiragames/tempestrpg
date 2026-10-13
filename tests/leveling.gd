@@ -40,7 +40,7 @@ func _run() -> void:
     _check(LEVELING.valid(_progress(1, 0, 0)) and LEVELING.valid(_progress(3, 160, 2)) and LEVELING.valid(_progress(3, 160, 0)), "Consistent progression is valid (points may be spent)")
     var fractional := _progress(2, 60, 0)
     fractional["experience"] = 60.5
-    var bad := [_progress(2, 10, 0), _progress(1, 60, 0), _progress(3, 160, 3), _progress(1, -5, 0), _progress(1, 0, -1), _progress(LEVELING.LEVEL_CAP, LEVELING.max_experience() + 1, 0), fractional]
+    var bad := [_progress(2, 10, 0), _progress(1, 60, 0), _progress(3, 160, 4), _progress(1, -5, 0), _progress(1, 0, -1), _progress(LEVELING.LEVEL_CAP, LEVELING.max_experience() + 1, 0), fractional]
     var rejected := true
     for entry in bad:
         rejected = rejected and not LEVELING.valid(entry)
@@ -57,12 +57,12 @@ func _run() -> void:
     actor.position = Vector2(100, 600)
     for enemy in get_nodes_in_group("enemies"):
         enemy.set_physics_process(false)
-    _check(actor.progression.level == 1 and actor.progression.experience == 0 and actor.progression.skill_points == 0, "New characters start at level 1 with no XP or points")
+    _check(actor.progression.level == 1 and actor.progression.experience == 0 and actor.progression.skill_points == 1, "New characters start at level 1 with no XP and one skill point")
     actor.gain_experience(60, "test")
-    _check(actor.progression.level == 2 and actor.progression.experience == 60 and actor.progression.skill_points == 1, "Reaching 50 XP gives level 2 and one skill point")
+    _check(actor.progression.level == 2 and actor.progression.experience == 60 and actor.progression.skill_points == 2, "Reaching 50 XP gives level 2 and one more skill point")
     _check(messages.any(func(m): return m.contains("+60 XP") and m.contains("Level 2 reached")), "Level-up is announced")
     actor.gain_experience(300, "test")
-    _check(actor.progression.level == 4 and actor.progression.skill_points == 3, "A large award can grant several levels and points at once")
+    _check(actor.progression.level == 4 and actor.progression.skill_points == 4, "A large award can grant several levels and points at once")
     actor.gain_experience(0, "test")
     actor.gain_experience(-50, "test")
     _check(actor.progression.experience == 360, "Zero or negative awards change nothing")
@@ -121,7 +121,7 @@ func _run() -> void:
     _check(actor.progression.experience == before + LEVELING.TRIAL_XP, "A failed trial gives nothing")
     # The cap holds experience and level.
     other.gain_experience(LEVELING.max_experience() * 2, "test")
-    _check(other.progression.level == LEVELING.LEVEL_CAP and other.progression.experience == LEVELING.max_experience() and other.progression.skill_points == LEVELING.LEVEL_CAP - 1, "Awards stop at the level cap")
+    _check(other.progression.level == LEVELING.LEVEL_CAP and other.progression.experience == LEVELING.max_experience() and other.progression.skill_points == LEVELING.LEVEL_CAP, "Awards stop at the level cap")
     # Replicas never award experience.
     var session: Node = root.get_node("GameSession")
     session.replica_world = true
@@ -154,10 +154,10 @@ func _run() -> void:
     legacy.version = 13
     legacy.players.host.progression = {"level": 3, "experience": 45, "race": "Slime", "quests": {}, "equipment": {}}
     var migrated: Variant = STORE.migrate(legacy)
-    _check(migrated is Dictionary and STORE.validate(migrated) and migrated.players.host.progression.level == 3 and migrated.players.host.progression.experience == 150 and migrated.players.host.progression.skill_points == 2, "v13 characters keep their level (XP raised to its threshold) and gain its skill points")
+    _check(migrated is Dictionary and STORE.validate(migrated) and migrated.players.host.progression.level == 3 and migrated.players.host.progression.experience == 150 and migrated.players.host.progression.skill_points == 3, "v13 characters keep their level (XP raised to its threshold) and gain its skill points (one per level from v15)")
     legacy.players.host.progression = {"level": 1, "experience": 0, "race": "Slime", "quests": {}, "equipment": {}}
     migrated = STORE.migrate(legacy)
-    _check(migrated is Dictionary and STORE.validate(migrated) and migrated.players.host.progression.skill_points == 0, "Fresh v13 characters migrate to level 1 with no points")
+    _check(migrated is Dictionary and STORE.validate(migrated) and migrated.players.host.progression.skill_points == 1, "Fresh v13 characters migrate to level 1 with its one point")
     session.stop_session(false)
     for file in DirAccess.get_files_at(dir):
         DirAccess.remove_absolute(dir.path_join(file))

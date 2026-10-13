@@ -105,7 +105,7 @@ func _finish(success: bool, message: String) -> void:
         # Only the starter is credited; helpers and reconnecting guests gain nothing.
         var gained: Array = owner.get_node("SkillBook").record_trial(ID)
         var names: Array = gained.map(func(skill): return "%s: %s" % [skill.tier, skill.display_name])
-        session.notify_character(owner_id, "%s complete.%s" % [DISPLAY_NAME, " %s acquired." % ", ".join(names) if not names.is_empty() else ""])
+        session.notify_character(owner_id, "%s complete.%s" % [DISPLAY_NAME, " %s acquired. Activate it in the skill tree (K)." % ", ".join(names) if not names.is_empty() else ""])
         owner.gain_experience(LEVELING.TRIAL_XP, "trial")
     elif not message.is_empty():
         session.notify_character(owner_id, message)

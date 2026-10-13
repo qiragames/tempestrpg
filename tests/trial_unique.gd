@@ -32,6 +32,14 @@ func _defeat_all() -> void:
     for creature in trial.creatures():
         creature.get_node("Health").take_damage(999)
     await _frames()
+## 17c: learned skills must be activated in the skill tree (earning levels for points if needed).
+func _activate_learned(actor: Node) -> void:
+    for id in actor.get_node("SkillBook").evidence_ids():
+        if id in actor.progression.tree.active:
+            continue
+        while int(actor.progression.skill_points) < 1:
+            actor.gain_experience(25 * (actor.progression.level + 1) * actor.progression.level - int(actor.progression.experience), "test")
+        actor.activate_skill(id)
 func _run() -> void:
     world = load("res://scenes/world/forest.tscn").instantiate()
     root.add_child(world)
@@ -81,7 +89,8 @@ func _run() -> void:
     await _defeat_all()
     trial._physics_process(0.016)
     _check(not trial.state.active and trial.creatures().is_empty(), "Defeating every creature ends the trial and clears the arena")
-    _check("proving_trial" in book.evidence.trials and book.knows(&"predator_focus") and book.skill_at_slot(3).id == &"predator_focus", "Owner earns trial evidence and Predator Focus in slot 4")
+    _activate_learned(actor)
+    _check("proving_trial" in book.evidence.trials and book.knows(&"predator_focus") and book.skill_at_slot(3).id == &"predator_focus", "Owner earns trial evidence and, once activated, Predator Focus in slot 4")
     _check(helper.get_node("SkillBook").evidence.trials.is_empty() and not helper.get_node("SkillBook").knows(&"predator_focus"), "Helpers are not credited")
     _check(get_nodes_in_group("magicule_pickups").size() == pickups_before, "Trial creatures drop nothing")
     _check(not trial.try_start(actor), "A completed trial cannot be repeated for rewards")

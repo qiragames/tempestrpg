@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 14
+const VERSION := 15
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
 ## Initial saved state of the v8 encounter; matches scenes/world/forest.tscn.
@@ -10,6 +10,7 @@ const CAMP := preload("res://scripts/settlement/first_camp.gd")
 const LAYOUT := preload("res://scripts/world/world_layout.gd")
 const LEVELING := preload("res://scripts/progression/leveling.gd")
 const RACES := preload("res://scripts/races/race_catalogue.gd")
+const TREE := preload("res://scripts/skills/skill_tree.gd")
 const ALLY := preload("res://scripts/allies/goblin_ally.gd")
 const MAX_BYTES := 4 * 1024 * 1024
 const CODEC := preload("res://scripts/persistence/state_codec.gd")
@@ -83,7 +84,7 @@ static func validate_player(state: Variant, id: String) -> bool:
         seen[skill] = true
     var equipped := {}
     for slot in slots:
-        if not slot is String or (slot != "" and (not seen.has(slot) or equipped.has(slot))):
+        if not slot is String or (slot != "" and ((not seen.has(slot) and not TREE.SKILLS.has(slot)) or equipped.has(slot))):
             return false
         equipped[slot] = true
     # Every saved skill must follow from this character's own unlock evidence.
@@ -112,6 +113,13 @@ static func validate_player(state: Variant, id: String) -> bool:
     # Level, experience and unspent skill points must agree with the level curve (v14).
     if not progression is Dictionary or not _plain(progression) or not LEVELING.valid(progression) or not RACES.valid(progression.get("race")):
         return false
+    # Skill tree (v15): nodes of this race in order, activations of learned skills, exact point total.
+    if not TREE.valid(progression, known):
+        return false
+    var granted: Array = TREE.granted_skills(progression.tree.nodes)
+    for slot in slots:
+        if slot != "" and not slot in granted and not slot in progression.tree.active:
+            return false
     # Apply the same Slime-only mimic gate to restored state and network snapshots.
     if form.id != FORMS.BASE and not RACES.stats(progression.race).mimic:
         return false
@@ -339,7 +347,7 @@ static func migrate(data: Variant) -> Variant:
         if not data.get("players") is Dictionary:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 14
         for state in data.players.values():
             if not state is Dictionary or not state.get("progression") is Dictionary:
                 return null
@@ -351,6 +359,18 @@ static func migrate(data: Variant) -> Variant:
             progression["experience"] = clampi(int(progression.experience), LEVELING.xp_for_level(level), LEVELING.max_experience())
             progression["level"] = LEVELING.level_for(progression.experience)
             progression["skill_points"] = progression.level - 1
+    # v15 adds the skill tree (17c). Every level now grants a point (level 1 included), so each
+    # character gains one; skills they could already use stay active for free.
+    if data.get("version") == 14:
+        if not data.get("players") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = VERSION
+        for state in data.players.values():
+            if not state is Dictionary or not state.get("progression") is Dictionary or not state.get("skill_ids") is Array:
+                return null
+            state.progression["skill_points"] = int(state.progression.get("skill_points", 0)) + 1
+            state.progression["tree"] = {"nodes": [], "active": state.skill_ids.duplicate(), "free": state.skill_ids.duplicate()}
     return data
 
 static func _read(path: String) -> Dictionary:

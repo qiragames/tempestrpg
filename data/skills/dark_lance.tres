@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/skills/skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"dark_lance"
+display_name = "Dark Lance"
+tier = "Common"
+description = "Hurl a spear of darkness through a line of foes."
+damage = 28
+magicule_cost = 18.0
+cooldown = 1.3
+effect = &"pierce"

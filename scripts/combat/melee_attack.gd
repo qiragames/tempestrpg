@@ -27,12 +27,15 @@ func _race() -> Dictionary:
 func attack(facing: Vector2) -> bool:
     # Mimic forms and Human weapon mastery strengthen the basic strike; skills keep their own damage.
     var bonus: int = get_parent().form_strike_bonus() if get_parent().has_method("form_strike_bonus") else 0
+    bonus += get_parent().tree_strike_bonus() if get_parent().has_method("tree_strike_bonus") else 0
     var race := _race()
     return _strike(facing, damage + bonus + race.strike_bonus, magicule_cost, cooldown * race.recovery)
 
 func attack_skill(facing: Vector2, skill_id: StringName) -> bool:
-    var skill: Resource = get_parent().get_node("SkillBook").get_skill(skill_id)
-    if skill == null:
+    var book = get_parent().get_node("SkillBook")
+    var skill: Resource = book.get_skill(skill_id)
+    # Learned skills must be activated in the skill tree before use.
+    if skill == null or not book.is_active(skill_id):
         return false
     # Effects are dispatched by stable ID; new effect types are added here deliberately.
     # Demons hit harder with skills and drain part of the damage; Humans recover faster.

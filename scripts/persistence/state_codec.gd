@@ -3,6 +3,7 @@ extends RefCounted
 
 const CATALOGUE := preload("res://scripts/skills/skill_catalogue.gd")
 const SKILLS := CATALOGUE.SKILLS
+const TREE := preload("res://scripts/skills/skill_tree.gd")
 const SPECIMEN := "res://data/specimens/forest_gnasher.tres"
 ## Saved enemy kind -> scene. Stable IDs only; never a client-supplied path.
 const ENEMY_SCENES := {"gnasher": "res://scenes/enemies/forest_gnasher.tscn", "thornback": "res://scenes/enemies/thornback_gnasher.tscn"}
@@ -19,9 +20,8 @@ static func capture_player(actor: Node2D) -> Dictionary:
     var book = actor.get_node("SkillBook")
     var bag = actor.get_node("Inventory")
     var absorption = actor.get_node("Absorption")
-    var known: Array = []
-    for skill in book.all_skills():
-        known.append(String(skill.id))
+    # Tree skills are not saved as known skills; they follow from the bought nodes.
+    var known: Array = book.evidence_ids()
     var slots: Array = []
     for index in range(book.SLOT_COUNT):
         var skill: Resource = book.skill_at_slot(index)
@@ -74,6 +74,8 @@ static func apply_player(actor: Node2D, state: Dictionary, world: Node2D, replic
     book._known.clear()
     for id in state.skill_ids:
         book._known[StringName(id)] = load(SKILLS[id])
+    for id in TREE.granted_skills(state.progression.tree.nodes):
+        book._known[StringName(id)] = load(TREE.SKILLS[id])
     for index in range(book.SLOT_COUNT):
         book._slots[index] = StringName(state.slots[index])
     book.evidence = CATALOGUE.empty_evidence()

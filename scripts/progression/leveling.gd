@@ -1,6 +1,6 @@
 extends RefCounted
-## Experience and levels (step 17). Host-only awards to the character who earned them; each level
-## grants one skill point (spent in the skill tree, step 17c). Starting numbers, tuned in step 24.
+## Experience and levels (step 17). Host-only awards to the character who earned them; each level,
+## level 1 included, grants one skill point (spent in the skill tree, step 17c). Starting numbers, tuned in step 24.
 const AUTHORITY := preload("res://scripts/network/authority.gd")
 const LEVEL_CAP := 20
 ## XP by creature tier [Easy, Standard, Elite]: the defeating blow, and a completed absorption.
@@ -21,7 +21,8 @@ static func level_for(experience: int) -> int:
         level += 1
     return level
 
-## Level, experience and skill points must agree with the curve; points never exceed levels earned.
+## Level, experience and skill points must agree with the curve; unspent points never exceed the
+## level (one per level). The skill tree checks the exact total with its spent points.
 static func valid(progression: Dictionary) -> bool:
     var experience = progression.get("experience")
     var points = progression.get("skill_points")
@@ -29,7 +30,7 @@ static func valid(progression: Dictionary) -> bool:
         return false
     if not (points is int or points is float) or points != floor(points) or points < 0:
         return false
-    return progression.get("level") == level_for(int(experience)) and points <= progression.level - 1
+    return progression.get("level") == level_for(int(experience)) and points <= progression.level
 
 ## Award experience on the host. Returns the number of levels gained.
 static func grant(actor: Node, amount: int) -> int:
