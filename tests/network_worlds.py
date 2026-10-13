@@ -37,7 +37,7 @@ def wait(path, key, timeout=12):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         try:
-            data = json.loads(path.read_text())
+            data = json.loads(path.read_text(encoding="utf-8"))
         except (FileNotFoundError, json.JSONDecodeError):
             data = {}
         if data.get("error"):
@@ -84,7 +84,7 @@ try:
     finish(host, "reload")
     for _, log, name in processes:
         log.flush()
-        output = (WORK / f"{name}.log").read_text()
+        output = (WORK / f"{name}.log").read_text(encoding="utf-8")
         check("SCRIPT ERROR" not in output and "ERROR:" not in output, f"{name} has no engine errors")
     print(f"Worlds network integration: {checks} checks passed")
 finally:

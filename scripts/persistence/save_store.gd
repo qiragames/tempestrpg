@@ -1,13 +1,14 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 13
+const VERSION := 14
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
 ## Initial saved state of the v8 encounter; matches scenes/world/forest.tscn.
 const THORNBACK := {"id": "thornback_1", "kind": "thornback", "position": [880.0, 560.0], "home": [880.0, 560.0], "difficulty": 1, "hp": 30, "maximum_hp": 30, "immunity": 0.0, "state": 0, "state_time": 0.0, "target": ""}
 const CAMP := preload("res://scripts/settlement/first_camp.gd")
 const LAYOUT := preload("res://scripts/world/world_layout.gd")
+const LEVELING := preload("res://scripts/progression/leveling.gd")
 const ALLY := preload("res://scripts/allies/goblin_ally.gd")
 const MAX_BYTES := 4 * 1024 * 1024
 const CODEC := preload("res://scripts/persistence/state_codec.gd")
@@ -107,7 +108,8 @@ static func validate_player(state: Variant, id: String) -> bool:
     if not analysis is Dictionary or not _id(analysis.get("target"), true) or not _number(analysis.get("remaining"), 0, 60) or not _number(analysis.get("focus"), 0, 20):
         return false
     var progression = state.get("progression")
-    if not progression is Dictionary or not _plain(progression) or not _number(progression.get("level"), 1, 1000, true) or not _number(progression.get("experience"), 0, 1000000000, true):
+    # Level, experience and unspent skill points must agree with the level curve (v14).
+    if not progression is Dictionary or not _plain(progression) or not LEVELING.valid(progression):
         return false
     if not progression.get("quests") is Dictionary or not progression.get("equipment") is Dictionary:
         return false
@@ -324,9 +326,27 @@ static func migrate(data: Variant) -> Variant:
         if data.has("meta") and not data.meta is Dictionary:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 13
         if data.has("meta"):
             data.meta["seeded"] = data.meta.get("seeded", false)
+    # v14 makes experience and levels real (step 17). Keep each character's level (raising
+    # experience to that level's threshold if needed) and grant one skill point per level above 1.
+    if data.get("version") == 13:
+        if not data.get("players") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = VERSION
+        for state in data.players.values():
+            if not state is Dictionary or not state.get("progression") is Dictionary:
+                return null
+            var progression: Dictionary = state.progression
+            if not _number(progression.get("level"), 1, 1000, true) or not _number(progression.get("experience"), 0, 1000000000, true):
+                return null
+            var level: int = mini(int(progression.level), LEVELING.LEVEL_CAP)
+            # Bracket keys: dot assignment would add a StringName key, which saves reject.
+            progression["experience"] = clampi(int(progression.experience), LEVELING.xp_for_level(level), LEVELING.max_experience())
+            progression["level"] = LEVELING.level_for(progression.experience)
+            progression["skill_points"] = progression.level - 1
     return data
 
 static func _read(path: String) -> Dictionary:

@@ -10,6 +10,7 @@ const TIER_STATS := {
     Difficulty.ELITE: {"health": 60, "damage": 20, "speed": 65.0, "drop": 32.0, "absorb_heal": 40.0},
 }
 const PICKUP_SCENE := preload("res://scenes/pickups/magicule_pickup.tscn")
+const LEVELING := preload("res://scripts/progression/leveling.gd")
 @export var difficulty: Difficulty = Difficulty.STANDARD
 @export var specimen: Resource = preload("res://data/specimens/forest_gnasher.tres")
 ## Stable saved creature kind; selects the scene on restore (see StateCodec.ENEMY_SCENES).
@@ -84,7 +85,7 @@ func _physics_process(delta: float) -> void:
             if state_time <= 0.0:
                 var ray := PhysicsRayQueryParameters2D.create(global_position, target.global_position, 1)
                 if target_alive and distance <= attack_range and get_world_2d().direct_space_state.intersect_ray(ray).is_empty():
-                    target.get_node("Health").take_damage(damage)
+                    target.get_node("Health").take_damage(damage, self)
                 state = State.RECOVER
                 state_time = 0.9
         State.RECOVER:
@@ -105,6 +106,10 @@ func _defeat() -> void:
     # Defer creation because defeat can originate during a physics callback.
     if drops_rewards:
         _drop_magicules.call_deferred()
+        # Experience for the character who landed the defeating blow (trial creatures give none).
+        var victor: Node = health.last_hit_by
+        if is_instance_valid(victor) and victor.is_in_group("player"):
+            victor.gain_experience(LEVELING.DEFEAT_XP[difficulty], "defeat")
     # Retain the defeated creature for the next absorption milestone.
     queue_redraw()
 

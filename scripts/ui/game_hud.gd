@@ -15,6 +15,8 @@ var _entries: Array = []
 var _selection: StringName = &""
 var _paused_before_open: bool = false
 var _recovery: Label
+## Level and experience readout, top right of the title bar.
+var _level: Label
 var _trial_back: ColorRect
 var _trial_label: Label
 var _camp_dialog: Panel
@@ -29,6 +31,9 @@ func _ready() -> void:
     _backdrop(Rect2(6, 42, 206, 88))
     _backdrop(Rect2(446, 42, 188, 80))
     _recovery = _label("", Vector2(12, 110), Vector2(300, 30), self, 11)
+    _level = _label("", Vector2(380, 4), Vector2(248, 16), self, 11)
+    _level.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    _level.add_theme_color_override("font_color", Color(0.95, 0.85, 0.55))
     _trial_back = ColorRect.new()
     _trial_back.position = Vector2(220, 44)
     _trial_back.size = Vector2(220, 22)
@@ -88,6 +93,13 @@ func _button(text: String, position: Vector2, size: Vector2, parent: Node) -> Bu
     parent.add_child(button)
     return button
 
+static func level_text(progression: Dictionary) -> String:
+    var leveling := preload("res://scripts/progression/leveling.gd")
+    var level: int = int(progression.get("level", 1))
+    var points: int = int(progression.get("skill_points", 0))
+    var xp := "XP max" if level >= leveling.LEVEL_CAP else "XP %d / %d" % [int(progression.get("experience", 0)), leveling.xp_for_level(level + 1)]
+    return "Lv %d · %s%s" % [level, xp, " · %d skill point%s" % [points, "" if points == 1 else "s"] if points > 0 else ""]
+
 func _label(text: String, position: Vector2, size: Vector2, parent: Node, font_size: int = 11) -> Label:
     var label := Label.new()
     label.text = text
@@ -136,6 +148,7 @@ func _process(_delta: float) -> void:
             player.input_blocked = true
         _refresh_pause()
     _recovery.visible = player.is_exhausted()
+    _level.text = level_text(player.progression)
     var trial: Dictionary = get_parent().trial.state if get_parent().get("trial") != null else {}
     _trial_back.visible = trial.get("active", false)
     _trial_label.visible = _trial_back.visible

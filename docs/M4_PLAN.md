@@ -159,7 +159,9 @@ Claim file ownership in `docs/AI_HANDOFF.md` and push the claim before implement
 
 The user scrapped the Great Sage / analysis assistant concept. **Step 17 is cancelled** and its slot becomes the first of the new systems below. User decisions: everyone can absorb but the Slime absorbs best, and mimic forms stay Slime-only; fusing consumes both original skills, and a fused skill can always be split back into the two originals; gear comes from creature drops, camp crafting, chests/points of interest and merchants (merchants need currency and arrive with M5 trade); systems come before the art steps, so 19 can draw every race and weapon type at once. Exact numbers below are starting proposals for tuning in 24, not final balance.
 
-### 17 — Experience and levels (replaces the analysis assistant) — **Next**
+### 17 — Experience and levels (replaces the analysis assistant) — **Done**
+
+**Status 2026-10-13:** implemented on `claude/roadmap-17-xp-levels`. Curve: total XP for level L = 25·L·(L−1) (50, 150, 300, 500 …), cap 20. Awards (host only): defeating blow by tier 10/20/40, completed absorption 5/10/20, completed trial 60 (owner only); trial creatures, sourceless defeats, failed trials and clients award nothing. One skill point per level, stored unspent in `progression.skill_points`. HUD title bar: `Lv N · XP x / next · k skill points`.
 Per-character `level` and `experience` (already reserved in `progression`) become real: XP from defeats (by creature tier), completed absorptions and trials, awarded only on the host and only to the character who earned it (trial creatures and contested corpses follow existing credit rules). A level curve, a level cap for M4, and one **skill point** per level (stored as unspent points for 17c). HUD level/XP readout and a System Voice line on level-up. Saved, validated (level/XP consistent with the curve, points never above levels earned), migrated (existing characters start at level 1 with XP 0) and replicated in snapshots.
 
 ### 17b — Playable races: Human, Demon, Slime

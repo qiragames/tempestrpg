@@ -2,6 +2,7 @@ extends CharacterBody2D
 @onready var session: Node = get_node("/root/GameSession")
 const AUTHORITY := preload("res://scripts/network/authority.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
+const LEVELING := preload("res://scripts/progression/leveling.gd")
 ## Movement delegates health and attacks to reusable combat components.
 
 @export var move_speed: float = 95.0
@@ -14,7 +15,7 @@ var exhaustion_active: bool = false
 var exhaustion_left: float = 0.0
 var remote_direction := Vector2.ZERO
 var last_input_msec: int = 0
-var progression: Dictionary = {"level": 1, "experience": 0, "race": "Slime", "quests": {}, "equipment": {}}
+var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 0, "race": "Slime", "quests": {}, "equipment": {}}
 ## Current mimic form and the time until it can change again (host-owned, saved).
 var form: String = FORMS.BASE
 var form_cooldown: float = 0.0
@@ -29,6 +30,19 @@ func _ready() -> void:
         apply_form(FORMS.BASE)
         form_cooldown = 0.0
     )
+
+## Host-only experience award; tells the character about XP and any level-up.
+func gain_experience(amount: int, reason: String) -> void:
+    if amount <= 0 or not AUTHORITY.can_mutate(self):
+        return
+    var gained: int = LEVELING.grant(self, amount)
+    if is_instance_valid(session.world):
+        var text := "+%d XP (%s)." % [amount, reason]
+        if gained > 0:
+            text += " Level %d reached: +%d skill point%s." % [progression.level, gained, "" if gained == 1 else "s"]
+        session.notify_character(character_id, text)
+    if gained > 0:
+        session.queue_save()
 
 func _physics_process(_delta: float) -> void:
     var direction := Vector2.ZERO

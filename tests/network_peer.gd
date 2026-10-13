@@ -64,7 +64,8 @@ func _run() -> void:
             host.get_node("Magicules")._current = 120
             host.get_node("Magicules").regeneration_per_second = 0
             host.progression.level = 3
-            host.progression.experience = 45
+            host.progression.experience = 160
+            host.progression.skill_points = 2
             host.get_node("Inventory").add_specimen(load(CODEC.SPECIMEN))
             world.progression.quests = {"intro": {"complete": true}}
             world.progression.settlements = {"camp": {"wood": 7}}
@@ -78,7 +79,8 @@ func _run() -> void:
         session.player_joined.connect(func(actor: Node2D):
             if actor.progression.level == 1:
                 actor.progression.level = 2
-                actor.progression.experience = 20
+                actor.progression.experience = 60
+                actor.progression.skill_points = 1
                 actor.position = Vector2(480, 340)
                 actor.get_node("Magicules").regeneration_per_second = 0
         )

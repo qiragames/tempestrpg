@@ -92,4 +92,4 @@ func _act() -> void:
         await process_frame
     await create_timer(0.4).timeout
     var mine: Dictionary = session.latest_snapshot.players[me]
-    _report({"phase": true, "id": me, "qualified": qualified, "guard": guard, "during": during, "creatures": creatures, "trials": mine.skill_evidence.trials, "skills": mine.skill_ids, "slots": mine.slots, "after_active": session.latest_snapshot.trial.active})
+    _report({"phase": true, "id": me, "qualified": qualified, "guard": guard, "during": during, "creatures": creatures, "trials": mine.skill_evidence.trials, "skills": mine.skill_ids, "slots": mine.slots, "after_active": session.latest_snapshot.trial.active, "progression": mine.progression, "hud_level": world.get_node("HUD")._level.text})

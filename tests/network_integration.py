@@ -43,7 +43,7 @@ def wait_report(path, predicate=lambda value: True, timeout=12):
     while time.monotonic() < deadline:
         if path.exists():
             try:
-                value = json.loads(path.read_text())
+                value = json.loads(path.read_text(encoding="utf-8"))
             except json.JSONDecodeError:
                 value = {}
             if value.get("error"):
@@ -123,7 +123,7 @@ try:
         check(after["allies"][0]["name"] == "Aster" and after["allies"][0]["race"] == "Hobgoblin", "Named evolution survives host restart")
         check(after["world"]["settlements"]["camp"]["wood"] == 7, "Shared settlement state must survive reload")
     # A valid character ID with an invalid credential must be rejected.
-    profile = json.loads((WORK / "identity_0.json").read_text())
+    profile = json.loads((WORK / "identity_0.json").read_text(encoding="utf-8"))
     for entry in profile.values():
         entry["credential"] = "0" * 64
     forged = WORK / "forged_profile.json"
@@ -156,7 +156,7 @@ try:
     finish(server)
     for _, log, name in processes:
         log.flush()
-        text = (WORK / f"{name}.log").read_text()
+        text = (WORK / f"{name}.log").read_text(encoding="utf-8")
         check("SCRIPT ERROR" not in text and "ERROR:" not in text, f"{name} must finish without engine/script errors")
     print(f"Network integration: {checks} checks passed; real host/clients, concurrency, reload/reconnect, forged identity, 8-player cap")
 finally:

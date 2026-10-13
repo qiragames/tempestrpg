@@ -84,7 +84,7 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
             continue
         var sight := PhysicsRayQueryParameters2D.create(global_position, target.global_position, 1)
         if space.intersect_ray(sight).is_empty() and target.has_node("Health"):
-            target.get_node("Health").take_damage(strike_damage)
+            target.get_node("Health").take_damage(strike_damage, get_parent())
     return true
 
 func _draw() -> void:

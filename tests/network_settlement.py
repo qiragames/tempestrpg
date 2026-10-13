@@ -37,7 +37,7 @@ def wait(path, key, value=True, timeout=10):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         try:
-            data = json.loads(path.read_text())
+            data = json.loads(path.read_text(encoding="utf-8"))
         except (FileNotFoundError, json.JSONDecodeError):
             data = {}
         if data.get("error"):
@@ -131,7 +131,7 @@ try:
     check(built["work"]["role"] == "follow", "Completed builder returns to follow")
     for _, log, name in processes:
         log.flush()
-        output = (WORK / f"{name}.log").read_text()
+        output = (WORK / f"{name}.log").read_text(encoding="utf-8")
         check("ERROR:" not in output and "SCRIPT ERROR" not in output, f"{name} has no engine errors")
     print(f"Settlement network integration: {checks} checks passed")
 finally:

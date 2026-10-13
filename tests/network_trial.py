@@ -37,7 +37,7 @@ def wait(path, key, timeout=12):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         try:
-            data = json.loads(path.read_text())
+            data = json.loads(path.read_text(encoding="utf-8"))
         except (FileNotFoundError, json.JSONDecodeError):
             data = {}
         if data.get("error"):
@@ -73,6 +73,8 @@ try:
         check(not result["after_active"], "Both clients observe the trial ending")
     check("proving_trial" in qualified["trials"] and "predator_focus" in qualified["skills"] and qualified["slots"][3] == "predator_focus", "The owner earns trial evidence and Predator Focus in slot 4")
     check(helper["trials"] == [] and "predator_focus" not in helper["skills"], "The helper and the late requester are not credited")
+    check(qualified["progression"]["experience"] == 60 and qualified["progression"]["level"] == 2 and qualified["progression"]["skill_points"] == 1 and helper["progression"]["experience"] == 0, "Only the trial owner gains 60 XP (level 2, 1 skill point), replicated to its client")
+    check(qualified["hud_level"].startswith("Lv 2 · XP 60 / 150") and helper["hud_level"] == "Lv 1 · XP 0 / 50", "Each client's HUD shows its own level and XP")
     for i, (proc, _) in enumerate(clients):
         finish(proc, f"guest_{i}")
     finish(host, "host")
@@ -87,7 +89,7 @@ try:
     finish(host, "reload")
     for _, log, name in processes:
         log.flush()
-        output = (WORK / f"{name}.log").read_text()
+        output = (WORK / f"{name}.log").read_text(encoding="utf-8")
         check("SCRIPT ERROR" not in output and "ERROR:" not in output, f"{name} has no engine errors")
     print(f"Trial network integration: {checks} checks passed")
 finally:

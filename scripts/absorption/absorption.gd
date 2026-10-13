@@ -1,4 +1,5 @@
 extends Node
+const LEVELING := preload("res://scripts/progression/leveling.gd")
 const AUTHORITY := preload("res://scripts/network/authority.gd")
 const CATALOGUE := preload("res://scripts/skills/skill_catalogue.gd")
 ## Channel beside a defeated creature, analyze its traits, and learn its skill.
@@ -86,6 +87,8 @@ func _process(delta: float) -> void:
             status_changed.emit("Absorbed vitality: +%d HP over %ds." % [int(heal), int(get_parent().get_node("Health").REGEN_SECONDS)])
         # The skill book applies the catalogue's unlock rules to this character's evidence.
         var gained: Array = get_parent().get_node("SkillBook").record_analysis(specimen.id)
+        if "difficulty" in _target:
+            get_parent().gain_experience(LEVELING.ABSORB_XP[_target.difficulty], "absorption")
         _target.queue_free()
         _target = null
         analyzed.emit(specimen, not gained.is_empty())

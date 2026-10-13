@@ -373,6 +373,12 @@ func _run() -> void:
     await _tap("skill_4")
     _check(await _until(func(): return player.get_node("Absorption").focus_left > 0.0), "Slot 4 arms Predator Focus")
     await _shot("predator_focus", "Unique skill: Predator Focus armed from hotbar slot 4")
+    _log("## 11b. Experience and levels")
+    var progress: Dictionary = player.progression
+    _check(progress.level >= 3 and progress.skill_points == progress.level - 1, "Reached level %d (%d XP, %d skill points) from defeats, absorptions and the trial" % [progress.level, progress.experience, progress.skill_points])
+    _check(hud._level.text.begins_with("Lv %d" % progress.level), "HUD title bar shows the level: %s" % hud._level.text)
+    _check(messages.any(func(m): return m.contains("Level 2 reached")), "The System Voice announced a level-up")
+    await _shot("level_hud", "Level, XP and unspent skill points in the top-right of the HUD")
     _log("## 12. Pause menu and Open to friends")
     # Turn this sandbox into a solo-hosted world (as the title menu does), then use Esc.
     # This sandbox was played on the reference map, so it is hosted as an unseeded world (16d).

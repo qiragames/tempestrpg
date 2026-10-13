@@ -67,6 +67,7 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/absorb_healing.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/worlds_menu.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/seeded_worlds.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/leveling.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
 python3 tests/network_forms.py
@@ -214,6 +215,10 @@ After your character has analyzed a Forest Gnasher, press **T** to take **Gnashe
 A stone stands in the north at **(480, 100)**. Once your character knows **Piercing Fang**, stand at the stone and press **F** to begin the **Proving Trial**: three trial creatures appear, and you have **60 seconds** to defeat them all while staying inside the faint circle. A banner at the top shows the creatures left and the time. Other players may help, but **only the character who started the trial is credited**. The trial fails if you are defeated, leave the circle, disconnect or run out of time, and you can simply try again. Trial creatures drop nothing and cannot be analyzed. A trial in progress is not saved: a host restart cancels it.
 
 Completing it teaches the first **Unique** skill, **Predator Focus** (placeholder name), which goes into the new **4th hotbar slot (key 4)**. It costs 25 Magicules: your **next analysis within 20 seconds** reaches twice as far (72 px) and completes in 0.3 s instead of 1.2 s. It is used up when that analysis begins, so interrupting it gives nothing back, and it cannot be stacked. **Ultimate** skills stay locked until an ascension exists (planned for M6). Schema **v10** stores the fourth slot and an armed focus. Tests: `tests/trial_unique.gd` (40) and `python3 tests/network_trial.py` (22 real-process checks).
+
+## Experience and levels
+
+You earn **XP** for the defeating blow on a creature (Easy 10, Standard 20, Elite 40), for every completed **absorption** (5 / 10 / 20) and for completing the **trial** (60). Levels need 50, 150, 300, 500 … total XP, up to **level 20** for now. Each level gives **one skill point**, which you will spend in the skill tree (coming in step 17c). The top-right of the HUD shows your level, XP toward the next level and unspent points, and the System Voice announces level-ups. Only the player who earns XP gets it; trial creatures give no XP of their own. Saved with your character (schema **v14**). Tests: `tests/leveling.gd` (29).
 
 ## Healing: absorbed vitality
 

@@ -8,6 +8,7 @@ extends Node2D
 ## creatures drop nothing and cannot be analyzed. A running trial is not saved: a host restart
 ## cancels it and the starter may simply begin again.
 const AUTHORITY := preload("res://scripts/network/authority.gd")
+const LEVELING := preload("res://scripts/progression/leveling.gd")
 const CREATURE := preload("res://scenes/enemies/forest_gnasher.tscn")
 const ID := "proving_trial"
 const DISPLAY_NAME := "Proving Trial"
@@ -105,6 +106,7 @@ func _finish(success: bool, message: String) -> void:
         var gained: Array = owner.get_node("SkillBook").record_trial(ID)
         var names: Array = gained.map(func(skill): return "%s: %s" % [skill.tier, skill.display_name])
         session.notify_character(owner_id, "%s complete.%s" % [DISPLAY_NAME, " %s acquired." % ", ".join(names) if not names.is_empty() else ""])
+        owner.gain_experience(LEVELING.TRIAL_XP, "trial")
     elif not message.is_empty():
         session.notify_character(owner_id, message)
     session.queue_save()

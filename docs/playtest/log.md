@@ -202,36 +202,46 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 ![Unique skill: Predator Focus armed from hotbar slot 4](34_predator_focus.png)
 *Unique skill: Predator Focus armed from hotbar slot 4* (640x360)
 
+## 11b. Experience and levels
+- [x] Reached level 3 (150 XP, 2 skill points) from defeats, absorptions and the trial
+- [x] HUD title bar shows the level: Lv 3 · XP 150 / 300 · 2 skill points
+- [x] The System Voice announced a level-up
+
+![Level, XP and unspent skill points in the top-right of the HUD](35_level_hud.png)
+*Level, XP and unspent skill points in the top-right of the HUD* (640x360)
+
 ## 12. Pause menu and Open to friends
 - [x] World is hosted solo and saved, no port open
 - [x] Esc opens the pause menu and freezes the solo world
 
-![Pause menu while playing solo: Resume, Open to friends, Save, Save & quit](35_pause_solo.png)
+![Pause menu while playing solo: Resume, Open to friends, Save, Save & quit](36_pause_solo.png)
 *Pause menu while playing solo: Resume, Open to friends, Save, Save & quit* (640x360)
 
 - [x] Open to friends starts listening without a restart
 
-![Pause menu after Open to friends: port and LAN address for friends](36_pause_open.png)
+![Pause menu after Open to friends: port and LAN address for friends](37_pause_open.png)
 *Pause menu after Open to friends: port and LAN address for friends* (640x360)
 
 - [x] Esc resumes
 ## 13. Seeded worlds
 
-![Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed](37_seed_goblin_camp.png)
+![Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed](38_seed_goblin_camp.png)
 *Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed* (640x360)
 
 
-![Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed](38_seed_tempest.png)
+![Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed](39_seed_tempest.png)
 *Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed* (640x360)
 
 - [x] Different seeds lay out different worlds; the same seed repeats exactly
 
 ## System messages seen
 
+- +20 XP (defeat).
 - Threat neutralized. Specimen retained.
 - Recovered 16.0 Magicules.
 - Analyzing Forest Gnasher. Remain nearby.
 - Absorbed vitality: +25 HP over 10s.
+- +10 XP (absorption).
 - Analysis complete. Common: Rending Bite acquired.
 - A nameless goblin has joined you.
 - Aster evolved into a Hobgoblin. 80 Magicules transferred.
@@ -244,10 +254,12 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - All nearby deposits gathered. Ally returning to follow.
 - Aster: build assigned.
 - Ally completed the Goblin Hut.
+- +20 XP (defeat). Level 2 reached: +1 skill point.
 - Threat neutralized. Specimen retained.
 - Recovered 16.0 Magicules.
 - Analyzing Forest Gnasher. Remain nearby.
 - Absorbed vitality: +25 HP over 10s.
+- +10 XP (absorption).
 - Analysis complete. Common: Rending Bite already known.
 - Materials added to shared camp stock.
 - Materials added to shared camp stock.
@@ -256,10 +268,12 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Gnasher Essence offered to the camp.
 - Storehouse built. Shared materials consumed.
 - Essence Shrine built. Shared materials consumed.
+- +20 XP (defeat).
 - Threat neutralized. Specimen retained.
 - Recovered 16.0 Magicules.
 - Analyzing Thornback Gnasher. Remain nearby.
 - Absorbed vitality: +25 HP over 10s.
+- +10 XP (absorption).
 - Analysis complete. Common: Thorn Lash, Extra: Piercing Fang acquired.
 - Mimicry: Gnasher Form.
 - Mimicry: Slime.
@@ -268,10 +282,11 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Threat neutralized.
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired.
+- +60 XP (trial). Level 3 reached: +1 skill point.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 
 The bot retreated 1 time(s) to let Magicules recover.
 
-**Result: 0 failed checks, 38 screenshots.**
+**Result: 0 failed checks, 39 screenshots.**

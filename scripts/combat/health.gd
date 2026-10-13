@@ -15,6 +15,8 @@ var regen_rate: float = 0.0
 var regen_left: float = 0.0
 var _regen_carry: float = 0.0
 
+## Who landed the latest hit (host only, never saved).
+var last_hit_by: Node
 func _ready() -> void:
     current = maximum
 
@@ -54,11 +56,13 @@ func clear_regen() -> void:
     regen_left = 0.0
     _regen_carry = 0.0
 
-func take_damage(amount: int) -> bool:
+## `source` is the attacker (a character or creature); the last one to land a hit gets defeat credit.
+func take_damage(amount: int, source: Node = null) -> bool:
     if not AUTHORITY.can_mutate(self):
         return false
     if amount <= 0 or current <= 0 or immunity_left > 0.0:
         return false
+    last_hit_by = source
     current = maxi(0, current - amount)
     immunity_left = immunity_seconds
     changed.emit(current, maximum)
