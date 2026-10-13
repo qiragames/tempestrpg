@@ -3,6 +3,7 @@ extends SceneTree
 ## Demon skill power and drain, Slime absorption and mimicry), host creation, saves and the menu.
 const RACES := preload("res://scripts/races/race_catalogue.gd")
 const STORE := preload("res://scripts/persistence/save_store.gd")
+const CODEC := preload("res://scripts/persistence/state_codec.gd")
 const GNASHER := preload("res://scenes/enemies/forest_gnasher.tscn")
 var checks := 0
 var failures := 0
@@ -153,6 +154,19 @@ func _run() -> void:
     var demon: Dictionary = saved.data.duplicate(true)
     demon.players.host.progression.race = "Demon"
     _check(STORE.validate(demon), "Each playable race validates")
+    # Valid analysis evidence must not override a race's Slime-only mimic restriction.
+    var restored_actor = world.get_local_player()
+    restored_actor.get_node("SkillBook").record_analysis(&"forest_gnasher")
+    var mimic_state: Dictionary = CODEC.capture_player(restored_actor)
+    mimic_state.form.id = "gnasher"
+    mimic_state.progression["race"] = "Slime"
+    _check(STORE.validate_player(mimic_state, mimic_state.id), "An analyzed Slime mimic form remains valid")
+    for race_id in ["Human", "Demon"]:
+        mimic_state.progression["race"] = race_id
+        mimic_state.form.id = "gnasher"
+        _check(not STORE.validate_player(mimic_state, mimic_state.id), "%s saves cannot load a mimic form even with analysis evidence" % race_id)
+        mimic_state.form.id = "slime"
+        _check(STORE.validate_player(mimic_state, mimic_state.id), "%s base form with analysis evidence remains valid" % race_id)
     # --- Menu: race pickers pass the choice on
     var menu = load("res://scenes/menu/title_menu.tscn").instantiate()
     menu.worlds_dir = dir

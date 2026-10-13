@@ -112,6 +112,9 @@ static func validate_player(state: Variant, id: String) -> bool:
     # Level, experience and unspent skill points must agree with the level curve (v14).
     if not progression is Dictionary or not _plain(progression) or not LEVELING.valid(progression) or not RACES.valid(progression.get("race")):
         return false
+    # Apply the same Slime-only mimic gate to restored state and network snapshots.
+    if form.id != FORMS.BASE and not RACES.stats(progression.race).mimic:
+        return false
     if not progression.get("quests") is Dictionary or not progression.get("equipment") is Dictionary:
         return false
     return true
