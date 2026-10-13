@@ -57,10 +57,23 @@ func _run() -> void:
     _check(player.position.x <= 434.1 and player.position.x > 420, "Rock collision must block movement")
     Input.action_release("move_right")
 
+    # M4.5a: the clearing opens onto the archipelago; the sea is the boundary.
     player.position = Vector2(946, 340)
     Input.action_press("move_right")
     await _frames(30)
-    _check(player.position.x <= 954.1, "World boundary must contain the player")
+    _check(player.position.x > 960, "The east road leads out of the clearing into the wider world")
+    Input.action_release("move_right")
+    var map := preload("res://scripts/world/world_map.gd")
+    var coast := -1
+    for x in range(250, map.COLS):
+        if map.solid(x, 140):
+            coast = x
+            break
+    var shore := map.to_world(Vector2(coast, 140))
+    player.position = shore + Vector2(-24, 8)
+    Input.action_press("move_right")
+    await _frames(60)
+    _check(coast > 0 and player.position.x < shore.x, "The sea blocks the player at the coast")
     Input.action_release("move_right")
     player.position = Vector2(610, 160)
     Input.action_press("move_right")

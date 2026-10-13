@@ -5,6 +5,10 @@ signal system_message(message: String)
 ## creatures, points of interest and decorations (see WorldLayout). Visuals and collisions share geometry.
 const LAYOUT := preload("res://scripts/world/world_layout.gd")
 const ART := preload("res://scripts/visual/world_art.gd")
+const WORLD_MAP := preload("res://scripts/world/world_map.gd")
+## The archipelago around the clearing (M4.5a): ground tiles, coasts, props, collisions.
+var terrain: Node2D
+## The First Clearing (the start of the archipelago; see WorldMap for the whole world).
 const WORLD_SIZE := Vector2(960, 640)
 const POND := LAYOUT.POND
 
@@ -48,8 +52,11 @@ func _ready() -> void:
     for enemy in [$ForestGnasher, $SecondGnasher, $ThornbackGnasher]:
         wire_enemy(enemy)
     _add_obstacle(POND)
-    for border in [Rect2(-16, 0, 16, 640), Rect2(960, 0, 16, 640), Rect2(0, -16, 960, 16), Rect2(0, 640, 960, 16)]:
-        _add_obstacle(border)
+    # The clearing no longer ends at its edges: the archipelago surrounds it (world edges are
+    # ocean and are closed by the terrain).
+    terrain = load("res://scripts/world/world_terrain.gd").new()
+    terrain.y_sort_enabled = true
+    add_child(terrain)
     _decorations = Node2D.new()
     _decorations.name = "Decorations"
     _decorations.y_sort_enabled = true
@@ -127,8 +134,14 @@ func get_local_player() -> CharacterBody2D:
 func bind_local_player(actor: CharacterBody2D) -> void:
     local_player = actor
     actor.local_controlled = true
-    actor.get_node("Camera2D").enabled = true
-    actor.get_node("Camera2D").make_current()
+    var camera: Camera2D = actor.get_node("Camera2D")
+    camera.enabled = true
+    camera.make_current()
+    var bounds: Rect2 = WORLD_MAP.bounds()
+    camera.limit_left = int(bounds.position.x)
+    camera.limit_top = int(bounds.position.y)
+    camera.limit_right = int(bounds.end.x)
+    camera.limit_bottom = int(bounds.end.y)
     $HUD.bind_player(actor)
     if not actor.has_meta("local_hud_wired"):
         actor.set_meta("local_hud_wired", true)
@@ -237,9 +250,5 @@ func _unhandled_input(event: InputEvent) -> void:
         get_tree().reload_current_scene()
 
 func _draw() -> void:
-    # Ground art only; obstacles and buildings are y-sorted sprites. Shapes follow the same
-    # geometry as the collisions (roads have none; the pond's shore surrounds its collision).
-    ART.draw_grass(self, Rect2(Vector2.ZERO, WORLD_SIZE))
-    ART.draw_patch(self, ART.FLOOR, ART.DIRT_PATCH, LAYOUT.ROADS[0])
-    ART.draw_patch(self, ART.FLOOR, ART.DIRT_PATCH, Rect2(LAYOUT.ROADS[1].position + Vector2(0, 40), LAYOUT.ROADS[1].size - Vector2(0, 40)), true)
-    ART.draw_patch(self, ART.WATER, ART.POND_PATCH, POND.grow(5))
+    # The ground (including the clearing's grass, roads and pond) is the terrain's tile layer.
+    pass

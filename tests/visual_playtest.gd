@@ -437,7 +437,7 @@ func _run() -> void:
     var xp_before_respawn: int = player.progression.experience
     _check(await _until(func(): return world.entity_by_id("gnasher_1") != null and world.entity_by_id("gnasher_1").get_node("Health").current > 0, 8.0), "The Forest Gnasher respawned at its home")
     var reborn: Node2D = world.entity_by_id("gnasher_1")
-    _check(await _walk_to(Vector2(480, 130), 10.0, 20.0) and await _walk_to(Vector2(484, 340), 10.0, 20.0) and await _walk_to(reborn.position + Vector2(-60, 0), 10.0, 20.0), "Walked back along the road to the respawned Gnasher")
+    _check(await _walk_to(Vector2(480, 130), 10.0, 20.0) and await _walk_to(Vector2(496, 230), 8.0, 20.0) and await _walk_to(Vector2(484, 340), 10.0, 20.0) and await _walk_to(reborn.position + Vector2(-60, 0), 10.0, 20.0), "Walked back along the road to the respawned Gnasher")
     await _shot("respawned", "Respawned Forest Gnasher back at its home spot")
     _check(await _fight(reborn, true, "respawn_fight") and player.progression.experience > xp_before_respawn, "Defeating it again earns XP again")
     _log("## 11b. Experience and levels")
@@ -585,6 +585,30 @@ func _run() -> void:
     await _wait(0.2)
     _check(lineup[0].get_node("Health").maximum == 120 and lineup[1].get_node("Magicules").maximum == 130.0, "Human and Demon are created with their own stats")
     await _shot("races", "Playable races, left to right: Slime, Human, Demon (placeholder looks)")
+    _log("## 15. The archipelago (M4.5a)")
+    # The seed showcase above replaced the world: use the current world's HUD.
+    hud = world.get_node("HUD")
+    for extra in lineup:
+        extra.queue_free()
+    var walker = world.get_local_player()
+    walker.get_node("Camera2D").zoom = Vector2.ONE
+    walker.position = Vector2(930, 330)
+    Input.action_press("move_right")
+    await _wait(2.5)
+    Input.action_release("move_right")
+    _check(walker.position.x > 1100, "Walking east follows the road out of the clearing: x %.0f" % walker.position.x)
+    await _shot("road_east", "The east road continues beyond the clearing towards the Harrowmere bridge")
+    var map_script := preload("res://scripts/world/world_map.gd")
+    for stop in [["thornwood", Vector2(104, 92), "Thornwood: dense forest west of the clearing"], ["mirror_lake", Vector2(246, 80), "Mirror Lake: the bridge to the ruined keep on its islet"], ["harrowmere_bridge", Vector2(300, 92), "The bridge to Harrowmere"], ["harrowmere", Vector2(346, 94), "Harrowmere: the walled-town island"], ["cinder_crater", Vector2(256, 175), "Cinder Crater: ash, boulders and a lava pool"], ["sunfall_beach", Vector2(186, 190), "Sunfall Beach: the south coast; Ambervale lies across the strait"]]:
+        walker.position = map_script.to_world(stop[1])
+        await _wait(0.3)
+        _check(hud.get_node("Title").text == map_script.region_name(walker.position).to_upper(), "HUD region name at %s" % stop[0])
+        await _shot(stop[0], stop[2])
+    hud.world_map.open()
+    await _wait(0.3)
+    _check(hud.world_map.visible and paused, "M opens the world map")
+    await _shot("world_map", "World map (M): Verdant Isle with the clearing, Thornwood, Mirror Lake, Cinder Crater; Harrowmere by bridge; Ambervale and the Emberreach Isles across the sea")
+    hud.world_map.close()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

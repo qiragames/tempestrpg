@@ -23,8 +23,11 @@ static func _number(value: Variant, low: float, high: float, whole: bool = false
         return false
     return is_finite(float(value)) and value >= low and value <= high and (not whole or value == floor(value))
 
+## Anywhere in the archipelago (M4.5a; the clearing's 0..960 x 0..640 lies inside it, so older
+## saves stay valid without migration).
 static func _position(value: Variant) -> bool:
-    return value is Array and value.size() == 2 and _number(value[0], 0, 960) and _number(value[1], 0, 640)
+    var world: Rect2 = preload("res://scripts/world/world_map.gd").bounds()
+    return value is Array and value.size() == 2 and _number(value[0], world.position.x, world.end.x) and _number(value[1], world.position.y, world.end.y)
 
 static func _id(value: Variant, empty: bool = false) -> bool:
     if not value is String or value.length() > 64 or (value.is_empty() and not empty):

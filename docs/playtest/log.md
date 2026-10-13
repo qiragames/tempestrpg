@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.1 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.0 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -298,7 +298,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 *A closed chest (gold lock) at a point of interest* (640x360)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Rare Spirit Amulet
+- [x] The chest gave an Uncommon-or-better item: Uncommon Cloth Hood
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (640x360)
@@ -331,6 +331,47 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 
 ![Playable races, left to right: Slime, Human, Demon (placeholder looks)](55_races.png)
 *Playable races, left to right: Slime, Human, Demon (placeholder looks)* (640x360)
+
+## 15. The archipelago (M4.5a)
+- [x] Walking east follows the road out of the clearing: x 1169
+
+![The east road continues beyond the clearing towards the Harrowmere bridge](56_road_east.png)
+*The east road continues beyond the clearing towards the Harrowmere bridge* (640x360)
+
+- [x] HUD region name at thornwood
+
+![Thornwood: dense forest west of the clearing](57_thornwood.png)
+*Thornwood: dense forest west of the clearing* (640x360)
+
+- [x] HUD region name at mirror_lake
+
+![Mirror Lake: the bridge to the ruined keep on its islet](58_mirror_lake.png)
+*Mirror Lake: the bridge to the ruined keep on its islet* (640x360)
+
+- [x] HUD region name at harrowmere_bridge
+
+![The bridge to Harrowmere](59_harrowmere_bridge.png)
+*The bridge to Harrowmere* (640x360)
+
+- [x] HUD region name at harrowmere
+
+![Harrowmere: the walled-town island](60_harrowmere.png)
+*Harrowmere: the walled-town island* (640x360)
+
+- [x] HUD region name at cinder_crater
+
+![Cinder Crater: ash, boulders and a lava pool](61_cinder_crater.png)
+*Cinder Crater: ash, boulders and a lava pool* (640x360)
+
+- [x] HUD region name at sunfall_beach
+
+![Sunfall Beach: the south coast; Ambervale lies across the strait](62_sunfall_beach.png)
+*Sunfall Beach: the south coast; Ambervale lies across the strait* (640x360)
+
+- [x] M opens the world map
+
+![World map (M): Verdant Isle with the clearing, Thornwood, Mirror Lake, Cinder Crater; Harrowmere by bridge; Ambervale and the Emberreach Isles across the sea](63_world_map.png)
+*World map (M): Verdant Isle with the clearing, Thornwood, Mirror Lake, Cinder Crater; Harrowmere by bridge; Ambervale and the Emberreach Isles across the sea* (640x360)
 
 
 ## System messages seen
@@ -385,7 +426,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +60 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Rare Hunting Bow.
+- Trial reward: Rare Leather Gloves.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +20 XP (defeat).
@@ -401,11 +442,11 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Rare Spirit Amulet.
+- Chest opened: Uncommon Cloth Hood.
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 
 The bot retreated 1 time(s) to let Magicules recover.
 XP assistance for skill points: 130 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 55 screenshots.**
+**Result: 0 failed checks, 63 screenshots.**

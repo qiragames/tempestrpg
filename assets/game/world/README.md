@@ -19,4 +19,14 @@ Pixel scale 1:1 with the 640x360 viewport; nearest filtering (project default). 
 | `station_anvil.png` | 272x160 | Forge: anvil station sheet | `assets/source/packs/pixel_crawler/Environment/Structures/Stations/Anvil/Anvil.png` |
 | `station_bonfire.png` | 64x384 | Camp flag/bonfire sheet | `assets/source/packs/pixel_crawler/Environment/Structures/Stations/Bonfire/Bonfire.png` |
 
+## Archipelago sheets (M4.5a, `tools/prepare_world.py`)
+
+| File | Size | Source | Used for |
+| --- | --- | --- | --- |
+| `ruins.png` | 320x192 | Ninja Adventure `TilesetVillageAbandoned.png` (copy) | Lakeward Keep and Ambervale ruins |
+| `desert.png` | 320x192 | Ninja Adventure `TilesetDesert.png` (copy) | Harrowmere walls and tower |
+| `lava.png` | 448x96 | Derived from `water.png` rows 0-5: water → lava, sand → ash (same layout) | Lava pools and ash ground (Cinder Crater, Emberreach) |
+
+Corner sets used by `scripts/world/world_terrain.gd` (16 combinations, shared layout: pond 3x3 at columns 0-2, pond-with-island 4x4 at 4-7, diagonals at column 9, plain land at (0, 5)): `water.png` rows 0-5 (sand shore), rows 6-11 (grass shore, lakes), `lava.png`, `terrain_floor.png` rows 7-12 (dirt paths). Rounded biome overlays: `terrain_field.png` 3x3 patches (grass, forest, autumn).
+
 Licences and credits: see `CREDITS.md` at the repository root and the licence files next to each pack in `assets/source/packs/`.

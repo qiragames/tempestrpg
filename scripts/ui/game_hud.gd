@@ -20,6 +20,9 @@ var skill_tree: Control
 var fusion: Control
 ## Equipment window (from the bag), see gear_panel.gd.
 var gear_panel: Control
+## World map (M), see world_map_panel.gd.
+var world_map: Control
+const WORLD_MAP := preload("res://scripts/world/world_map.gd")
 var _modal: Control
 var _items: ItemList
 var _details: Label
@@ -67,6 +70,8 @@ func _ready() -> void:
     add_child(fusion)
     gear_panel = load("res://scripts/ui/gear_panel.gd").new(self)
     add_child(gear_panel)
+    world_map = load("res://scripts/ui/world_map_panel.gd").new(self)
+    add_child(world_map)
     _hook_pause_returns()
     get_parent().system_message.connect(fusion.show_message)
     _ally_dialog = load("res://scripts/ui/ally_dialog.gd").new()
@@ -75,7 +80,7 @@ func _ready() -> void:
     add_child(_camp_dialog)
 
 func menu_open() -> bool:
-    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible)
+    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible)
 
 func bind_player(actor: Node2D) -> void:
     if player == actor:
@@ -158,6 +163,7 @@ func _build_status() -> void:
     _outline($StrikeCost)
     # Region title and the System line, top right.
     $Title.text = "THE FIRST CLEARING"
+    $Title.set_meta("region", -1)
     $Title.position = Vector2(300, 4)
     $Title.size = Vector2(334, 16)
     $Title.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -278,6 +284,11 @@ func _process(_delta: float) -> void:
         _refresh_pause()
     _recovery.visible = player.is_exhausted()
     _level.text = level_text(player.progression)
+    # Region name of where this character stands (M4.5a).
+    var region: int = WORLD_MAP.region_at(player.global_position)
+    if $Title.get_meta("region", -1) != region:
+        $Title.set_meta("region", region)
+        $Title.text = WORLD_MAP.REGION_NAMES[region].to_upper()
     _refresh_status()
     var trial: Dictionary = get_parent().trial.state if get_parent().get("trial") != null else {}
     _trial_back.visible = trial.get("active", false)
@@ -419,6 +430,14 @@ func _unhandled_input(event: InputEvent) -> void:
             fusion.open()
         get_viewport().set_input_as_handled()
         return
+    if world_map.visible and (event.is_action_pressed("ui_cancel") or (event.is_action_pressed("world_map") and not event.is_echo())):
+        world_map.close()
+        get_viewport().set_input_as_handled()
+        return
+    if event.is_action_pressed("world_map") and not event.is_echo() and not menu_open():
+        world_map.open()
+        get_viewport().set_input_as_handled()
+        return
     if gear_panel.visible and (event.is_action_pressed("ui_cancel") or (event.is_action_pressed("inventory") and not event.is_echo())):
         gear_panel.close()
         get_viewport().set_input_as_handled()
@@ -457,6 +476,8 @@ func _exit_tree() -> void:
         get_tree().paused = fusion._paused_before_open
     if is_instance_valid(gear_panel) and gear_panel.visible:
         get_tree().paused = gear_panel._paused_before_open
+    if is_instance_valid(world_map) and world_map.visible:
+        get_tree().paused = world_map._paused_before_open
 
 var _pause_panel: Panel
 var _pause_status: Label
@@ -492,12 +513,12 @@ func _build_pause_panel() -> void:
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     _pause_menu = Panel.new()
     _pause_menu.position = Vector2(206, 62)
-    _pause_menu.size = Vector2(228, 228)
+    _pause_menu.size = Vector2(228, 240)
     _pause_menu.add_theme_stylebox_override("panel", UI.ornate())
     _pause_panel.add_child(_pause_menu)
-    var entries := [["resume", "RESUME"], ["bag", "INVENTORY & EQUIPMENT"], ["tree", "SKILL TREE"], ["fusion", "SKILL FUSION"], ["open", "OPEN TO FRIENDS"], ["save", "SAVE WORLD"], ["options", "OPTIONS"], ["quit", "SAVE & QUIT TO TITLE"]]
+    var entries := [["resume", "RESUME"], ["bag", "INVENTORY & EQUIPMENT"], ["tree", "SKILL TREE"], ["fusion", "SKILL FUSION"], ["map", "WORLD MAP"], ["open", "OPEN TO FRIENDS"], ["save", "SAVE WORLD"], ["options", "OPTIONS"], ["quit", "SAVE & QUIT TO TITLE"]]
     for index in range(entries.size()):
-        var button := _button(entries[index][1], Vector2(10, 8 + index * 27), Vector2(208, 25), _pause_menu)
+        var button := _button(entries[index][1], Vector2(10, 8 + index * 25), Vector2(208, 24), _pause_menu)
         UI.menu_entry(button)
         _pause_buttons[entries[index][0]] = button
     _pause_panel.add_child(MARKER.new(_pause_buttons.values()))
@@ -505,6 +526,7 @@ func _build_pause_panel() -> void:
     _pause_buttons.bag.pressed.connect(_from_pause.bind(open_inventory))
     _pause_buttons.tree.pressed.connect(_from_pause.bind(func(): skill_tree.open()))
     _pause_buttons.fusion.pressed.connect(_from_pause.bind(func(): fusion.open()))
+    _pause_buttons.map.pressed.connect(_from_pause.bind(func(): world_map.open()))
     _pause_buttons.open.pressed.connect(func(): session.open_to_friends(); _refresh_pause())
     _pause_buttons.save.pressed.connect(func():
         var result: Error = session.save_world()
@@ -535,7 +557,7 @@ func _build_pause_panel() -> void:
 
 ## Windows opened from the pause menu bring it back when they close (called once they exist).
 func _hook_pause_returns() -> void:
-    for window in [_modal, skill_tree, fusion, gear_panel]:
+    for window in [_modal, skill_tree, fusion, gear_panel, world_map]:
         window.visibility_changed.connect(func():
             if not window.visible and _back_to_pause:
                 _return_to_pause.call_deferred()
@@ -661,7 +683,7 @@ func _refresh_pause() -> void:
     _pause_card.mag_text.text = "Magicules %.0f / %.0f" % [magicules.current, magicules.maximum]
     var world_time: float = float(get_parent().progression.get("world_time", 0.0))
     var values := {
-        "zone": ["ZONE", "The First Clearing"],
+        "zone": ["ZONE", WORLD_MAP.region_name(player.global_position)],
         "world": ["WORLD", session.world_meta.get("name", "Sandbox") if session.active else "Offline sandbox"],
         "map": ["MAP", LAYOUT.describe(session.world_meta) if session.active else "original map"],
         "players": ["PLAYERS", "%d / 8" % maxi(1, session.owners.size()) if session.active else "1 (offline)"],

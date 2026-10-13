@@ -113,6 +113,13 @@ func _act(phase: String) -> void:
     var guard: bool = not world.camp.transact(world.get_local_player(), operation, target)
     if phase.begins_with("work_"):
         var role := phase.trim_prefix("work_")
+        # Work is only assigned at the camp: give the following ally time to walk back (the
+        # world now takes longer to build at startup, so it may have wandered after its owner).
+        var ally = world.get_node("GoblinAlly")
+        var waited := 0.0
+        while ally.global_position.distance_to(world.camp.SITE) > 90.0 and waited < 6.0:
+            await create_timer(0.1).timeout
+            waited += 0.1
         guard = not world.get_node("GoblinAlly").assign_work(world.get_local_player(), role)
         session.request_action("ally_work", {"id": "ally_goblin_1", "role": role})
         session.request_action("ally_work", {"id": "ally_goblin_1", "role": role})
