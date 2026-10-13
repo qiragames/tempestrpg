@@ -35,6 +35,10 @@ const STOREHOUSE_WORK_FACTOR := 0.5
 var sites: Dictionary = DEPOSITS
 var state: Dictionary = initial_state()
 var _shapes: Dictionary = {}
+const ART := preload("res://scripts/visual/world_art.gd")
+## Building art (step 20): y-sorted sprites standing on each footprint's bottom edge, shown once built.
+var _art: Dictionary = {}
+var _center: Sprite2D
 
 static func initial_state(table: Dictionary = DEPOSITS) -> Dictionary:
     var deposits: Dictionary = {}
@@ -98,6 +102,12 @@ func _ready() -> void:
         body.add_child(collider)
         add_child(body)
         _shapes[id] = collider
+        var art: Sprite2D = ART.prop(STRUCTURES[id].key, STRUCTURES[id].site + Vector2(0, STRUCTURES[id].size.y / 2.0 + 2.0))
+        art.visible = state[STRUCTURES[id].key]
+        add_child(art)
+        _art[id] = art
+    _center = ART.prop("camp_post", SITE + Vector2(0, 6))
+    add_child(_center)
 
 ## Switch to this world's deposit table (from its seed). Restore or reset `state` afterwards.
 func set_sites(table: Dictionary) -> void:
@@ -280,43 +290,23 @@ func _physics_process(delta: float) -> void:
             pool.restore(pool.regeneration_per_second * SHRINE_BONUS * delta)
 
 func _draw() -> void:
+    for id in _art:
+        _art[id].visible = state[STRUCTURES[id].key]
+    if is_instance_valid(_center):
+        var center := "campfire" if state.founded else "camp_post"
+        if _center.name != center:
+            _center.name = center
+            _center.texture = ART.atlas(center)
+            _center.offset = Vector2(0, -ART.PROPS[center][1].size.y / 2.0)
     draw_arc(SITE, 21, 0, TAU, 20, Color("e1bf79") if state.founded else Color("a1a99b"), 2)
-    if state.founded:
-        draw_rect(Rect2(SITE - Vector2(11, 3), Vector2(22, 6)), Color("75523a"))
-        draw_colored_polygon(PackedVector2Array([SITE+Vector2(-7, 0), SITE+Vector2(0, -17), SITE+Vector2(7, 0)]), Color("eba65c"))
-    else:
-        draw_line(SITE+Vector2(0, 7), SITE+Vector2(0, -21), Color("b6a378"), 2)
-        draw_rect(Rect2(SITE+Vector2(1, -21), Vector2(14, 9)), Color("8da69d"))
     for id in sites:
         var point: Vector2 = sites[id].position
         if state.deposits[id] == 0:
-            draw_rect(Rect2(point-Vector2(4, 2), Vector2(8, 4)), Color("514c3b"))
+            ART.draw_prop(self, "pebbles", point + Vector2(0, 6))
         elif sites[id].resource == "wood":
-            for offset in [-4, 0, 4]:
-                draw_rect(Rect2(point+Vector2(-9, offset-2), Vector2(18, 4)), Color("a48254"))
-                draw_rect(Rect2(point+Vector2(-8, offset-1), Vector2(3, 2)), Color("d2b579"))
+            ART.draw_prop(self, "logs", point + Vector2(0, 8))
+            ART.draw_prop(self, "logs", point + Vector2(2, 1))
         else:
-            draw_colored_polygon(PackedVector2Array([point+Vector2(-10, 5), point+Vector2(-7, -6), point+Vector2(5, -9), point+Vector2(12, 4)]), Color("8e9b9f"))
-    if state.hut:
-        draw_rect(Rect2(HUT_SITE-Vector2(18, 12), Vector2(36, 24)), Color("71543a"))
-        draw_rect(Rect2(HUT_SITE+Vector2(-5, -2), Vector2(10, 14)), Color("292d2c"))
-        draw_colored_polygon(PackedVector2Array([HUT_SITE+Vector2(-24, -10), HUT_SITE+Vector2(0, -34), HUT_SITE+Vector2(24, -10)]), Color("baa56a"))
-        draw_line(HUT_SITE+Vector2(0, -32), HUT_SITE+Vector2(0, -11), Color("dec78b"), 2)
-    if state.storehouse:
-        var store: Vector2 = STRUCTURES.storehouse_1.site
-        draw_rect(Rect2(store-Vector2(15, 10), Vector2(30, 20)), Color("5f4a35"))
-        draw_rect(Rect2(store-Vector2(17, 13), Vector2(34, 5)), Color("8c7552"))
-        for x in [-10, -2, 6]:
-            draw_rect(Rect2(store+Vector2(x, -4), Vector2(5, 12)), Color("3e3024"))
+            ART.draw_prop(self, "stones", point + Vector2(0, 7))
     if state.shrine:
-        var shrine: Vector2 = STRUCTURES.shrine_1.site
-        draw_arc(shrine, SHRINE_RANGE, 0, TAU, 32, Color(0.44, 0.89, 0.83, 0.25), 1)
-        draw_rect(Rect2(shrine-Vector2(9, 9), Vector2(18, 18)), Color("6f7a7e"))
-        draw_rect(Rect2(shrine-Vector2(5, 15), Vector2(10, 10)), Color("8e9b9f"))
-        draw_circle(shrine-Vector2(0, 10), 3, Color("71e4d4"))
-    if state.get("forge", false):
-        var forge: Vector2 = STRUCTURES.forge_1.site
-        draw_rect(Rect2(forge - Vector2(14, 10), Vector2(28, 20)), Color("4b4a4f"))
-        draw_rect(Rect2(forge - Vector2(10, 14), Vector2(8, 6)), Color("6c6a70"))
-        draw_rect(Rect2(forge + Vector2(-4, 0), Vector2(8, 6)), Color("f08a3c"))
-        draw_rect(Rect2(forge + Vector2(-2, 2), Vector2(4, 3)), Color("ffd27a"))
+        draw_arc(STRUCTURES.shrine_1.site, SHRINE_RANGE, 0, TAU, 32, Color(0.44, 0.89, 0.83, 0.25), 1)

@@ -1,6 +1,6 @@
 # Prepared world tiles and props
 
-Step 18 (asset preparation). Copied unchanged from the third-party packs in `assets/source/packs/` by `tools/prepare_assets.py`; previews (x3, nearest) in `docs/asset_previews/`. **Status: prepared, not yet integrated** (scenes still use the code-drawn placeholders until steps 19–21).
+Step 18 (asset preparation). Copied unchanged from the third-party packs in `assets/source/packs/` by `tools/prepare_assets.py`; previews (x3, nearest) in `docs/asset_previews/`. **Status: integrated in step 20** through `scripts/visual/world_art.gd` (regions used: light-grass floor row, the dirt and pond nine-slices, tree/rock/stone/pebble props, hut/storehouse/shrine/standing stone from `house.png`, logs and camp post from `camp.png`, the small anvil station and the fire pit; the rest stays available for later areas).
 
 Pixel scale 1:1 with the 640x360 viewport; nearest filtering (project default). Foot pivot: bottom-centre of each frame unless noted.
 

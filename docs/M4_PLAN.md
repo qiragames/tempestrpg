@@ -103,7 +103,9 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 
 **Done evidence:** visible captures of all relevant states at ×2/×3, consistent feet/pivots/z-order, readable attack telegraph; headless tests confirm costs/attack timing unchanged and clients see the same forms/evolution.
 
-## 20 — Forest and village tiles/props (Claude)
+## 20 — Forest and village tiles/props (Claude) — **Done**
+
+**Status 2026-10-13:** integrated on `claude/roadmap-20-tiles-props` via `scripts/visual/world_art.gd`. The map geometry (roads, pond, borders, seeded rocks/trees, camp footprints) is unchanged; art is anchored to it (a prop's foot = the bottom edge of its collision footprint + 2 px). Ground is drawn by `forest.gd` from tiles (no TileMapLayer resource needed for a 960x640 map drawn once); props/buildings are `Sprite2D`s under y-sorted parents. No migration: nothing saved changed.
 
 **Goal/dependencies:** requires 18–19. Replace the initial clearing visuals with a small tile/prop slice while preserving encounter/camp/deposit IDs and routes.
 

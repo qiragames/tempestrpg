@@ -15,7 +15,7 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 
 | Date | Tool | Status | Task | Branch | Files owned |
 | --- | --- | --- | --- | --- | --- |
-| 2026-10-13 | Claude Code | **Working** | **Step 20 — forest and village tiles/props.** Accepted your 19 review `28ad1ac` as is (client attack frames noted as a known visual limitation for 23). Ground/road/pond tiles, tree/rock/building/forge/trial/chest/deposit art placed on the existing geometry; y-sorted depth; no collision, ID or save change. | `claude/roadmap-20-tiles-props` (from `codex/review-character-sprites` `28ad1ac`) | Claimed: new `scripts/visual/world_art.gd`, `tests/world_art.gd`; `scripts/world/forest.gd`, `scripts/world/chest_layer.gd`, `scripts/settlement/first_camp.gd`, `scripts/trials/proving_trial.gd` (drawing only), `tests/visual_playtest.gd`, docs. |
+| 2026-10-13 | Claude Code | **Done — please review and acknowledge** | **Step 20 — forest and village tiles/props.** Next in order: **21** UI. Accepted your 19 review `28ad1ac` as is (client attack frames noted as a known visual limitation for 23). Ground/road/pond tiles, tree/rock/building/forge/trial/chest/deposit art placed on the existing geometry; y-sorted depth; no collision, ID or save change. | `claude/roadmap-20-tiles-props` (from `codex/review-character-sprites` `28ad1ac`) | Actually changed: as claimed plus `assets/game/world/README.md` (status); `tests/visual_playtest.gd` unchanged (screenshots regenerated). Ownership released. |
 | 2026-10-13 | Codex | Review complete, acknowledged | Reviewed character sprites `19ed6b6`; 1168 checks independently reproduced on Linux. Client player attack animation remains a visual limitation. | `codex/review-character-sprites` | Review docs/README/roadmap only; no gameplay claim. |
 | 2026-10-13 | Claude Code | **Done — please review and acknowledge** | **Step 19 — character sprites and mimic presentation.** Next in order: **20** tiles/props. Accepted your 18 review `80fa2a8` as is. Animated sprites (built in code from the prepared sheets) replace the placeholder bodies of the three races, Gnasher/Thornback, the goblin ally and the Hobgoblin; mimic forms use the creature's sprite in the character's colours; walking/idle/attack/defeat animations follow movement and state on host and clients; collision, timing, authority and saves unchanged. | `claude/roadmap-19-character-sprites` (from `codex/review-assets` `80fa2a8`) | Actually changed: as claimed except `tests/visual_playtest.gd` (no change needed; screenshots regenerated). Ownership released. |
 | 2026-10-13 | Codex | Review complete, acknowledged | Reviewed asset preparation `9f48a86`; decoded prepared textures, verified regeneration pixels and Godot smoke/menu/startup. | `codex/review-assets` | Review documentation and roadmap only; no integration claim. |
@@ -67,6 +67,17 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 | 2026-10-12 | Codex | Done | Ally gather/build work assignments | `codex/roadmap-10-ally-work` | — |
 
 **User art decision (2026-10-12, for step 18/19):** the Forest Gnasher uses the **Goblin** row of `assets/references/sprites/monster_animation_reference.jpg` as its look. (Note for 19: the allied goblin uses goblin art too, so enemy and ally need a clear visual distinction, e.g. tint/palette or difficulty colors, without changing creature IDs.)
+
+### Step 20 summary for Codex (Claude, `claude/roadmap-20-tiles-props`)
+
+Received your step-19 review `28ad1ac` (accepted as is; client player attack frames stay a known visual limitation for 23 VFX). What changed for 20, where and how:
+- **`scripts/visual/world_art.gd` (new, static):** sheet constants; `GRASS`/`TUFTS` regions; nine-slice origins `DIRT_PATCH` (floor) and `POND_PATCH` (water); `PROPS` id → [sheet, region]; `prop(id, foot)` makes a nearest-filtered `Sprite2D` whose node position is the foot (bottom-centre); `draw_prop` for flat drawing; `draw_grass` (deterministic tuft sprinkle); `draw_patch(rect, open_top)` covers any size (last tile per row/column pulled back to end on the edge).
+- **`forest.gd`:** `_draw` is ground only — grass, the horizontal road, the vertical road from y+40 with an open top (T-junction), pond = `POND.grow(5)` shore patch. `y_sort_enabled` on the world, `Decorations`, camp and trial. `_add_obstacle(rect, parent, art)` keeps the collider as child 0 and adds the art sprite (child 1) at the footprint bottom + 2 with `y_sort_enabled` on the body — same body count/positions/shapes as before (existing seeded-world/network assertions unchanged).
+- **`first_camp.gd`:** one sprite per structure (`key` = prop id) at site + size.y/2 + 2, visibility synced from `state` at the top of `_draw` (every restore/build already queues a redraw, so host and clients agree); centre post ↔ campfire on founding; deposits drawn as logs/stones/pebbles; founding ring and shrine range kept. Collisions untouched.
+- **Trial stone / chests:** drawn with `draw_prop` (standing stone + glow; chest closed/open frames).
+- **No rule/save change:** collisions, IDs, layouts, snapshots and schema v19 untouched; no migration.
+- **Tests:** `tests/world_art.gd` (16).
+- **Validation (Windows 11):** 918 local + 266 network = 1184; visual playtest regenerated.
 
 ### Step 19 sprite review acknowledgment (Codex, 2026-10-13)
 

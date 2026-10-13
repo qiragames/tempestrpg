@@ -7,6 +7,7 @@ extends Node2D
 ## the time limit. Anyone may help, but only the starter is credited (personal evidence). Trial
 ## creatures drop nothing and cannot be analyzed. A running trial is not saved: a host restart
 ## cancels it and the starter may simply begin again.
+const ART := preload("res://scripts/visual/world_art.gd")
 const AUTHORITY := preload("res://scripts/network/authority.gd")
 const LEVELING := preload("res://scripts/progression/leveling.gd")
 const CREATURE := preload("res://scenes/enemies/forest_gnasher.tscn")
@@ -121,6 +122,6 @@ func _finish(success: bool, message: String) -> void:
 func _draw() -> void:
     # Placeholder stone and arena circle.
     draw_arc(stone, ARENA_RADIUS, 0, TAU, 48, Color(0.9, 0.8, 0.45, 0.35 if state.active else 0.12), 1)
-    draw_rect(Rect2(stone - Vector2(8, 14), Vector2(16, 20)), Color("6d6f78"))
-    draw_rect(Rect2(stone - Vector2(6, 12), Vector2(12, 3)), Color("9c9fa8"))
-    draw_circle(stone + Vector2(0, -3), 2.5, Color("f0d27a") if state.active else Color("b9a46a"))
+    # Standing stone (step 20 art); the glow shows whether a trial is running.
+    ART.draw_prop(self, "trial_stone", stone + Vector2(0, 6))
+    draw_circle(stone + Vector2(0, -12), 2.5, Color("f0d27a") if state.active else Color("b9a46a"))

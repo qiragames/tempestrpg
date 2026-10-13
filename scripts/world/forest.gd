@@ -4,6 +4,7 @@ signal system_message(message: String)
 ## A placeholder map with a fixed scheme (roads, pond, camp); the world's seed lays out deposits,
 ## creatures, points of interest and decorations (see WorldLayout). Visuals and collisions share geometry.
 const LAYOUT := preload("res://scripts/world/world_layout.gd")
+const ART := preload("res://scripts/visual/world_art.gd")
 const WORLD_SIZE := Vector2(960, 640)
 const POND := LAYOUT.POND
 
@@ -22,11 +23,16 @@ var layout: Dictionary = LAYOUT.generate(0)
 var _decorations: Node2D
 
 func _ready() -> void:
+    # Depth (step 20): characters, creatures, props and buildings are drawn in order of their feet,
+    # so a character behind a tree or hut is hidden by it. Ground art is this node's own drawing.
+    y_sort_enabled = true
     camp = load("res://scripts/settlement/first_camp.gd").new()
     camp.name = "FirstCamp"
+    camp.y_sort_enabled = true
     add_child(camp)
     trial = load("res://scripts/trials/proving_trial.gd").new()
     trial.name = "ProvingTrial"
+    trial.y_sort_enabled = true
     add_child(trial)
     respawner = load("res://scripts/world/respawner.gd").new()
     respawner.name = "Respawner"
@@ -46,6 +52,7 @@ func _ready() -> void:
         _add_obstacle(border)
     _decorations = Node2D.new()
     _decorations.name = "Decorations"
+    _decorations.y_sort_enabled = true
     add_child(_decorations)
     apply_layout(0, false)
     # Start the world chosen in the title menu (or on the command line), if any.
@@ -61,10 +68,11 @@ func apply_layout(seed: int, fresh: bool) -> void:
     for child in _decorations.get_children():
         _decorations.remove_child(child)
         child.queue_free()
+    # One collision body per decoration (as before); its art sits on the footprint's bottom edge.
     for rock in layout.rocks:
-        _add_obstacle(rock, _decorations)
+        _add_obstacle(rock, _decorations, "rock")
     for tree in layout.trees:
-        _add_obstacle(Rect2(tree + Vector2(-6, 4), Vector2(12, 12)), _decorations)
+        _add_obstacle(Rect2(tree + Vector2(-6, 4), Vector2(12, 12)), _decorations, "tree")
     if fresh:
         camp.restore(camp.initial_state(layout.deposits))
         for id in layout.creatures:
@@ -211,7 +219,7 @@ func announce_magicule_pickup(amount: float, character_id: String = "") -> void:
     elif get_local_player().get_node("Health").current > 0:
         _announce("Recovered %.1f Magicules." % amount)
 
-func _add_obstacle(rect: Rect2, parent: Node = self) -> void:
+func _add_obstacle(rect: Rect2, parent: Node = self, art: String = "") -> void:
     var body := StaticBody2D.new()
     body.position = rect.get_center()
     var collider := CollisionShape2D.new()
@@ -219,6 +227,9 @@ func _add_obstacle(rect: Rect2, parent: Node = self) -> void:
     shape.size = rect.size
     collider.shape = shape
     body.add_child(collider)
+    if not art.is_empty():
+        body.y_sort_enabled = true
+        body.add_child(ART.prop(art, Vector2(0, rect.size.y / 2.0 + 2.0)))
     parent.add_child(body)
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -226,26 +237,9 @@ func _unhandled_input(event: InputEvent) -> void:
         get_tree().reload_current_scene()
 
 func _draw() -> void:
-    draw_rect(Rect2(Vector2.ZERO, WORLD_SIZE), Color("294b40"))
-    # Integer-aligned accents keep the placeholder readable at the base resolution.
-    for y in range(0, 640, 16):
-        for x in range(0, 960, 16):
-            if (x * 7 + y * 11) % 13 < 3:
-                draw_rect(Rect2(x + 3, y + 5, 3, 2), Color("376451"))
-                draw_rect(Rect2(x + 6, y + 3, 2, 4), Color("376451"))
-    draw_rect(Rect2(0, 304, 960, 56), Color("82765a"))
-    draw_rect(Rect2(464, 304, 40, 336), Color("82765a"))
-    draw_rect(POND.grow(5), Color("4d8270"))
-    draw_rect(POND, Color("315e79"))
-    for x in range(640, 770, 32):
-        draw_rect(Rect2(x, 144, 12, 2), Color("57909d"))
-        draw_rect(Rect2(x + 8, 176, 16, 2), Color("57909d"))
-    for rock in layout.rocks:
-        draw_rect(rock.grow(2), Color("243c3a"))
-        draw_rect(rock, Color("72817b"))
-        draw_rect(Rect2(rock.position + Vector2(4, 3), Vector2(rock.size.x - 8, 5)), Color("a0aaa0"))
-    for tree in layout.trees:
-        draw_rect(Rect2(tree + Vector2(-6, 0), Vector2(12, 16)), Color("655348"))
-        draw_rect(Rect2(tree + Vector2(-20, -20), Vector2(40, 26)), Color("193d34"))
-        draw_rect(Rect2(tree + Vector2(-15, -30), Vector2(30, 24)), Color("32634b"))
-        draw_rect(Rect2(tree + Vector2(-9, -27), Vector2(18, 6)), Color("518366"))
+    # Ground art only; obstacles and buildings are y-sorted sprites. Shapes follow the same
+    # geometry as the collisions (roads have none; the pond's shore surrounds its collision).
+    ART.draw_grass(self, Rect2(Vector2.ZERO, WORLD_SIZE))
+    ART.draw_patch(self, ART.FLOOR, ART.DIRT_PATCH, LAYOUT.ROADS[0])
+    ART.draw_patch(self, ART.FLOOR, ART.DIRT_PATCH, Rect2(LAYOUT.ROADS[1].position + Vector2(0, 40), LAYOUT.ROADS[1].size - Vector2(0, 40)), true)
+    ART.draw_patch(self, ART.WATER, ART.POND_PATCH, POND.grow(5))
