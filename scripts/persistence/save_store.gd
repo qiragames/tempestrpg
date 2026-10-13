@@ -152,9 +152,14 @@ static func validate(data: Variant) -> bool:
         return false
     if not data.get("players") is Dictionary or not data.players.has("host") or data.players.size() > 256:
         return false
+    var item_ids: Dictionary = {}
     for id in data.players:
         if not validate_player(data.players[id], id):
             return false
+        for item in data.players[id].gear.items:
+            if item_ids.has(item.id):
+                return false
+            item_ids[item.id] = true
         var hash_value = data.players[id].get("token_hash", "")
         if not hash_value is String or (id != "host" and (hash_value.length() != 64 or not hash_value.is_valid_hex_number(false))):
             return false
@@ -230,6 +235,9 @@ static func validate(data: Variant) -> bool:
     for entry in data.loot:
         if not SOURCES.valid_loot(entry) or not _position(entry.position) or ids.has(entry.id) or respawning.has(entry.id):
             return false
+        if item_ids.has(entry.item.id):
+            return false
+        item_ids[entry.item.id] = true
         ids[entry.id] = true
     for pickup in data.pickups:
         if not pickup is Dictionary or not _id(pickup.get("id")) or ids.has(pickup.id) or respawning.has(pickup.id) or not _position(pickup.get("position")) or not _number(pickup.get("amount"), 0.000001, 1000000):

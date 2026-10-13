@@ -199,6 +199,14 @@ func _run() -> void:
     _check(session.start_host(24700, path, false) == OK and world.entity_by_id("loot_savecheck01") != null and world.get_local_player().progression.chests == ["chest_1"], "Reload restores ground loot and opened chests")
     session.stop_session(false)
     var data: Dictionary = saved.data
+    var duplicate_loot := data.duplicate(true)
+    var copy: Dictionary = duplicate_loot.loot[0].duplicate(true)
+    copy.id = "loot_duplicate_item"
+    duplicate_loot.loot.append(copy)
+    _check(not STORE.validate(duplicate_loot), "Two ground loot entities cannot contain the same gear instance")
+    var already_owned := data.duplicate(true)
+    already_owned.loot[0].item = already_owned.players.host.gear.items[0].duplicate(true)
+    _check(not STORE.validate(already_owned), "Ground loot cannot duplicate a character-owned gear instance")
     var bad := []
     var doc: Dictionary
     doc = data.duplicate(true); doc.loot[0].item.stats.damage = 999; bad.append(doc)
