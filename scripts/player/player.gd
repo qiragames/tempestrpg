@@ -216,11 +216,12 @@ func refresh_gear() -> void:
 func _apply_item(item: Dictionary, sign: int) -> void:
     var hp: int = int(item.stats.get("hp", 0)) * sign
     $Health.maximum += hp
-    $Health.current = clampi($Health.current + (hp if hp > 0 and $Health.current > 0 else 0), 0, $Health.maximum)
+    # Reversible equipment changes capacity, never refills current resources.
+    $Health.current = clampi($Health.current, 0, $Health.maximum)
     $Health.changed.emit($Health.current, $Health.maximum)
     var mp: float = float(item.stats.get("magicules", 0)) * sign
     $Magicules.maximum += mp
-    $Magicules._current = clampf($Magicules._current + (mp if mp > 0 else 0.0), 0.0, $Magicules.maximum)
+    $Magicules._current = clampf($Magicules._current, 0.0, $Magicules.maximum)
     $Magicules.changed.emit($Magicules.current, $Magicules.maximum)
     $Magicules.regeneration_per_second = maxf(0.0, $Magicules.regeneration_per_second + (float(item.stats.get("regen", 0)) + (0.5 if "wellspring" in item.passives else 0.0)) * sign)
 

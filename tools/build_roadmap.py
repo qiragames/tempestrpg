@@ -89,7 +89,14 @@ for index, (mid, title, status_text, body) in enumerate(milestones):
     nodes.append(dict(id=mid, title=title, status=status, deps=["skill_ui" if number == 1 else "naming_evolution" if number == 2 else "camp_growth" if number == 3 else "m4_24" if number == 4 else f"M{number-1}"],
                       what="\n".join(b for b in bullets if not b.startswith("Exit goal:")),
                       why=why[number-1], evidence=evidence, x=300, y=1180+(number-1)*115+(345 if number >= 2 else 0)+(345 if number >= 3 else 0)+(1495 if number >= 4 else 0), phase=mid))
-if len(nodes) != 24 + len(m4_rows):
+expansion = re.search(r"### M4\.5 — (.*?) · ([^\n]+)\n(.*?)(?=\n### |\n## |\Z)", source, re.S)
+if expansion:
+    title, status_text, body = expansion.groups()
+    nodes.append(dict(id="M4.5", title=title, status="planned", deps=["m4_17g"],
+                      what=body.strip(), why="Expand the proven gear and exploration systems into original regions and travel.",
+                      evidence="Planned only; implementation order awaits user confirmation. Currency/quest-dependent travel needs those systems first.",
+                      x=300, y=max(node["y"] for node in nodes)+115, phase="M4.5"))
+if len(nodes) != 24 + len(m4_rows) + int(expansion is not None):
     raise ValueError("Milestone structure changed: review the graph mapping.")
 updated = re.search(r"Last updated: (.*)", source).group(1)
 template = (ROOT / "tools/roadmap.template.html").read_text(encoding="utf-8")

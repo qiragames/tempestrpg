@@ -80,11 +80,22 @@ func _run() -> void:
     for item in [vest, helm, boots, ring, amulet, gloves]:
         actor.add_item(item)
     _check(actor.gear.items.size() == 6 and not actor.add_item(vest), "Items are added once (stable IDs)")
+    health.current = 20
+    pool._current = 10.0
+    for _cycle in range(3):
+        actor.equip(vest.id, "body")
+        actor.unequip("body")
+        actor.equip(ring.id, "accessory_1")
+        actor.unequip("accessory_1")
+    _check(health.current == 20, "Repeated gear equip/unequip does not heal HP")
+    _check(is_equal_approx(pool.current, 10.0), "Repeated gear equip/unequip does not restore Magicules")
+    health.current = health.maximum
+    pool._current = pool.maximum
     _check(not actor.equip(vest.id, "head") and not actor.equip(ring.id, "body") and not actor.equip("item_missing", "body"), "Items only fit their slot; unknown items cannot be equipped")
     var hp: int = health.maximum
     var mp: float = pool.maximum
     var regen: float = pool.regeneration_per_second
-    _check(actor.equip(vest.id, "body") and health.maximum == hp + 10 and health.current == health.maximum, "Equipping +10 HP raises max and current HP")
+    _check(actor.equip(vest.id, "body") and health.maximum == hp + 10 and health.current == hp, "Equipping +10 HP raises capacity without refilling current HP")
     _check(actor.equip(helm.id, "head") and health.maximum == hp + 22 and health.armor == 2, "A helm adds HP and defense")
     _check(actor.equip(ring.id, "accessory_1") and actor.equip(amulet.id, "accessory_2") and pool.maximum == mp + 12 and is_equal_approx(pool.regeneration_per_second, regen + 0.5 + 0.8), "Two accessories: Magicules, regeneration and the Wellspring passive")
     var speed: float = actor.current_speed()

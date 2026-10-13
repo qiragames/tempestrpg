@@ -186,6 +186,8 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-13: Codex reviewed gear `7af267d` and plan `2feae5c`: 1087 existing Linux checks pass (821 local + 266 network), import/startup and 48 screenshots verified. Found reversible equip loops refilling HP/Magicules; separate correction on `codex/fix-gear-resource-refills` preserves current resources, with two regressions failing before/passing after (40 gear checks). Graph now includes the previously omitted M4.5 planning node. Version selection pending; next remains weapons. Watcher is running at the user-requested 30-second interval.
+
 - 2026-10-13: User requests recorded (Claude Code): an archipelago world map with original regions inspired by the theme of the Farever Siagarta map, sea travel by coastal ferries (currency or quest vouchers) or an own bought/crafted ship, and item categories tools/materials/consumables/mounts/runes/augments inspired by the Farever database structure — all original names, numbers and art (no 1:1 copies). Added as M4.5, planned after 17g; order to be confirmed with the user.
 
 - 2026-10-13: Claude Code completed step 17e (gear foundation) on Codex's accepted `codex/fix-respawn-identity-collisions` (via `codex/claude-watcher`). New `scripts/items/gear_catalogue.gd`, `scripts/ui/gear_panel.gd`; `Player` gear (`add_item`, `equip`, `unequip`, `use_gear_active`, `gear_bonus`, `gear_passive`, `on_damaged_by`, looks); `Health.armor` and thorns hook; `MeleeAttack` gear strike, keen, lifesteal; `gear` intent; G key; `SaveStore` v18. New `tests/gear.gd` (38), +1 network check. 821 local + 266 network = 1087 checks pass on Windows. Branch: `claude/roadmap-17e-gear`. Next: 17f.
