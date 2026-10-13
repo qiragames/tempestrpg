@@ -356,19 +356,31 @@ func _run() -> void:
         _check(await _fight(thornback, true, "thornback_fight"), "Defeated the Thornback Gnasher with Rending Bite")
     _check(await _absorb(thornback), "Absorbed the Thornback")
     var skills = player.get_node("SkillBook")
-    _check(skills.knows(&"thorn_lash") and skills.knows(&"piercing_fang"), "Learned Thorn Lash (Common) and Piercing Fang (Extra)")
-    _check(messages.any(func(m): return m.contains("Extra: Piercing Fang acquired")), "System Voice announced the Extra skill")
-    _check(await _use_tree("thorn_lash") and await _use_tree("piercing_fang"), "Activated Thorn Lash and Piercing Fang in the skill tree")
-    await _shot("extra_unlocked", "Hotbar: Rending Bite, Thorn Lash and Piercing Fang")
+    _check(skills.knows(&"thorn_lash") and not skills.knows(&"piercing_fang"), "Learned Thorn Lash (Common); the Extra now comes from fusion")
+    _check(await _use_tree("thorn_lash"), "Activated Thorn Lash in the skill tree")
+    # Fusion window (U): drop Rending Bite into the area, then drop Thorn Lash onto it.
+    await _tap("fusion")
+    _check(await _until(func(): return hud.fusion.visible and paused), "U opens the fusion window")
+    hud.fusion._drop_on_area(Vector2(120, 70), {"skill": "rending_bite"})
+    await _wait(0.2)
+    await _shot("fusion_ready", "Fusion window: Rending Bite placed in the fusion area, skills listed on the right")
+    hud.fusion._drop_on_tile(Vector2.ZERO, {"skill": "thorn_lash"}, 0)
+    await _wait(0.3)
+    await _shot("fusion_done", "Fusion: Rending Bite + Thorn Lash became Piercing Fang (Extra), with a Split button")
+    await _tap("fusion")
+    _check(await _until(func(): return not hud.fusion.visible and not paused), "U closes the fusion window")
+    _check(skills.knows(&"piercing_fang") and not skills.knows(&"rending_bite") and not skills.knows(&"thorn_lash"), "Fused Piercing Fang (Extra); both Commons were replaced")
+    _check(messages.any(func(m): return m.begins_with("Fusion: Rending Bite + Thorn Lash → Piercing Fang")), "System Voice announced the fusion")
+    await _shot("extra_unlocked", "Hotbar: Piercing Fang in Rending Bite's slot")
     pool._current = pool.maximum
     player.get_node("MeleeAttack").cooldown_left = 0.0
     _steer(Vector2.RIGHT)
     await physics_frame
     _release_moves()
     var spent_before: float = pool.current
-    await _tap("skill_3")
+    await _tap("skill_%d" % (skills._slots.find(&"piercing_fang") + 1))
     await _shot("piercing_fang", "Piercing Fang: long thrust that hits every creature in a line")
-    _check(is_equal_approx(spent_before - pool.current, 18.0) or pool.current < spent_before, "Piercing Fang activated from hotbar slot 3")
+    _check(is_equal_approx(spent_before - pool.current, 18.0) or pool.current < spent_before, "Piercing Fang activated from its hotbar slot")
     _log("## 10. Mimicry: Gnasher Form")
     await _wait(1.3)
     pool._current = pool.maximum
@@ -403,9 +415,9 @@ func _run() -> void:
     pool._current = pool.maximum
     player.get_node("MeleeAttack").cooldown_left = 0.0
     _check(await _use_tree("predator_focus"), "Activated Predator Focus in the skill tree")
-    await _tap("skill_4")
-    _check(await _until(func(): return player.get_node("Absorption").focus_left > 0.0), "Slot 4 arms Predator Focus")
-    await _shot("predator_focus", "Unique skill: Predator Focus armed from hotbar slot 4")
+    await _tap("skill_%d" % (player.get_node("SkillBook")._slots.find(&"predator_focus") + 1))
+    _check(await _until(func(): return player.get_node("Absorption").focus_left > 0.0), "Its hotbar slot arms Predator Focus")
+    await _shot("predator_focus", "Unique skill: Predator Focus armed from the hotbar")
     _log("## 11b. Experience and levels")
     var progress: Dictionary = player.progression
     _check(progress.level >= 3 and progress.skill_points + preload("res://scripts/skills/skill_tree.gd").spent(progress.tree) == progress.level, "Reached level %d (%d XP, %d skill points) from defeats, absorptions and the trial" % [progress.level, progress.experience, progress.skill_points])

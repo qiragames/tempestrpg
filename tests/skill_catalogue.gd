@@ -59,8 +59,10 @@ func _run() -> void:
     _check(not "storm" in CATALOGUE.unlockable(["bite", "claw", "pierce", "focus"], almost, rules), "Ultimate needs mastery of its Unique, not only ascension")
     almost.mastery = ["focus"]
     _check("storm" in CATALOGUE.unlockable(["bite", "claw", "pierce", "focus"], almost, rules), "Ultimate unlocks with mastery + ascension")
-    _check(not CATALOGUE.justified(["pierce"], _evidence(["wolf"]), rules) and CATALOGUE.justified(["bite", "claw", "pierce"], _evidence(["forest_gnasher", "wolf"]), rules), "Known skills must be derivable from evidence")
-    _check(not CATALOGUE.justified(["pierce"], _evidence(["forest_gnasher", "wolf"]), rules), "Extra save must retain required Common skills even with complete analysis evidence")
+    _check(not CATALOGUE.justified(["pierce"], _evidence(["wolf"]), rules) and CATALOGUE.justified(["bite", "claw"], _evidence(["forest_gnasher", "wolf"]), rules), "Known skills must be derivable from evidence")
+    # 17d (user decision): fusing consumes the Commons, superseding the step-14 rule that an Extra
+    # keeps them. A fused Extra alone is valid; held together with a part it is a duplicate.
+    _check(CATALOGUE.justified(["pierce"], _evidence(["forest_gnasher", "wolf"]), rules) and not CATALOGUE.justified(["bite", "claw", "pierce"], _evidence(["forest_gnasher", "wolf"]), rules) and not CATALOGUE.justified(["bite", "pierce"], _evidence(["forest_gnasher", "wolf"]), rules), "A fused Extra replaces its Commons: alone valid, with a part rejected")
     _check(not CATALOGUE.justified(["focus"], _evidence(["forest_gnasher", "wolf"], ["trial_a"]), rules), "Unique save must retain its required Extra skill")
     _check(not CATALOGUE.justified(["storm"], almost, rules), "Ultimate save must retain its required Unique skill")
     # Skill book on the real player.

@@ -61,6 +61,10 @@ skill_4={
 "events": [Object(InputEventKey,"physical_keycode":52)]
 }
 
+fusion={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":85)]
+}
 skill_tree={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"physical_keycode":75)]

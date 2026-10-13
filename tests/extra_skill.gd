@@ -78,17 +78,18 @@ func _run() -> void:
     _check(bag.entries().any(func(entry): return entry.id == &"thornback_quill" and entry.name == "Thornback Quill"), "Thornback Quill stored in the bag")
     var gnasher = world.entity_by_id("gnasher_1")
     _check(await _analyze(actor, gnasher), "Forest Gnasher analysis completes")
-    _check(book.knows(&"rending_bite") and book.knows(&"piercing_fang"), "Knowing both Commons with Thornback evidence unlocks the Extra")
-    _check(messages.back() == "Analysis complete. Common: Rending Bite, Extra: Piercing Fang acquired. Activate them in the skill tree (K).", "One analysis reports both new skills in tier order")
+    _check(book.knows(&"rending_bite") and not book.knows(&"piercing_fang"), "Both Commons learned; the Extra is no longer granted automatically (17d: fusion)")
+    _check(messages.back() == "Analysis complete. Common: Rending Bite acquired. Activate it in the skill tree (K).", "System Voice names the second Common")
     _activate_learned(actor)
-    _check(book.skill_at_slot(0).id == &"thorn_lash" and book.skill_at_slot(1).id == &"rending_bite" and book.skill_at_slot(2).id == &"piercing_fang", "Activated skills fill the hotbar in learned order")
+    _check(book.skill_at_slot(0).id == &"thorn_lash" and book.skill_at_slot(1).id == &"rending_bite", "Activated skills fill the hotbar in learned order")
+    _check(actor.fuse_skills("rending_bite", "thorn_lash") and book.known_ids() == ["piercing_fang"] and book.skill_at_slot(0) == null and book.skill_at_slot(1).id == &"piercing_fang", "Fusing Rending Bite + Thorn Lash gives Piercing Fang in Rending Bite's slot")
     var again = _spawn(THORNBACK, "thornback_test_a", Vector2(700, 600))
-    _check(await _analyze(actor, again) and book.known_ids().size() == 3 and messages.back().contains("already known"), "Repeat analysis adds no skill")
+    _check(await _analyze(actor, again) and book.known_ids() == ["piercing_fang"] and messages.back().contains("already known"), "Repeat analysis adds no skill (no second Thorn Lash beside the fused Piercing Fang)")
     # Order B: Rending Bite first, then one Thornback analysis grants Common and Extra together.
     var guest = _guest("guest", Vector2(600, 600))
     guest.get_node("SkillBook").record_analysis(&"forest_gnasher")
     var gained: Array = guest.get_node("SkillBook").record_analysis(&"thornback_gnasher")
-    _check(gained.map(func(skill): return String(skill.id)) == ["thorn_lash", "piercing_fang"], "Reverse order unlocks Thorn Lash and Piercing Fang in one analysis")
+    _check(gained.map(func(skill): return String(skill.id)) == ["thorn_lash"], "Reverse order also teaches only Thorn Lash; Piercing Fang comes from fusion")
     var third = _guest("guest_b", Vector2(600, 620))
     third.get_node("SkillBook").record_analysis(&"thornback_gnasher")
     _check(third.get_node("SkillBook").known_ids() == ["thorn_lash"], "Each character needs its own Rending Bite for the Extra")
@@ -100,7 +101,9 @@ func _run() -> void:
     await _frames()
     pool._current = 100.0
     melee.cooldown_left = 0.0
-    _check(melee.attack_skill(Vector2.RIGHT, &"rending_bite") and near.get_node("Health").current == 10 and far.get_node("Health").current == 30, "Rending Bite reaches only the adjacent creature")
+    actor.split_skill("piercing_fang")
+    _check(melee.attack_skill(Vector2.RIGHT, &"rending_bite") and near.get_node("Health").current == 10 and far.get_node("Health").current == 30, "Rending Bite (split out again) reaches only the adjacent creature")
+    actor.fuse_skills("rending_bite", "thorn_lash")
     await create_timer(0.85).timeout
     var before: float = pool.current
     _check(melee.attack_skill(Vector2.RIGHT, &"piercing_fang"), "Piercing Fang activates")
@@ -144,7 +147,7 @@ func _run() -> void:
     var path := OS.get_temp_dir().path_join("tempestrpg-extra-" + Crypto.new().generate_random_bytes(8).hex_encode()) + "/world.json"
     _check(STORE.write_world(path, data) == OK, "World saves atomically")
     var loaded: Dictionary = STORE.load_world(path)
-    _check(loaded.ok and loaded.data.players.host.skill_ids.size() == 3, "Reload keeps all three skills")
+    _check(loaded.ok and loaded.data.players.host.skill_ids == ["piercing_fang"], "Reload keeps the fused Piercing Fang (its Commons are inside it)")
     var restored = _guest("restored", Vector2(500, 500))
     CODEC.apply_player(restored, loaded.data.players.host, world, false)
     _check(restored.get_node("SkillBook").knows(&"piercing_fang") and restored.get_node("Inventory").entries().any(func(entry): return entry.name == "Thornback Quill"), "Restored character keeps Extra and named quill")

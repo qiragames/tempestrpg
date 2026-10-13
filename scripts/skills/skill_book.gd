@@ -29,7 +29,7 @@ func record_trial(trial_id: String) -> Array:
 
 func _grant_unlocked() -> Array:
     var gained: Array = []
-    for id in CATALOGUE.unlockable(known_ids(), evidence):
+    for id in CATALOGUE.unlockable(known_ids(), evidence, CATALOGUE.RULES, true):
         var skill: Resource = load(CATALOGUE.SKILLS[id])
         # Learned, but usable only after activation in the skill tree (17c).
         _known[skill.id] = skill
@@ -51,14 +51,67 @@ func auto_slot(id: StringName) -> void:
     if empty >= 0 and not _slots.has(id):
         _slots[empty] = id
 
-## Usable (and slottable): tree skills once granted, evidence skills once activated.
+## Usable (and slottable): tree skills once granted, evidence skills once activated; a fused
+## skill once both of its skills were activated (activations stay on the base skills).
 func is_active(id: StringName) -> bool:
     if not _known.has(id):
         return false
     if TREE.SKILLS.has(String(id)):
         return true
     var progression: Variant = get_parent().get("progression")
-    return progression is Dictionary and String(id) in progression.get("tree", {}).get("active", [])
+    if not progression is Dictionary:
+        return false
+    return TREE.activated(String(id), progression.get("tree", {}).get("active", []))
+
+## Host-side fusion: both active skills are replaced by the fused skill, which takes the first's slot.
+func fuse(a: StringName, b: StringName) -> String:
+    if not AUTHORITY.can_mutate(self):
+        return "Only the host can fuse skills."
+    if not _known.has(a) or not _known.has(b) or a == b:
+        return "Drag two different skills you know onto each other."
+    if not is_active(a) or not is_active(b):
+        return "Activate both skills in the skill tree (K) first."
+    var result: String = CATALOGUE.fusion_for(String(a), String(b))
+    if result.is_empty():
+        return "These skills do not fuse."
+    if not CATALOGUE.RULES[result].analysis in evidence.analyzed:
+        return "Fusing these needs a %s analysis first." % load(CATALOGUE.SPECIMENS[CATALOGUE.RULES[result].analysis]).species
+    var slot := _slots.find(a)
+    if slot < 0:
+        slot = _slots.find(b)
+    for part in [a, b]:
+        _known.erase(part)
+        var index := _slots.find(part)
+        if index >= 0:
+            _slots[index] = &""
+    var skill: Resource = load(CATALOGUE.SKILLS[result])
+    _known[skill.id] = skill
+    if slot >= 0:
+        _slots[slot] = skill.id
+    else:
+        auto_slot(skill.id)
+    learned.emit(skill)
+    return ""
+
+## Host-side split: a fused skill turns back into its two skills (first takes its slot).
+func split(id: StringName) -> String:
+    if not AUTHORITY.can_mutate(self):
+        return "Only the host can split skills."
+    if not _known.has(id) or not CATALOGUE.is_fused(String(id)):
+        return "Only a fused skill can be split."
+    var slot := _slots.find(id)
+    _known.erase(id)
+    if slot >= 0:
+        _slots[slot] = &""
+    var parts: Array = CATALOGUE.components(String(id))
+    for part in parts:
+        _known[StringName(part)] = load(CATALOGUE.SKILLS[part])
+    if slot >= 0:
+        _slots[slot] = StringName(parts[0])
+    for part in parts:
+        if is_active(StringName(part)):
+            auto_slot(StringName(part))
+    return ""
 
 ## Skills learned from evidence (absorbing, trials); tree skills are derived from bought nodes.
 func evidence_ids() -> Array:

@@ -438,6 +438,18 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             rejected_requests += 1
             return false
         return actor.buy_node(payload.id) if payload.operation == "buy" else actor.activate_skill(payload.id)
+    if action == "fusion":
+        # Clients name the skills to fuse or the fused skill to split; the host checks everything else.
+        var fuse: bool = payload.get("operation") == "fuse"
+        if fuse:
+            if payload.size() != 3 or not payload.get("a") is String or not payload.get("b") is String or payload.a.length() > 64 or payload.b.length() > 64:
+                rejected_requests += 1
+                return false
+            return actor.fuse_skills(payload.a, payload.b)
+        if payload.size() != 2 or payload.get("operation") != "split" or not payload.get("id") is String or payload.id.length() > 64:
+            rejected_requests += 1
+            return false
+        return actor.split_skill(payload.id)
     if action == "assign_slot":
         # Loadout is host-owned: clients name a slot and a skill ID; the book checks knowledge.
         var slot: Variant = payload.get("slot")

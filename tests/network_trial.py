@@ -73,6 +73,7 @@ try:
         check(not result["after_active"], "Both clients observe the trial ending")
     check("proving_trial" in qualified["trials"] and "predator_focus" in qualified["skills"] and not qualified["slotted_before"], "The owner earns trial evidence and learns Predator Focus (not usable until activated)")
     check("predator_focus" in qualified["progression"]["tree"]["active"] and "predator_focus" in qualified["slots"], "Activating it through the host puts Predator Focus on the hotbar")
+    check(sorted(qualified["split_skills"]) == ["predator_focus", "rending_bite", "thorn_lash"] and "piercing_fang" in qualified["skills"] and "rending_bite" not in qualified["skills"], "The owner splits Piercing Fang and fuses it again through the host")
     check(helper["trials"] == [] and "predator_focus" not in helper["skills"], "The helper and the late requester are not credited")
     check(qualified["progression"]["experience"] == 60 and qualified["progression"]["level"] == 2 and qualified["progression"]["skill_points"] == 1 and helper["progression"]["experience"] == 0, "Only the trial owner gains 60 XP (level 2: 2 points, 1 left after activating), replicated to its client")
     check(qualified["hud_level"].startswith("Lv 2 · XP 60 / 150") and helper["hud_level"].startswith("Lv 1 · XP 0 / 50"), "Each client's HUD shows its own level and XP")

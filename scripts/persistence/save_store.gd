@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 15
+const VERSION := 16
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
 ## Initial saved state of the v8 encounter; matches scenes/world/forest.tscn.
@@ -118,7 +118,7 @@ static func validate_player(state: Variant, id: String) -> bool:
         return false
     var granted: Array = TREE.granted_skills(progression.tree.nodes)
     for slot in slots:
-        if slot != "" and not slot in granted and not slot in progression.tree.active:
+        if slot != "" and not slot in granted and not TREE.activated(slot, progression.tree.active):
             return false
     # Apply the same Slime-only mimic gate to restored state and network snapshots.
     if form.id != FORMS.BASE and not RACES.stats(progression.race).mimic:
@@ -365,12 +365,43 @@ static func migrate(data: Variant) -> Variant:
         if not data.get("players") is Dictionary:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 15
         for state in data.players.values():
             if not state is Dictionary or not state.get("progression") is Dictionary or not state.get("skill_ids") is Array:
                 return null
             state.progression["skill_points"] = int(state.progression.get("skill_points", 0)) + 1
             state.progression["tree"] = {"nodes": [], "active": state.skill_ids.duplicate(), "free": state.skill_ids.duplicate()}
+    # v16 (17d): Extra skills come only from fusion and replace their two skills. Characters who
+    # held an Extra together with its parts keep the Extra; the parts become its (splittable)
+    # components. Activations move to the parts: both count as activated (free if newly added),
+    # and a paid activation of the Extra itself is refunded.
+    if data.get("version") == 15:
+        if not data.get("players") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = VERSION
+        for state in data.players.values():
+            if not state is Dictionary or not state.get("skill_ids") is Array or not state.get("slots") is Array or not state.get("progression") is Dictionary or not state.progression.get("tree") is Dictionary:
+                return null
+            var tree: Dictionary = state.progression.tree
+            if not tree.get("active") is Array or not tree.get("free") is Array:
+                return null
+            for fused in SKILLS.RULES:
+                if not SKILLS.is_fused(fused) or not fused in state.skill_ids:
+                    continue
+                for part in SKILLS.components(fused):
+                    state.skill_ids.erase(part)
+                    var slot: int = state.slots.find(part)
+                    if slot >= 0:
+                        state.slots[slot] = ""
+                    if not part in tree.active:
+                        tree.active.append(part)
+                        tree.free.append(part)
+                if fused in tree.active:
+                    if not fused in tree.free:
+                        state.progression["skill_points"] = int(state.progression.get("skill_points", 0)) + 1
+                    tree.active.erase(fused)
+                    tree.free.erase(fused)
     return data
 
 static func _read(path: String) -> Dictionary:

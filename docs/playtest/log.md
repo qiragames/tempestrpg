@@ -138,7 +138,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.1 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.2 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](24_shrine.png)
@@ -160,24 +160,34 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 *Absorbing thornback_1: analysis channel and progress bar* (640x360)
 
 - [x] Absorbed the Thornback
-- [x] Learned Thorn Lash (Common) and Piercing Fang (Extra)
-- [x] System Voice announced the Extra skill
-- (XP assistance: +60 XP to reach level 3 for a skill point)
-- [x] Activated Thorn Lash and Piercing Fang in the skill tree
+- [x] Learned Thorn Lash (Common); the Extra now comes from fusion
+- [x] Activated Thorn Lash in the skill tree
+- [x] U opens the fusion window
 
-![Hotbar: Rending Bite, Thorn Lash and Piercing Fang](28_extra_unlocked.png)
-*Hotbar: Rending Bite, Thorn Lash and Piercing Fang* (640x360)
+![Fusion window: Rending Bite placed in the fusion area, skills listed on the right](28_fusion_ready.png)
+*Fusion window: Rending Bite placed in the fusion area, skills listed on the right* (640x360)
 
 
-![Piercing Fang: long thrust that hits every creature in a line](29_piercing_fang.png)
+![Fusion: Rending Bite + Thorn Lash became Piercing Fang (Extra), with a Split button](29_fusion_done.png)
+*Fusion: Rending Bite + Thorn Lash became Piercing Fang (Extra), with a Split button* (640x360)
+
+- [x] U closes the fusion window
+- [x] Fused Piercing Fang (Extra); both Commons were replaced
+- [x] System Voice announced the fusion
+
+![Hotbar: Piercing Fang in Rending Bite's slot](30_extra_unlocked.png)
+*Hotbar: Piercing Fang in Rending Bite's slot* (640x360)
+
+
+![Piercing Fang: long thrust that hits every creature in a line](31_piercing_fang.png)
 *Piercing Fang: long thrust that hits every creature in a line* (640x360)
 
-- [x] Piercing Fang activated from hotbar slot 3
+- [x] Piercing Fang activated from its hotbar slot
 ## 10. Mimicry: Gnasher Form
 - [x] T transforms into Gnasher Form
 - [x] Transformation cost 20 Magicules
 
-![Gnasher Form: cyan mimic of the Gnasher, faster, stronger basic strike; HUD shows form and cooldown](30_gnasher_form.png)
+![Gnasher Form: cyan mimic of the Gnasher, faster, stronger basic strike; HUD shows form and cooldown](32_gnasher_form.png)
 *Gnasher Form: cyan mimic of the Gnasher, faster, stronger basic strike; HUD shows form and cooldown* (640x360)
 
 - [x] T returns to the slime after the cooldown
@@ -187,42 +197,41 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - [x] F at the stone starts the Proving Trial
 - [x] Three trial creatures appear
 
-![Proving Trial: arena circle, three creatures and the trial banner](31_trial_start.png)
+![Proving Trial: arena circle, three creatures and the trial banner](33_trial_start.png)
 *Proving Trial: arena circle, three creatures and the trial banner* (640x360)
-
-
-![Fighting: strike arc and enemy health bar](32_trial_fight.png)
-*Fighting: strike arc and enemy health bar* (640x360)
-
-
-![Fighting: strike arc and enemy health bar](33_trial_fight.png)
-*Fighting: strike arc and enemy health bar* (640x360)
 
 
 ![Fighting: strike arc and enemy health bar](34_trial_fight.png)
 *Fighting: strike arc and enemy health bar* (640x360)
 
+
+![Fighting: strike arc and enemy health bar](35_trial_fight.png)
+*Fighting: strike arc and enemy health bar* (640x360)
+
+
+![Fighting: strike arc and enemy health bar](36_trial_fight.png)
+*Fighting: strike arc and enemy health bar* (640x360)
+
 - [x] Trial ends after the last creature falls
 - [x] Trial complete: Predator Focus (Unique) learned
 - [x] System Voice announced the Unique skill
-- (XP assistance: +90 XP to reach level 4 for a skill point)
 - [x] Activated Predator Focus in the skill tree
-- [x] Slot 4 arms Predator Focus
+- [x] Its hotbar slot arms Predator Focus
 
-![Unique skill: Predator Focus armed from hotbar slot 4](35_predator_focus.png)
-*Unique skill: Predator Focus armed from hotbar slot 4* (640x360)
+![Unique skill: Predator Focus armed from the hotbar](37_predator_focus.png)
+*Unique skill: Predator Focus armed from the hotbar* (640x360)
 
 ## 11b. Experience and levels
-- [x] Reached level 4 (300 XP, 0 skill points) from defeats, absorptions and the trial
-- [x] HUD title bar shows the level: Lv 4 · XP 300 / 500
+- [x] Reached level 3 (150 XP, 0 skill points) from defeats, absorptions and the trial
+- [x] HUD title bar shows the level: Lv 3 · XP 150 / 300
 - [x] The System Voice announced a level-up
 
-![Level, XP and unspent skill points in the top-right of the HUD](36_level_hud.png)
+![Level, XP and unspent skill points in the top-right of the HUD](38_level_hud.png)
 *Level, XP and unspent skill points in the top-right of the HUD* (640x360)
 
-- (XP assistance: +200 XP to reach level 5 for a skill point)
+- (XP assistance: +150 XP to reach level 4 for a skill point)
 
-![Skill tree: Gel Vitality bought (+10 max HP)](37_tree_node.png)
+![Skill tree: Gel Vitality bought (+10 max HP)](39_tree_node.png)
 *Skill tree: Gel Vitality bought (+10 max HP)* (640x360)
 
 - [x] Bought a stat node: Gel Vitality +10 max HP
@@ -230,29 +239,29 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - [x] World is hosted solo and saved, no port open
 - [x] Esc opens the pause menu and freezes the solo world
 
-![Pause menu while playing solo: Resume, Open to friends, Save, Save & quit](38_pause_solo.png)
+![Pause menu while playing solo: Resume, Open to friends, Save, Save & quit](40_pause_solo.png)
 *Pause menu while playing solo: Resume, Open to friends, Save, Save & quit* (640x360)
 
 - [x] Open to friends starts listening without a restart
 
-![Pause menu after Open to friends: port and LAN address for friends](39_pause_open.png)
+![Pause menu after Open to friends: port and LAN address for friends](41_pause_open.png)
 *Pause menu after Open to friends: port and LAN address for friends* (640x360)
 
 - [x] Esc resumes
 ## 13. Seeded worlds
 
-![Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed](40_seed_goblin_camp.png)
+![Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed](42_seed_goblin_camp.png)
 *Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed* (640x360)
 
 
-![Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed](41_seed_tempest.png)
+![Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed](43_seed_tempest.png)
 *Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed* (640x360)
 
 - [x] Different seeds lay out different worlds; the same seed repeats exactly
 ## 14. Playable races
 - [x] Human and Demon are created with their own stats
 
-![Playable races, left to right: Slime, Human, Demon (placeholder looks)](42_races.png)
+![Playable races, left to right: Slime, Human, Demon (placeholder looks)](44_races.png)
 *Playable races, left to right: Slime, Human, Demon (placeholder looks)* (640x360)
 
 
@@ -297,10 +306,9 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Analyzing Thornback Gnasher. Remain nearby.
 - Absorbed vitality: +25 HP over 10s.
 - +10 XP (absorption).
-- Analysis complete. Common: Thorn Lash, Extra: Piercing Fang acquired. Activate them in the skill tree (K).
+- Analysis complete. Common: Thorn Lash acquired. Activate it in the skill tree (K).
 - Skill activated: Thorn Lash.
-- +60 XP (showcase assistance). Level 3 reached: +1 skill point.
-- Skill activated: Piercing Fang.
+- Fusion: Rending Bite + Thorn Lash → Piercing Fang (Extra).
 - Mimicry: Gnasher Form.
 - Mimicry: Slime.
 - Proving Trial begun: defeat 3 creatures within 60 seconds. Stay inside the circle.
@@ -308,16 +316,15 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Threat neutralized.
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
-- +60 XP (trial).
-- +90 XP (showcase assistance). Level 4 reached: +1 skill point.
+- +60 XP (trial). Level 3 reached: +1 skill point.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
-- +200 XP (showcase assistance). Level 5 reached: +1 skill point.
+- +150 XP (showcase assistance). Level 4 reached: +1 skill point.
 - Skill tree: Gel Vitality. +10 max HP
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 
 The bot retreated 1 time(s) to let Magicules recover.
-XP assistance for skill points: 350 XP in total (the slice has three creatures and no respawns yet).
+XP assistance for skill points: 150 XP in total (the slice has three creatures and no respawns yet).
 
-**Result: 0 failed checks, 42 screenshots.**
+**Result: 0 failed checks, 44 screenshots.**

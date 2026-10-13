@@ -5,6 +5,8 @@ extends CanvasLayer
 var _slots: Array[Button] = []
 ## Skill tree window (K), see skill_tree_panel.gd.
 var skill_tree: Control
+## Skill fusion window (U), see fusion_panel.gd.
+var fusion: Control
 var _modal: Control
 var _items: ItemList
 var _details: Label
@@ -51,13 +53,16 @@ func _ready() -> void:
     _build_pause_panel()
     skill_tree = load("res://scripts/ui/skill_tree_panel.gd").new(self)
     add_child(skill_tree)
+    fusion = load("res://scripts/ui/fusion_panel.gd").new(self)
+    add_child(fusion)
+    get_parent().system_message.connect(fusion.show_message)
     _ally_dialog = load("res://scripts/ui/ally_dialog.gd").new()
     add_child(_ally_dialog)
     _camp_dialog = load("res://scripts/ui/camp_dialog.gd").new()
     add_child(_camp_dialog)
 
 func menu_open() -> bool:
-    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible)
+    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible)
 
 func bind_player(actor: Node2D) -> void:
     if player == actor:
@@ -271,11 +276,22 @@ func _unhandled_input(event: InputEvent) -> void:
             get_parent()._announce("World saved." if result == OK else "Only the host can save; check the world path if saving failed.")
             get_viewport().set_input_as_handled()
             return
-    if event.is_action_pressed("skill_tree") and not event.is_echo() and not _modal.visible:
+    if event.is_action_pressed("skill_tree") and not event.is_echo() and not _modal.visible and not fusion.visible:
         if skill_tree.visible:
             skill_tree.close()
         else:
             skill_tree.open()
+        get_viewport().set_input_as_handled()
+        return
+    if event.is_action_pressed("fusion") and not event.is_echo() and not _modal.visible and not skill_tree.visible:
+        if fusion.visible:
+            fusion.close()
+        else:
+            fusion.open()
+        get_viewport().set_input_as_handled()
+        return
+    if fusion.visible and event.is_action_pressed("ui_cancel"):
+        fusion.close()
         get_viewport().set_input_as_handled()
         return
     if skill_tree.visible and event.is_action_pressed("ui_cancel"):
@@ -304,6 +320,8 @@ func _exit_tree() -> void:
         get_tree().paused = _paused_before_open
     if is_instance_valid(skill_tree) and skill_tree.visible:
         get_tree().paused = skill_tree._paused_before_open
+    if is_instance_valid(fusion) and fusion.visible:
+        get_tree().paused = fusion._paused_before_open
 
 var _pause_panel: Panel
 var _pause_status: Label

@@ -93,6 +93,32 @@ func activate_skill(id: String) -> bool:
     session.queue_save()
     return true
 
+## Host-only fusion (17d): two active skills become their fused skill.
+func fuse_skills(a: String, b: String) -> bool:
+    if not AUTHORITY.can_mutate(self):
+        return false
+    var problem: String = $SkillBook.fuse(StringName(a), StringName(b))
+    if not problem.is_empty():
+        session.notify_character(character_id, problem)
+        return false
+    var result: String = $SkillBook.CATALOGUE.fusion_for(a, b)
+    var book = $SkillBook
+    session.notify_character(character_id, "Fusion: %s + %s → %s (%s)." % [load(book.CATALOGUE.SKILLS[a]).display_name, load(book.CATALOGUE.SKILLS[b]).display_name, book.get_skill(StringName(result)).display_name, book.get_skill(StringName(result)).tier])
+    session.queue_save()
+    return true
+
+## Host-only split: a fused skill becomes its two skills again.
+func split_skill(id: String) -> bool:
+    if not AUTHORITY.can_mutate(self):
+        return false
+    var problem: String = $SkillBook.split(StringName(id))
+    if not problem.is_empty():
+        session.notify_character(character_id, problem)
+        return false
+    session.notify_character(character_id, "Split: %s → %s." % [load($SkillBook.CATALOGUE.SKILLS[id]).display_name, " + ".join($SkillBook.CATALOGUE.components(id).map(func(part): return load($SkillBook.CATALOGUE.SKILLS[part]).display_name))])
+    session.queue_save()
+    return true
+
 func tree_strike_bonus() -> int:
     return int(TREE.stat_bonus(progression.get("tree", {}).get("nodes", []), "strike"))
 

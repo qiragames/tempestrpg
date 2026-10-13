@@ -49,6 +49,12 @@ const NODES := {
 }
 const STAT_TEXT := {"hp": "+%s max HP", "magicules": "+%s max Magicules", "regen": "+%s Magicules/s", "speed": "+%s move speed", "strike": "+%s strike damage"}
 
+## A fused skill counts as activated when all of its skills were activated (17d).
+static func activated(id: String, active: Array) -> bool:
+    if CATALOGUE.is_fused(id):
+        return CATALOGUE.components(id).all(func(part): return activated(part, active))
+    return id in active
+
 static func empty() -> Dictionary:
     return {"nodes": [], "active": [], "free": []}
 
@@ -103,6 +109,8 @@ static func buy_problem(progression: Dictionary, id: String) -> String:
 static func activate_problem(progression: Dictionary, known: Array, id: String) -> String:
     if not CATALOGUE.SKILLS.has(id) or not id in known:
         return "That skill has not been learned."
+    if CATALOGUE.is_fused(id):
+        return "A fused skill is active when both of its skills are. Split it to activate them."
     if id in progression.tree.active:
         return "Already active."
     if int(progression.skill_points) < ACTIVATE_COST:
@@ -110,7 +118,12 @@ static func activate_problem(progression: Dictionary, known: Array, id: String) 
     return ""
 
 ## Saved-tree validation against the character's race, level and evidence-learned skills.
+## `known` is the held skills; activations may name skills consumed by a held fused skill.
 static func valid(progression: Dictionary, known: Array) -> bool:
+    var holdable: Array = known.duplicate()
+    for id in known:
+        if CATALOGUE.is_fused(id):
+            holdable.append_array(CATALOGUE.components(id))
     var tree: Variant = progression.get("tree")
     if not tree is Dictionary or tree.size() != 3:
         return false
@@ -127,7 +140,7 @@ static func valid(progression: Dictionary, known: Array) -> bool:
         seen[id] = true
     var active: Dictionary = {}
     for id in tree.active:
-        if not id is String or active.has(id) or not id in known:
+        if not id is String or active.has(id) or not id in holdable or CATALOGUE.is_fused(id):
             return false
         active[id] = true
     var free: Dictionary = {}

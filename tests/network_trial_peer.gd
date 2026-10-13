@@ -42,6 +42,11 @@ func _run() -> void:
                 if joined == 1:
                     actor.get_node("SkillBook").record_analysis(&"forest_gnasher")
                     actor.get_node("SkillBook").record_analysis(&"thornback_gnasher")
+                    # 17d: Piercing Fang is fused. Both Commons count as activated for free (as after
+                    # the v15 migration) so the trial XP/point checks stay unchanged.
+                    actor.progression.tree.active.append_array(["rending_bite", "thorn_lash"])
+                    actor.progression.tree.free.append_array(["rending_bite", "thorn_lash"])
+                    actor.fuse_skills("rending_bite", "thorn_lash")
             )
         _report({"ready": true, "evidence": _evidence(session.persistent_document().players)})
     else:
@@ -96,5 +101,13 @@ func _act() -> void:
     if qualified:
         session.request_action("tree", {"operation": "activate", "id": "predator_focus"})
         await create_timer(0.4).timeout
+    # 17d: split and fuse again through the host.
+    var split_skills: Array = []
+    if qualified:
+        session.request_action("fusion", {"operation": "split", "id": "piercing_fang"})
+        await create_timer(0.4).timeout
+        split_skills = session.latest_snapshot.players[me].skill_ids.duplicate()
+        session.request_action("fusion", {"operation": "fuse", "a": "rending_bite", "b": "thorn_lash"})
+        await create_timer(0.4).timeout
     var mine: Dictionary = session.latest_snapshot.players[me]
-    _report({"phase": true, "id": me, "qualified": qualified, "guard": guard, "during": during, "creatures": creatures, "trials": mine.skill_evidence.trials, "skills": mine.skill_ids, "slots": mine.slots, "after_active": session.latest_snapshot.trial.active, "progression": mine.progression, "slotted_before": slotted_before, "hud_level": world.get_node("HUD")._level.text})
+    _report({"phase": true, "id": me, "qualified": qualified, "guard": guard, "during": during, "creatures": creatures, "trials": mine.skill_evidence.trials, "skills": mine.skill_ids, "slots": mine.slots, "after_active": session.latest_snapshot.trial.active, "progression": mine.progression, "slotted_before": slotted_before, "split_skills": split_skills, "hud_level": world.get_node("HUD")._level.text})

@@ -27,6 +27,8 @@ func _guest(id: String, at: Vector2, extra: bool) -> Node2D:
     if extra:
         guest.get_node("SkillBook").record_analysis(&"forest_gnasher")
         guest.get_node("SkillBook").record_analysis(&"thornback_gnasher")
+        _activate_learned(guest)
+        guest.fuse_skills("rending_bite", "thorn_lash")
     return guest
 func _defeat_all() -> void:
     for creature in trial.creatures():
@@ -63,6 +65,8 @@ func _run() -> void:
     _check(not trial.try_start(actor) and trial.creatures().is_empty(), "Without an Extra skill the stone stays silent")
     book.record_analysis(&"forest_gnasher")
     book.record_analysis(&"thornback_gnasher")
+    _activate_learned(actor)
+    actor.fuse_skills("rending_bite", "thorn_lash")
     actor.position = Vector2(480, 300)
     _check(not trial.try_start(actor), "Starting requires standing at the stone")
     actor.position = trial.stone + Vector2(0, 20)
@@ -90,7 +94,7 @@ func _run() -> void:
     trial._physics_process(0.016)
     _check(not trial.state.active and trial.creatures().is_empty(), "Defeating every creature ends the trial and clears the arena")
     _activate_learned(actor)
-    _check("proving_trial" in book.evidence.trials and book.knows(&"predator_focus") and book.skill_at_slot(3).id == &"predator_focus", "Owner earns trial evidence and, once activated, Predator Focus in slot 4")
+    _check("proving_trial" in book.evidence.trials and book.knows(&"predator_focus") and book._slots.has(&"predator_focus"), "Owner earns trial evidence and, once activated, Predator Focus on the hotbar")
     _check(helper.get_node("SkillBook").evidence.trials.is_empty() and not helper.get_node("SkillBook").knows(&"predator_focus"), "Helpers are not credited")
     _check(get_nodes_in_group("magicule_pickups").size() == pickups_before, "Trial creatures drop nothing")
     _check(not trial.try_start(actor), "A completed trial cannot be repeated for rewards")
@@ -171,7 +175,7 @@ func _run() -> void:
     _check(STORE.VERSION >= 10 and STORE.validate(data) and data.players.host.slots.size() == 4 and data.players.host.analysis.focus == 20.0, "v10 save keeps four slots and the armed focus")
     var restored = _guest("restored", Vector2(600, 600), false)
     CODEC.apply_player(restored, JSON.parse_string(JSON.stringify(data.players.host)), world, false)
-    _check(restored.get_node("Absorption").focus_left == 20.0 and restored.get_node("SkillBook").skill_at_slot(3).id == &"predator_focus", "Reload restores focus timer and slot 4")
+    _check(restored.get_node("Absorption").focus_left == 20.0 and restored.get_node("SkillBook")._slots.has(&"predator_focus"), "Reload restores focus timer and the Predator Focus slot")
     var bad := data.duplicate(true)
     bad.players.host.analysis.focus = 30
     _check(not STORE.validate(bad), "Out-of-range focus rejected")

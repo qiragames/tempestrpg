@@ -8,6 +8,10 @@ extends RefCounted
 ##   Unique   {"requires": [Extra], "trial": trial}          know the Extra, complete the trial
 ##   Ultimate {"requires": [Unique], "ascension": milestone}  know + master the Unique, ascend
 ## No trial or ascension can be earned yet, so Unique/Ultimate stay locked until later steps add them.
+##
+## Fusion (step 17d): Extra skills are never granted automatically. An Extra rule is a fusion
+## recipe — its two `requires` skills are fused in the fusion window (both are replaced by the Extra)
+## once its `analysis` evidence exists. A fused skill can always be split back into the two.
 
 const TIERS := ["Common", "Extra", "Unique", "Ultimate"]
 const EVIDENCE_KINDS := ["analyzed", "trials", "mastery", "ascensions"]
@@ -26,6 +30,43 @@ const RULES := {
 ## so Ultimate skills stay locked.
 const TRIALS := {"proving_trial": "Proving Trial"}
 const ASCENSIONS := {}
+
+const FUSED_TIERS := ["Extra"]
+
+static func is_fused(id: String, rules: Dictionary = RULES) -> bool:
+    return rules.has(id) and rules[id].tier in FUSED_TIERS
+
+## The two skills a fused skill is made of (empty for other skills).
+static func components(id: String, rules: Dictionary = RULES) -> Array:
+    return rules[id].requires.duplicate() if is_fused(id, rules) else []
+
+## The fused skill two skills make together (either order), or "" if they do not fuse.
+static func fusion_for(a: String, b: String, rules: Dictionary = RULES) -> String:
+    for id in rules:
+        if is_fused(id, rules) and rules[id].requires.size() == 2 and a != b and a in rules[id].requires and b in rules[id].requires:
+            return id
+    return ""
+
+## Held skills plus what fusing/splitting them could give: components of held fused skills, and
+## fused skills whose components are all present and whose analysis is met. Prerequisites of
+## higher tiers are checked against this, so splitting a fused skill never invalidates a Unique.
+static func closure(known: Array, evidence: Dictionary, rules: Dictionary = RULES) -> Array:
+    var have: Array = known.duplicate()
+    var changed := true
+    while changed:
+        changed = false
+        for id in rules:
+            if not is_fused(id, rules):
+                continue
+            if id in have:
+                for part in rules[id].requires:
+                    if not part in have:
+                        have.append(part)
+                        changed = true
+            elif rules[id].requires.all(func(part): return part in have) and rules[id].analysis in evidence.analyzed:
+                have.append(id)
+                changed = true
+    return have
 
 static func empty_evidence() -> Dictionary:
     return {"analyzed": [], "trials": [], "mastery": [], "ascensions": []}
@@ -104,22 +145,34 @@ static func requirements_met(id: String, known: Array, evidence: Dictionary, rul
     return true
 
 ## Skills the evidence now unlocks, lower tiers first so one analysis can satisfy a chain.
-static func unlockable(known: Array, evidence: Dictionary, rules: Dictionary = RULES) -> Array:
+## `automatic` (granting in play) skips fused tiers — those come only from the fusion window — and
+## checks prerequisites against the closure, so a Unique sees a fused skill that was split again.
+static func unlockable(known: Array, evidence: Dictionary, rules: Dictionary = RULES, automatic: bool = false) -> Array:
     var have: Array = known.duplicate()
     var gained: Array = []
     for tier in TIERS:
         for id in rules:
-            if rules[id].tier == tier and not id in have and requirements_met(id, have, evidence, rules):
+            if rules[id].tier != tier or id in have or (automatic and tier in FUSED_TIERS):
+                continue
+            # A part consumed by a held fused skill is not granted again (Split gives it back).
+            if automatic and id in closure(have, evidence, rules):
+                continue
+            if requirements_met(id, closure(have, evidence, rules) if automatic else have, evidence, rules):
                 have.append(id)
                 gained.append(id)
     return gained
 
-## Every known skill needs valid evidence and its prerequisites in the actual known set.
+## Every held skill needs valid evidence and its prerequisites in the closure; a fused skill's
+## components are consumed, so they can never be held at the same time as it.
 static func justified(known: Array, evidence: Dictionary, rules: Dictionary = RULES) -> bool:
     var derivable: Array = unlockable([], evidence, rules)
+    var reachable: Array = closure(known, evidence, rules)
     for id in known:
-        if not id in derivable or not requirements_met(id, known, evidence, rules):
+        if not id in derivable or not requirements_met(id, reachable, evidence, rules):
             return false
+        for part in components(id, rules):
+            if part in known:
+                return false
     return true
 
 static func evidence_valid(evidence: Variant, known: Array = []) -> bool:
