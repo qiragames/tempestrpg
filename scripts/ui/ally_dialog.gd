@@ -38,6 +38,11 @@ func open_nearest() -> void:
         # The host explains any refusal through the System Voice.
         session.request_action("trial", {"operation": "start"})
         return
+    # F next to an unopened chest opens it (17g).
+    var chest: String = hud.get_parent().nearest_chest(hud.player)
+    if not chest.is_empty():
+        session.request_action("chest", {"id": chest})
+        return
     var closest: Node2D
     var distance: float = 40.1
     for candidate in get_tree().get_nodes_in_group("allies"):

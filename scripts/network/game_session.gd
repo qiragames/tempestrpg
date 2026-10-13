@@ -438,6 +438,11 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             rejected_requests += 1
             return false
         return actor.buy_node(payload.id) if payload.operation == "buy" else actor.activate_skill(payload.id)
+    if action == "chest":
+        if payload.size() != 1 or not payload.get("id") is String or payload.id.length() > 16:
+            rejected_requests += 1
+            return false
+        return false if actor.input_blocked else world.open_chest(actor, payload.id)
     if action == "gear":
         # Clients name an owned item and a slot (or a slot to empty); the host checks the rest.
         var operation: Variant = payload.get("operation")

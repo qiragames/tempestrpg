@@ -107,17 +107,20 @@ static func capture_entities(world: Node2D) -> Dictionary:
     var enemies: Array = []
     var pickups: Array = []
     var allies: Array = []
+    var loot: Array = []
     for node in world.get_children():
         if node.is_queued_for_deletion():
             continue
         if node.is_in_group("enemies"):
             var health = node.get_node("Health")
             enemies.append({"id": node.entity_id, "kind": node.kind, "position": vector(node.position), "home": vector(node.home), "difficulty": node.difficulty, "hp": health.current, "maximum_hp": health.maximum, "immunity": health.immunity_left, "state": node.state, "state_time": node.state_time, "target": node.target.character_id if is_instance_valid(node.target) else ""})
+        elif node.is_in_group("gear_pickups"):
+            loot.append({"id": node.entity_id, "position": vector(node.position), "item": node.item.duplicate(true)})
         elif node.is_in_group("magicule_pickups"):
             pickups.append({"id": node.entity_id, "position": vector(node.position), "amount": node.amount})
         elif node.is_in_group("allies"):
             allies.append({"id": node.entity_id, "position": vector(node.position), "owner": node.owner_id, "name": node.display_name, "race": node.race, "maximum_hp": node.maximum_hp, "power": node.power, "speed": node.follow_speed, "work": {"role": node.work_role, "target": node.work_target, "remaining": node.work_left}})
-    return {"enemies": enemies, "pickups": pickups, "allies": allies, "camp": world.camp.state.duplicate(true), "trial": world.trial.state.duplicate(true), "respawns": world.respawner.capture()}
+    return {"enemies": enemies, "pickups": pickups, "allies": allies, "camp": world.camp.state.duplicate(true), "trial": world.trial.state.duplicate(true), "respawns": world.respawner.capture(), "loot": loot}
 
 static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> void:
     world.camp.restore(data.camp)
@@ -183,7 +186,16 @@ static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> vo
         pickup.position = to_vector(state.position)
         pickup.amount = state.amount
         pickup.set_physics_process(not replica)
+    for state in data.get("loot", []):
+        wanted[state.id] = true
+        var lying = world.entity_by_id(state.id)
+        if lying == null:
+            lying = world.drop_gear(state.item, to_vector(state.position), state.id)
+        if lying != null:
+            lying.position = to_vector(state.position)
+            lying.set_physics_process(not replica)
+            lying.queue_redraw()
     for node in world.get_children():
-        if (node.is_in_group("enemies") or node.is_in_group("magicule_pickups") or node.is_in_group("allies")) and not wanted.has(node.entity_id):
+        if (node.is_in_group("enemies") or node.is_in_group("magicule_pickups") or node.is_in_group("allies") or node.is_in_group("gear_pickups")) and not wanted.has(node.entity_id):
             world.remove_child(node)
             node.queue_free()

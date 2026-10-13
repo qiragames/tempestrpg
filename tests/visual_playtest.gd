@@ -511,6 +511,18 @@ func _run() -> void:
         for dummy in targets:
             world.remove_child(dummy)
             dummy.queue_free()
+    _log("## 11e. Chests")
+    # The reference map's third chest sits north of the pond; walk there along open ground and press F.
+    var chest: Dictionary = world.layout.chests[2]
+    var gear_before: int = player.gear.items.size()
+    var chest_route: bool = await _walk_to(Vector2(280, 340), 10.0, 20.0) and await _walk_to(Vector2(492, 330), 10.0, 20.0) and await _walk_to(Vector2(492, 110), 10.0, 20.0) and await _walk_to(chest.position + Vector2(-14, 4), 8.0, 20.0)
+    _check(chest_route, "Walked to the chest north of the pond")
+    await _shot("chest_closed", "A closed chest (gold lock) at a point of interest")
+    await _tap("interact")
+    _check(await _until(func(): return "chest_3" in player.progression.get("chests", [])), "F opens the chest")
+    _check(player.gear.items.size() == gear_before + 1 and player.gear.items.back().rarity >= 1, "The chest gave an Uncommon-or-better item: %s" % (gear_catalogue.display_name(player.gear.items.back()) if player.gear.items.size() > gear_before else "none"))
+    await _wait(0.3)
+    await _shot("chest_open", "Chest opened (lid up) and the item announced")
     _log("## 12. Pause menu and Open to friends")
     # Turn this sandbox into a solo-hosted world (as the title menu does), then use Esc.
     # This sandbox was played on the reference map, so it is hosted as an unseeded world (16d).

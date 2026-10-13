@@ -74,6 +74,7 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/respawn.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/gear.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/weapons.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/gear_sources.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
 python3 tests/network_forms.py
@@ -222,13 +223,22 @@ A stone stands in the north at **(480, 100)**. Once your character knows **Pierc
 
 Completing it teaches the first **Unique** skill, **Predator Focus** (placeholder name), which goes into the new **4th hotbar slot (key 4)**. It costs 25 Magicules: your **next analysis within 20 seconds** reaches twice as far (72 px) and completes in 0.3 s instead of 1.2 s. It is used up when that analysis begins, so interrupting it gives nothing back, and it cannot be stacked. **Ultimate** skills stay locked until an ascension exists (planned for M6). Schema **v10** stores the fourth slot and an armed focus. Tests: `tests/trial_unique.gd` (40) and `python3 tests/network_trial.py` (22 real-process checks).
 
+## Finding gear
+
+- **Creature drops:** defeated creatures sometimes drop gear on the ground (Easy 10%, Standard 20%, Elite 45%; tougher creatures drop rarer items, Elites even Legendary). Walk over it to pick it up.
+- **Chests:** every world has three chests at points of interest (the original map: far north-west, south-east by the Thornback, and north of the pond). Press **F** next to one to open it — Uncommon or better. Each character can open each chest once.
+- **Trial:** completing the Proving Trial also gives a Rare or Epic item.
+- **Forge:** build the **Forge** at the camp (4 stone + 3 essence, after the hut). Standing at it, use the camp menu (**B**): **armor** from 2 Gnasher Essence, **weapons** from 2 Thornback Quill, **accessories** from one of each.
+
+Merchants come later with money and trade. Saved per world and character (schema **v19**). Tests: `tests/gear_sources.gd` (29).
+
 ## Weapons
 
 Equip a weapon in the new **weapon slot** (bag → Equipment) and your basic attack (Space) changes: **Sword** — a balanced arc in front (0.45 s); **Spear** — a long thrust that hits everything in a narrow line (0.55 s); **Scythe** — a slow, wide sweep that also catches creatures beside you (0.75 s); **Bow** — a shot at the first creature in line of sight up to 200 pixels (0.6 s); trees and rocks block it. The weapon's damage replaces your unarmed 10 and grows with rarity; Human weapon mastery, the skill tree and gloves add on top. The HUD shows your weapon. Tests: `tests/weapons.gd` (20).
 
 ## Gear: armor and accessories
 
-You have six gear slots: **head, body, hands, feet and two accessories** (rings, amulets). Items come in five rarities — **Common, Uncommon, Rare, Epic, Legendary** — shown in grey, green, blue, purple and orange. Each item has its own rolled stats (max HP, Magicules, Magicule recovery, speed, strike damage or **defense**, which reduces every hit you take); higher rarities roll higher. **Rare** and better items add passives (Swift, Wellspring, Keen, Lifesteal, Thorns), and **Epic/Legendary** items have an **active** you trigger with **G** (Barrier: 2 s invulnerable; Mana Surge: +30 Magicules). Open the bag (**I**) and press **Equipment** to equip items or click a slot to take one off. Worn gear shows on your character. Gear is saved per character (schema **v18**). Where gear comes from — creature drops, chests and the camp forge — arrives in step 17g; weapons in 17f. Tests: `tests/gear.gd` (38).
+You have six gear slots: **head, body, hands, feet and two accessories** (rings, amulets). Items come in five rarities — **Common, Uncommon, Rare, Epic, Legendary** — shown in grey, green, blue, purple and orange. Each item has its own rolled stats (max HP, Magicules, Magicule recovery, speed, strike damage or **defense**, which reduces every hit you take); higher rarities roll higher. **Rare** and better items add passives (Swift, Wellspring, Keen, Lifesteal, Thorns), and **Epic/Legendary** items have an **active** you trigger with **G** (Barrier: 2 s invulnerable; Mana Surge: +30 Magicules). Open the bag (**I**) and press **Equipment** to equip items or click a slot to take one off. Worn gear shows on your character. Gear is saved per character (schema **v18**). Gear comes from creature drops, chests, the trial and the camp Forge (see "Finding gear"). Tests: `tests/gear.gd` (38).
 
 ## Creature respawning
 

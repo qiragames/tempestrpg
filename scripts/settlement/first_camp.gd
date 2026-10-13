@@ -20,7 +20,11 @@ const STRUCTURES := {
     "hut_1": {"key": "hut", "name": "Goblin Hut", "site": HUT_SITE, "size": Vector2(36, 24), "cost": HUT_COST, "requires": ""},
     "storehouse_1": {"key": "storehouse", "name": "Storehouse", "site": Vector2(400, 300), "size": Vector2(30, 20), "cost": {"wood": 10, "stone": 6}, "requires": "hut_1"},
     "shrine_1": {"key": "shrine", "name": "Essence Shrine", "site": Vector2(300, 292), "size": Vector2(18, 18), "cost": {"stone": 8, "essence": 2}, "requires": "hut_1"},
+    # 17g: south of the camp, outside the seeded deposit ring and inside the tree-free radius.
+    "forge_1": {"key": "forge", "name": "Forge", "site": Vector2(350, 455), "size": Vector2(28, 20), "cost": {"stone": 4, "essence": 3}, "requires": "hut_1"},
 }
+const FORGE_REACH := 50.0
+const SOURCES := preload("res://scripts/items/gear_sources.gd")
 const RESOURCES := ["wood", "stone", "essence"]
 const OFFER_ITEM := "gnasher_essence"
 const SHRINE_RANGE := 60.0
@@ -36,13 +40,13 @@ static func initial_state(table: Dictionary = DEPOSITS) -> Dictionary:
     var deposits: Dictionary = {}
     for id in table:
         deposits[id] = table[id].amount
-    return {"id": "camp_1", "founded": false, "founder": "", "wood": 0, "stone": 0, "essence": 0, "essence_offered": 0, "hut": false, "storehouse": false, "shrine": false, "deposits": deposits}
+    return {"id": "camp_1", "founded": false, "founder": "", "wood": 0, "stone": 0, "essence": 0, "essence_offered": 0, "hut": false, "storehouse": false, "shrine": false, "forge": false, "deposits": deposits}
 
 static func _whole(value: Variant, high: float = 1000000) -> bool:
     return (value is float or value is int) and value >= 0 and value <= high and value == floor(value)
 
 static func valid_state(value: Variant, players: Dictionary, table: Dictionary = DEPOSITS) -> bool:
-    if not value is Dictionary or value.size() != 11 or value.get("id") != "camp_1" or not value.get("founded") is bool or not value.get("founder") is String:
+    if not value is Dictionary or value.size() != 12 or value.get("id") != "camp_1" or not value.get("founded") is bool or not value.get("founder") is String:
         return false
     for id in STRUCTURES:
         if not value.get(STRUCTURES[id].key) is bool:
@@ -50,7 +54,7 @@ static func valid_state(value: Variant, players: Dictionary, table: Dictionary =
     if value.founded:
         if not players.has(value.founder):
             return false
-    elif not value.founder.is_empty() or value.hut or value.storehouse or value.shrine:
+    elif not value.founder.is_empty() or value.hut or value.storehouse or value.shrine or value.forge:
         return false
     for id in STRUCTURES:
         var requires: String = STRUCTURES[id].requires
@@ -207,6 +211,27 @@ func transact(actor: Node2D, operation: String, id: String) -> bool:
                 return false
             complete(id)
             message = "%s built. Shared materials consumed." % STRUCTURES[id].name
+        "craft":
+            # Forge recipes turn absorbed materials from the crafter's bag into a random item.
+            if not SOURCES.RECIPES.has(id) or not state.forge or not can_reach(actor, STRUCTURES.forge_1.site, FORGE_REACH):
+                return false
+            var bag = actor.get_node("Inventory")
+            var have := {}
+            for entry in bag.entries():
+                have[String(entry.id)] = entry.count
+            for material in SOURCES.RECIPES[id].materials:
+                if have.get(material, 0) < SOURCES.RECIPES[id].materials[material]:
+                    get_node("/root/GameSession").notify_character(actor.character_id, "The forge needs %s." % SOURCES.recipe_text(id))
+                    return false
+            if actor.gear.items.size() >= actor.GEAR.MAX_ITEMS:
+                get_node("/root/GameSession").notify_character(actor.character_id, "Gear bag full.")
+                return false
+            for material in SOURCES.RECIPES[id].materials:
+                for count in range(SOURCES.RECIPES[id].materials[material]):
+                    bag.discard(StringName(material))
+            var item: Dictionary = SOURCES.roll_forge(id, get_parent().loot_rng)
+            actor.add_item(item)
+            message = "Forged: %s." % actor.GEAR.display_name(item)
         "offer":
             # Discard and credit together on the host so an essence is never lost or counted twice.
             if id != OFFER_ITEM or not can_offer(actor) or not actor.get_node("Inventory").discard(StringName(OFFER_ITEM)):
@@ -289,3 +314,9 @@ func _draw() -> void:
         draw_rect(Rect2(shrine-Vector2(9, 9), Vector2(18, 18)), Color("6f7a7e"))
         draw_rect(Rect2(shrine-Vector2(5, 15), Vector2(10, 10)), Color("8e9b9f"))
         draw_circle(shrine-Vector2(0, 10), 3, Color("71e4d4"))
+    if state.get("forge", false):
+        var forge: Vector2 = STRUCTURES.forge_1.site
+        draw_rect(Rect2(forge - Vector2(14, 10), Vector2(28, 20)), Color("4b4a4f"))
+        draw_rect(Rect2(forge - Vector2(10, 14), Vector2(8, 6)), Color("6c6a70"))
+        draw_rect(Rect2(forge + Vector2(-4, 0), Vector2(8, 6)), Color("f08a3c"))
+        draw_rect(Rect2(forge + Vector2(-2, 2), Vector2(4, 3)), Color("ffd27a"))

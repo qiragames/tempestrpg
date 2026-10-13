@@ -10,6 +10,11 @@ const POND := LAYOUT.POND
 var camp: Node2D
 var trial: Node2D
 var respawner: Node
+## Host-side randomness for gear drops, chests, trial rewards and the forge (17g).
+var loot_rng := RandomNumberGenerator.new()
+var chest_layer: Node2D
+const SOURCES := preload("res://scripts/items/gear_sources.gd")
+const GEAR_PICKUP := preload("res://scenes/pickups/gear_pickup.tscn")
 var local_player: CharacterBody2D
 var progression: Dictionary = {"quests": {}, "settlements": {}, "world_time": 0.0}
 ## The current seed's layout. Seed 0 (the reference map) until a hosted world applies its own.
@@ -26,6 +31,11 @@ func _ready() -> void:
     respawner = load("res://scripts/world/respawner.gd").new()
     respawner.name = "Respawner"
     add_child(respawner)
+    loot_rng.randomize()
+    chest_layer = load("res://scripts/world/chest_layer.gd").new()
+    chest_layer.name = "Chests"
+    chest_layer.world = self
+    add_child(chest_layer)
     local_player = $Player
     session.bind_world(self)
     bind_local_player(local_player)
@@ -68,6 +78,40 @@ func apply_layout(seed: int, fresh: bool) -> void:
         if ally != null:
             ally.position = layout.ally
     queue_redraw()
+
+## Host: put an item on the ground as loot (a creature drop).
+func drop_gear(item: Dictionary, at: Vector2, id: String = "") -> Node2D:
+    if item.is_empty() or get_tree().get_nodes_in_group("gear_pickups").size() >= SOURCES.MAX_LOOT:
+        return null
+    var pickup = GEAR_PICKUP.instantiate()
+    pickup.item = item.duplicate(true)
+    pickup.entity_id = id if not id.is_empty() else "loot_" + Crypto.new().generate_random_bytes(8).hex_encode()
+    pickup.position = at
+    add_child(pickup)
+    return pickup
+
+func nearest_chest(actor: Node2D) -> String:
+    var opened: Array = actor.progression.get("chests", [])
+    for chest in layout.get("chests", []):
+        if not chest.id in opened and actor.global_position.distance_to(chest.position) <= SOURCES.CHEST_REACH:
+            return chest.id
+    return ""
+
+## Host: each character opens each chest once and gets a rolled item.
+func open_chest(actor: Node2D, id: String) -> bool:
+    if multiplayer.has_multiplayer_peer() and not multiplayer.is_server():
+        return false
+    if session.replica_world or actor.get_node("Health").current <= 0 or nearest_chest(actor) != id:
+        return false
+    if actor.gear.items.size() >= actor.GEAR.MAX_ITEMS:
+        session.notify_character(actor.character_id, "Gear bag full. Make room before opening the chest.")
+        return false
+    var item: Dictionary = SOURCES.roll_chest(loot_rng)
+    actor.add_item(item)
+    actor.progression["chests"] = actor.progression.get("chests", []) + [id]
+    session.notify_character(actor.character_id, "Chest opened: %s." % actor.GEAR.display_name(item))
+    session.queue_save()
+    return true
 
 func get_local_player() -> CharacterBody2D:
     return local_player if is_instance_valid(local_player) else $Player
@@ -127,7 +171,7 @@ func entity_by_id(id: String) -> Node2D:
     if id.is_empty():
         return null
     for actor in get_children():
-        if (actor.is_in_group("enemies") or actor.is_in_group("magicule_pickups") or actor.is_in_group("allies")) and actor.entity_id == id and not actor.is_queued_for_deletion():
+        if (actor.is_in_group("enemies") or actor.is_in_group("magicule_pickups") or actor.is_in_group("allies") or actor.is_in_group("gear_pickups")) and actor.entity_id == id and not actor.is_queued_for_deletion():
             return actor
     return null
 

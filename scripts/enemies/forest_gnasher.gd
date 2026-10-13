@@ -106,6 +106,12 @@ func _defeat() -> void:
     # Defer creation because defeat can originate during a physics callback.
     if drops_rewards:
         _drop_magicules.call_deferred()
+        # Gear drop (17g): chance and rarity by tier.
+        var world := get_parent()
+        if world != null and world.has_method("drop_gear"):
+            var item: Dictionary = world.SOURCES.roll_drop(difficulty, world.loot_rng)
+            if not item.is_empty():
+                world.drop_gear.call_deferred(item, position + Vector2(10, 6))
         # Experience for the character who landed the defeating blow (trial creatures give none).
         var victor: Node = health.last_hit_by
         if is_instance_valid(victor) and victor.is_in_group("player"):

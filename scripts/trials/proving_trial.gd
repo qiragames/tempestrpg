@@ -107,6 +107,12 @@ func _finish(success: bool, message: String) -> void:
         var names: Array = gained.map(func(skill): return "%s: %s" % [skill.tier, skill.display_name])
         session.notify_character(owner_id, "%s complete.%s" % [DISPLAY_NAME, " %s acquired. Activate it in the skill tree (K)." % ", ".join(names) if not names.is_empty() else ""])
         owner.gain_experience(LEVELING.TRIAL_XP, "trial")
+        # 17g: a Rare-or-better item for the owner (kept on the ground if the bag is full).
+        var reward: Dictionary = get_parent().SOURCES.roll_trial(get_parent().loot_rng)
+        if owner.add_item(reward):
+            session.notify_character(owner_id, "Trial reward: %s." % owner.GEAR.display_name(reward))
+        else:
+            get_parent().drop_gear(reward, owner.position)
     elif not message.is_empty():
         session.notify_character(owner_id, message)
     session.queue_save()

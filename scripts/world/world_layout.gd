@@ -24,7 +24,10 @@ const CLASSIC := {
     },
     "rocks": [Rect2(440, 250, 32, 24), Rect2(304, 400, 40, 24)],
     "trees": [Vector2(160, 144), Vector2(240, 192), Vector2(352, 112), Vector2(544, 160), Vector2(816, 288), Vector2(176, 464), Vector2(576, 496), Vector2(752, 480)],
+    "chests": [{"id": "chest_1", "position": Vector2(80, 80)}, {"id": "chest_2", "position": Vector2(900, 600)}, {"id": "chest_3", "position": Vector2(700, 60)}],
 }
+## Chests (17g) are drawn after everything else, so adding them did not move older layouts.
+const CHEST_IDS := ["chest_1", "chest_2", "chest_3"]
 ## Candidate spots for points of interest. Each keeps the trial arena and its spawns inside the map.
 const STONE_SPOTS: Array[Vector2] = [Vector2(480, 100), Vector2(170, 120), Vector2(800, 520), Vector2(150, 520)]
 const ALLY_SPOTS: Array[Vector2] = [Vector2(220, 360), Vector2(260, 420), Vector2(250, 250), Vector2(440, 430)]
@@ -103,8 +106,31 @@ static func generate(seed: int) -> Dictionary:
         if point != Vector2.INF:
             trees.append(point)
             obstacles.append(point)
+    # Later buildings (the 17g Forge) are kept clear afterwards, without changing any random draw.
+    var forge: Rect2 = Rect2(CAMP.STRUCTURES.forge_1.site - CAMP.STRUCTURES.forge_1.size / 2, CAMP.STRUCTURES.forge_1.size).grow(10)
+    rocks = rocks.filter(func(rock): return not rock.intersects(forge))
+    trees = trees.filter(func(tree): return not Rect2(tree + Vector2(-6, 4), Vector2(12, 12)).intersects(forge) and not forge.has_point(tree))
     layout.rocks = rocks
     layout.trees = trees
+    # Chests: away from the camp, the trial stone, every other spot and every obstacle; spread out.
+    var chests: Array = []
+    for index in range(CHEST_IDS.size()):
+        var point := _pick(rng, CLASSIC.chests[index].position, func(candidate: Vector2) -> bool:
+            if not WORLD.grow(-40).has_point(candidate) or _in_pond(candidate, 24.0) or candidate.distance_to(CAMP.SITE) < 150 or not _clear(candidate, taken, 40.0):
+                return false
+            for other in chests:
+                if candidate.distance_to(other.position) < 200:
+                    return false
+            for rock in rocks:
+                if rock.grow(20).has_point(candidate):
+                    return false
+            for tree in trees:
+                if candidate.distance_to(tree) < 32:
+                    return false
+            return true
+        , func() -> Vector2: return _anywhere(rng))
+        chests.append({"id": CHEST_IDS[index], "position": point})
+    layout.chests = chests
     return layout
 
 ## Rejection sampling with a deterministic number of draws; falls back to the reference spot.
@@ -141,8 +167,12 @@ static func _clear(point: Vector2, taken: Array, distance: float) -> bool:
             return false
     return true
 
+## Buildings the deposit placement avoids. Fixed to the buildings that existed when seeded worlds
+## were introduced, so later buildings never change older seeds' random draws.
+const LAYOUT_STRUCTURES := ["hut_1", "storehouse_1", "shrine_1"]
+
 static func _clear_of_structures(point: Vector2, padding: float) -> bool:
-    for id in CAMP.STRUCTURES:
+    for id in LAYOUT_STRUCTURES:
         var structure: Dictionary = CAMP.STRUCTURES[id]
         if Rect2(structure.site - structure.size / 2, structure.size).grow(padding).has_point(point):
             return false

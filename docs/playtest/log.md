@@ -9,7 +9,7 @@
 ![New World: name and seed (numbers or any text, empty = random)](02_new_world.png)
 *New World: name and seed (numbers or any text, empty = random)* (640x360)
 
-Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). Movement, combat, absorb, skills and menus use the real input actions; menu buttons are pressed programmatically.
+Automated, visible run on Windows. Viewport (640.0, 360.0), window (1250, 720). Movement, combat, absorb, skills and menus use the real input actions; menu buttons are pressed programmatically.
 
 ## 1. Spawn
 - [x] Base resolution is 640x360
@@ -287,33 +287,45 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 *Bow: shot at the first creature up to 200 px* (640x360)
 
 - [x] Bow hits its 1 practice target(s)
+## 11e. Chests
+- [x] Walked to the chest north of the pond
+
+![A closed chest (gold lock) at a point of interest](48_chest_closed.png)
+*A closed chest (gold lock) at a point of interest* (640x360)
+
+- [x] F opens the chest
+- [x] The chest gave an Uncommon-or-better item: Rare Travel Boots
+
+![Chest opened (lid up) and the item announced](49_chest_open.png)
+*Chest opened (lid up) and the item announced* (640x360)
+
 ## 12. Pause menu and Open to friends
 - [x] World is hosted solo and saved, no port open
 - [x] Esc opens the pause menu and freezes the solo world
 
-![Pause menu while playing solo: Resume, Open to friends, Save, Save & quit](48_pause_solo.png)
+![Pause menu while playing solo: Resume, Open to friends, Save, Save & quit](50_pause_solo.png)
 *Pause menu while playing solo: Resume, Open to friends, Save, Save & quit* (640x360)
 
 - [x] Open to friends starts listening without a restart
 
-![Pause menu after Open to friends: port and LAN address for friends](49_pause_open.png)
+![Pause menu after Open to friends: port and LAN address for friends](51_pause_open.png)
 *Pause menu after Open to friends: port and LAN address for friends* (640x360)
 
 - [x] Esc resumes
 ## 13. Seeded worlds
 
-![Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed](50_seed_goblin_camp.png)
+![Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed](52_seed_goblin_camp.png)
 *Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed* (640x360)
 
 
-![Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed](51_seed_tempest.png)
+![Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed](53_seed_tempest.png)
 *Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed* (640x360)
 
 - [x] Different seeds lay out different worlds; the same seed repeats exactly
 ## 14. Playable races
 - [x] Human and Demon are created with their own stats
 
-![Playable races, left to right: Slime, Human, Demon (placeholder looks)](52_races.png)
+![Playable races, left to right: Slime, Human, Demon (placeholder looks)](54_races.png)
 *Playable races, left to right: Slime, Human, Demon (placeholder looks)* (640x360)
 
 
@@ -369,6 +381,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +60 XP (trial). Level 3 reached: +1 skill point.
+- Trial reward: Rare Field Scythe.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +20 XP (defeat).
@@ -384,10 +397,11 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
+- Chest opened: Rare Travel Boots.
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 
 The bot retreated 1 time(s) to let Magicules recover.
 XP assistance for skill points: 130 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 52 screenshots.**
+**Result: 0 failed checks, 54 screenshots.**

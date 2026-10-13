@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 18
+const VERSION := 19
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
 ## Initial saved state of the v8 encounter; matches scenes/world/forest.tscn.
@@ -13,6 +13,7 @@ const RACES := preload("res://scripts/races/race_catalogue.gd")
 const TREE := preload("res://scripts/skills/skill_tree.gd")
 const RESPAWNER := preload("res://scripts/world/respawner.gd")
 const GEAR := preload("res://scripts/items/gear_catalogue.gd")
+const SOURCES := preload("res://scripts/items/gear_sources.gd")
 const ALLY := preload("res://scripts/allies/goblin_ally.gd")
 const MAX_BYTES := 4 * 1024 * 1024
 const CODEC := preload("res://scripts/persistence/state_codec.gd")
@@ -130,6 +131,9 @@ static func validate_player(state: Variant, id: String) -> bool:
     # Gear (v18): valid items, equipment slots pointing at owned items that fit, sane cooldowns.
     if not GEAR.valid_gear(state.get("gear"), progression.equipment):
         return false
+    # Chests opened by this character (v19): IDs are the same in every seed.
+    if not SOURCES.valid_opened(progression.get("chests"), LAYOUT.CHEST_IDS):
+        return false
     return true
 
 static func valid_meta(meta: Variant) -> bool:
@@ -220,6 +224,13 @@ static func validate(data: Variant) -> bool:
         if ids.has(entry.id) and not data.enemies.any(func(enemy): return enemy.id == entry.id):
             return false
         respawning[entry.id] = true
+    # Ground loot (v19).
+    if not data.get("loot") is Array or data.loot.size() > SOURCES.MAX_LOOT:
+        return false
+    for entry in data.loot:
+        if not SOURCES.valid_loot(entry) or not _position(entry.position) or ids.has(entry.id) or respawning.has(entry.id):
+            return false
+        ids[entry.id] = true
     for pickup in data.pickups:
         if not pickup is Dictionary or not _id(pickup.get("id")) or ids.has(pickup.id) or respawning.has(pickup.id) or not _position(pickup.get("position")) or not _number(pickup.get("amount"), 0.000001, 1000000):
             return false
@@ -445,12 +456,24 @@ static func migrate(data: Variant) -> Variant:
         if not data.get("players") is Dictionary:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 18
         for state in data.players.values():
             if not state is Dictionary or not state.get("progression") is Dictionary:
                 return null
             state["gear"] = {"items": [], "cooldowns": {}}
             state.progression["equipment"] = {}
+    # v19 (17g): ground loot, the camp forge and per-character opened chests.
+    if data.get("version") == 18:
+        if not data.get("players") is Dictionary or not data.get("camp") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = VERSION
+        data["loot"] = []
+        data.camp["forge"] = false
+        for state in data.players.values():
+            if not state is Dictionary or not state.get("progression") is Dictionary:
+                return null
+            state.progression["chests"] = []
     return data
 
 static func _read(path: String) -> Dictionary:

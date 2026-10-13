@@ -18,7 +18,7 @@ var exhaustion_active: bool = false
 var exhaustion_left: float = 0.0
 var remote_direction := Vector2.ZERO
 var last_input_msec: int = 0
-var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "race": "Slime", "quests": {}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}}
+var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "race": "Slime", "quests": {}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": []}
 ## Current mimic form and the time until it can change again (host-owned, saved).
 ## Gear (17e): owned items and active cooldowns; equipped item IDs live in progression.equipment.
 var gear: Dictionary = {"items": [], "cooldowns": {}}

@@ -7,6 +7,7 @@ var _offer: Button
 var _work_status: Label
 var _work_buttons: Dictionary = {}
 var _build_buttons: Dictionary = {}
+var _craft_buttons: Dictionary = {}
 var _paused_before: bool = false
 @onready var hud = get_parent()
 @onready var session: Node = get_node("/root/GameSession")
@@ -31,7 +32,7 @@ func _ready() -> void:
     var camp_script = load("res://scripts/settlement/first_camp.gd")
     var index := 0
     for id in camp_script.STRUCTURES:
-        var button: Button = hud._button("", Vector2(12 + index * 130, 164), Vector2(124, 34), self)
+        var button: Button = hud._button("", Vector2(12 + index * 98, 164), Vector2(94, 34), self)
         button.add_theme_font_size_override("font_size", 9)
         button.pressed.connect(_request.bind("build", id))
         _build_buttons[id] = button
@@ -42,6 +43,15 @@ func _ready() -> void:
         button.pressed.connect(_assign.bind(role))
         _work_buttons[role] = button
     _work_status = hud._label("", Vector2(12, 236), Vector2(384, 36), self, 10)
+    var sources = load("res://scripts/items/gear_sources.gd")
+    var recipe_index := 0
+    for recipe in sources.RECIPES:
+        var craft: Button = hud._button("Forge " + sources.RECIPES[recipe].name.to_lower(), Vector2(12 + recipe_index * 92, 286), Vector2(88, 26), self)
+        craft.add_theme_font_size_override("font_size", 9)
+        craft.pressed.connect(_request.bind("craft", recipe))
+        craft.tooltip_text = sources.recipe_text(recipe)
+        _craft_buttons[recipe] = craft
+        recipe_index += 1
     var close: Button = hud._button("Close", Vector2(294, 286), Vector2(102, 26), self)
     close.pressed.connect(close_dialog)
     hide()
@@ -112,6 +122,11 @@ func _refresh() -> void:
     else:
         var target: String = camp.STRUCTURES[ally.work_target].name if camp.STRUCTURES.has(ally.work_target) else ally.work_target
         _work_status.text = "%s · %s %s · %.1fs work left%s" % [ally.display_name, ally.work_role, target, ally.work_left, "\nStorehouse: work takes half the time." if camp.state.storehouse else ""]
+    var near_forge: bool = camp.state.get("forge", false) and hud.player.global_position.distance_to(camp.STRUCTURES.forge_1.site) <= camp.FORGE_REACH
+    for recipe in _craft_buttons:
+        _craft_buttons[recipe].disabled = not near_forge
+    if camp.state.get("forge", false):
+        _hint.text += "\nForge (south of the flag): armor = 2 Gnasher Essence, weapon = 2 Thornback Quill,\naccessory = 1 of each. Stand within 50px."
     for role in _work_buttons:
         _work_buttons[role].disabled = ally == null or not ally.can_assign_work(hud.player, role)
 

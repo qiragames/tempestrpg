@@ -193,7 +193,9 @@ Equipment slots (proposal: head, body, hands, feet, two accessories, weapon). It
 **Status 2026-10-13:** implemented on `claude/roadmap-17f-weapons`. Bases: Iron Sword 12–15, Ash Spear 13–17, Field Scythe 15–20, Hunting Bow 9–12 (Common; rarity scales). Shapes: sword circle r20 20 px ahead (front cone), spear 52×10 line, scythe circle r30 10 px ahead (dot ≥ −0.3, includes the sides), bow ray 200 px against terrain and creatures. Magicule cost stays 8 per basic attack. The bow is instant (hit-scan) with a visible shot line rather than a travelling projectile.
 Each weapon type changes the basic attack: **sword** balanced arc, **spear** long narrow thrust, **scythe** wide slow sweep, **bow** projectile with range and line of sight. Rarity scales damage and can add passives/actives like other gear. Host resolves all hits; replicas show them. Races interact with weapons through their racial bonuses (17b).
 
-### 17g — Gear sources: drops, chests, camp crafting
+### 17g — Gear sources: drops, chests, camp crafting — **Done**
+
+**Status 2026-10-13:** implemented on `claude/roadmap-17g-gear-sources`. Drop chance 10/20/45% by tier with rarity weights per tier (Easy ≤ Rare, Standard ≤ Epic, Elite up to Legendary); loot is a world entity, picked up by walking over it (line of sight, bag room). Chests: three per world (`chest_1..3`, reference positions or seeded), opened once per character with F; Uncommon+. Trial: Rare 70% / Epic 30%. Forge (`forge_1`, 4 stone + 3 essence, requires the hut) crafts from bag materials, Common–Rare. Merchants arrive with currency (M4.5).
 Creature drops by tier (elite creatures drop higher rarities), seeded chests at points of interest and trial rewards (uses the 16d layout; chests are saved once opened), and a camp forge recipe that crafts gear from deposits and absorbed materials. Merchants and currency are added with M5 trade.
 
 ### Effects on later steps
