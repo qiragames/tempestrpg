@@ -147,13 +147,13 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 
 **Authority/save:** keep ownership, single resource transactions and compatible saves across balance changes. Define how existing upgraded stats/timers migrate rather than silently resetting characters. Include guest disconnect/reconnect, exhausted/dead actors and old-save restore.
 
-**Done evidence:** user-visible full slice and eight-total-player checks, meaningful cost/recovery/cooldown measurements, Extra/Unique unlock evidence, form/assistant/UI usability, host save/reload, no duplicate rewards/audio. Validate real LAN with the user's machines; WAN/encryption remain separately scoped. Record unresolved issues and user feedback before marking M4 Done.
+**Done evidence:** user-visible full slice and eight-total-player checks, meaningful cost/recovery/cooldown measurements, Extra/Unique unlock evidence, race/form/skill-tree/fusion/equipment UI usability, host save/reload, no duplicate rewards/audio. Validate real LAN with the user's machines; WAN/encryption remain separately scoped. Record unresolved issues and user feedback before marking M4 Done.
 
 ## Parallel work and approval
 
-The user approved this plan on 2026-10-12. The approval node is Done; 13 (Codex) and 18 (Claude) are Next and can start in parallel after each tool pushes its ownership claim. All other steps wait for their stated dependencies. Update the plan if priorities/rules change. Plan approval does not merge branches automatically.
+The original steps were approved on 2026-10-12. The user's 2026-10-13 direction below supersedes the original assistant scope and ownership proposal: systems first (17, 17b–17g), then asset preparation/presentation (18+). Claude continues in order with 17 unless reassigned; Codex reviews released work. No unclaimed future file ownership is implied. Completed steps and their review history remain intact.
 
-Claim file ownership in `docs/AI_HANDOFF.md` and push the claim before work. During 13–17, Claude owns only asset preparation (18); Codex owns skill/form/analysis/authority/save files. Integration 19 waits for stable form/trial contracts. Assistant-model work (17) can proceed beside sprite/map presentation provided no world/HUD adapters overlap. Claude owns shared UI/world presentation for 20–22; Codex reviews/verifies released steps rather than editing the same files. Exchange exact branch/commit acknowledgments and use the user-selected integrated baseline before dependent work. Both tools recheck new remote commits at critical steps and approximately every ten minutes during long active tasks.
+Claim file ownership in `docs/AI_HANDOFF.md` and push the claim before implementation. Exchange exact branch/commit acknowledgments and preserve the selected baseline before dependent work. Both tools check new remote commits before critical changes and periodically during long active tasks. Plan approval does not merge branches automatically.
 
 ## User direction change (2026-10-13): races, skill tree, fusion window, gear
 

@@ -106,7 +106,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 - Evolution changes race, stats, and silhouette. It must have explicit prerequisites and balanced gains.
 - Absorption is followed by analysis; acquisition and mimicry need defined rules rather than granting unlimited power immediately.
 - Skills follow Common → Extra → Unique → Ultimate tiers. Strong abilities require appropriate progression.
-- The System Voice is cold and concise; the internal assistant exposes useful analysis and automation.
+- The System Voice is cold and concise. The internal analysis assistant was cancelled by the user on 2026-10-13; skills use the skill tree and fusion window.
 - Citizens matter to the economy and military. Race-specific aptitudes are starting design ideas, not a substitute for individual roles.
 - Use placeholder assets for the initial slice; polish after the core loop works.
 
@@ -140,7 +140,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 
 ## M4 approved steps
 
-**Approved by the user, 2026-10-12.** Detailed goals, files, authority/save contracts and completion evidence: `docs/M4_PLAN.md`. Steps 13–16 are Done; steps 17 and 18 are Next; later steps remain Planned behind their prerequisites.
+**Approved by the user, 2026-10-12.** Detailed goals, files, authority/save contracts and completion evidence: `docs/M4_PLAN.md`. Steps 13–16d are Done. The 2026-10-13 user direction replaces the former step 17: XP/levels are Next, followed by 17b–17g, then assets/presentation.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -150,7 +150,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 | 15 First mimic form | Done | 13, 14 | 30 local + 17 real-process checks: unlock by analysis, cost once, room check, no refills, exhaustion/menus/replicas blocked, defeat/respawn revert, per-character body, v8→v9 migration, replicated/saved/reloaded forms; visible showcase |
 | 16 Personal trial and Unique gate | Done | 13, 15 | 40 local + 22 real-process checks: start rules, owner-only credit, four failure paths, no rewards/analysis from trial creatures, Predator Focus reach/time/consumption/no refund/expiry, trial excluded from saves but replicated, v9→v10 migration; visible showcase. Story is a placeholder. |
 | 17 Experience and levels (replaces the cancelled analysis assistant) | Next | 13, 16d | Per-character XP from defeats, absorptions and trials; level curve; skill points per level; host-authoritative, replicated, saved and migrated; HUD level/XP readout |
-| 18 Prepare sprite, tileset and UI assets | Next | Approve M4 plan | Preserve originals; review transparent exports, pivots/atlases and nearest previews at x2/x3 |
+| 18 Prepare sprite, tileset and UI assets | Planned | 17g | Preserve originals; review transparent exports, pivots/atlases and nearest previews at x2/x3 |
 | 19 Character sprites and mimic presentation | Planned | 15, 16, 17b, 17f, 18 | All three races, weapon types and gear looks; visible state/form/evolution animations; combat timing and client identity unchanged |
 | 20 Forest and village tiles/props | Planned | 18, 19 | All routes/deposits remain reachable; visual depth, collision/LOS and camp restore pass |
 | 21 HUD, skill tree, fusion, equipment and storage UI | Planned | 17d, 17g, 18, 20 | Reference-style presentation of the working skill tree, fusion window, paper doll/equipment and bag; live values, per-client state, focus/contrast/modal rules and x2/x3 visual evidence |
@@ -176,6 +176,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-13: Codex reviewed Claude planning commit `06ca478`: acknowledged cancelled assistant, replacement XP/level step, Human/Demon/Slime races, activated skill tree, reversible consuming fusion and gear sources. No gameplay implementation changed. Corrected stale current ownership/assistant wording and made asset preparation depend on 17g to reflect the recorded systems-before-art order. Graph regenerated and dependency IDs/cycles checked.
 
 - 2026-10-13: **User direction change (planned by Claude Code with the user).** Step 17 (analysis assistant / Great Sage) is cancelled and becomes **17 Experience and levels**. New steps 17b playable races (Human, Demon, Slime; everyone absorbs, Slime best; mimic Slime-only), 17c skill tree (level-up points for stats; a new skill every few nodes; acquired skills must be activated in the tree), 17d skill fusion window (drag and drop; fusing consumes both originals; a fused skill can always be split back), 17e gear foundation (armor/accessories, rarities, stats, passives/actives), 17f weapons (sword, spear, scythe, bow), 17g gear sources (drops, chests, camp crafting; merchants in M5). Systems before art; 19, 21 and 24 now depend on the new steps. Codex reviewed 16d with no findings (873 checks on Linux). Branch: `claude/plan-races-skilltree-gear`.
 
