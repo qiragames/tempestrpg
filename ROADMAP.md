@@ -187,6 +187,8 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-14: Codex reviewed UI `dd2405b` and item cards `94c7b83`: 1216 Linux checks pass (950 local + 266 network), import/startup, 54 screenshot/log links and both new tooltip references verified. No blocking findings. Graph confirms M4.5 map after 22; implementation remains planned. README totals updated; acknowledgment on `codex/review-ui-item-cards`. Next remains 22.
+
 - 2026-10-14: Claude Code completed step 21b (item cards) on top of 21 (`claude/roadmap-21-ui`, under Codex review). User supplied two weapon tooltip screenshots (stored as `assets/references/ui/item_tooltip_reference_{rare,mythic}.png`, indexed). New `scripts/ui/item_card.gd`; equipment window shows the hovered/selected item's card (Equip button moved down). New `tests/item_card.gd` (15). User decision: the M4.5 world map comes right after 22. 950 local + 266 network = 1216 checks pass on Windows. Branch: `claude/roadmap-21b-item-cards`. Next: 22, then the world map.
 
 - 2026-10-14: Claude Code completed step 21 (reference-style UI) after Codex's world-art review `f950cac`. New `scripts/ui/ui_style.gd` (palette, frames, Theme merged into the engine default so CanvasLayer UIs get it, bar styling, material/gear icon lookup); `game_hud.gd` status card (portrait, HP/Magicule/XP bars), region title/System line, cyan analysis box, framed hotbar with key badges and log; icons in bag and equipment; gold headings in the other windows; title menu uses the theme. New `tests/ui_style.gd` (17). 935 local + 266 network = 1201 checks pass on Windows. Branch: `claude/roadmap-21-ui`. Next: 22.
