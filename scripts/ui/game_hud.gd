@@ -1,8 +1,18 @@
 extends CanvasLayer
 @onready var session: Node = get_node("/root/GameSession")
-## A functional prototype of the reference's hotbar, bag/details, and event log.
+## The in-game HUD after the user's reference (step 21): a status card (portrait, HP/Magicule/XP
+## bars, level), the region title and System line, the cyan analysis box, the skill hotbar with key
+## badges, the event log, and the bag. Every value is the local character's live state.
 
 const GEAR := preload("res://scripts/items/gear_catalogue.gd")
+const UI := preload("res://scripts/ui/ui_style.gd")
+const SPRITES := preload("res://scripts/visual/sprite_library.gd")
+const LEVELING := preload("res://scripts/progression/leveling.gd")
+var _hp_bar: ProgressBar
+var _xp_bar: ProgressBar
+var _portrait: TextureRect
+var _portrait_id: String = ""
+var _name: Label
 var _slots: Array[Button] = []
 ## Skill tree window (K), see skill_tree_panel.gd.
 var skill_tree: Control
@@ -34,20 +44,17 @@ var _ally_dialog: Panel
 func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
     get_parent().system_message.connect(record_event)
-    # Translucent panels keep the stat block and analysis text readable over any terrain.
-    _backdrop(Rect2(6, 42, 206, 88))
-    _backdrop(Rect2(446, 42, 188, 80))
-    _recovery = _label("", Vector2(12, 110), Vector2(300, 30), self, 11)
-    _level = _label("", Vector2(380, 4), Vector2(248, 16), self, 11)
-    _level.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-    _level.add_theme_color_override("font_color", Color(0.95, 0.85, 0.55))
+    UI.install(get_tree())
+    _build_status()
+    _recovery = _label("", Vector2(8, 86), Vector2(300, 14), self, 9)
+    _outline(_recovery)
     _trial_back = ColorRect.new()
-    _trial_back.position = Vector2(220, 44)
-    _trial_back.size = Vector2(220, 22)
-    _trial_back.color = Color(0.25, 0.18, 0.05, 0.75)
+    _trial_back.position = Vector2(234, 42)
+    _trial_back.size = Vector2(206, 20)
+    _trial_back.color = Color(0.25, 0.18, 0.05, 0.85)
     _trial_back.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(_trial_back)
-    _trial_label = _label("", Vector2(226, 47), Vector2(210, 18), self, 10)
+    _trial_label = _label("", Vector2(240, 45), Vector2(196, 16), self, 9)
     _build_hotbar()
     _build_inventory()
     inventory.changed.connect(_refresh_inventory)
@@ -79,23 +86,114 @@ func bind_player(actor: Node2D) -> void:
     inventory.changed.connect(_refresh_inventory)
     _refresh_inventory()
 
-func _panel_style() -> StyleBoxFlat:
-    var style := StyleBoxFlat.new()
-    style.bg_color = Color("19212e")
-    style.border_color = Color("9a8053")
-    style.set_border_width_all(1)
-    style.set_corner_radius_all(3)
-    return style
+func _panel_style(kind: String = "frame") -> StyleBoxFlat:
+    return UI.box(kind)
 
-## Drawn behind the scene's HUD labels (just after the top bar).
-func _backdrop(rect: Rect2) -> void:
-    var back := ColorRect.new()
+## A framed panel drawn behind the scene's HUD nodes (they come first in the scene).
+func _backdrop(rect: Rect2, kind: String = "frame") -> Panel:
+    var back := Panel.new()
     back.position = rect.position
     back.size = rect.size
-    back.color = Color(0.04, 0.09, 0.12, 0.55)
+    back.add_theme_stylebox_override("panel", UI.box(kind))
     back.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(back)
-    move_child(back, 1)
+    move_child(back, 0)
+    return back
+
+## Dark outline so text stays readable straight over the world.
+func _outline(label: Label) -> void:
+    label.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.05))
+    label.add_theme_constant_override("outline_size", 3)
+
+func _bar(rect: Rect2, color: Color) -> ProgressBar:
+    var bar := ProgressBar.new()
+    # Style first: with the percentage text on, the bar's minimum height is the font's.
+    UI.style_bar(bar, color)
+    bar.position = rect.position
+    bar.size = rect.size
+    add_child(bar)
+    return bar
+
+## Top-left status card: portrait, race/form, HP, Magicules, XP and level (scene labels reused).
+func _build_status() -> void:
+    $TopBar.hide()
+    $BottomBar.color = Color(0.03, 0.04, 0.06, 0.85)
+    _backdrop(Rect2(4, 4, 226, 66))
+    var well := Panel.new()
+    well.position = Vector2(9, 10)
+    well.size = Vector2(42, 42)
+    well.add_theme_stylebox_override("panel", UI.box("well"))
+    well.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    add_child(well)
+    _portrait = TextureRect.new()
+    _portrait.position = Vector2(14, 13)
+    _portrait.size = Vector2(32, 32)
+    _portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    _portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+    _portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+    _portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    add_child(_portrait)
+    _name = UI.heading(_label("", Vector2(56, 6), Vector2(168, 14), self, 10))
+    _hp_bar = _bar(Rect2(56, 21, 168, 11), UI.HP)
+    UI.style_bar($MagiculeBar, UI.MAGICULES)
+    $MagiculeBar.position = Vector2(56, 34)
+    $MagiculeBar.size = Vector2(168, 11)
+    _xp_bar = _bar(Rect2(56, 47, 168, 5), UI.XP)
+    for entry in [[$Health, 20], [$Magicules, 33]]:
+        var label: Label = entry[0]
+        label.position = Vector2(56, entry[1])
+        label.size = Vector2(168, 13)
+        label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        label.add_theme_font_size_override("font_size", 9)
+        label.add_theme_color_override("font_color", UI.TEXT)
+        # Over its bar (later siblings draw on top), but still below every window built after.
+        move_child(label, -1)
+        _outline(label)
+    _level = _label("", Vector2(56, 53), Vector2(168, 14), self, 9)
+    _level.add_theme_color_override("font_color", UI.GOLD_LIGHT)
+    $StrikeCost.position = Vector2(8, 72)
+    $StrikeCost.add_theme_font_size_override("font_size", 9)
+    _outline($StrikeCost)
+    # Region title and the System line, top right.
+    $Title.text = "THE FIRST CLEARING"
+    $Title.position = Vector2(300, 4)
+    $Title.size = Vector2(334, 16)
+    $Title.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    $Title.add_theme_color_override("font_color", UI.GOLD_LIGHT)
+    _outline($Title)
+    $SystemVoice.position = Vector2(234, 20)
+    $SystemVoice.size = Vector2(400, 14)
+    $SystemVoice.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    $SystemVoice.add_theme_font_size_override("font_size", 9)
+    $SystemVoice.add_theme_color_override("font_color", UI.CYAN)
+    _outline($SystemVoice)
+    # Analysis: the cyan box on the right.
+    _backdrop(Rect2(446, 40, 190, 82), "assistant")
+    $Analysis.position = Vector2(452, 44)
+    $Analysis.size = Vector2(178, 60)
+    $Analysis.add_theme_font_size_override("font_size", 10)
+    UI.style_bar($AnalysisProgress, UI.CYAN)
+    $AnalysisProgress.position = Vector2(452, 108)
+    $AnalysisProgress.size = Vector2(178, 7)
+
+## Live status-card values that have no signal of their own.
+func _refresh_status() -> void:
+    var health: Node = player.get_node("Health")
+    _hp_bar.max_value = health.maximum
+    _hp_bar.value = health.current
+    var level: int = int(player.progression.get("level", 1))
+    var floor_xp: int = LEVELING.xp_for_level(level)
+    var next_xp: int = LEVELING.xp_for_level(level + 1) if level < LEVELING.LEVEL_CAP else floor_xp + 1
+    _xp_bar.max_value = maxi(1, next_xp - floor_xp)
+    _xp_bar.value = _xp_bar.max_value if level >= LEVELING.LEVEL_CAP else clampi(int(player.progression.get("experience", 0)) - floor_xp, 0, next_xp - floor_xp)
+    var mimic: bool = player.form != player.FORMS.BASE
+    _name.text = "%s%s" % [player.race(), " · %s form" % player.FORMS.FORMS[player.form].name if mimic else ""]
+    var body: String = player._body_id()
+    if body != _portrait_id:
+        _portrait_id = body
+        var frames: SpriteFrames = SPRITES.frames(body)
+        _portrait.texture = frames.get_frame_texture("idle_down" if frames.has_animation("idle_down") else "idle", 0)
+    _portrait.modulate = player.MIMIC_TINT if mimic else Color.WHITE
 
 func _button(text: String, position: Vector2, size: Vector2, parent: Node) -> Button:
     var button := Button.new()
@@ -103,7 +201,6 @@ func _button(text: String, position: Vector2, size: Vector2, parent: Node) -> Bu
     button.position = position
     button.size = size
     button.add_theme_font_size_override("font_size", 10)
-    button.add_theme_stylebox_override("normal", _panel_style())
     parent.add_child(button)
     return button
 
@@ -126,16 +223,32 @@ func _label(text: String, position: Vector2, size: Vector2, parent: Node, font_s
     return label
 
 func _build_hotbar() -> void:
+    _backdrop(Rect2(176, 294, 304, 46))
     for index in range(4):
-        var button := _button("%d: Empty" % (index + 1), Vector2(176 + index * 86, 294), Vector2(82, 38), self)
-        button.add_theme_font_size_override("font_size", 9)
+        var button := _button("Empty", Vector2(182 + index * 74, 302), Vector2(70, 34), self)
+        button.add_theme_font_size_override("font_size", 8)
         button.focus_mode = Control.FOCUS_NONE
+        button.clip_text = true
         button.pressed.connect(_activate_slot.bind(index))
         _slots.append(button)
-    _backdrop(Rect2(6, 246, 162, 90))
+        # Key badge above the slot, like the reference.
+        var badge := Label.new()
+        badge.text = str(index + 1)
+        badge.position = Vector2(182 + index * 74 + 29, 288)
+        badge.size = Vector2(12, 12)
+        badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+        badge.add_theme_font_size_override("font_size", 8)
+        badge.add_theme_color_override("font_color", UI.GOLD_LIGHT)
+        var badge_box := UI.box("slot")
+        badge_box.set_content_margin_all(0)
+        badge.add_theme_stylebox_override("normal", badge_box)
+        badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        add_child(badge)
+    _backdrop(Rect2(4, 266, 166, 72))
     _log = RichTextLabel.new()
-    _log.position = Vector2(12, 250)
-    _log.size = Vector2(154, 84)
+    _log.position = Vector2(9, 270)
+    _log.size = Vector2(158, 66)
     _log.add_theme_font_size_override("normal_font_size", 9)
     # Newest lines stay visible; no scrollbar over the play area.
     _log.scroll_following = true
@@ -163,6 +276,7 @@ func _process(_delta: float) -> void:
         _refresh_pause()
     _recovery.visible = player.is_exhausted()
     _level.text = level_text(player.progression)
+    _refresh_status()
     var trial: Dictionary = get_parent().trial.state if get_parent().get("trial") != null else {}
     _trial_back.visible = trial.get("active", false)
     _trial_label.visible = _trial_back.visible
@@ -181,11 +295,11 @@ func _process(_delta: float) -> void:
         var skill: Resource = player.get_node("SkillBook").skill_at_slot(index)
         var button := _slots[index]
         if skill == null:
-            button.text = "%d: Empty" % (index + 1)
+            button.text = "Empty"
             button.disabled = true
             continue
         var cooldown: float = player.get_node("MeleeAttack").cooldown_left
-        button.text = "%d: %s\n%s" % [index + 1, skill.display_name, "%.1fs" % cooldown if cooldown > 0.0 else "%.0f Magicules" % skill.magicule_cost]
+        button.text = "%s\n%s" % [skill.display_name, "%.1fs" % cooldown if cooldown > 0.0 else "%.0f Magicules" % skill.magicule_cost]
         button.tooltip_text = "%s · %s\n%d damage · %.1fs cooldown" % [skill.tier, skill.display_name, skill.damage, skill.cooldown]
         button.disabled = player.is_exhausted() or get_tree().paused or player.input_blocked or (session.replica_world and not session.active) or player.get_node("Health").current <= 0 or cooldown > 0.0 or player.get_node("Magicules").current < skill.magicule_cost
 
@@ -211,9 +325,9 @@ func _build_inventory() -> void:
     frame.size = Vector2(440, 240)
     frame.add_theme_stylebox_override("panel", _panel_style())
     _modal.add_child(frame)
-    _label("DIMENSIONAL STORAGE", o + Vector2(12, 8), Vector2(280, 20), _modal, 15)
+    UI.heading(_label("DIMENSIONAL STORAGE", o + Vector2(12, 8), Vector2(240, 20), _modal, 14))
     _capacity = _label("", o + Vector2(14, 34), Vector2(190, 16), _modal, 10)
-    _label("MATERIAL DETAILS", o + Vector2(228, 36), Vector2(188, 16), _modal, 10)
+    UI.heading(_label("MATERIAL DETAILS", o + Vector2(228, 36), Vector2(188, 16), _modal, 10))
     _items = ItemList.new()
     _items.position = o + Vector2(14, 56)
     _items.size = Vector2(198, 122)
@@ -244,7 +358,7 @@ func _refresh_inventory() -> void:
     _capacity.text = "BAG · %d / %d units" % [inventory.total_units(), inventory.capacity]
     var selected: int = 0
     for index in range(_entries.size()):
-        _items.add_item("%s ×%d" % [_entries[index].name, _entries[index].count])
+        _items.add_item("%s ×%d" % [_entries[index].name, _entries[index].count], UI.icon(String(_entries[index].id)))
         if _entries[index].id == _selection:
             selected = index
     if _entries.is_empty():
@@ -355,7 +469,7 @@ func _build_pause_panel() -> void:
     _pause_panel.size = Vector2(260, 244)
     _pause_panel.add_theme_stylebox_override("panel", _panel_style())
     add_child(_pause_panel)
-    _label("PAUSED", Vector2(14, 10), Vector2(232, 22), _pause_panel, 15)
+    UI.heading(_label("GAME PAUSED", Vector2(14, 10), Vector2(232, 22), _pause_panel, 15))
     _pause_status = _label("", Vector2(14, 34), Vector2(232, 62), _pause_panel, 10)
     var entries := [["resume", "Resume"], ["open", "Open to friends"], ["save", "Save world"], ["quit", "Save & quit to title"]]
     for index in range(entries.size()):

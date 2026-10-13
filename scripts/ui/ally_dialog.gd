@@ -14,7 +14,7 @@ func _ready() -> void:
     position = Vector2(150, 75)
     size = Vector2(340, 210)
     add_theme_stylebox_override("panel", hud._panel_style())
-    _title = hud._label("NAMELESS GOBLIN", Vector2(12, 10), Vector2(260, 24), self, 14)
+    _title = hud.UI.heading(hud._label("NAMELESS GOBLIN", Vector2(12, 10), Vector2(260, 24), self, 14))
     _details = hud._label("", Vector2(12, 39), Vector2(316, 88), self, 11)
     _recruit = hud._button("Recruit", Vector2(12, 168), Vector2(170, 28), self)
     _name_field = LineEdit.new()

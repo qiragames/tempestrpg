@@ -1,6 +1,6 @@
 # Prepared UI frames, font and icons
 
-Step 18 (asset preparation). Copied unchanged from the third-party packs in `assets/source/packs/` by `tools/prepare_assets.py`; previews (x3, nearest) in `docs/asset_previews/`. **Status: prepared, not yet integrated** (scenes still use the code-drawn placeholders until steps 19–21).
+Step 18 (asset preparation). Copied unchanged from the third-party packs in `assets/source/packs/` by `tools/prepare_assets.py`; previews (x3, nearest) in `docs/asset_previews/`. **Status: partly integrated in step 21:** material icons (`icons/essence.png`, `icons/quill.png`; wood/stone/essence for camp resources) and all 60 gear icons are shown in the bag and equipment window via `scripts/ui/ui_style.gd`. The dialog frames are light-coloured and do not match the dark/gold reference, so panels use code-drawn frames instead; `font_normal.ttf` breaks at 8–11 px and is not used. Hearts, mini life bars, coins and the money bag remain available for later steps.
 
 Pixel scale 1:1 with the 640x360 viewport; nearest filtering (project default). Foot pivot: bottom-centre of each frame unless noted.
 

@@ -2,7 +2,8 @@ extends Control
 ## Skill fusion window (U). Your skills are listed on the right; drag one into the fusion area,
 ## then drag another onto it. If the two fuse, both are replaced by the fused skill (host decides).
 ## A fused skill in the area has a Split button that turns it back into its two skills.
-## Functional placeholder layout; reference-style presentation follows in step 21.
+## Styled with the shared theme (step 21); the fusion area keeps its purple accent.
+const UI := preload("res://scripts/ui/ui_style.gd")
 const CATALOGUE := preload("res://scripts/skills/skill_catalogue.gd")
 const TREE := preload("res://scripts/skills/skill_tree.gd")
 const ORIGIN := Vector2(30, 34)
@@ -35,7 +36,7 @@ func _init(owner_hud: CanvasLayer) -> void:
     frame.size = FRAME
     frame.add_theme_stylebox_override("panel", hud._panel_style())
     add_child(frame)
-    hud._label("SKILL FUSION", ORIGIN + Vector2(12, 8), Vector2(300, 20), self, 14)
+    UI.heading(hud._label("SKILL FUSION", ORIGIN + Vector2(12, 8), Vector2(300, 20), self, 14))
     _close = hud._button("Close", ORIGIN + Vector2(FRAME.x - 88, 6), Vector2(80, 24), self)
     _close.pressed.connect(close)
     area = Panel.new()
@@ -49,7 +50,7 @@ func _init(owner_hud: CanvasLayer) -> void:
     area.set_drag_forwarding(Callable(), _can_drop, _drop_on_area)
     add_child(area)
     hud._label("Drop a skill here, then drop another skill onto it", ORIGIN + AREA.position + Vector2(8, AREA.size.y - 20), Vector2(340, 16), self, 9)
-    hud._label("YOUR SKILLS (drag)", ORIGIN + Vector2(388, 36), Vector2(180, 16), self, 10)
+    UI.heading(hud._label("YOUR SKILLS (drag)", ORIGIN + Vector2(388, 36), Vector2(180, 16), self, 10))
     _detail = hud._label("", ORIGIN + Vector2(12, 224), Vector2(556, 44), self, 10)
     hud._label("U / Esc: close · Fusing replaces both skills; Split always gives them back", ORIGIN + Vector2(12, 270), Vector2(500, 16), self, 9)
     hide()

@@ -115,7 +115,9 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 
 **Done evidence:** replay the full slice around terrain/buildings; all deposits reachable, no trapped spawn or misaligned hut footprints; visual depth/occlusion checks and authoritative collision/LOS/network regressions pass.
 
-## 21 — Reference-style HUD, assistant and storage UI (Claude)
+## 21 — Reference-style HUD, assistant and storage UI (Claude) — **Done**
+
+**Status 2026-10-14:** integrated on `claude/roadmap-21-ui`. The "assistant" is the existing Analysis box (the Great Sage was dropped by the user), styled cyan. Shared look in `scripts/ui/ui_style.gd`: a Theme merged into `ThemeDB.get_default_theme()` once (a Window theme does not reach Controls under a CanvasLayer). Only implemented systems are shown — no minimap, clock, quests or currency. The Ninja Adventure pixel font was evaluated and rejected for body text (broken glyphs at 8–11 px).
 
 **Goal/dependencies:** requires 17–18 and 20. Bring gold/dark/cyan styling into implemented panels at 640×360, bind the assistant model, and improve material-bag readability.
 

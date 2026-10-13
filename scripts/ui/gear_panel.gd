@@ -1,8 +1,9 @@
 extends Control
 ## Equipment window (opened from the bag). Left: the six slots (click to take an item off).
 ## Middle: owned items in rarity colours. Right: details and Equip. G uses a ready gear active.
-## Functional placeholder layout; the reference paper doll follows in step 21.
+## Styled after the inventory reference (step 21): gold-trimmed frame, item icons per base and rarity.
 const GEAR := preload("res://scripts/items/gear_catalogue.gd")
+const UI := preload("res://scripts/ui/ui_style.gd")
 const ORIGIN := Vector2(30, 34)
 const FRAME := Vector2(580, 292)
 const SLOT_NAMES := {"weapon": "Weapon", "head": "Head", "body": "Body", "hands": "Hands", "feet": "Feet", "accessory_1": "Accessory", "accessory_2": "Accessory"}
@@ -30,12 +31,17 @@ func _init(owner_hud: CanvasLayer) -> void:
     frame.size = FRAME
     frame.add_theme_stylebox_override("panel", hud._panel_style())
     add_child(frame)
-    hud._label("EQUIPMENT", ORIGIN + Vector2(12, 8), Vector2(300, 20), self, 14)
+    UI.heading(hud._label("EQUIPMENT", ORIGIN + Vector2(12, 8), Vector2(300, 20), self, 14))
+    UI.heading(hud._label("WORN", ORIGIN + Vector2(12, 24), Vector2(172, 12), self, 9))
+    UI.heading(hud._label("OWNED GEAR", ORIGIN + Vector2(194, 24), Vector2(188, 12), self, 9))
+    UI.heading(hud._label("DETAILS", ORIGIN + Vector2(394, 24), Vector2(176, 12), self, 9))
     _close = hud._button("Close", ORIGIN + Vector2(FRAME.x - 88, 6), Vector2(80, 24), self)
     _close.pressed.connect(close)
     for index in range(GEAR.SLOTS.size()):
         var slot: String = GEAR.SLOTS[index]
-        var button: Button = hud._button("", ORIGIN + Vector2(12, 36 + index * 26), Vector2(172, 23), self)
+        var button: Button = hud._button("", ORIGIN + Vector2(12, 38 + index * 26), Vector2(172, 23), self)
+        button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+        button.expand_icon = false
         button.pressed.connect(_unequip.bind(slot))
         _slot_buttons[slot] = button
     _items = ItemList.new()
@@ -92,12 +98,13 @@ func refresh() -> void:
     for slot in GEAR.SLOTS:
         var item: Dictionary = player.item_by_id(equipment.get(slot, ""))
         _slot_buttons[slot].text = "%s: %s" % [SLOT_NAMES[slot], "—" if item.is_empty() else GEAR.display_name(item)]
+        _slot_buttons[slot].icon = UI.gear_icon(item)
         _slot_buttons[slot].add_theme_color_override("font_color", Color(GEAR.RARITY_COLORS[int(item.rarity)]) if not item.is_empty() else Color(0.6, 0.65, 0.68))
     var owned: Array = _owned()
     _items.clear()
     for index in range(owned.size()):
         var item: Dictionary = owned[index]
-        _items.add_item(("● " if not _worn_slot(item.id).is_empty() else "") + GEAR.display_name(item))
+        _items.add_item(("● " if not _worn_slot(item.id).is_empty() else "") + GEAR.display_name(item), UI.gear_icon(item))
         _items.set_item_custom_fg_color(index, Color(GEAR.RARITY_COLORS[int(item.rarity)]))
         if item.id == _selected:
             _items.select(index)

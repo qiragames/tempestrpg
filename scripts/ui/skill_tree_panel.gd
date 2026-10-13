@@ -30,9 +30,10 @@ func _init(owner_hud: CanvasLayer) -> void:
     frame.add_theme_stylebox_override("panel", hud._panel_style())
     add_child(frame)
     _title = hud._label("", ORIGIN + Vector2(12, 8), Vector2(440, 20), self, 14)
+    _title.add_theme_color_override("font_color", hud.UI.GOLD_LIGHT)
     _close = hud._button("Close", ORIGIN + Vector2(FRAME.x - 88, 6), Vector2(80, 24), self)
     _close.pressed.connect(close)
-    hud._label("LEARNED SKILLS", ORIGIN + Vector2(388, 36), Vector2(180, 16), self, 10)
+    hud.UI.heading(hud._label("LEARNED SKILLS", ORIGIN + Vector2(388, 36), Vector2(180, 16), self, 10))
     for index in range(4):
         _skill_labels.append(hud._label("", ORIGIN + Vector2(388, 56 + index * 40), Vector2(180, 16), self, 10))
         var button: Button = hud._button("", ORIGIN + Vector2(388, 72 + index * 40), Vector2(180, 20), self)

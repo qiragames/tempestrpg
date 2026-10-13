@@ -16,7 +16,7 @@ func _ready() -> void:
     position = Vector2(116, 18)
     size = Vector2(408, 324)
     add_theme_stylebox_override("panel", hud._panel_style())
-    hud._label("THE FIRST GOBLIN CAMP", Vector2(12, 8), Vector2(384, 22), self, 15)
+    hud.UI.heading(hud._label("THE FIRST GOBLIN CAMP", Vector2(12, 8), Vector2(384, 22), self, 15))
     _stock = hud._label("", Vector2(12, 32), Vector2(384, 18), self, 11)
     _hint = hud._label("", Vector2(12, 54), Vector2(384, 72), self, 10)
     _found = hud._button("Found camp", Vector2(12, 132), Vector2(124, 26), self)

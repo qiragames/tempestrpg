@@ -18,6 +18,8 @@ var _worlds: Array = []
 @onready var session: Node = get_node("/root/GameSession")
 
 func _ready() -> void:
+    # Shared interface look (step 21); the full title/pause flow is step 22.
+    preload("res://scripts/ui/ui_style.gd").install()
     set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     var back := ColorRect.new()
     back.color = Color("0f1a24")
@@ -40,12 +42,7 @@ func _panel(id: String) -> Panel:
     var panel := Panel.new()
     panel.position = Vector2(170, 104)
     panel.size = Vector2(300, 206)
-    var style := StyleBoxFlat.new()
-    style.bg_color = Color("19212e")
-    style.border_color = Color("9a8053")
-    style.set_border_width_all(1)
-    style.set_corner_radius_all(3)
-    panel.add_theme_stylebox_override("panel", style)
+    panel.add_theme_stylebox_override("panel", preload("res://scripts/ui/ui_style.gd").box())
     add_child(panel)
     _panels[id] = panel
     return panel
