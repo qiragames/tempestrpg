@@ -212,9 +212,12 @@ static func validate(data: Variant) -> bool:
             return false
         if data.enemies.any(func(enemy): return enemy.id == entry.id and enemy.hp > 0):
             return false
+        # Only a defeated creature may share its ID with a pending respawn.
+        if ids.has(entry.id) and not data.enemies.any(func(enemy): return enemy.id == entry.id):
+            return false
         respawning[entry.id] = true
     for pickup in data.pickups:
-        if not pickup is Dictionary or not _id(pickup.get("id")) or ids.has(pickup.id) or not _position(pickup.get("position")) or not _number(pickup.get("amount"), 0.000001, 1000000):
+        if not pickup is Dictionary or not _id(pickup.get("id")) or ids.has(pickup.id) or respawning.has(pickup.id) or not _position(pickup.get("position")) or not _number(pickup.get("amount"), 0.000001, 1000000):
             return false
         ids[pickup.id] = true
     return true

@@ -117,6 +117,13 @@ func _run() -> void:
     _check(world.entity_by_id("thornback_1") != null and world.entity_by_id("thornback_1").kind == "thornback" and world.entity_by_id("thornback_1").get_node("Health").current > 0, "After reload the Thornback returns on time")
     session.stop_session(false)
     var data: Dictionary = saved.data
+    var ally_collision := data.duplicate(true)
+    ally_collision.respawns[0].id = ally_collision.allies[0].id
+    _check(not STORE.validate(ally_collision), "Respawn IDs cannot collide with an ally")
+    var pickup_collision := data.duplicate(true)
+    pickup_collision.respawns[0].id = "respawn_pickup_collision"
+    pickup_collision.pickups.append({"id": "respawn_pickup_collision", "position": [600.0, 400.0], "amount": 8.0})
+    _check(not STORE.validate(pickup_collision), "Respawn IDs cannot collide with a pickup")
     var forged := []
     var doc: Dictionary
     doc = data.duplicate(true); doc.respawns[0].kind = "dragon"; forged.append(doc)
