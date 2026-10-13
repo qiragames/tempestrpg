@@ -1,6 +1,6 @@
 # TempestRPG — Living Roadmap
 
-Last updated: 2026-10-12
+Last updated: 2026-10-13
 
 ## Goal
 
@@ -168,6 +168,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-13: Codex reviewed seeded-world step `3191d72`, confirmed the save-and-quit correction is carried forward, and independently reproduced 873 checks on Linux (617 local + 256 network), import and startup. Additional 10,000-seed placement probe found no failures; 38 screenshots/log links verified. No blocking findings; documentation acknowledgment on `codex/review-seeded-worlds`. Next remains 17.
 
 - 2026-10-13: Claude Code completed step 16d (user step B), built on Codex's accepted `codex/fix-save-before-quit`. New `scripts/world/world_layout.gd` (`generate(seed)`, `seed_of(meta)`, `describe(meta)`); `forest.gd` `apply_layout(seed, fresh)` rebuilds deposits, trial stone, trees/rocks (with collisions) and, for a new world, places creatures/ally and resets the camp; `FirstCamp.sites` and `ProvingTrial.stone` are per world (constants stay as the reference map); `GameSession` applies the layout on host start and from snapshot meta on clients; `SaveStore` v13 validates the camp against the seed's deposits and adds `meta.seeded` (false for migrated worlds). Random seeds are never 0. New `tests/seeded_worlds.gd` (36), +2 checks in `tests/network_worlds.py`. 617 local + 256 network = 873 checks pass on Windows. Branch: `claude/roadmap-16d-seeded-worlds`. Next: 17.
 
