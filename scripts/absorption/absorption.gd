@@ -18,6 +18,8 @@ var focus_left: float = 0.0
 var _channel_reach: float = 36.0
 var _target: Node2D
 var time_left: float = 0.0
+## Length of the running channel (race speed or focus), for progress display.
+var channel_seconds: float = 1.2
 var active: bool:
     get:
         return is_instance_valid(_target)
@@ -53,7 +55,10 @@ func attempt_absorb() -> bool:
     _target.remove_from_group("absorbable_creatures")
     _target.being_analyzed = true
     _target.queue_redraw()
-    time_left = FOCUS_ANALYSIS_SECONDS if focused else analysis_seconds
+    # Every race can absorb; Slimes are fastest (race absorb_time multiplier).
+    var race: Dictionary = player.race_stats() if player.has_method("race_stats") else {"absorb_time": 1.0}
+    time_left = FOCUS_ANALYSIS_SECONDS if focused else analysis_seconds * race.absorb_time
+    channel_seconds = time_left
     _channel_reach = reach
     focus_left = 0.0
     status_changed.emit("%s %s. Remain nearby." % ["Focused analysis:" if focused else "Analyzing", _target.specimen.species])
@@ -83,6 +88,8 @@ func _process(delta: float) -> void:
             return
         # Absorbed vitality: the creature's tier sets the gradual heal (replaces a weaker running heal).
         var heal: float = _target.TIER_STATS[_target.difficulty].get("absorb_heal", 0.0) if "TIER_STATS" in _target else 0.0
+        if get_parent().has_method("race_stats"):
+            heal *= get_parent().race_stats().absorb_heal
         if get_parent().get_node("Health").start_regen(heal):
             status_changed.emit("Absorbed vitality: +%d HP over %ds." % [int(heal), int(get_parent().get_node("Health").REGEN_SECONDS)])
         # The skill book applies the catalogue's unlock rules to this character's evidence.

@@ -155,7 +155,10 @@ func _process(_delta: float) -> void:
     if _trial_back.visible:
         _trial_label.text = "%s · %d left · %.0fs%s" % [get_parent().trial.DISPLAY_NAME, trial.remaining, trial.time_left, "" if trial.owner == player.character_id else " (another player)"]
     var shape: Dictionary = player.FORMS.FORMS[player.form]
-    $StrikeCost.text = "Strike: 8 Magicules · Form: %s%s" % [shape.name, " (%.1fs)" % player.form_cooldown if player.form_cooldown > 0.0 else " · T: mimic"]
+    if player.race_stats().mimic:
+        $StrikeCost.text = "Strike: 8 Magicules · Form: %s%s" % [shape.name, " (%.1fs)" % player.form_cooldown if player.form_cooldown > 0.0 else " · T: mimic"]
+    else:
+        $StrikeCost.text = "Strike: 8 Magicules · %s: %s" % [player.race(), player.race_stats().ability.get_slice(":", 0).to_lower()]
     _recovery.text = "Recovering: %.1fs · need %.0f Magicules" % [player.exhaustion_left, player.get_node("Magicules").maximum * 0.25]
     for index in range(_slots.size()):
         var skill: Resource = player.get_node("SkillBook").skill_at_slot(index)

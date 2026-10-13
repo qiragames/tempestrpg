@@ -416,6 +416,25 @@ func _run() -> void:
         await _wait(0.2)
         await _shot("seed_" + seed_text.replace(" ", "_"), "Seed \"%s\" (%d): deposits, creatures, trial stone, ally, %d trees and %d rocks placed from the seed" % [seed_text, seed, world.layout.trees.size(), world.layout.rocks.size()])
     _check(layouts[0] != layouts[1] and layouts[0] == load("res://scripts/world/world_layout.gd").generate(layouts[0].seed), "Different seeds lay out different worlds; the same seed repeats exactly")
+    _log("## 14. Playable races")
+    # Slime, Human and Demon side by side (placeholder silhouettes until step 19).
+    world.get_local_player().get_node("Camera2D").zoom = Vector2(2, 2)
+    world.get_local_player().position = Vector2(200, 330)
+    world.get_local_player().choose_race("Slime")
+    var lineup: Array = []
+    for index in range(2):
+        var extra = load("res://scenes/player/player.tscn").instantiate()
+        extra.character_id = "showcase_%d" % index
+        extra.local_controlled = false
+        extra.position = Vector2(230 + index * 30, 330)
+        world.add_child(extra)
+        lineup.append(extra)
+    await _wait(0.1)
+    lineup[0].choose_race("Human")
+    lineup[1].choose_race("Demon")
+    await _wait(0.2)
+    _check(lineup[0].get_node("Health").maximum == 120 and lineup[1].get_node("Magicules").maximum == 130.0, "Human and Demon are created with their own stats")
+    await _shot("races", "Playable races, left to right: Slime, Human, Demon (placeholder looks)")
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

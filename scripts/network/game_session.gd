@@ -8,6 +8,7 @@ const MAX_PLAYERS := 8
 const DEFAULT_PORT := 24560
 const CODEC := preload("res://scripts/persistence/state_codec.gd")
 const LAYOUT := preload("res://scripts/world/world_layout.gd")
+const RACES := preload("res://scripts/races/race_catalogue.gd")
 const STORE := preload("res://scripts/persistence/save_store.gd")
 var active: bool = false
 var replica_world: bool = false
@@ -31,6 +32,8 @@ var _save_queued: bool = false
 var listening: bool = false
 var listen_port: int = DEFAULT_PORT
 ## Name, seed and dates of the hosted world (saved with it).
+## Race requested for a new character when joining (ignored for returning characters).
+var join_race: String = "Slime"
 var world_meta: Dictionary = {}
 ## A world chosen in the title menu, started once the game scene is ready.
 var pending_launch: Dictionary = {}
@@ -55,9 +58,9 @@ func _launch_arguments() -> void:
         return
     # Command-line hosting/joining skips the title menu.
     if options.has("host"):
-        pending_launch = {"mode": "host", "port": int(options.get("port", DEFAULT_PORT)), "path": options.get("save", save_path), "listen": true}
+        pending_launch = {"mode": "host", "port": int(options.get("port", DEFAULT_PORT)), "path": options.get("save", save_path), "listen": true, "race": options.get("race", RACES.DEFAULT)}
     else:
-        pending_launch = {"mode": "join", "address": options.join, "port": int(options.get("port", DEFAULT_PORT)), "identity": options.get("identity", identity_path)}
+        pending_launch = {"mode": "join", "address": options.join, "port": int(options.get("port", DEFAULT_PORT)), "identity": options.get("identity", identity_path), "race": options.get("race", RACES.DEFAULT)}
     if get_tree().current_scene != null and get_tree().current_scene.scene_file_path == WORLD_SCENE:
         await get_tree().process_frame
         bind_world(get_tree().current_scene)
@@ -72,9 +75,9 @@ func launch_pending() -> void:
     var launch := pending_launch
     pending_launch = {}
     if launch.mode == "host":
-        start_host(launch.get("port", DEFAULT_PORT), launch.path, launch.get("listen", false), launch.get("meta", {}))
+        start_host(launch.get("port", DEFAULT_PORT), launch.path, launch.get("listen", false), launch.get("meta", {}), launch.get("race", RACES.DEFAULT))
     else:
-        join_host(launch.address, launch.get("port", DEFAULT_PORT), launch.get("identity", identity_path))
+        join_host(launch.address, launch.get("port", DEFAULT_PORT), launch.get("identity", identity_path), launch.get("race", RACES.DEFAULT))
 
 ## Leave the current world (saving when hosting) and return to the title menu.
 func quit_to_title() -> Error:
@@ -99,7 +102,8 @@ func new_id(prefix: String = "") -> String:
 
 ## Host a saved world. With listen = false nothing is opened on the network (solo play); the
 ## world is still hosted and saved, and open_to_friends() can start accepting guests later.
-func start_host(port: int = DEFAULT_PORT, path: String = "user://worlds/forest.json", listen: bool = true, meta: Dictionary = {}) -> Error:
+## `race` applies only when the host's character is created (a world without a host record).
+func start_host(port: int = DEFAULT_PORT, path: String = "user://worlds/forest.json", listen: bool = true, meta: Dictionary = {}, race: String = RACES.DEFAULT) -> Error:
     if active or replica_world or not is_instance_valid(world) or port < 1 or port > 65535:
         return ERR_INVALID_PARAMETER
     var loaded: Dictionary = {}
@@ -135,6 +139,8 @@ func start_host(port: int = DEFAULT_PORT, path: String = "user://worlds/forest.j
     var host_actor = world.get_local_player()
     host_actor.character_id = "host"
     host_actor.local_controlled = true
+    if not records.has("host"):
+        host_actor.choose_race(race if RACES.valid(race) else RACES.DEFAULT)
     # Seed 0 is the reference map (also every world saved before seeds existed).
     world.apply_layout(LAYOUT.seed_of(world_meta), loaded.is_empty())
     if not loaded.is_empty():
@@ -188,7 +194,8 @@ static func lan_addresses() -> Array:
             result.append(address)
     return result
 
-func join_host(address: String, port: int = DEFAULT_PORT, profile: String = "user://profiles/characters.json") -> Error:
+## `race` is used only if this world has no character for this profile yet.
+func join_host(address: String, port: int = DEFAULT_PORT, profile: String = "user://profiles/characters.json", race: String = RACES.DEFAULT) -> Error:
     if active or not is_instance_valid(world) or address.is_empty() or port < 1 or port > 65535:
         return ERR_INVALID_PARAMETER
     var peer := ENetMultiplayerPeer.new()
@@ -196,6 +203,7 @@ func join_host(address: String, port: int = DEFAULT_PORT, profile: String = "use
     if error != OK:
         return error
     identity_path = profile
+    join_race = race
     replica_world = true
     multiplayer.multiplayer_peer = peer
     active = true
@@ -233,10 +241,10 @@ func _hello(id: String) -> void:
     if not profile.get("character", "") is String or not profile.get("credential", "") is String:
         _fail("Character profile fields are invalid.")
         return
-    _join_world.rpc_id(1, profile.get("character", ""), profile.get("credential", ""))
+    _join_world.rpc_id(1, profile.get("character", ""), profile.get("credential", ""), join_race)
 
 @rpc("any_peer", "call_remote", "reliable")
-func _join_world(character: String, credential: String) -> void:
+func _join_world(character: String, credential: String, race: String) -> void:
     if not active or not multiplayer.is_server():
         return
     var peer := multiplayer.get_remote_sender_id()
@@ -250,6 +258,11 @@ func _join_world(character: String, credential: String) -> void:
             _deny(peer, "Character identity could not be verified or is already connected.")
             return
     else:
+        # New characters choose their race once; returning characters keep theirs.
+        if not RACES.valid(race):
+            rejected_requests += 1
+            _deny(peer, "Unknown race. Choose Slime, Human or Demon.")
+            return
         character = new_id("character_")
         credential = Crypto.new().generate_random_bytes(32).hex_encode()
     var actor = load("res://scenes/player/player.tscn").instantiate()
@@ -262,6 +275,7 @@ func _join_world(character: String, credential: String) -> void:
     if records.has(character):
         CODEC.apply_player(actor, records[character], world, false)
     else:
+        actor.choose_race(race)
         records[character] = CODEC.capture_player(actor)
         records[character]["token_hash"] = (world_id + credential).sha256_text()
     owners[peer] = character
@@ -274,7 +288,8 @@ func _join_world(character: String, credential: String) -> void:
 func _deny(peer: int, message: String) -> void:
     _denied.rpc_id(peer, message)
     await get_tree().create_timer(0.2).timeout
-    if active and multiplayer.is_server():
+    # The denied player may already have left; disconnecting a gone peer is an engine error.
+    if active and multiplayer.is_server() and multiplayer.get_peers().has(peer):
         multiplayer.multiplayer_peer.disconnect_peer(peer)
 
 @rpc("authority", "call_remote", "reliable")

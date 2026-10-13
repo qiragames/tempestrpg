@@ -92,6 +92,8 @@ static func apply_player(actor: Node2D, state: Dictionary, world: Node2D, replic
     # Replicas show the channel. Reload/reconnect interrupts it without refunding cost.
     absorption._target = world.entity_by_id(state.analysis.target) if replica else null
     absorption.time_left = state.analysis.remaining if replica and absorption.active else 0.0
+    # Replicas only see the remaining time; the race's normal channel length is a good display scale.
+    absorption.channel_seconds = maxf(absorption.time_left, absorption.analysis_seconds * actor.race_stats().absorb_time)
     absorption.focus_left = state.analysis.focus
     actor.queue_redraw()
 

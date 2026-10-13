@@ -1,12 +1,15 @@
 extends Control
 ## Functional title menu (final presentation follows in step 22): new world with name and seed,
 ## saved worlds, join a friend, quit. Every world is hosted and saved; solo play opens no port.
+const RACES := preload("res://scripts/races/race_catalogue.gd")
 const REGISTRY := preload("res://scripts/menu/world_registry.gd")
 ## Tests point this at a temporary folder.
 var worlds_dir: String = REGISTRY.DEFAULT_DIR
 var _panels: Dictionary = {}
 var _status: Label
 var _name_field: LineEdit
+var _new_race: OptionButton
+var _join_race: OptionButton
 var _seed_field: LineEdit
 var _address_field: LineEdit
 var _world_list: ItemList
@@ -90,6 +93,7 @@ func _build_new() -> void:
     _name_field.max_length = REGISTRY.NAME_LENGTH
     _label("Seed (empty = random, numbers or any text)", Vector2(14, 84), Vector2(272, 16), panel, 10)
     _seed_field = _field("random", Vector2(14, 100), panel)
+    _new_race = _race_picker(Vector2(14, 130), panel)
     _button("Create and play", Vector2(14, 158), Vector2(170, 32), panel, create_world)
     _button("Back", Vector2(190, 158), Vector2(96, 32), panel, func(): _show("main"))
 
@@ -111,8 +115,23 @@ func _build_join() -> void:
     _label("JOIN A FRIEND", Vector2(14, 10), Vector2(272, 20), panel, 13)
     _label("Your friend opens their world to friends (Esc → Open to friends) and tells you their address.", Vector2(14, 34), Vector2(272, 44), panel, 10)
     _address_field = _field("e.g. 192.168.1.10", Vector2(14, 84), panel)
+    _label("Race for a new character (returning characters keep theirs)", Vector2(14, 114), Vector2(272, 14), panel, 9)
+    _join_race = _race_picker(Vector2(14, 128), panel)
     _button("Join", Vector2(14, 158), Vector2(170, 32), panel, join_world)
     _button("Back", Vector2(190, 158), Vector2(96, 32), panel, func(): _show("main"))
+
+## Slime, Human or Demon with a one-line summary of its racial ability.
+func _race_picker(at: Vector2, parent: Node) -> OptionButton:
+    var picker := OptionButton.new()
+    picker.position = at
+    picker.size = Vector2(272, 24)
+    picker.add_theme_font_size_override("font_size", 10)
+    for id in RACES.ORDER:
+        var stats: Dictionary = RACES.RACES[id]
+        picker.add_item("%s · HP %d · Magicules %d · %s" % [id, stats.hp, stats.magicules, stats.ability.get_slice(":", 0)])
+    picker.select(0)
+    parent.add_child(picker)
+    return picker
 
 func _show(id: String) -> void:
     for key in _panels:
@@ -143,7 +162,7 @@ func create_world() -> void:
         name = "My World"
     var seed: int = REGISTRY.parse_seed(_seed_field.text)
     var path: String = REGISTRY.new_world_path(name, worlds_dir)
-    _launch({"mode": "host", "path": path, "listen": false, "meta": REGISTRY.new_meta(name, seed)})
+    _launch({"mode": "host", "path": path, "listen": false, "meta": REGISTRY.new_meta(name, seed), "race": RACES.ORDER[_new_race.selected]})
 
 func load_selected() -> void:
     if not _selected_ok():
@@ -155,7 +174,7 @@ func join_world() -> void:
     if address.is_empty():
         _status.text = "Enter your friend's address first."
         return
-    _launch({"mode": "join", "address": address})
+    _launch({"mode": "join", "address": address, "race": RACES.ORDER[_join_race.selected]})
 
 func _launch(request: Dictionary) -> void:
     session.pending_launch = request

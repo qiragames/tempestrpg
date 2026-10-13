@@ -56,6 +56,13 @@ func clear_regen() -> void:
     regen_left = 0.0
     _regen_carry = 0.0
 
+## Instant host-side healing (e.g. a Demon's drain), capped at maximum.
+func heal(amount: int) -> void:
+    if amount <= 0 or current <= 0 or not AUTHORITY.can_mutate(self):
+        return
+    current = mini(maximum, current + amount)
+    changed.emit(current, maximum)
+
 ## `source` is the attacker (a character or creature); the last one to land a hit gets defeat credit.
 func take_damage(amount: int, source: Node = null) -> bool:
     if not AUTHORITY.can_mutate(self):

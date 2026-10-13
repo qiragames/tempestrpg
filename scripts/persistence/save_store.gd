@@ -9,6 +9,7 @@ const THORNBACK := {"id": "thornback_1", "kind": "thornback", "position": [880.0
 const CAMP := preload("res://scripts/settlement/first_camp.gd")
 const LAYOUT := preload("res://scripts/world/world_layout.gd")
 const LEVELING := preload("res://scripts/progression/leveling.gd")
+const RACES := preload("res://scripts/races/race_catalogue.gd")
 const ALLY := preload("res://scripts/allies/goblin_ally.gd")
 const MAX_BYTES := 4 * 1024 * 1024
 const CODEC := preload("res://scripts/persistence/state_codec.gd")
@@ -109,7 +110,7 @@ static func validate_player(state: Variant, id: String) -> bool:
         return false
     var progression = state.get("progression")
     # Level, experience and unspent skill points must agree with the level curve (v14).
-    if not progression is Dictionary or not _plain(progression) or not LEVELING.valid(progression):
+    if not progression is Dictionary or not _plain(progression) or not LEVELING.valid(progression) or not RACES.valid(progression.get("race")):
         return false
     if not progression.get("quests") is Dictionary or not progression.get("equipment") is Dictionary:
         return false

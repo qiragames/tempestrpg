@@ -33,12 +33,16 @@ func _run() -> void:
             return
         _report({"ready": true, "listening": session.listening, "offline_peer": session.multiplayer.multiplayer_peer is OfflineMultiplayerPeer, "records": session.records.keys(), "meta": session.world_meta, "layout": _layout()})
     else:
-        session.join_host("127.0.0.1", int(options.port), options.identity)
+        session.session_failed.connect(func(message: String):
+            _report({"denied": message})
+            quit(0)
+        )
+        session.join_host("127.0.0.1", int(options.port), options.identity, options.get("race", "Slime"))
         await session.character_assigned
         while session.latest_snapshot.is_empty():
             await process_frame
         await create_timer(0.3).timeout
-        _report({"joined": true, "id": session.local_character_id, "meta": session.latest_snapshot.get("meta", {}), "players": session.latest_snapshot.players.keys(), "layout": _layout()})
+        _report({"joined": true, "id": session.local_character_id, "meta": session.latest_snapshot.get("meta", {}), "players": session.latest_snapshot.players.keys(), "layout": _layout(), "race": session.latest_snapshot.players[session.local_character_id].progression.race, "max_hp": session.latest_snapshot.players[session.local_character_id].health.maximum, "magicules": session.latest_snapshot.players[session.local_character_id].magicules.maximum})
 func _process(_delta: float) -> bool:
     if Time.get_ticks_msec() > deadline:
         _report({"error": "Worlds integration timed out"})

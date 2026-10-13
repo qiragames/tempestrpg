@@ -132,7 +132,7 @@ func _process(delta: float) -> void:
         progression.world_time += delta
     var absorption = local_player.get_node("Absorption")
     $HUD/AnalysisProgress.visible = absorption.active
-    $HUD/AnalysisProgress.value = 1.0 - absorption.time_left / absorption.analysis_seconds
+    $HUD/AnalysisProgress.value = 1.0 - absorption.time_left / maxf(absorption.channel_seconds, 0.001)
     _health_changed(local_player.get_node("Health").current, local_player.get_node("Health").maximum)
     _magicules_changed(local_player.get_node("Magicules").current, local_player.get_node("Magicules").maximum)
 

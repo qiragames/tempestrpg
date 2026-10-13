@@ -233,6 +233,12 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 *Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed* (640x360)
 
 - [x] Different seeds lay out different worlds; the same seed repeats exactly
+## 14. Playable races
+- [x] Human and Demon are created with their own stats
+
+![Playable races, left to right: Slime, Human, Demon (placeholder looks)](40_races.png)
+*Playable races, left to right: Slime, Human, Demon (placeholder looks)* (640x360)
+
 
 ## System messages seen
 
@@ -289,4 +295,4 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 
 The bot retreated 1 time(s) to let Magicules recover.
 
-**Result: 0 failed checks, 39 screenshots.**
+**Result: 0 failed checks, 40 screenshots.**

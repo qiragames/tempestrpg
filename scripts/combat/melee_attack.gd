@@ -20,21 +20,29 @@ func _process(delta: float) -> void:
     flash_left = maxf(0.0, flash_left - delta)
     queue_redraw()
 
+## Race modifiers of the attacking character (none for other attackers).
+func _race() -> Dictionary:
+    return get_parent().race_stats() if get_parent().has_method("race_stats") else {"strike_bonus": 0, "recovery": 1.0, "skill_bonus": 0.0, "drain": 0.0}
+
 func attack(facing: Vector2) -> bool:
-    # Mimic forms may strengthen the basic strike; skills keep their own damage.
+    # Mimic forms and Human weapon mastery strengthen the basic strike; skills keep their own damage.
     var bonus: int = get_parent().form_strike_bonus() if get_parent().has_method("form_strike_bonus") else 0
-    return _strike(facing, damage + bonus, magicule_cost, cooldown)
+    var race := _race()
+    return _strike(facing, damage + bonus + race.strike_bonus, magicule_cost, cooldown * race.recovery)
 
 func attack_skill(facing: Vector2, skill_id: StringName) -> bool:
     var skill: Resource = get_parent().get_node("SkillBook").get_skill(skill_id)
     if skill == null:
         return false
     # Effects are dispatched by stable ID; new effect types are added here deliberately.
+    # Demons hit harder with skills and drain part of the damage; Humans recover faster.
+    var race := _race()
+    var power := int(round(skill.damage * (1.0 + race.skill_bonus)))
     match skill.effect:
         &"strike":
-            return _strike(facing, skill.damage, skill.magicule_cost, skill.cooldown)
+            return _strike(facing, power, skill.magicule_cost, skill.cooldown * race.recovery, &"strike", race.drain)
         &"pierce":
-            return _strike(facing, skill.damage, skill.magicule_cost, skill.cooldown, &"pierce")
+            return _strike(facing, power, skill.magicule_cost, skill.cooldown * race.recovery, &"pierce", race.drain)
         &"focus":
             return _focus(skill)
     return false
@@ -53,7 +61,7 @@ func _focus(skill: Resource) -> bool:
     absorption.status_changed.emit("Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.")
     return true
 
-func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, effect: StringName = &"strike") -> bool:
+func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, effect: StringName = &"strike", drain: float = 0.0) -> bool:
     if not AUTHORITY.can_mutate(self):
         return false
     if cooldown_left > 0.0 or get_parent().get_node("Health").current <= 0 or get_parent().is_exhausted():
@@ -77,6 +85,7 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
         query.transform = Transform2D(0.0, global_position + direction * 18.0)
     query.collision_mask = 4
     var space := get_world_2d().direct_space_state
+    var dealt := 0
     for hit in space.intersect_shape(query):
         var target: Node2D = hit.collider
         var offset := target.global_position - global_position
@@ -84,7 +93,11 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
             continue
         var sight := PhysicsRayQueryParameters2D.create(global_position, target.global_position, 1)
         if space.intersect_ray(sight).is_empty() and target.has_node("Health"):
-            target.get_node("Health").take_damage(strike_damage, get_parent())
+            var before: int = target.get_node("Health").current
+            if target.get_node("Health").take_damage(strike_damage, get_parent()):
+                dealt += before - target.get_node("Health").current
+    if drain > 0.0 and dealt > 0:
+        get_parent().get_node("Health").heal(int(round(dealt * drain)))
     return true
 
 func _draw() -> void:

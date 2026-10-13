@@ -3,6 +3,7 @@ extends CharacterBody2D
 const AUTHORITY := preload("res://scripts/network/authority.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const LEVELING := preload("res://scripts/progression/leveling.gd")
+const RACES := preload("res://scripts/races/race_catalogue.gd")
 ## Movement delegates health and attacks to reusable combat components.
 
 @export var move_speed: float = 95.0
@@ -30,6 +31,30 @@ func _ready() -> void:
         apply_form(FORMS.BASE)
         form_cooldown = 0.0
     )
+
+func race() -> String:
+    return progression.get("race", RACES.DEFAULT)
+
+func race_stats() -> Dictionary:
+    return RACES.stats(race())
+
+## Character creation (host only): set the race and its base stats at full health and Magicules.
+func choose_race(id: String) -> bool:
+    if not RACES.valid(id) or not AUTHORITY.can_mutate(self):
+        return false
+    var stats: Dictionary = RACES.stats(id)
+    progression["race"] = id
+    move_speed = stats.move_speed
+    $Health.maximum = stats.hp
+    $Health.current = stats.hp
+    $Health.changed.emit($Health.current, $Health.maximum)
+    $Magicules.maximum = stats.magicules
+    $Magicules._current = stats.magicules
+    $Magicules.changed.emit($Magicules.current, $Magicules.maximum)
+    if not stats.mimic and form != FORMS.BASE:
+        apply_form(FORMS.BASE)
+    queue_redraw()
+    return true
 
 ## Host-only experience award; tells the character about XP and any level-up.
 func gain_experience(amount: int, reason: String) -> void:
@@ -80,6 +105,9 @@ func apply_form(id: String) -> void:
 ## Host-side mimicry. Costs are paid only when the change succeeds; nothing is refilled.
 func try_transform(target: String) -> bool:
     if not AUTHORITY.can_mutate(self) or not FORMS.FORMS.has(target) or target == form:
+        return false
+    if not race_stats().mimic:
+        session.notify_character(character_id, "Only Slimes can take mimic forms.")
         return false
     if $Health.current <= 0 or is_exhausted() or form_cooldown > 0.0:
         return false
@@ -149,7 +177,9 @@ func _unhandled_input(event: InputEvent) -> void:
         return
     if event.is_action_pressed("transform") and not event.is_echo():
         var target := next_form()
-        if target.is_empty():
+        if not race_stats().mimic:
+            session.notify_character(character_id, "Only Slimes can take mimic forms.")
+        elif target.is_empty():
             session.notify_character(character_id, "No mimic form known yet. Analyze a creature first.")
         elif session.active:
             session.request_action("transform", {"form": target})
@@ -198,6 +228,32 @@ func _draw() -> void:
         draw_rect(Rect2(Vector2(-6, -4) + facing * 1.5, Vector2(3, 3)), Color("142c42"))
         draw_rect(Rect2(Vector2(3, -4) + facing * 1.5, Vector2(3, 3)), Color("142c42"))
         draw_rect(Rect2(-4, 2, 8, 3), Color("baf3e4"))
+        return
+    var eyes := facing * 1.5
+    if race() == "Human":
+        # Placeholder humanoid: tan skin, brown hair, blue tunic.
+        draw_rect(Rect2(-7, 5, 14, 4), Color(0.03, 0.12, 0.14, 0.5))
+        draw_rect(Rect2(-4, 1, 8, 7), Color("3d5f9e"))
+        draw_rect(Rect2(-4, 8, 3, 2), Color("4a3a2c"))
+        draw_rect(Rect2(1, 8, 3, 2), Color("4a3a2c"))
+        draw_rect(Rect2(-6, 1, 2, 5), Color("e2b98f"))
+        draw_rect(Rect2(4, 1, 2, 5), Color("e2b98f"))
+        draw_rect(Rect2(-4, -8, 8, 9), Color("e2b98f"))
+        draw_rect(Rect2(-5, -10, 10, 4), Color("6b4428"))
+        draw_rect(Rect2(Vector2(-3, -4) + eyes, Vector2(2, 2)), Color("142c42"))
+        draw_rect(Rect2(Vector2(1, -4) + eyes, Vector2(2, 2)), Color("142c42"))
+        return
+    if race() == "Demon":
+        # Placeholder demon: dark violet body, pale horns, red eyes.
+        draw_rect(Rect2(-7, 5, 14, 4), Color(0.03, 0.12, 0.14, 0.5))
+        draw_rect(Rect2(-5, 0, 10, 8), Color("4b2a5e"))
+        draw_rect(Rect2(-4, 8, 3, 2), Color("2b1736"))
+        draw_rect(Rect2(1, 8, 3, 2), Color("2b1736"))
+        draw_rect(Rect2(-4, -8, 8, 9), Color("7d4a8f"))
+        draw_rect(Rect2(-6, -12, 2, 5), Color("e6dcc8"))
+        draw_rect(Rect2(4, -12, 2, 5), Color("e6dcc8"))
+        draw_rect(Rect2(Vector2(-3, -4) + eyes, Vector2(2, 2)), Color("ff4a4a"))
+        draw_rect(Rect2(Vector2(1, -4) + eyes, Vector2(2, 2)), Color("ff4a4a"))
         return
     # Deliberately simple pixel placeholder, ready to replace with animated sprites.
     draw_rect(Rect2(-9, 3, 18, 5), Color(0.03, 0.12, 0.14, 0.5))
