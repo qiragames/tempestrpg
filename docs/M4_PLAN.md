@@ -69,7 +69,7 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 
 **Done evidence:** trial can be completed legitimately; unauthorized/duplicate rewards and cross-character unlocks fail; interrupted analysis obeys the chosen paid-benefit rules; Unique works once per activation; Ultimate is visibly and mechanically locked until real ascension exists.
 
-## 17 — Analysis assistant model (Codex)
+## 17 — Analysis assistant model (Codex) — **Cancelled by the user (2026-10-13)**; see "User direction change" below
 
 **Goal/dependencies:** requires 13–14. Expose factual specimen traits, known skills, unlock requirements, current form and resource/recovery advice through a read-only analysis model. It supplies the Great Sage-inspired panel in 21.
 
@@ -154,6 +154,34 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 The user approved this plan on 2026-10-12. The approval node is Done; 13 (Codex) and 18 (Claude) are Next and can start in parallel after each tool pushes its ownership claim. All other steps wait for their stated dependencies. Update the plan if priorities/rules change. Plan approval does not merge branches automatically.
 
 Claim file ownership in `docs/AI_HANDOFF.md` and push the claim before work. During 13–17, Claude owns only asset preparation (18); Codex owns skill/form/analysis/authority/save files. Integration 19 waits for stable form/trial contracts. Assistant-model work (17) can proceed beside sprite/map presentation provided no world/HUD adapters overlap. Claude owns shared UI/world presentation for 20–22; Codex reviews/verifies released steps rather than editing the same files. Exchange exact branch/commit acknowledgments and use the user-selected integrated baseline before dependent work. Both tools recheck new remote commits at critical steps and approximately every ten minutes during long active tasks.
+
+## User direction change (2026-10-13): races, skill tree, fusion window, gear
+
+The user scrapped the Great Sage / analysis assistant concept. **Step 17 is cancelled** and its slot becomes the first of the new systems below. User decisions: everyone can absorb but the Slime absorbs best, and mimic forms stay Slime-only; fusing consumes both original skills, and a fused skill can always be split back into the two originals; gear comes from creature drops, camp crafting, chests/points of interest and merchants (merchants need currency and arrive with M5 trade); systems come before the art steps, so 19 can draw every race and weapon type at once. Exact numbers below are starting proposals for tuning in 24, not final balance.
+
+### 17 — Experience and levels (replaces the analysis assistant) — **Next**
+Per-character `level` and `experience` (already reserved in `progression`) become real: XP from defeats (by creature tier), completed absorptions and trials, awarded only on the host and only to the character who earned it (trial creatures and contested corpses follow existing credit rules). A level curve, a level cap for M4, and one **skill point** per level (stored as unspent points for 17c). HUD level/XP readout and a System Voice line on level-up. Saved, validated (level/XP consistent with the curve, points never above levels earned), migrated (existing characters start at level 1 with XP 0) and replicated in snapshots.
+
+### 17b — Playable races: Human, Demon, Slime
+Race chosen at character creation: the host when creating a world, a friend on first join (a small picker before the character is created; reconnecting characters keep their race). Starting proposal: **Slime** (HP 100, Magicules 100; fastest absorption, full analysis evidence, mimic forms), **Human** (HP 120, Magicules 70; +weapon damage, faster attack recovery; absorbs slower), **Demon** (HP 90, Magicules 130; +skill damage, small life drain on skill hits; absorbs slower). Race is per character, saved/validated, host-authoritative and visible to other players (placeholder silhouettes until 19). Existing characters migrate as Slimes. Allies and naming keep working for every race.
+
+### 17c — Skill tree
+One tree per race. Nodes cost skill points from 17: **stat nodes** (HP, Magicules, regeneration, power, speed) and, every few nodes, a **skill node** that grants a new skill. Skills gained by leveling or absorbing appear in the tree but stay **locked until activated** with points; only active skills can go on the hotbar or into the fusion window. Host validates every purchase (prerequisite nodes, enough points, node belongs to the character's race); forged or out-of-order saves are rejected. Existing learned skills migrate as already active so no one loses progress.
+
+### 17d — Skill fusion window (replaces the assistant UI)
+A window with the character's active skills listed on the right; drag two skills into the fusion area and onto each other. If a recipe exists, both originals are **replaced** by the fused skill; otherwise nothing happens and the window says they do not fuse. A fused skill can always be **split** back into its two originals. Recipes are data in the skill catalogue; the existing automatic Extra unlock (Rending Bite + Thorn Lash after a Thornback analysis → Piercing Fang) becomes the first fusion recipe, keeping its analysis requirement. Host-authoritative intent, saved, migrated (characters who already own Piercing Fang keep it as a fused skill with its originals recoverable by splitting), and the hotbar updates when slotted skills are fused or split.
+
+### 17e — Gear foundation: armor and accessories
+Equipment slots (proposal: head, body, hands, feet, two accessories, weapon). Items are instances with stable IDs, a base type, a **rarity** (Common, Uncommon, Rare, Epic, Legendary), stat rolls within the base type's range, **passives** from Rare and an **active** on Epic/Legendary, and a distinct look per base type/rarity. Equip/unequip per character from the bag; stats apply on the host; the existing inventory reference (paper doll, bag, item details) is the layout guide. Saved, validated (stats within ranges, passives/actives allowed for the rarity, no duplicated instance IDs) and replicated.
+
+### 17f — Weapons: sword, spear, scythe, bow
+Each weapon type changes the basic attack: **sword** balanced arc, **spear** long narrow thrust, **scythe** wide slow sweep, **bow** projectile with range and line of sight. Rarity scales damage and can add passives/actives like other gear. Host resolves all hits; replicas show them. Races interact with weapons through their racial bonuses (17b).
+
+### 17g — Gear sources: drops, chests, camp crafting
+Creature drops by tier (elite creatures drop higher rarities), seeded chests at points of interest and trial rewards (uses the 16d layout; chests are saved once opened), and a camp forge recipe that crafts gear from deposits and absorbed materials. Merchants and currency are added with M5 trade.
+
+### Effects on later steps
+19 draws all three races, the weapon types and gear looks. 21 becomes the reference-style presentation of the skill tree, fusion window, paper doll/equipment and bag (the "assistant" panel is dropped). 24 balances races, levels, tree, fusion and gear together.
 
 ## Added after approval (user decisions, 2026-10-13)
 

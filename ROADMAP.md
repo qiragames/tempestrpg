@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**Current focus: step 17 — analysis assistant model.** Step 16d is done (Claude): every new world is laid out from its seed — deposits (positions, outlying amounts 8–12), creature spots and difficulty, the trial stone and ally start (from designed candidate spots), trees and rocks — while the roads, pond, camp and spawn stay fixed. Same seed = same world for the host and every friend; seed 0 is the original hand-made map, and worlds saved before 16d keep it (schema v13 `seeded` flag). Reachability is verified for 200 seeds. 617 local + 256 network = 873 automated checks pass on Windows plus the visual playtest. Step 16c (Claude, Save & quit guard by Codex): the game starts at a title menu with New World (name + seed), Load World (save slots with name, seed and last-played date; damaged files listed), Join a Friend and Quit. Every world is hosted and always saved; solo play opens no port. The pause menu (Esc) offers Resume, **Open to friends** (starts listening in the running world, shows the LAN address), Save and Save & quit to title. The F8 panel is gone. Schema v12 stores world meta. 833 automated checks pass on Windows (579 local + 254 network) plus the visual playtest.
+**Current focus: step 17 — experience and levels** (first of the user's new systems, 2026-10-13). **User direction change:** the Great Sage / analysis assistant is scrapped; instead come **three playable races (Human, Demon, Slime)**, a **skill tree** fed by level-ups, a drag-and-drop **skill fusion window**, and **gear** (armor, accessories and weapons — sword, spear, scythe, bow — with looks, rarities, stats, and passives/actives on higher rarities). Order by user decision: systems first (17 → 17b → 17c → 17d → 17e → 17f → 17g), then art (18+), so sprites cover all races and weapon types. Step 16d is done (Claude): every new world is laid out from its seed — deposits (positions, outlying amounts 8–12), creature spots and difficulty, the trial stone and ally start (from designed candidate spots), trees and rocks — while the roads, pond, camp and spawn stay fixed. Same seed = same world for the host and every friend; seed 0 is the original hand-made map, and worlds saved before 16d keep it (schema v13 `seeded` flag). Reachability is verified for 200 seeds. 617 local + 256 network = 873 automated checks pass on Windows plus the visual playtest. Step 16c (Claude, Save & quit guard by Codex): the game starts at a title menu with New World (name + seed), Load World (save slots with name, seed and last-played date; damaged files listed), Join a Friend and Quit. Every world is hosted and always saved; solo play opens no port. The pause menu (Esc) offers Resume, **Open to friends** (starts listening in the running world, shows the LAN address), Save and Save & quit to title. The F8 panel is gone. Schema v12 stores world meta. 833 automated checks pass on Windows (579 local + 254 network) plus the visual playtest.
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -79,7 +79,8 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 ### M4 — Progression and presentation · Next, requires M3
 
 - Expand skill data across Common, Extra, Unique, and Ultimate tiers with explicit unlock rules.
-- Add analysis/assistant UI, selected skill combinations, and an initial mimic form.
+- Add selected skill combinations and an initial mimic form. (User, 2026-10-13: the analysis assistant is scrapped; skills fuse in a drag-and-drop fusion window instead.)
+- Add three playable races (Human, Demon, Slime), experience/levels with a per-race skill tree, and gear: armor, accessories and weapons (sword, spear, scythe, bow) with looks, rarities, stats and higher-rarity passives/actives.
 - Develop original regions, factions, sprites, audio, and combat VFX.
 - Balance naming costs, skill acquisition, and recovery against actual playtests.
 - Exit goal: the core slice is readable, enjoyable, and balanced before adding world scale.
@@ -87,6 +88,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 ### M5 — Nation building and diplomacy · Planned, requires M4
 
 - Expand settlement services, citizen roles, trade routes, and faction relationships.
+- Add currency and merchants that sell gear (user decision 2026-10-13: gear also comes from merchants).
 - Add emissaries, diplomatic choices, and consequences.
 - Introduce settlement threats and a small defensive siege.
 - Exit goal: economy and diplomacy change the outcome of a playable conflict.
@@ -147,17 +149,23 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 | 14 Second specimen and Extra upgrade | Done | 13 | 37 checks: Thornback encounter, Thorn Lash, Piercing Fang in both unlock orders, line hits/LOS/cost/cooldown, contested corpse, quill/kind save, v7→v8 migration; visible showcase |
 | 15 First mimic form | Done | 13, 14 | 30 local + 17 real-process checks: unlock by analysis, cost once, room check, no refills, exhaustion/menus/replicas blocked, defeat/respawn revert, per-character body, v8→v9 migration, replicated/saved/reloaded forms; visible showcase |
 | 16 Personal trial and Unique gate | Done | 13, 15 | 40 local + 22 real-process checks: start rules, owner-only credit, four failure paths, no rewards/analysis from trial creatures, Predator Focus reach/time/consumption/no refund/expiry, trial excluded from saves but replicated, v9→v10 migration; visible showcase. Story is a placeholder. |
-| 17 Analysis assistant model | Next | 13, 14 | Read-only factual traits/unlock/recovery advice isolated to each character |
+| 17 Experience and levels (replaces the cancelled analysis assistant) | Next | 13, 16d | Per-character XP from defeats, absorptions and trials; level curve; skill points per level; host-authoritative, replicated, saved and migrated; HUD level/XP readout |
 | 18 Prepare sprite, tileset and UI assets | Next | Approve M4 plan | Preserve originals; review transparent exports, pivots/atlases and nearest previews at x2/x3 |
-| 19 Character sprites and mimic presentation | Planned | 15, 16, 18 | Visible state/form/evolution animations; combat timing and client identity unchanged |
+| 19 Character sprites and mimic presentation | Planned | 15, 16, 17b, 17f, 18 | All three races, weapon types and gear looks; visible state/form/evolution animations; combat timing and client identity unchanged |
 | 20 Forest and village tiles/props | Planned | 18, 19 | All routes/deposits remain reachable; visual depth, collision/LOS and camp restore pass |
-| 21 HUD, assistant and storage UI | Planned | 17, 18, 20 | Live values, per-client inventory, focus/contrast/modal rules and x2/x3 visual evidence |
+| 21 HUD, skill tree, fusion, equipment and storage UI | Planned | 17d, 17g, 18, 20 | Reference-style presentation of the working skill tree, fusion window, paper doll/equipment and bag; live values, per-client state, focus/contrast/modal rules and x2/x3 visual evidence |
 | 22 Title and pause flow | Planned | 21 | Real New/Continue/Join/Resume/Quit paths, host saves, guest disconnect and corrupt-save handling |
 | 23 Audio and combat/analysis VFX | Planned | 16, 19, 21 | Clear cues, mute/reduced effects, no duplicate snapshot audio or gameplay timing change |
-| 24 Balance and M4 acceptance | Planned | 14, 15, 16, 17, 20, 21, 22, 23 | Visible user feedback, measured costs/recovery, eight-player/save checks and scoped LAN validation |
+| 24 Balance and M4 acceptance | Planned | 14, 15, 16, 17d, 17g, 20, 21, 22, 23 | Visible user feedback, measured costs/recovery, eight-player/save checks and scoped LAN validation |
 | 16b Healing on absorb | Done | 16 | Codex review: frame-rounding correction accepted; fractional carry now saved (16c). 21 checks: tier heals 15/25/40 over 10 s, gradual and capped, stronger heal replaces weaker, ends on defeat, host-only, saved/reloaded, v10→v11; the unassisted visible playtest now completes the trial |
 | 16c Worlds, save slots and menus (user step A) | Done | 16b | Review: Codex's save-failure quit guard accepted (37 local, verified on Windows; 16d builds on it). 35 local + 16 real-process checks: registry/seed parsing, create/save/list/load cycle, damaged files, solo hosting without a port, pause behavior, open to friends mid-game, quit to title, friend kept across reload and rejoin, v11→v12 meta; visible showcase from the title menu |
 | 16d Seeded worlds (user step B) | Done | 16c | 36 local + 2 real-process checks: seed 0 = reference map, determinism, 200 seeds checked for IDs, amounts, building budget, placement rules and on-foot reachability (grid flood fill), fresh placement, save/reload from the seed, validation against the seed's deposits, v12→v13 keeps older worlds on the original map, friend sees the host's layout; playtest screenshots of two seeds |
+| 17b Playable races: Human, Demon, Slime | Planned | 17 | Race chosen when a character is created (host's new world, friend's first join); per-race base stats and one racial ability; everyone can absorb but the Slime absorbs best; mimic forms stay Slime-only; existing characters migrate as Slimes |
+| 17c Skill tree | Planned | 17, 17b | Per-race tree: stat nodes bought with level-up points and a new skill every few nodes; skills gained by leveling/absorbing stay locked until activated in the tree; only active skills fit the hotbar; forged activations rejected |
+| 17d Skill fusion window | Planned | 17c | Drag-and-drop window (skills listed on the right); dropping two fusable skills onto each other replaces both with the fused skill; a fused skill can always be split back into its two originals; data-driven recipes; Piercing Fang becomes a fusion |
+| 17e Gear foundation: armor and accessories | Planned | 17b | Equipment slots, item instances with stable IDs, rarities, stat rolls, passives on higher and actives on the highest rarities, distinct looks; equip/unequip per character; saved and validated |
+| 17f Weapons: sword, spear, scythe, bow | Planned | 17e | Each weapon type has its own attack shape (arc, long thrust, wide sweep, projectile) and rarity scaling; host-authoritative hits; replicated |
+| 17g Gear sources: drops, chests, camp crafting | Planned | 17f | Creature drops by tier, seeded chests/points of interest and trial rewards, a camp forge recipe; merchants follow with currency/trade in M5 |
 
 ## Update contract
 
@@ -168,6 +176,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-13: **User direction change (planned by Claude Code with the user).** Step 17 (analysis assistant / Great Sage) is cancelled and becomes **17 Experience and levels**. New steps 17b playable races (Human, Demon, Slime; everyone absorbs, Slime best; mimic Slime-only), 17c skill tree (level-up points for stats; a new skill every few nodes; acquired skills must be activated in the tree), 17d skill fusion window (drag and drop; fusing consumes both originals; a fused skill can always be split back), 17e gear foundation (armor/accessories, rarities, stats, passives/actives), 17f weapons (sword, spear, scythe, bow), 17g gear sources (drops, chests, camp crafting; merchants in M5). Systems before art; 19, 21 and 24 now depend on the new steps. Codex reviewed 16d with no findings (873 checks on Linux). Branch: `claude/plan-races-skilltree-gear`.
 
 - 2026-10-13: Codex reviewed seeded-world step `3191d72`, confirmed the save-and-quit correction is carried forward, and independently reproduced 873 checks on Linux (617 local + 256 network), import and startup. Additional 10,000-seed placement probe found no failures; 38 screenshots/log links verified. No blocking findings; documentation acknowledgment on `codex/review-seeded-worlds`. Next remains 17.
 
