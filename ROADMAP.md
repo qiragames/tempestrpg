@@ -177,6 +177,8 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-13: Codex reviewed XP/level step `58d15f4`; independently reproduced 904 Linux checks (646 local + 258 network), import and startup. Verified 39 screenshots/log links and inspected the level HUD capture. No blocking findings; README implementation/totals corrected and acknowledgment published on `codex/review-xp-levels`. Next remains 17b races; point spending waits for 17c.
+
 - 2026-10-13: Claude Code completed step 17 (experience and levels), after Codex acknowledged the revised plan (`codex/review-progression-plan`, accepted: step 18 now follows 17g). New `scripts/progression/leveling.gd` (curve, cap 20, `valid`, `grant`); `Player.gain_experience`; `Health.take_damage(amount, source)` records the last attacker so the defeating blow earns XP; absorption and trial completion award XP; HUD level/XP/points label; schema v14 (`progression.skill_points`, curve-consistent validation, migration keeps levels). New `tests/leveling.gd` (29), +2 checks in `tests/network_trial.py`; the five network drivers now read reports as UTF-8 (they failed on non-ASCII text under Windows' default encoding). 646 local + 258 network = 904 checks pass on Windows. Branch: `claude/roadmap-17-xp-levels`. Next: 17b.
 
 - 2026-10-13: Codex reviewed Claude planning commit `06ca478`: acknowledged cancelled assistant, replacement XP/level step, Human/Demon/Slime races, activated skill tree, reversible consuming fusion and gear sources. No gameplay implementation changed. Corrected stale current ownership/assistant wording and made asset preparation depend on 17g to reflect the recorded systems-before-art order. Graph regenerated and dependency IDs/cycles checked.
