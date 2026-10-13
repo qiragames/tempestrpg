@@ -37,7 +37,7 @@ func _run() -> void:
     var kinds := {}
     for base in GEAR.BASES:
         kinds[GEAR.BASES[base].slot] = true
-    _check(GEAR.SLOTS.size() == 6 and kinds.keys().size() == 5 and GEAR.RARITIES.size() == 5, "Six slots (head, body, hands, feet, two accessories), five rarities, bases for every slot kind")
+    _check(GEAR.SLOTS.size() == 7 and kinds.keys().size() == 6 and GEAR.RARITIES.size() == 5, "Seven slots (weapon, head, body, hands, feet, two accessories), five rarities, bases for every slot kind")
     var all_valid := true
     var shapes := true
     for base in GEAR.BASES:
@@ -46,7 +46,7 @@ func _run() -> void:
                 var item: Dictionary = GEAR.roll(base, rarity, rng)
                 all_valid = all_valid and GEAR.valid_item(item)
                 shapes = shapes and item.passives.size() == GEAR.PASSIVE_COUNT[rarity] and (item.active.is_empty() == (rarity < 3))
-    _check(all_valid, "800 rolled items across every base and rarity validate")
+    _check(all_valid, "Rolled items across every base and rarity validate")
     _check(shapes, "Passives from Rare (two on Legendary); one active only on Epic and Legendary")
     _check(GEAR.stat_range("padded_vest", "hp", 4) == [13.0, 26.0] and GEAR.stat_range("scale_mail", "speed", 4) == [-6.0, -3.0], "Higher rarities scale bonuses, never penalties")
     var forged := [

@@ -5,7 +5,7 @@ extends Control
 const GEAR := preload("res://scripts/items/gear_catalogue.gd")
 const ORIGIN := Vector2(30, 34)
 const FRAME := Vector2(580, 292)
-const SLOT_NAMES := {"head": "Head", "body": "Body", "hands": "Hands", "feet": "Feet", "accessory_1": "Accessory", "accessory_2": "Accessory"}
+const SLOT_NAMES := {"weapon": "Weapon", "head": "Head", "body": "Body", "hands": "Hands", "feet": "Feet", "accessory_1": "Accessory", "accessory_2": "Accessory"}
 
 var hud: CanvasLayer
 var _slot_buttons: Dictionary = {}
@@ -35,7 +35,7 @@ func _init(owner_hud: CanvasLayer) -> void:
     _close.pressed.connect(close)
     for index in range(GEAR.SLOTS.size()):
         var slot: String = GEAR.SLOTS[index]
-        var button: Button = hud._button("", ORIGIN + Vector2(12, 38 + index * 30), Vector2(172, 26), self)
+        var button: Button = hud._button("", ORIGIN + Vector2(12, 36 + index * 26), Vector2(172, 23), self)
         button.pressed.connect(_unequip.bind(slot))
         _slot_buttons[slot] = button
     _items = ItemList.new()

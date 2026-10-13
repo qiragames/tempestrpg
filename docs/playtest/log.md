@@ -264,33 +264,56 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 ![Gear looks on the slime: helm and mail in rarity colours](43_gear_looks.png)
 *Gear looks on the slime: helm and mail in rarity colours* (640x360)
 
+## 11d. Weapons
+- (Showcase weapons handed over; sources arrive in 17g)
+- [x] Walked to an open practice spot
+
+![Sword: balanced arc in front](44_weapon_sword.png)
+*Sword: balanced arc in front* (640x360)
+
+- [x] Sword hits its 1 practice target(s)
+
+![Spear: long thrust through a line](45_weapon_spear.png)
+*Spear: long thrust through a line* (640x360)
+
+- [x] Spear hits its 2 practice target(s)
+
+![Scythe: wide sweep around the front](46_weapon_scythe.png)
+*Scythe: wide sweep around the front* (640x360)
+
+- [x] Scythe hits its 3 practice target(s)
+
+![Bow: shot at the first creature up to 200 px](47_weapon_bow.png)
+*Bow: shot at the first creature up to 200 px* (640x360)
+
+- [x] Bow hits its 1 practice target(s)
 ## 12. Pause menu and Open to friends
 - [x] World is hosted solo and saved, no port open
 - [x] Esc opens the pause menu and freezes the solo world
 
-![Pause menu while playing solo: Resume, Open to friends, Save, Save & quit](44_pause_solo.png)
+![Pause menu while playing solo: Resume, Open to friends, Save, Save & quit](48_pause_solo.png)
 *Pause menu while playing solo: Resume, Open to friends, Save, Save & quit* (640x360)
 
 - [x] Open to friends starts listening without a restart
 
-![Pause menu after Open to friends: port and LAN address for friends](45_pause_open.png)
+![Pause menu after Open to friends: port and LAN address for friends](49_pause_open.png)
 *Pause menu after Open to friends: port and LAN address for friends* (640x360)
 
 - [x] Esc resumes
 ## 13. Seeded worlds
 
-![Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed](46_seed_goblin_camp.png)
+![Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed](50_seed_goblin_camp.png)
 *Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed* (640x360)
 
 
-![Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed](47_seed_tempest.png)
+![Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed](51_seed_tempest.png)
 *Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed* (640x360)
 
 - [x] Different seeds lay out different worlds; the same seed repeats exactly
 ## 14. Playable races
 - [x] Human and Demon are created with their own stats
 
-![Playable races, left to right: Slime, Human, Demon (placeholder looks)](48_races.png)
+![Playable races, left to right: Slime, Human, Demon (placeholder looks)](52_races.png)
 *Playable races, left to right: Slime, Human, Demon (placeholder looks)* (640x360)
 
 
@@ -357,10 +380,14 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Equipped Epic Scale Mail.
 - Equipped Legendary Copper Ring.
 - Barrier: 2 s of invulnerability.
+- Equipped Uncommon Iron Sword.
+- Equipped Rare Ash Spear.
+- Equipped Epic Field Scythe.
+- Equipped Common Hunting Bow.
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 
 The bot retreated 1 time(s) to let Magicules recover.
 XP assistance for skill points: 130 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 48 screenshots.**
+**Result: 0 failed checks, 52 screenshots.**

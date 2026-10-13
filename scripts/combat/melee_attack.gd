@@ -12,6 +12,16 @@ var flash_effect: StringName = &"strike"
 ## Piercing thrust: a narrow line in front of the attacker that hits every creature inside it.
 const PIERCE_LENGTH := 64.0
 const PIERCE_WIDTH := 14.0
+## Weapon shapes (17f).
+const SPEAR_LENGTH := 52.0
+const SPEAR_WIDTH := 10.0
+const SWORD_RADIUS := 20.0
+const SCYTHE_RADIUS := 30.0
+const BOW_RANGE := 200.0
+const BASIC_EFFECTS := [&"strike", &"sword", &"spear", &"scythe", &"bow"]
+const GEAR := preload("res://scripts/items/gear_catalogue.gd")
+## Where the last bow shot ended (for the flash).
+var shot_end := Vector2.ZERO
 
 func _process(delta: float) -> void:
     if not AUTHORITY.can_mutate(self):
@@ -30,7 +40,12 @@ func attack(facing: Vector2) -> bool:
     bonus += get_parent().tree_strike_bonus() if get_parent().has_method("tree_strike_bonus") else 0
     bonus += int(get_parent().gear_bonus("strike")) if get_parent().has_method("gear_bonus") else 0
     var race := _race()
-    return _strike(facing, damage + bonus + race.strike_bonus, magicule_cost, cooldown * race.recovery)
+    # An equipped weapon replaces the unarmed damage and sets the attack's shape and timing.
+    var weapon: Dictionary = get_parent().equipped_weapon() if get_parent().has_method("equipped_weapon") else {}
+    if weapon.is_empty():
+        return _strike(facing, damage + bonus + race.strike_bonus, magicule_cost, cooldown * race.recovery)
+    var kind: String = GEAR.BASES[weapon.base].weapon
+    return _strike(facing, int(weapon.stats.damage) + bonus + race.strike_bonus, magicule_cost, GEAR.WEAPONS[kind].recovery * race.recovery, StringName(kind))
 
 func attack_skill(facing: Vector2, skill_id: StringName) -> bool:
     var book = get_parent().get_node("SkillBook")
@@ -77,8 +92,27 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
     cooldown_left = recovery
     flash_left = 0.12
     flash_effect = effect
+    if effect == &"bow":
+        return _shoot(strike_damage)
     var query := PhysicsShapeQueryParameters2D.new()
-    if effect == &"pierce":
+    var reach_dot := 0.25
+    if effect == &"spear":
+        var shaft := RectangleShape2D.new()
+        shaft.size = Vector2(SPEAR_LENGTH, SPEAR_WIDTH)
+        query.shape = shaft
+        query.transform = Transform2D(direction.angle(), global_position + direction * (SPEAR_LENGTH / 2.0 + 4.0))
+    elif effect == &"sword":
+        var arc := CircleShape2D.new()
+        arc.radius = SWORD_RADIUS
+        query.shape = arc
+        query.transform = Transform2D(0.0, global_position + direction * 20.0)
+    elif effect == &"scythe":
+        var sweep := CircleShape2D.new()
+        sweep.radius = SCYTHE_RADIUS
+        query.shape = sweep
+        query.transform = Transform2D(0.0, global_position + direction * 10.0)
+        reach_dot = -0.3
+    elif effect == &"pierce":
         var line := RectangleShape2D.new()
         line.size = Vector2(PIERCE_LENGTH, PIERCE_WIDTH)
         query.shape = line
@@ -95,7 +129,7 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
     for hit in space.intersect_shape(query):
         var target: Node2D = hit.collider
         var offset := target.global_position - global_position
-        if offset.normalized().dot(direction) < 0.25:
+        if offset.normalized().dot(direction) < reach_dot:
             continue
         var sight := PhysicsRayQueryParameters2D.create(global_position, target.global_position, 1)
         if space.intersect_ray(sight).is_empty() and target.has_node("Health"):
@@ -106,12 +140,34 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
     if drain > 0.0 and dealt > 0:
         get_parent().get_node("Health").heal(int(round(dealt * drain)))
     # Lifesteal gear: basic strikes heal 1 HP per creature hit.
-    if effect == &"strike" and drain == 0.0 and hits > 0 and get_parent().has_method("gear_passive") and get_parent().gear_passive("lifesteal"):
+    if effect in BASIC_EFFECTS and drain == 0.0 and hits > 0 and get_parent().has_method("gear_passive") and get_parent().gear_passive("lifesteal"):
         get_parent().get_node("Health").heal(hits)
     return true
 
+## Bow: the first thing in line of sight up to BOW_RANGE takes the hit (terrain stops the shot).
+func _shoot(shot_damage: int) -> bool:
+    var space := get_world_2d().direct_space_state
+    var ray := PhysicsRayQueryParameters2D.create(global_position, global_position + direction * BOW_RANGE, 1 | 4)
+    ray.exclude = [get_parent().get_rid()]
+    var hit := space.intersect_ray(ray)
+    shot_end = (hit.position - global_position) if not hit.is_empty() else direction * BOW_RANGE
+    if not hit.is_empty() and hit.collider.has_node("Health") and hit.collider.is_in_group("enemies"):
+        if hit.collider.get_node("Health").take_damage(shot_damage, get_parent()) and get_parent().has_method("gear_passive") and get_parent().gear_passive("lifesteal"):
+            get_parent().get_node("Health").heal(1)
+    return true
+
 func _draw() -> void:
-    if flash_left > 0.0 and flash_effect == &"pierce":
+    var tint := Color("f4e2b8")
+    if flash_left > 0.0 and flash_effect == &"bow":
+        draw_line(direction * 8.0, shot_end, tint, 1.0)
+        draw_rect(Rect2(shot_end - Vector2(1.5, 1.5), Vector2(3, 3)), tint)
+    elif flash_left > 0.0 and flash_effect == &"spear":
+        draw_line(direction * 6.0, direction * (SPEAR_LENGTH + 4.0), tint, 2.0)
+    elif flash_left > 0.0 and flash_effect == &"sword":
+        draw_arc(direction * 20.0, SWORD_RADIUS, direction.angle() - 1.1, direction.angle() + 1.1, 12, tint, 3.0)
+    elif flash_left > 0.0 and flash_effect == &"scythe":
+        draw_arc(direction * 10.0, SCYTHE_RADIUS, direction.angle() - 1.9, direction.angle() + 1.9, 18, tint, 3.0)
+    elif flash_left > 0.0 and flash_effect == &"pierce":
         draw_line(direction * 6.0, direction * (PIERCE_LENGTH + 4.0), Color("e8dcc0"), 3.0)
         draw_line(direction * 6.0, direction * (PIERCE_LENGTH + 4.0), Color("c9f6df"), 1.0)
     elif flash_left > 0.0:

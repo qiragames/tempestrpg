@@ -3,14 +3,14 @@ extends RefCounted
 ## type (slot, look, stat ranges), a rarity, rolled stats, passives (Rare and up) and one active
 ## (Epic and Legendary). Weapons follow in 17f, sources (drops, chests, crafting) in 17g.
 ## Starting numbers, tuned in step 24.
-const SLOTS := ["head", "body", "hands", "feet", "accessory_1", "accessory_2"]
+const SLOTS := ["weapon", "head", "body", "hands", "feet", "accessory_1", "accessory_2"]
 const RARITIES := ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
 const RARITY_COLORS := ["9aa3a8", "6fcf7a", "5aa2ee", "b47cf0", "f0a34a"]
 ## Positive stat ranges grow with rarity; penalties (negative ranges) do not.
 const RARITY_SCALE := [1.0, 1.25, 1.5, 1.8, 2.2]
 const PASSIVE_COUNT := [0, 0, 1, 1, 2]
-const STATS := ["hp", "magicules", "regen", "speed", "strike", "defense"]
-const STAT_TEXT := {"hp": "+%s max HP", "magicules": "+%s max Magicules", "regen": "+%s Magicules/s", "speed": "%s move speed", "strike": "+%s strike damage", "defense": "-%s damage taken per hit"}
+const STATS := ["damage", "hp", "magicules", "regen", "speed", "strike", "defense"]
+const STAT_TEXT := {"damage": "%s weapon damage", "hp": "+%s max HP", "magicules": "+%s max Magicules", "regen": "+%s Magicules/s", "speed": "%s move speed", "strike": "+%s strike damage", "defense": "-%s damage taken per hit"}
 const BASES := {
     "cloth_hood": {"slot": "head", "name": "Cloth Hood", "look": "hood", "stats": {"hp": [3, 6]}},
     "iron_helm": {"slot": "head", "name": "Iron Helm", "look": "helm", "stats": {"hp": [6, 10], "defense": [1, 2]}},
@@ -20,6 +20,20 @@ const BASES := {
     "travel_boots": {"slot": "feet", "name": "Travel Boots", "look": "boots", "stats": {"speed": [3, 6]}},
     "copper_ring": {"slot": "accessory", "name": "Copper Ring", "look": "ring", "stats": {"magicules": [5, 10]}},
     "spirit_amulet": {"slot": "accessory", "name": "Spirit Amulet", "look": "amulet", "stats": {"regen": [0.2, 0.5]}},
+    # Weapons (17f): `damage` replaces the unarmed strike's 10; the type sets shape and timing.
+    "iron_sword": {"slot": "weapon", "weapon": "sword", "name": "Iron Sword", "look": "sword", "stats": {"damage": [12, 15]}},
+    "ash_spear": {"slot": "weapon", "weapon": "spear", "name": "Ash Spear", "look": "spear", "stats": {"damage": [13, 17]}},
+    "field_scythe": {"slot": "weapon", "weapon": "scythe", "name": "Field Scythe", "look": "scythe", "stats": {"damage": [15, 20]}},
+    "hunting_bow": {"slot": "weapon", "weapon": "bow", "name": "Hunting Bow", "look": "bow", "stats": {"damage": [9, 12]}},
+}
+## Basic-attack behaviour per weapon type (unarmed: radius 16, 18 px ahead, 0.4 s).
+##   sword  balanced arc          spear  long thrust hitting everything in a narrow line
+##   scythe wide slow sweep       bow    ranged shot at the first creature in line of sight
+const WEAPONS := {
+    "sword": {"name": "Sword", "recovery": 0.45, "text": "balanced arc in front"},
+    "spear": {"name": "Spear", "recovery": 0.55, "text": "long thrust through a line"},
+    "scythe": {"name": "Scythe", "recovery": 0.75, "text": "wide sweep around the front"},
+    "bow": {"name": "Bow", "recovery": 0.6, "text": "shot at the first creature up to 200 px"},
 }
 const PASSIVES := {
     "keen": "Skills deal 10% more damage",

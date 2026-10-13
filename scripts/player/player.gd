@@ -194,6 +194,9 @@ func equipped_items() -> Array:
             result.append(item)
     return result
 
+func equipped_weapon() -> Dictionary:
+    return item_by_id(progression.get("equipment", {}).get("weapon", ""))
+
 func gear_passive(id: String) -> bool:
     return equipped_items().any(func(item): return id in item.passives)
 
@@ -444,6 +447,18 @@ func _draw_gear() -> void:
                 draw_circle(Vector2(7, 4), 1.2, color)
             "amulet":
                 draw_rect(Rect2(-1, 0, 2, 2), color)
+            "sword":
+                draw_line(Vector2(9, 4), Vector2(9, -8), color, 2.0)
+                draw_rect(Rect2(7, 2, 5, 1), color.darkened(0.3))
+            "spear":
+                draw_line(Vector2(10, 8), Vector2(10, -14), color.darkened(0.3), 1.0)
+                draw_rect(Rect2(9, -17, 3, 4), color)
+            "scythe":
+                draw_line(Vector2(10, 8), Vector2(10, -12), color.darkened(0.3), 1.0)
+                draw_arc(Vector2(5, -12), 5.0, -PI, 0.0, 6, color, 2.0)
+            "bow":
+                draw_arc(Vector2(8, -1), 7.0, -1.4, 1.4, 8, color, 1.5)
+                draw_line(Vector2(9, -8), Vector2(9, 6), Color(0.9, 0.9, 0.85, 0.7), 1.0)
 
 func _draw_body() -> void:
     if has_node("Health") and $Health.current <= 0:

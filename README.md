@@ -73,6 +73,7 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/fusion.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/respawn.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/gear.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/weapons.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
 python3 tests/network_forms.py
@@ -220,6 +221,10 @@ After your character has analyzed a Forest Gnasher, press **T** to take **Gnashe
 A stone stands in the north at **(480, 100)**. Once your character knows **Piercing Fang**, stand at the stone and press **F** to begin the **Proving Trial**: three trial creatures appear, and you have **60 seconds** to defeat them all while staying inside the faint circle. A banner at the top shows the creatures left and the time. Other players may help, but **only the character who started the trial is credited**. The trial fails if you are defeated, leave the circle, disconnect or run out of time, and you can simply try again. Trial creatures drop nothing and cannot be analyzed. A trial in progress is not saved: a host restart cancels it.
 
 Completing it teaches the first **Unique** skill, **Predator Focus** (placeholder name), which goes into the new **4th hotbar slot (key 4)**. It costs 25 Magicules: your **next analysis within 20 seconds** reaches twice as far (72 px) and completes in 0.3 s instead of 1.2 s. It is used up when that analysis begins, so interrupting it gives nothing back, and it cannot be stacked. **Ultimate** skills stay locked until an ascension exists (planned for M6). Schema **v10** stores the fourth slot and an armed focus. Tests: `tests/trial_unique.gd` (40) and `python3 tests/network_trial.py` (22 real-process checks).
+
+## Weapons
+
+Equip a weapon in the new **weapon slot** (bag → Equipment) and your basic attack (Space) changes: **Sword** — a balanced arc in front (0.45 s); **Spear** — a long thrust that hits everything in a narrow line (0.55 s); **Scythe** — a slow, wide sweep that also catches creatures beside you (0.75 s); **Bow** — a shot at the first creature in line of sight up to 200 pixels (0.6 s); trees and rocks block it. The weapon's damage replaces your unarmed 10 and grows with rarity; Human weapon mastery, the skill tree and gloves add on top. The HUD shows your weapon. Tests: `tests/weapons.gd` (20).
 
 ## Gear: armor and accessories
 

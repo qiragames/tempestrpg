@@ -114,6 +114,9 @@ func _defeat() -> void:
     queue_redraw()
 
 func _drop_magicules() -> void:
+    # Deferred: the creature may have been removed in the same frame (e.g. a respawn replaced it).
+    if not is_inside_tree():
+        return
     var pickup = PICKUP_SCENE.instantiate()
     pickup.amount = TIER_STATS[difficulty].drop
     # Respawned creatures reuse their ID, so each drop gets its own suffix.

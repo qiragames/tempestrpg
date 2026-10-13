@@ -2,6 +2,7 @@ extends CanvasLayer
 @onready var session: Node = get_node("/root/GameSession")
 ## A functional prototype of the reference's hotbar, bag/details, and event log.
 
+const GEAR := preload("res://scripts/items/gear_catalogue.gd")
 var _slots: Array[Button] = []
 ## Skill tree window (K), see skill_tree_panel.gd.
 var skill_tree: Control
@@ -168,7 +169,10 @@ func _process(_delta: float) -> void:
     if _trial_back.visible:
         _trial_label.text = "%s · %d left · %.0fs%s" % [get_parent().trial.DISPLAY_NAME, trial.remaining, trial.time_left, "" if trial.owner == player.character_id else " (another player)"]
     var shape: Dictionary = player.FORMS.FORMS[player.form]
-    if player.race_stats().mimic:
+    var weapon: Dictionary = player.equipped_weapon()
+    if not weapon.is_empty():
+        $StrikeCost.text = "%s: %d dmg, 8 Magicules · %s" % [GEAR.WEAPONS[GEAR.BASES[weapon.base].weapon].name, int(weapon.stats.damage), GEAR.WEAPONS[GEAR.BASES[weapon.base].weapon].text]
+    elif player.race_stats().mimic:
         $StrikeCost.text = "Strike: 8 Magicules · Form: %s%s" % [shape.name, " (%.1fs)" % player.form_cooldown if player.form_cooldown > 0.0 else " · T: mimic"]
     else:
         $StrikeCost.text = "Strike: 8 Magicules · %s: %s" % [player.race(), player.race_stats().ability.get_slice(":", 0).to_lower()]

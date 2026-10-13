@@ -475,6 +475,42 @@ func _run() -> void:
     await _tap("gear_active")
     _check(await _until(func(): return player.get_node("Health").immunity_left >= 1.5), "G uses the mail's Barrier active")
     await _shot("gear_looks", "Gear looks on the slime: helm and mail in rarity colours")
+    _log("## 11d. Weapons")
+    # Four showcase weapons (sources arrive in 17g); each swings once at practice targets.
+    var weapons := [
+        {"id": "item_showcase_sword", "base": "iron_sword", "rarity": 1, "stats": {"damage": 16}, "passives": [], "active": ""},
+        {"id": "item_showcase_spear", "base": "ash_spear", "rarity": 2, "stats": {"damage": 20}, "passives": ["keen"], "active": ""},
+        {"id": "item_showcase_scythe", "base": "field_scythe", "rarity": 3, "stats": {"damage": 30}, "passives": ["lifesteal"], "active": "surge"},
+        {"id": "item_showcase_bow", "base": "hunting_bow", "rarity": 0, "stats": {"damage": 11}, "passives": [], "active": ""},
+    ]
+    _log("- (Showcase weapons handed over; sources arrive in 17g)")
+    var range_at := Vector2(280, 470)
+    _check(await _walk_to(Vector2(280, 340), 10.0, 20.0) and await _walk_to(range_at, 8.0, 20.0), "Walked to an open practice spot")
+    for weapon in weapons:
+        player.add_item(weapon)
+        player.equip(weapon.id, "weapon")
+        var kind: String = gear_catalogue.BASES[weapon.base].weapon
+        var targets: Array = []
+        var offsets: Array = [Vector2(120, 0)] if kind == "bow" else ([Vector2(26, 0), Vector2(50, 0)] if kind == "spear" else ([Vector2(22, -20), Vector2(26, 0), Vector2(22, 20)] if kind == "scythe" else [Vector2(28, 0)]))
+        for index in range(offsets.size()):
+            var dummy = load("res://scenes/enemies/forest_gnasher.tscn").instantiate()
+            dummy.entity_id = "practice_%s_%d" % [kind, index]
+            dummy.drops_rewards = false
+            dummy.position = player.position + offsets[index]
+            world.add_child(dummy)
+            dummy.set_physics_process(false)
+            targets.append(dummy)
+        await _wait(0.15)
+        player.facing = Vector2.RIGHT
+        player.get_node("MeleeAttack").cooldown_left = 0.0
+        player.get_node("Magicules")._current = player.get_node("Magicules").maximum
+        await _tap("attack")
+        await _shot("weapon_" + kind, "%s: %s" % [gear_catalogue.WEAPONS[kind].name, gear_catalogue.WEAPONS[kind].text])
+        var hit_all: bool = targets.all(func(dummy): return dummy.get_node("Health").current < dummy.get_node("Health").maximum)
+        _check(hit_all, "%s hits its %d practice target(s)" % [gear_catalogue.WEAPONS[kind].name, targets.size()])
+        for dummy in targets:
+            world.remove_child(dummy)
+            dummy.queue_free()
     _log("## 12. Pause menu and Open to friends")
     # Turn this sandbox into a solo-hosted world (as the title menu does), then use Esc.
     # This sandbox was played on the reference map, so it is hosted as an unseeded world (16d).
