@@ -44,7 +44,7 @@ Disconnect preserves the character’s last authoritative state and releases any
 
 ## Ally naming and recovery
 
-Host validates ally owner, living/awake namer, range/terrain, unique valid name and 80-Magicule reserves. Naming/evolution/cost happen once; repeated or competing requests cannot spend twice. World-owned ally records retain stable owner ID, name, race, stats and position. Character-owned exhaustion retains its remaining minimum 8-second timer plus 25% resource threshold. Schema v0/v1/v2 migration supplies missing fields. Dead characters can respawn with exhaustion retained; disconnected characters do not recover until reconnect.
+Host validates ally owner, living/awake namer, range/terrain, unique valid name and reserves covering 80% of the character’s maximum Magicules (rounded to whole Magicules). Naming/evolution/cost happen once; repeated or competing requests cannot spend twice. World-owned ally records retain stable owner ID, name, race, stats and position. Character-owned exhaustion retains its remaining minimum 8-second timer plus 25% resource threshold. Schema v0/v1/v2 migration supplies missing fields. Dead characters can respawn with exhaustion retained; disconnected characters do not recover until reconnect.
 
 ## First camp
 
@@ -119,3 +119,7 @@ Character `progression` holds `level`, `experience` and `skill_points` (unspent)
 ## Worlds, save slots and Open to friends (schema v12)
 
 Every world is hosted by the player who loads it, with an `OfflineMultiplayerPeer` until **Open to friends** replaces it with an ENet server on the same running world (`GameSession.open_to_friends`); `multiplayer.is_server()` stays true throughout, so all host-authority paths are unchanged and solo play is saved exactly like hosted play. Leaving with Save & quit saves, closes the port and returns to the title menu; reloading starts solo again with all guest records and credentials kept, so friends rejoin as themselves after it is reopened. Save files live in `user://worlds/<slug>.json` (+ `.bak`), one per world. The top-level `meta = {name, seed, created, last_played}` is validated (1–32 printable characters, seed 0–2147483647, whole non-negative timestamps); v11→v12 adds a neutral meta. Meta is optional for hand-built test documents but always written by hosted worlds. Pause in a solo world freezes the tree; with guests connected it blocks only the local character, and a guest joining while the host is paused unfreezes the shared world. Covered by `tests/worlds_menu.gd` (35) and `tests/network_worlds.py` (16 real-process checks).
+
+### Updated mimic eligibility (2026-10-13)
+
+The latest user decision replaces Slime-only mimicry: `RaceCatalogue.can_mimic` permits Slime at level 1, Demon at level 5 and Human at level 20. Both runtime transformation and saved-form validation use that gate; analysis prerequisites, resource cost and cooldown remain required. No schema bump.

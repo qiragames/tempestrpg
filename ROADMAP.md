@@ -186,6 +186,8 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-13: Codex reviewed `906e25b` naming-share/mimic-level rules: 1113 Linux checks pass (847 local + 266 network), import and startup. No blocking findings; current rule docs corrected and acknowledgment on `codex/review-naming-mimic-levels`. Gear sources are still Working, not delivered. Watcher confirmed alive at 30-second intervals.
+
 - 2026-10-13: User decisions while testing (Claude Code): a Human (70 max Magicules) could never pay the flat 80-Magicule naming cost — naming now costs **80% of the namer's maximum** (Slime 80, Human 56, Demon 104); **mimicry for every race**, Slime from level 1, Demon from level 5, Human at level 20 (endgame). `RaceCatalogue.mimic_level`/`can_mimic`, `Player.can_mimic/mimic_hint`, `GoblinAlly.naming_cost`; the saved-form check (Codex's 17b fix) now uses the level gate. No schema change (existing non-Slime characters cannot be in a mimic form). 847 local + 266 network checks pass. Commit on `claude/roadmap-17g-gear-sources` before the 17g work.
 
 - 2026-10-13: Codex reviewed weapons `e51aa25`, confirmed capacity-only equipment and M4.5 graph corrections are carried forward, and reproduced 1109 Linux checks (843 local + 266 network), import/startup. Verified 52 screenshots/log links. No new blocking prototype issue; bow is an instant ray/shot line rather than a travelling projectile, and gear sources remain 17g. README totals updated; acknowledgment on `codex/review-weapons`.
