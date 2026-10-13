@@ -298,7 +298,6 @@ func _build_pause_panel() -> void:
         get_parent()._announce("World saved." if result == OK else "Saving failed; the previous save is retained.")
     )
     _pause_buttons.quit.pressed.connect(func():
-        close_pause()
         session.quit_to_title()
     )
     _pause_panel.hide()

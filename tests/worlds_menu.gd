@@ -81,6 +81,17 @@ func _run() -> void:
     hud.open_pause()
     _check(paused and hud._pause_status.text.contains("open to friends on UDP %d" % port) and hud._pause_buttons.open.disabled, "Pause shows the open port; nobody joined yet, so the world still freezes")
     _check(hud._pause_buttons.quit.text == "Save & quit to title", "Host leaves with Save & quit")
+    # A write failure must preserve the live world and its pause menu for a retry.
+    var blocked_path := dir.path_join("not_a_directory")
+    var blocker := FileAccess.open(blocked_path, FileAccess.WRITE)
+    blocker.store_string("Blocks directory creation")
+    blocker.close()
+    session.save_path = blocked_path.path_join("world.json")
+    hud._pause_buttons.quit.pressed.emit()
+    await _frames(1)
+    _check(session.active and current_scene == world and paused and hud._pause_panel.visible, "Failed Save & quit preserves the hosted world and pause menu")
+    _check(STORE.load_world(path).ok, "Failed Save & quit preserves the previous valid save")
+    session.save_path = path
     hud._pause_buttons.quit.pressed.emit()
     _check(await _until(func(): return not session.active and current_scene != null and current_scene.scene_file_path == session.TITLE_SCENE), "Save & quit returns to the title menu")
     _check(not paused and not session.listening, "Leaving closes the port and unpauses")

@@ -76,10 +76,16 @@ func launch_pending() -> void:
         join_host(launch.address, launch.get("port", DEFAULT_PORT), launch.get("identity", identity_path))
 
 ## Leave the current world (saving when hosting) and return to the title menu.
-func quit_to_title() -> void:
-    stop_session(true)
+func quit_to_title() -> Error:
+    if active and multiplayer.is_server():
+        var error := save_world()
+        if error != OK:
+            world._announce("Saving failed. Your world is still open; retry Save & quit after correcting the save path or disk problem.")
+            return error
+    stop_session(false)
     get_tree().paused = false
     get_tree().change_scene_to_file(TITLE_SCENE)
+    return OK
 
 func bind_world(value: Node2D) -> void:
     if not active and value != world:
