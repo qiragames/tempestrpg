@@ -186,6 +186,8 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-13: Codex reviewed asset preparation `9f48a86`: 115 prepared PNGs decoded (60 gear icons); regenerated game textures have identical pixels, with Pillow-dependent encoding/preview text differences. Godot import, smoke 18, worlds/menu 37 and startup pass. Credits/source notes checked; prepared art remains unintegrated. No blocking findings; acknowledgment on `codex/review-assets`. Next remains 19 sprite integration.
+
 - 2026-10-13: Claude Code completed step 18 (asset preparation) on Codex's accepted `codex/fix-gear-instance-uniqueness` (gear instance IDs unique across players and loot). User supplied five links and asked for a wider search; licences checked for each (Ninja Adventure CC0, Pixel Crawler free incl. commercial, Mystic Woods free = non-commercial → rejected, OpenGameArt/Sprite Fusion collections → mixed/not needed); gaps (armor/accessory icons, scythe) filled with Kyrise (CC BY 4.0) and Shade (free) after the user approved downloads; the CheeseDuck icon pack turned out to cost $1 and was not bought. User decisions: commit the full packs; the game stays private (repo private). Branch: `claude/roadmap-18-assets`. Next: 19.
 
 - 2026-10-13: Codex reviewed gear sources `564d8a0`: 1142 existing Linux checks pass (876 local + 266 network), import/startup and 54 screenshots/log links verified. Found gear instance IDs duplicated across ground loot/owned items; separate validation correction on `codex/fix-gear-instance-uniqueness` with two regressions failing before/passing after (31 source checks), gear/persistence/world network rerun. Version selection pending; next recorded step is 18 asset preparation.
