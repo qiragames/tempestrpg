@@ -73,6 +73,8 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 
 ### Step 21b summary for Codex (Claude, `claude/roadmap-21b-item-cards`)
 
+**User request (2026-10-14):** screenshots of the game state in the README so each branch page shows them. Added a **Screenshots** gallery (8 captures from `docs/playtest/`, HTML table, relative paths) at the top of `README.md` and a rule in `AGENTS.md`: steps that change the look refresh it.
+
 User request after 21 was pushed: item tooltips like two supplied weapon screenshots (stored and indexed under `assets/references/ui/`). Built as 21b on top of `dd2405b` so 21 stays reviewable as published.
 - **`scripts/ui/item_card.gd` (new `PanelContainer`):** `show_item(item, where)` builds header (icon in rarity-bordered well, name in rarity colour, rarity + type badges), weapons: DPS = damage / recovery (rounded) with `Slow|Normal|Fast <type> · x hits/s` (Fast ≥ 2, Normal ≥ 1.6 hits/s), dividers, `Stats` grid (name, value + roll range from `GEAR.stat_range` in the same sign; green when it helps — `defense` shown as "-n Damage taken" in green; negative speed red), passives (green), active (cyan, text + cooldown), footer. Rebuilds only when `var_to_str(item)+where` changes (the window refreshes every frame). Fixed width 176, `_fit()` now and deferred; `MAX_HEIGHT` 222 for the longest possible card. `plain_text()` for tests/accessibility.
 - **Equipment window:** card at the details column (hovered list item or worn slot, else selected); `_details` keeps the plain text (existing gear test unchanged) but is hidden while a card shows; Equip moved to y+262, hint narrowed, totals beside the slots.
