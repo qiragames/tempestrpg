@@ -8,12 +8,14 @@ const OUT := "res://docs/playtest"
 var world: Node2D
 var player: CharacterBody2D
 var hud: CanvasLayer
+var session: Node
 var camp: Node2D
 var ally: CharacterBody2D
 var lines: Array[String] = []
 var messages: Array[String] = []
 var failures := 0
 var shots := 0
+var retreats := 0
 
 func _initialize() -> void:
     call_deferred("_run")
@@ -122,11 +124,36 @@ func _fight(enemy: Node2D, use_skill: bool, shot_name: String) -> bool:
         if not shot_taken and offset.length() < 40:
             await _shot(shot_name, "Fighting: strike arc and enemy health bar")
             shot_taken = true
+        if player.get_node("Magicules").current < 8.0:
+            # Like a player would: back off until the aura recovers instead of mashing an unaffordable strike.
+            await _recover()
+            continue
         var skill_ready: bool = use_skill and player.get_node("SkillBook").skill_at_slot(0) != null and player.get_node("Magicules").current >= 12
         await _tap("skill_1" if skill_ready else "attack")
         await _wait(0.45 if not skill_ready else 0.85)
     _release_moves()
     return true
+
+## Retreat from the nearest living enemy (staying inside an active trial circle) until Magicules recover.
+func _recover() -> void:
+    var start := Time.get_ticks_msec()
+    retreats += 1
+    while player.get_node("Magicules").current < 40.0 and Time.get_ticks_msec() - start < 9000 and player.get_node("Health").current > 0:
+        var threat: Node2D = null
+        for enemy in get_nodes_in_group("enemies"):
+            if enemy.get_node("Health").current > 0 and (threat == null or player.position.distance_to(enemy.position) < player.position.distance_to(threat.position)):
+                threat = enemy
+        var away: Vector2 = (player.position - threat.position).normalized() if threat != null else Vector2.ZERO
+        if world.trial.state.active and (player.position + away * 24.0).distance_to(world.trial.STONE) > world.trial.ARENA_RADIUS - 30:
+            # Near the circle's edge: circle around the stone (and slightly inward) instead of leaving.
+            var radial: Vector2 = world.trial.STONE.direction_to(player.position)
+            var tangent: Vector2 = radial.orthogonal()
+            if tangent.dot(away) < 0:
+                tangent = -tangent
+            away = (tangent - radial * 0.6).normalized()
+        _steer(away)
+        await physics_frame
+    _release_moves()
 
 func _absorb(enemy: Node2D) -> bool:
     if not await _walk_to(enemy.position + Vector2(-14, 0), 4.0):
@@ -154,6 +181,24 @@ func _gather_here() -> bool:
 
 func _run() -> void:
     DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
+    session = root.get_node("GameSession")
+    # Title menu first (with an empty temporary save folder), then the gameplay world.
+    var temp_worlds := OS.get_temp_dir().path_join("tempestrpg-showcase-" + Crypto.new().generate_random_bytes(6).hex_encode())
+    DirAccess.make_dir_recursive_absolute(temp_worlds)
+    var title = load("res://scenes/menu/title_menu.tscn").instantiate()
+    title.worlds_dir = temp_worlds
+    root.add_child(title)
+    current_scene = title
+    await _wait(0.3)
+    lines.append("# Visual playtest — full first slice\n")
+    _log("## 0. Title menu")
+    await _shot("title_menu", "Title menu: New World, Load World, Join a Friend, Quit")
+    title._show("new")
+    title._name_field.text = "Showcase World"
+    title._seed_field.text = "goblin camp"
+    await _shot("new_world", "New World: name and seed (numbers or any text, empty = random)")
+    title.queue_free()
+    await _wait(0.1)
     world = load("res://scenes/world/forest.tscn").instantiate()
     root.add_child(world)
     current_scene = world
@@ -163,7 +208,6 @@ func _run() -> void:
     ally = world.get_node("GoblinAlly")
     world.system_message.connect(func(message: String): messages.append(message))
     root.get_window().title = "TempestRPG — visual playtest (automated)"
-    _log("# Visual playtest — full first slice\n")
     _log("Automated, visible run on %s. Viewport %s, window %s. Movement, combat, absorb, skills and menus use the real input actions; menu buttons are pressed programmatically.\n" % [OS.get_name(), root.get_visible_rect().size, root.get_window().size])
     await _wait(0.5)
     _log("## 1. Spawn")
@@ -319,7 +363,6 @@ func _run() -> void:
     await _shot("trial_start", "Proving Trial: arena circle, three creatures and the trial banner")
     for creature in trial_creatures:
         if is_instance_valid(creature) and creature.get_node("Health").current > 0:
-            pool._current = maxf(pool.current, 60.0)
             await _fight(creature, true, "trial_fight")
     _check(await _until(func(): return not trial.state.active, 3.0), "Trial ends after the last creature falls")
     var learned = player.get_node("SkillBook")
@@ -330,13 +373,28 @@ func _run() -> void:
     await _tap("skill_4")
     _check(await _until(func(): return player.get_node("Absorption").focus_left > 0.0), "Slot 4 arms Predator Focus")
     await _shot("predator_focus", "Unique skill: Predator Focus armed from hotbar slot 4")
-    _log("## 12. Multiplayer panel")
-    await _key(KEY_F8)
-    await _shot("session_panel", "F8 host/join panel")
-    await _key(KEY_F8)
+    _log("## 12. Pause menu and Open to friends")
+    # Turn this sandbox into a solo-hosted world (as the title menu does), then use Esc.
+    var meta := {"name": "Showcase World", "seed": 1234, "created": 1, "last_played": 1}
+    _check(session.start_host(24560, temp_worlds.path_join("showcase_world.json"), false, meta) == OK and not session.listening, "World is hosted solo and saved, no port open")
+    await _wait(0.2)
+    await _tap("ui_cancel")
+    _check(await _until(func(): return hud._pause_panel.visible and paused), "Esc opens the pause menu and freezes the solo world")
+    await _shot("pause_solo", "Pause menu while playing solo: Resume, Open to friends, Save, Save & quit")
+    hud._pause_buttons.open.pressed.emit()
+    _check(await _until(func(): return session.listening), "Open to friends starts listening without a restart")
+    await _wait(0.1)
+    await _shot("pause_open", "Pause menu after Open to friends: port and LAN address for friends")
+    await _tap("ui_cancel")
+    _check(await _until(func(): return not hud._pause_panel.visible and not paused), "Esc resumes")
+    session.stop_session(false)
+    for file in DirAccess.get_files_at(temp_worlds):
+        DirAccess.remove_absolute(temp_worlds.path_join(file))
+    DirAccess.remove_absolute(temp_worlds)
     _log("\n## System messages seen\n")
     for message in messages:
         _log("- %s" % message)
+    _log("\nThe bot retreated %d time(s) to let Magicules recover." % retreats)
     _log("\n**Result: %d failed checks, %d screenshots.**" % [failures, shots])
     var file := FileAccess.open(OUT.path_join("log.md"), FileAccess.WRITE)
     file.store_string("\n".join(lines) + "\n")

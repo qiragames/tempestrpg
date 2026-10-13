@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 11
+const VERSION := 12
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
 ## Initial saved state of the v8 encounter; matches scenes/world/forest.tscn.
@@ -112,6 +112,17 @@ static func validate_player(state: Variant, id: String) -> bool:
         return false
     return true
 
+static func valid_meta(meta: Variant) -> bool:
+    if not meta is Dictionary or meta.size() != 4 or not meta.get("name") is String:
+        return false
+    var name: String = meta.name
+    if name.strip_edges().is_empty() or name.length() > 32 or name != name.strip_edges():
+        return false
+    for character in name:
+        if character.unicode_at(0) < 32:
+            return false
+    return _number(meta.get("seed"), 0, 2147483647, true) and _number(meta.get("created"), 0, 100000000000, true) and _number(meta.get("last_played"), 0, 100000000000, true)
+
 static func validate(data: Variant) -> bool:
     if not data is Dictionary or data.get("version") != VERSION or not _id(data.get("world_id")):
         return false
@@ -124,6 +135,9 @@ static func validate(data: Variant) -> bool:
         if not hash_value is String or (id != "host" and (hash_value.length() != 64 or not hash_value.is_valid_hex_number(false))):
             return false
     if not CAMP.valid_state(data.get("camp"), data.players):
+        return false
+    # World meta (save-slot name, seed, dates). Written by every hosted world; optional for hand-built test documents.
+    if data.has("meta") and not valid_meta(data.meta):
         return false
     if not data.get("progression") is Dictionary or not _plain(data.progression):
         return false
@@ -283,12 +297,17 @@ static func migrate(data: Variant) -> Variant:
         if not data.get("players") is Dictionary:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 11
         for state in data.players.values():
             if not state is Dictionary or not state.get("health") is Dictionary:
                 return null
             state.health["regen_rate"] = state.health.get("regen_rate", 0.0)
             state.health["regen_left"] = state.health.get("regen_left", 0.0)
+    # v12: save-slot meta. Older single-slot worlds get a neutral name and seed 0.
+    if data.get("version") == 11:
+        data = data.duplicate(true)
+        data.version = VERSION
+        data["meta"] = data.get("meta", {"name": "Earlier world", "seed": 0, "created": 0, "last_played": 0})
     return data
 
 static func _read(path: String) -> Dictionary:

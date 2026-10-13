@@ -32,6 +32,8 @@ func _ready() -> void:
         _add_obstacle(Rect2(tree + Vector2(-6, 4), Vector2(12, 12)))
     for border in [Rect2(-16, 0, 16, 640), Rect2(960, 0, 16, 640), Rect2(0, -16, 960, 16), Rect2(0, 640, 960, 16)]:
         _add_obstacle(border)
+    # Start the world chosen in the title menu (or on the command line), if any.
+    session.call_deferred("launch_pending")
 
 func get_local_player() -> CharacterBody2D:
     return local_player if is_instance_valid(local_player) else $Player

@@ -19,7 +19,8 @@ func _frames(count: int) -> void:
         await process_frame
 
 func _run() -> void:
-    var scene: PackedScene = load(ProjectSettings.get_setting("application/run/main_scene"))
+    _check(ProjectSettings.get_setting("application/run/main_scene") == "res://scenes/menu/title_menu.tscn", "The game starts at the title menu")
+    var scene: PackedScene = load("res://scenes/world/forest.tscn")
     if scene == null:
         push_error("Main scene failed to load")
         quit(1)

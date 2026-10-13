@@ -26,6 +26,15 @@ var _received_revision: int = -1
 var _join_deadline: int = 0
 var _action_budgets: Dictionary = {}
 var _save_queued: bool = false
+## True once the hosted world accepts guests ("Open to friends"); solo worlds open no port.
+var listening: bool = false
+var listen_port: int = DEFAULT_PORT
+## Name, seed and dates of the hosted world (saved with it).
+var world_meta: Dictionary = {}
+## A world chosen in the title menu, started once the game scene is ready.
+var pending_launch: Dictionary = {}
+const TITLE_SCENE := "res://scenes/menu/title_menu.tscn"
+const WORLD_SCENE := "res://scenes/world/forest.tscn"
 
 func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
@@ -43,12 +52,34 @@ func _launch_arguments() -> void:
         options[pair[0]] = pair[1] if pair.size() == 2 else ""
     if not options.has("host") and not options.has("join"):
         return
-    await get_tree().process_frame
-    bind_world(get_tree().current_scene)
+    # Command-line hosting/joining skips the title menu.
     if options.has("host"):
-        start_host(int(options.get("port", DEFAULT_PORT)), options.get("save", save_path))
+        pending_launch = {"mode": "host", "port": int(options.get("port", DEFAULT_PORT)), "path": options.get("save", save_path), "listen": true}
     else:
-        join_host(options.join, int(options.get("port", DEFAULT_PORT)), options.get("identity", identity_path))
+        pending_launch = {"mode": "join", "address": options.join, "port": int(options.get("port", DEFAULT_PORT)), "identity": options.get("identity", identity_path)}
+    if get_tree().current_scene != null and get_tree().current_scene.scene_file_path == WORLD_SCENE:
+        await get_tree().process_frame
+        bind_world(get_tree().current_scene)
+        launch_pending()
+    else:
+        get_tree().change_scene_to_file(WORLD_SCENE)
+
+## Called by the world scene when it is ready: start what the title menu (or CLI) asked for.
+func launch_pending() -> void:
+    if pending_launch.is_empty() or not is_instance_valid(world):
+        return
+    var launch := pending_launch
+    pending_launch = {}
+    if launch.mode == "host":
+        start_host(launch.get("port", DEFAULT_PORT), launch.path, launch.get("listen", false), launch.get("meta", {}))
+    else:
+        join_host(launch.address, launch.get("port", DEFAULT_PORT), launch.get("identity", identity_path))
+
+## Leave the current world (saving when hosting) and return to the title menu.
+func quit_to_title() -> void:
+    stop_session(true)
+    get_tree().paused = false
+    get_tree().change_scene_to_file(TITLE_SCENE)
 
 func bind_world(value: Node2D) -> void:
     if not active and value != world:
@@ -59,7 +90,9 @@ func bind_world(value: Node2D) -> void:
 func new_id(prefix: String = "") -> String:
     return prefix + Crypto.new().generate_random_bytes(16).hex_encode()
 
-func start_host(port: int = DEFAULT_PORT, path: String = "user://worlds/forest.json") -> Error:
+## Host a saved world. With listen = false nothing is opened on the network (solo play); the
+## world is still hosted and saved, and open_to_friends() can start accepting guests later.
+func start_host(port: int = DEFAULT_PORT, path: String = "user://worlds/forest.json", listen: bool = true, meta: Dictionary = {}) -> Error:
     if active or replica_world or not is_instance_valid(world) or port < 1 or port > 65535:
         return ERR_INVALID_PARAMETER
     var loaded: Dictionary = {}
@@ -69,20 +102,24 @@ func start_host(port: int = DEFAULT_PORT, path: String = "user://worlds/forest.j
             _fail("Save is invalid; preserved on disk. Choose a different world path or restore a valid backup.")
             return ERR_FILE_CORRUPT
         loaded = result.data
-    var peer := ENetMultiplayerPeer.new()
     # Clients talk only to the host. No client-to-client relay is needed for
     # authoritative snapshots, and disabling it avoids stale relay peers on exit.
     (multiplayer as SceneMultiplayer).server_relay = false
-    var error := peer.create_server(port, MAX_PLAYERS - 1)
-    if error != OK:
-        _fail("Could not host on UDP port %d." % port)
-        return error
-    multiplayer.multiplayer_peer = peer
+    listening = false
+    listen_port = port
+    if listen:
+        var error := _listen(port)
+        if error != OK:
+            return error
+    else:
+        multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
     active = true
     Engine.max_fps = 60
     get_tree().auto_accept_quit = false
     save_path = path
     world_id = loaded.get("world_id", new_id("world_"))
+    world_meta = loaded.get("meta", meta if not meta.is_empty() else {"name": path.get_file().get_basename().capitalize(), "seed": 0, "created": int(Time.get_unix_time_from_system()), "last_played": 0}).duplicate(true)
+    world_meta.last_played = int(Time.get_unix_time_from_system())
     records = loaded.get("players", {}).duplicate(true)
     owners = {1: "host"}
     local_character_id = "host"
@@ -101,9 +138,44 @@ func start_host(port: int = DEFAULT_PORT, path: String = "user://worlds/forest.j
         stop_session(false)
         _fail("Could not save the hosted world; hosting stopped.")
         return saved
-    world._announce("Hosting for up to 8 players on UDP %d. F9 saves." % port)
+    world._announce("Hosting for up to 8 players on UDP %d. F9 saves." % port if listening else "World \"%s\" loaded. Esc: pause menu, open to friends." % world_meta.name)
     character_assigned.emit("host")
     return OK
+
+func _listen(port: int) -> Error:
+    var peer := ENetMultiplayerPeer.new()
+    var error := peer.create_server(port, MAX_PLAYERS - 1)
+    if error != OK:
+        _fail("Could not host on UDP port %d." % port)
+        return error
+    multiplayer.multiplayer_peer = peer
+    listening = true
+    listen_port = port
+    return OK
+
+## Start accepting guests in the running hosted world, without restarting it.
+func open_to_friends(port: int = DEFAULT_PORT) -> Error:
+    if not active or replica_world or listening or not multiplayer.is_server():
+        return ERR_UNAVAILABLE
+    var peer := ENetMultiplayerPeer.new()
+    var error := peer.create_server(port, MAX_PLAYERS - 1)
+    if error != OK:
+        world._announce("Could not open UDP port %d. Is another game using it?" % port)
+        return error
+    multiplayer.multiplayer_peer = peer
+    listening = true
+    listen_port = port
+    world._announce("Open to friends on UDP %d. They join with: %s" % [port, ", ".join(lan_addresses()) if not lan_addresses().is_empty() else "your IP address"])
+    save_world()
+    return OK
+
+## Private IPv4 addresses friends on the same network can use to join.
+static func lan_addresses() -> Array:
+    var result: Array = []
+    for address in IP.get_local_addresses():
+        if address.begins_with("192.168.") or address.begins_with("10.") or (address.begins_with("172.") and address.split(".").size() == 4 and int(address.split(".")[1]) >= 16 and int(address.split(".")[1]) <= 31):
+            result.append(address)
+    return result
 
 func join_host(address: String, port: int = DEFAULT_PORT, profile: String = "user://profiles/characters.json") -> Error:
     if active or not is_instance_valid(world) or address.is_empty() or port < 1 or port > 65535:
@@ -421,6 +493,8 @@ func document() -> Dictionary:
     _update_records()
     var data := CODEC.capture_entities(world)
     data.merge({"version": STORE.VERSION, "world_id": world_id, "players": records.duplicate(true), "progression": world.progression.duplicate(true)})
+    if not world_meta.is_empty():
+        data["meta"] = world_meta.duplicate(true)
     return data
 
 ## Saves exclude a running trial and its creatures: a host restart cancels the trial.
@@ -520,6 +594,8 @@ func stop_session(save: bool = true) -> void:
     if active and save and multiplayer.is_server():
         save_world()
     active = false
+    listening = false
+    world_meta = {}
     _join_deadline = 0
     multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
     owners.clear()

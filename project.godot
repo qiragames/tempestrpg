@@ -3,7 +3,7 @@ config_version=5
 
 [application]
 config/name="TempestRPG"
-run/main_scene="res://scenes/world/forest.tscn"
+run/main_scene="res://scenes/menu/title_menu.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 
 [autoload]

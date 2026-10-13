@@ -161,10 +161,12 @@ Claim file ownership in `docs/AI_HANDOFF.md` and push the claim before work. Dur
 
 After the step-16 playtest showed the trial was too hard without any HP recovery, the user chose healing that scales with the absorbed creature: Easy 15, Standard 25, Elite 40 HP restored gradually over 10 s (`Health.start_regen`, `TIER_STATS.absorb_heal`). A new heal replaces the running one only if it restores more; healing is capped at max HP, ends on defeat, runs only on the host and is saved (`health.regen_rate/regen_left`, schema v11). Trial creatures cannot be absorbed, so trials still cannot be farmed for healing.
 
-### 16c — Worlds, save slots and menus (user step A, Claude) — **Next**
+### 16c — Worlds, save slots and menus (user step A, Claude) — **Done**
+
+**Status 2026-10-13:** implemented on `claude/roadmap-16c-worlds-menus` as described below. Title menu is the main scene; F8 panel removed; pause menu on Esc; schema v12 world meta (`name`, `seed`, `created`, `last_played`; optional in validation for hand-built test documents, always written by hosted worlds).
 
 A working, unstyled title flow before the art steps (final presentation remains step 22): New World (name + optional seed), Load World (list of save slots with name, seed and last-played time), Join (address), Quit. Every world is always saved; playing alone means running as a local host with nobody connected, so the pause menu's **Open to friends** simply starts accepting joins without a restart. The pause menu also offers Resume and Save & Quit. Replaces the F8 host/join panel. Must keep host authority, private reconnect identities, autosave/backup behavior, 8-player cap and existing save migration; per-world save files under `user://worlds/`.
 
-### 16d — Seeded worlds (user step B) — **Planned**
+### 16d — Seeded worlds (user step B) — **Next**
 
 Each world stores a seed. The map layout, spawn and camp site stay fixed; the seed deterministically places resource deposits (positions/amounts), creatures (placement and difficulty), points of interest (trial stone, ally start, from designed candidate spots) and decorations (trees/rocks) while keeping every route, deposit and point of interest reachable. The same seed always produces the same world; the seed is saved, validated and shown in the menu. Static IDs stay stable so saves, ownership and conservation rules keep working. The extra "something else" tick was accidental (user, 2026-10-13); the seed covers exactly these four groups.

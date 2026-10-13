@@ -41,14 +41,14 @@ func _ready() -> void:
     inventory.changed.connect(_refresh_inventory)
     _refresh_inventory()
     record_event("Reincarnation confirmed.")
-    _build_session_panel()
+    _build_pause_panel()
     _ally_dialog = load("res://scripts/ui/ally_dialog.gd").new()
     add_child(_ally_dialog)
     _camp_dialog = load("res://scripts/ui/camp_dialog.gd").new()
     add_child(_camp_dialog)
 
 func menu_open() -> bool:
-    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _session_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible)
+    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible)
 
 func bind_player(actor: Node2D) -> void:
     if player == actor:
@@ -128,6 +128,13 @@ func _activate_slot(index: int) -> void:
             player.get_node("MeleeAttack").attack_skill(player.facing, skill.id)
 
 func _process(_delta: float) -> void:
+    if _pause_panel.visible:
+        # A friend joined while this host was paused alone: resume the shared world, keep this player stopped.
+        if not _pause_blocking and get_tree().paused and session.active and session.owners.size() > 1:
+            get_tree().paused = _paused_before_pause
+            _pause_blocking = true
+            player.input_blocked = true
+        _refresh_pause()
     _recovery.visible = player.is_exhausted()
     var trial: Dictionary = get_parent().trial.state if get_parent().get("trial") != null else {}
     _trial_back.visible = trial.get("active", false)
@@ -239,15 +246,6 @@ func close_inventory() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and not event.echo:
-        if event.keycode == KEY_F8:
-            if _modal.visible or _ally_dialog.visible or _camp_dialog.visible:
-                return
-            _session_panel.visible = not _session_panel.visible
-            player.input_blocked = _session_panel.visible
-            if session.active:
-                session.request_action("menu", {"open": _session_panel.visible})
-            get_viewport().set_input_as_handled()
-            return
         if event.keycode == KEY_F9:
             var result: Error = session.save_world()
             get_parent()._announce("World saved." if result == OK else "Only the host can save; check the world path if saving failed.")
@@ -262,36 +260,85 @@ func _unhandled_input(event: InputEvent) -> void:
     elif _modal.visible and event.is_action_pressed("ui_cancel"):
         close_inventory()
         get_viewport().set_input_as_handled()
+    elif event.is_action_pressed("ui_cancel") and not event.is_echo():
+        # Esc with no other menu open toggles the pause menu (dialogs consume Esc first).
+        if _pause_panel.visible:
+            close_pause()
+        elif not menu_open():
+            open_pause()
+        get_viewport().set_input_as_handled()
 
 func _exit_tree() -> void:
     if is_instance_valid(_modal) and _modal.visible:
         get_tree().paused = _paused_before_open
 
-var _session_panel: Panel
+var _pause_panel: Panel
+var _pause_status: Label
+var _pause_buttons: Dictionary = {}
+var _pause_blocking: bool = false
+var _paused_before_pause: bool = false
 
-func _build_session_panel() -> void:
-    _session_panel = Panel.new()
-    _session_panel.position = Vector2(150, 105)
-    _session_panel.size = Vector2(340, 150)
-    _session_panel.add_theme_stylebox_override("panel", _panel_style())
-    add_child(_session_panel)
-    _label("HOST / JOIN · 8 PLAYERS TOTAL", Vector2(12, 10), Vector2(310, 22), _session_panel, 14)
-    var address := LineEdit.new()
-    address.text = "127.0.0.1"
-    address.position = Vector2(12, 40)
-    address.size = Vector2(310, 26)
-    _session_panel.add_child(address)
-    var host := _button("Host saved world", Vector2(12, 76), Vector2(150, 30), _session_panel)
-    var join := _button("Join address", Vector2(172, 76), Vector2(150, 30), _session_panel)
-    host.pressed.connect(func():
-        if session.start_host() == OK:
-            player.input_blocked = false
-            _session_panel.hide()
+## Pause menu: resume, open the hosted world to friends, save, and leave to the title menu.
+func _build_pause_panel() -> void:
+    _pause_panel = Panel.new()
+    _pause_panel.position = Vector2(190, 56)
+    _pause_panel.size = Vector2(260, 244)
+    _pause_panel.add_theme_stylebox_override("panel", _panel_style())
+    add_child(_pause_panel)
+    _label("PAUSED", Vector2(14, 10), Vector2(232, 22), _pause_panel, 15)
+    _pause_status = _label("", Vector2(14, 34), Vector2(232, 62), _pause_panel, 10)
+    var entries := [["resume", "Resume"], ["open", "Open to friends"], ["save", "Save world"], ["quit", "Save & quit to title"]]
+    for index in range(entries.size()):
+        var button := _button(entries[index][1], Vector2(14, 104 + index * 32), Vector2(232, 26), _pause_panel)
+        _pause_buttons[entries[index][0]] = button
+    _pause_buttons.resume.pressed.connect(close_pause)
+    _pause_buttons.open.pressed.connect(func(): session.open_to_friends(); _refresh_pause())
+    _pause_buttons.save.pressed.connect(func():
+        var result: Error = session.save_world()
+        get_parent()._announce("World saved." if result == OK else "Saving failed; the previous save is retained.")
     )
-    join.pressed.connect(func():
-        if session.join_host(address.text.strip_edges()) == OK:
-            player.input_blocked = false
-            _session_panel.hide()
+    _pause_buttons.quit.pressed.connect(func():
+        close_pause()
+        session.quit_to_title()
     )
-    _label("F8 closes · UDP 24560 · F9 host save", Vector2(12, 116), Vector2(310, 24), _session_panel, 10)
-    _session_panel.hide()
+    _pause_panel.hide()
+
+func open_pause() -> void:
+    if menu_open():
+        return
+    _paused_before_pause = get_tree().paused
+    # Alone (or offline) the world freezes; with guests connected only this character stops.
+    _pause_blocking = session.active and (session.replica_world or session.owners.size() > 1)
+    if _pause_blocking:
+        player.input_blocked = true
+        session.request_action("menu", {"open": true})
+    else:
+        get_tree().paused = true
+    _pause_panel.show()
+    _refresh_pause()
+    _pause_buttons.resume.grab_focus()
+
+func close_pause() -> void:
+    if not _pause_panel.visible:
+        return
+    _pause_panel.hide()
+    if _pause_blocking:
+        player.input_blocked = false
+        session.request_action("menu", {"open": false})
+    get_tree().paused = _paused_before_pause if not _pause_blocking else get_tree().paused
+
+func _refresh_pause() -> void:
+    var hosting: bool = session.active and not session.replica_world
+    if session.replica_world:
+        _pause_status.text = "Joined a friend's world. Leaving keeps your character on their save."
+    elif not session.active:
+        _pause_status.text = "Offline sandbox (not saved)."
+    elif session.listening:
+        var addresses: Array = session.lan_addresses()
+        _pause_status.text = "\"%s\" · open to friends on UDP %d · %d/8 players\nJoin with: %s" % [session.world_meta.get("name", "World"), session.listen_port, session.owners.size(), ", ".join(addresses) if not addresses.is_empty() else "your IP address"]
+    else:
+        _pause_status.text = "\"%s\" · seed %d · playing solo\nOpen to friends lets up to 7 friends join." % [session.world_meta.get("name", "World"), int(session.world_meta.get("seed", 0))]
+    _pause_buttons.open.disabled = not hosting or session.listening
+    _pause_buttons.open.text = "Open to friends" if not session.listening else "Open to friends (on)"
+    _pause_buttons.save.disabled = not hosting
+    _pause_buttons.quit.text = "Leave to title" if session.replica_world else "Save & quit to title" if hosting else "Quit to title"

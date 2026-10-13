@@ -4,7 +4,7 @@ A Godot **4.6.3** / GDScript prototype for a top-down pixel-art Isekai RPG.
 
 ## Play
 
-Open `project.godot` in Godot 4.6.3 and press **F5** to run the project. Move with **WASD / arrow keys**, strike with **Space / J**, absorb with **E**, use hotbar slots with **1–4** or a click, open storage with **I**, and use **F8** for Host/Join or **F9** for host save. **T** switches mimic form, **R** retries offline or respawns a defeated hosted character. Explore as a placeholder slime; trees, rocks, water, and the map edge have collision.
+Open `project.godot` in Godot 4.6.3 and press **F5** to run the project. The game opens at the **title menu**: create a **New World** (name and optional seed), **Load World** from your saves, or **Join a Friend**. In a world, move with **WASD / arrow keys**, strike with **Space / J**, absorb with **E**, use hotbar slots with **1–4** or a click, open storage with **I**, press **Esc** for the pause menu (Resume, Open to friends, Save, Save & quit to title) and **F9** to save. **T** switches mimic form, **R** retries offline or respawns a defeated hosted character. Explore as a placeholder slime; trees, rocks, water, and the map edge have collision.
 
 The game renders at a 640 × 360 base resolution (×2 = 1280 × 720 default window, ×3 = 1920 × 1080 fullscreen), integer scaling, nearest texture filtering, and a bounded player camera. Art is a procedural placeholder. One Forest Gnasher notices you within 180 pixels, chases at 55 pixels/second, and pauses for a 0.35-second bite windup. Dodge away while it turns orange. It recovers for 0.9 seconds before attacking again. Its basic AI can collide with terrain; pathfinding is not implemented.
 
@@ -65,14 +65,16 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/mimic_form.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/trial_unique.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/absorb_healing.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/worlds_menu.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
 python3 tests/network_forms.py
 python3 tests/network_trial.py
+python3 tests/network_worlds.py
 "$GODOT_BIN" --headless --path . --quit-after 120
 ```
 
-The cloud checks validate import, 17 foundation checks, 24 combat checks, 27 Magicule checks, 32 drop checks, 26 absorption checks, 35 skills/storage checks, 32 persistence checks, 18 ally checks, 28 naming checks, 34 settlement checks, 35 worker checks, 48 camp-growth checks, 51 skill-catalogue checks, 40 Extra-skill checks, 30 mimic-form checks, 40 trial checks, 21 healing checks, and 238 real multi-process networking checks (776 total on Windows 11 through step 16b; the 689 checks through step 15 were independently verified on Linux, where `python` replaces `python3`). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
+The cloud checks validate import, 18 foundation checks, 24 combat checks, 27 Magicule checks, 32 drop checks, 26 absorption checks, 35 skills/storage checks, 32 persistence checks, 18 ally checks, 28 naming checks, 34 settlement checks, 35 worker checks, 48 camp-growth checks, 51 skill-catalogue checks, 40 Extra-skill checks, 30 mimic-form checks, 40 trial checks, 21 healing checks, 35 world/menu checks, and 254 real multi-process networking checks (828 total on Windows 11 through step 16c; the 689 checks through step 15 were independently verified on Linux, where `python` replaces `python3`). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
 
 ## Structure
 
@@ -97,13 +99,13 @@ After roadmap changes, run `python3 tools/build_roadmap.py` to update the graph.
 
 ## Hosted multiplayer and saves
 
-**8 players total: 1 host + 7 guests.** Press **F8**, choose **Host saved world**, and have friends choose **Join address** with your machine’s LAN IP. The default is **UDP 24560**. Do not use `127.0.0.1` from a different machine; that address refers to that friend’s computer.
+**8 players total: 1 host + 7 guests.** Load or create a world, press **Esc** and choose **Open to friends**; the pause menu shows your LAN address. Friends choose **Join a Friend** on the title menu and enter that address. The default is **UDP 24560**. Do not use `127.0.0.1` from a different machine; that address refers to that friend’s computer.
 
 The host owns movement, combat, drops, corpse claims, skills, inventories, and world saves. Clients send validated intentions. Enemies select nearby living players; each HUD and bag belongs to its local character. One player opening inventory does not pause everyone else. R respawns a defeated character with its learned skills, inventory, level and current Magicules retained; living characters cannot use respawn to reset health.
 
 Save locations (Godot application user-data folder):
 
-- `user://worlds/forest.json`: host world and all registered character records.
+- `user://worlds/<world name>.json`: one file per world (save slot) with its name, seed, dates and all registered character records. An older `forest.json` appears in the list as "Earlier world".
 - The adjacent `.bak`: previous valid save, used if the primary is corrupt.
 - `user://profiles/characters.json`: each client’s private reconnect identities. Keep this file on that player’s machine; do not commit or share it. Losing it requires a new character rather than claiming another character’s ID.
 
@@ -215,3 +217,9 @@ Completing it teaches the first **Unique** skill, **Predator Focus** (placeholde
 ## Healing: absorbed vitality
 
 Hit points do not regenerate on their own. Completing an **absorption** heals you gradually over **10 seconds**, depending on the creature: **Easy 15 HP, Standard 25 HP, Elite 40 HP** (the Thornback is Standard). The HP display shows "+ healing" while it runs. A new absorption only replaces a running heal if it would restore more, healing never exceeds your maximum, and it stops if you are defeated. Trial creatures cannot be absorbed, so trials cannot be used to heal. Running heals are saved (schema **v11**). Tests: `tests/absorb_healing.gd` (21).
+
+## Worlds, save slots and playing with friends
+
+The title menu lists every saved world with its **name, seed and last-played date**; damaged files are shown as damaged instead of disappearing. **New World** asks for a name and a seed: leave the seed empty for a random one, type a number to use it directly, or type any text (it is turned into a number, like in Minecraft). The seed is stored now and will shape the world once seeded generation arrives (step 16d). Each world gets its own file, so two worlds with the same name get separate slots.
+
+**Every world is always saved.** Playing alone means you host the world without opening anything on the network (no firewall prompt). Press **Esc** for the pause menu: playing alone, it freezes the world; with friends connected, it only stops your own character. **Open to friends** starts accepting up to 7 friends in the running world without a restart and shows your LAN address and port (UDP 24560). **Save & quit to title** saves and closes the port; joined players see **Leave to title** instead. When you load the world again it starts solo, and your friends' characters are kept, so they rejoin as themselves after you open it again. Command-line `--host` / `--join` still work and skip the menu. Tests: `tests/worlds_menu.gd` (35) and `python3 tests/network_worlds.py` (16 real-process checks).

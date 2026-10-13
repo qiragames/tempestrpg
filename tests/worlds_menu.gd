@@ -1,0 +1,145 @@
+extends SceneTree
+## Title menu, save slots, solo hosting, pause menu, "Open to friends" and quit/load cycles.
+const REGISTRY := preload("res://scripts/menu/world_registry.gd")
+const STORE := preload("res://scripts/persistence/save_store.gd")
+var checks := 0
+var failures := 0
+var session: Node
+var dir: String
+func _initialize() -> void:
+    call_deferred("_run")
+func _check(ok: bool, message: String) -> void:
+    checks += 1
+    if not ok:
+        failures += 1
+        push_error(message)
+func _frames(count: int = 3) -> void:
+    for _i in range(count):
+        await physics_frame
+        await process_frame
+func _until(condition: Callable, seconds: float = 5.0) -> bool:
+    var start := Time.get_ticks_msec()
+    while not condition.call():
+        if Time.get_ticks_msec() - start > seconds * 1000:
+            return false
+        await process_frame
+    return true
+func _menu() -> Control:
+    var menu = load("res://scenes/menu/title_menu.tscn").instantiate()
+    menu.worlds_dir = dir
+    var old := current_scene
+    root.add_child(menu)
+    current_scene = menu
+    if is_instance_valid(old) and old != menu:
+        old.queue_free()
+    await _frames(1)
+    return menu
+func _run() -> void:
+    session = root.get_node("GameSession")
+    dir = OS.get_temp_dir().path_join("tempestrpg-worlds-" + Crypto.new().generate_random_bytes(6).hex_encode())
+    DirAccess.make_dir_recursive_absolute(dir)
+    # Registry helpers.
+    _check(REGISTRY.clean_name("  My\tWorld  ") == "MyWorld" and REGISTRY.clean_name("x".repeat(50)).length() == 32, "World names are cleaned and limited to 32 characters")
+    _check(REGISTRY.parse_seed("12345") == 12345 and REGISTRY.parse_seed("-7") == 7, "Numeric seeds are used directly")
+    _check(REGISTRY.parse_seed("goblin camp") == REGISTRY.parse_seed("goblin camp") and REGISTRY.parse_seed("goblin camp") != REGISTRY.parse_seed("goblin cave"), "Text seeds are hashed deterministically")
+    var random_seed: int = REGISTRY.parse_seed("")
+    _check(random_seed >= 0 and random_seed <= REGISTRY.MAX_SEED, "Empty seed gives a random valid seed")
+    _check(REGISTRY.new_world_path("My World!", dir).get_file() == "my_world.json" and REGISTRY.new_world_path("???", dir).get_file() == "world.json", "World file names come from the name")
+    _check(project_main_scene() == "res://scenes/menu/title_menu.tscn", "The game starts at the title menu")
+    # Empty title menu.
+    var menu = await _menu()
+    menu._show("load")
+    _check(menu._world_list.item_count == 0 and menu._play.disabled and menu._status.text.contains("No saved worlds"), "Load list starts empty with a hint")
+    menu._show("join")
+    menu.join_world()
+    _check(menu._status.text.contains("address") and session.pending_launch.is_empty(), "Join needs an address")
+    # Create a world: solo, saved, no port opened.
+    menu._show("new")
+    menu._name_field.text = "Test World"
+    menu._seed_field.text = "1234"
+    menu.create_world()
+    _check(await _until(func(): return session.active and current_scene != null and current_scene.scene_file_path == session.WORLD_SCENE), "Create and play opens the world")
+    await _frames()
+    var path := dir.path_join("test_world.json")
+    _check(not session.listening and session.multiplayer.multiplayer_peer is OfflineMultiplayerPeer and session.multiplayer.is_server(), "Solo world is hosted without opening a port")
+    _check(session.world_meta.name == "Test World" and session.world_meta.seed == 1234 and FileAccess.file_exists(path), "World saved immediately with its name and seed")
+    var first: Dictionary = STORE.load_world(path)
+    _check(first.ok and first.data.meta.name == "Test World" and first.data.meta.seed == 1234 and STORE.valid_meta(first.data.meta), "Save file carries valid meta")
+    var world_id: String = session.world_id
+    # Pause menu while alone freezes the world.
+    var world = current_scene
+    var hud = world.get_node("HUD")
+    hud.open_pause()
+    _check(paused and hud._pause_panel.visible and hud._pause_status.text.contains("playing solo") and not hud._pause_buttons.open.disabled, "Solo pause freezes the world and offers Open to friends")
+    hud.close_pause()
+    _check(not paused and not hud._pause_panel.visible, "Resume continues the world")
+    world.get_local_player().position = Vector2(300, 200)
+    # Open to friends without restarting.
+    var port := 30000 + randi() % 20000
+    _check(session.open_to_friends(port) == OK and session.listening and session.multiplayer.multiplayer_peer is ENetMultiplayerPeer and session.world_id == world_id, "Open to friends starts listening in the same world")
+    _check(session.open_to_friends(port) == ERR_UNAVAILABLE, "Opening twice is refused")
+    hud.open_pause()
+    _check(paused and hud._pause_status.text.contains("open to friends on UDP %d" % port) and hud._pause_buttons.open.disabled, "Pause shows the open port; nobody joined yet, so the world still freezes")
+    _check(hud._pause_buttons.quit.text == "Save & quit to title", "Host leaves with Save & quit")
+    hud._pause_buttons.quit.pressed.emit()
+    _check(await _until(func(): return not session.active and current_scene != null and current_scene.scene_file_path == session.TITLE_SCENE), "Save & quit returns to the title menu")
+    _check(not paused and not session.listening, "Leaving closes the port and unpauses")
+    var saved: Dictionary = STORE.load_world(path)
+    _check(saved.ok and saved.data.players.host.position == [300.0, 200.0], "Quitting saved the character position")
+    _check(saved.data.meta.last_played >= first.data.meta.last_played, "Last-played time recorded")
+    # Load the same world again from the list.
+    menu = current_scene
+    menu.worlds_dir = dir
+    menu._show("load")
+    _check(menu._world_list.item_count == 1 and menu._world_list.get_item_text(0).begins_with("Test World · seed 1234") and not menu._play.disabled, "Saved world listed with name and seed")
+    var bad_file := FileAccess.open(dir.path_join("broken.json"), FileAccess.WRITE)
+    bad_file.store_string("{ not json")
+    bad_file.close()
+    menu.refresh_worlds()
+    var damaged := -1
+    for index in range(menu._world_list.item_count):
+        if menu._world_list.get_item_text(index).contains("damaged"):
+            damaged = index
+    _check(damaged >= 0, "Damaged save files are listed, not hidden")
+    menu._world_list.select(damaged)
+    menu._world_list.item_selected.emit(damaged)
+    _check(menu._play.disabled, "Damaged worlds cannot be played")
+    for index in range(menu._world_list.item_count):
+        if menu._world_list.get_item_text(index).begins_with("Test World"):
+            menu._world_list.select(index)
+    menu.load_selected()
+    _check(await _until(func(): return session.active and current_scene.scene_file_path == session.WORLD_SCENE), "Load World opens the saved world")
+    await _frames()
+    _check(session.world_id == world_id and session.world_meta.name == "Test World" and not session.listening, "Loading restores the same world, again solo")
+    _check(current_scene.get_local_player().position == Vector2(300, 200), "Character position restored")
+    session.quit_to_title()
+    await _until(func(): return current_scene != null and current_scene.scene_file_path == session.TITLE_SCENE)
+    # A second world gets its own slot.
+    menu = current_scene
+    menu.worlds_dir = dir
+    menu._name_field.text = "Test World"
+    menu._seed_field.text = "goblin"
+    menu.create_world()
+    await _until(func(): return session.active)
+    _check(FileAccess.file_exists(dir.path_join("test_world_2.json")) and session.world_meta.seed == REGISTRY.parse_seed("goblin"), "Same name creates a separate slot; text seed stored")
+    session.quit_to_title()
+    await _until(func(): return current_scene != null and current_scene.scene_file_path == session.TITLE_SCENE)
+    _check(REGISTRY.list(dir).filter(func(w): return w.ok).size() == 2, "Both worlds are listed")
+    # Meta validation and migration.
+    var data: Dictionary = STORE.load_world(path).data
+    for bad_meta in [{"name": "", "seed": 1, "created": 0, "last_played": 0}, {"name": "x".repeat(40), "seed": 1, "created": 0, "last_played": 0}, {"name": "A", "seed": -1, "created": 0, "last_played": 0}, {"name": "A", "seed": 1, "created": 0, "last_played": 0, "extra": 1}]:
+        var bad := data.duplicate(true)
+        bad.meta = bad_meta
+        _check(not STORE.validate(bad), "Invalid meta rejected: %s" % [bad_meta])
+    var legacy := data.duplicate(true)
+    legacy.version = 11
+    legacy.erase("meta")
+    var migrated: Dictionary = STORE.migrate(legacy)
+    _check(STORE.validate(migrated) and migrated.meta.name == "Earlier world" and migrated.meta.seed == 0, "v11 worlds gain neutral meta")
+    for file in DirAccess.get_files_at(dir):
+        DirAccess.remove_absolute(dir.path_join(file))
+    DirAccess.remove_absolute(dir)
+    print("Worlds and menu checks: %d passed, %d failed" % [checks - failures, failures])
+    quit(1 if failures else 0)
+func project_main_scene() -> String:
+    return ProjectSettings.get_setting("application/run/main_scene")

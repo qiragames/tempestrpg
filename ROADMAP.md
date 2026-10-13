@@ -8,7 +8,7 @@ A top-down 2D pixel-art Isekai action RPG in Godot 4 with GDScript, with friends
 
 ## Current focus
 
-**Current focus: step 16c (user step A) — worlds, save slots and menus; then 16d (user step B) — seeded worlds; then 17.** User decision 2026-10-13 after the step-16 playtest: (1) healing on absorb, done as 16b: Easy 15 / Standard 25 / Elite 40 HP over 10 s; the unassisted visible playtest now completes the Proving Trial; (2) a working main menu earlier than step 22 (final art stays in 22): several named save slots, every world always saved (playing alone = hosting with nobody connected), "Open to friends" from the pause menu, join by address; (3) seeded worlds like Minecraft: the map layout stays fixed, while deposits, creatures, points of interest and decorations come from the world's seed. Steps 13–16 and 16b are done; 17 and 18 remain ready. 776 automated checks pass on Windows (538 local + 238 network) plus the visual playtest.
+**Current focus: step 16d (user step B) — seeded worlds; then 17.** Step 16c is done (Claude): the game starts at a title menu with New World (name + seed), Load World (save slots with name, seed and last-played date; damaged files listed), Join a Friend and Quit. Every world is hosted and always saved; solo play opens no port. The pause menu (Esc) offers Resume, **Open to friends** (starts listening in the running world, shows the LAN address), Save and Save & quit to title. The F8 panel is gone. Schema v12 stores world meta. 828 automated checks pass on Windows (574 local + 254 network) plus the visual playtest. Seeds are stored but do not yet change the world (16d).
 
 | Task | Status | Prerequisite | Completion evidence |
 | --- | --- | --- | --- |
@@ -117,6 +117,7 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 | Starting form | Slime/shapeshifter prototype consistent with absorption | M1 |
 | Naming balance | 80 cost, 25% recovery reserve, minimum 8-second sleep verified; tune through playtesting | M2 complete |
 | World identity | Develop original names, lore, and assets from the supplied inspirations | Before final content production |
+| Defenseless at 0 Magicules | Step 16c playtest: every attack costs Magicules, so a drained character cannot fight back; retreating to regenerate works but is easy to miss. Consider a free weak attack or cheaper basic strike | Step 24 (balance) |
 | HP recovery and trial difficulty | Step 16 playtest: the trial was too hard without healing. Addressed in 16b by absorbed vitality (Easy 15 / Standard 25 / Elite 40 HP over 10 s); the unassisted playtest now completes the trial. Fine-tune in step 24 | Step 24 |
 | Project scope | Ship a small playable slice before expanding to nation-scale simulation | M3 review |
 
@@ -155,8 +156,8 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 | 23 Audio and combat/analysis VFX | Planned | 16, 19, 21 | Clear cues, mute/reduced effects, no duplicate snapshot audio or gameplay timing change |
 | 24 Balance and M4 acceptance | Planned | 14, 15, 16, 17, 20, 21, 22, 23 | Visible user feedback, measured costs/recovery, eight-player/save checks and scoped LAN validation |
 | 16b Healing on absorb | Done | 16 | 21 checks: tier heals 15/25/40 over 10 s, gradual and capped, stronger heal replaces weaker, ends on defeat, host-only, saved/reloaded, v10→v11; the unassisted visible playtest now completes the trial |
-| 16c Worlds, save slots and menus (user step A) | Next | 16b | Title menu (New World with name + seed, Load World list, Join, Quit), always-saved worlds (solo = local host), pause menu with Resume / Open to friends / Save & Quit; replaces F8 panel; real-process host/join/save checks |
-| 16d Seeded worlds (user step B) | Planned | 16c | Fixed map layout; seed decides deposits, creature placement/difficulty, points of interest and decorations; same seed = same world; seed saved and validated; routes stay reachable |
+| 16c Worlds, save slots and menus (user step A) | Done | 16b | 35 local + 16 real-process checks: registry/seed parsing, create/save/list/load cycle, damaged files, solo hosting without a port, pause behavior, open to friends mid-game, quit to title, friend kept across reload and rejoin, v11→v12 meta; visible showcase from the title menu |
+| 16d Seeded worlds (user step B) | Next | 16c | Fixed map layout; seed decides deposits, creature placement/difficulty, points of interest and decorations; same seed = same world; seed saved and validated; routes stay reachable |
 
 ## Update contract
 
@@ -167,6 +168,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-13: Claude Code completed step 16c (user step A). New title menu (`scenes/menu/title_menu.tscn`, now the main scene) and `scripts/menu/world_registry.gd` (save slots in `user://worlds/`, name cleaning, Minecraft-style seed parsing, listing with damaged files). `GameSession`: solo hosting with an offline peer (`start_host(..., listen = false, meta)`), `open_to_friends()`, `launch_pending()`, `quit_to_title()`, world meta in every save. Pause menu (Esc) replaces the F8 panel. Schema v12. New `tests/worlds_menu.gd` (35) and `tests/network_worlds.py` (16); the smoke test now loads the world scene explicitly. 574 local + 254 network checks pass on Windows. Branch: `claude/roadmap-16c-worlds-menus`. Next: 16d seeded worlds.
 
 - 2026-10-13: Claude Code completed step 16b (user request): absorbed vitality heals by creature tier (Easy 15 / Standard 25 / Elite 40 HP over 10 s, host-only, capped, no stacking unless stronger, ends on defeat), HUD shows "+ healing", schema v11. New `tests/absorb_healing.gd` (21). The visual playtest no longer restores HP before the trial and still passes. User decisions recorded: new steps 16c (worlds/save slots/menus, "Open to friends") and 16d (seeded worlds) come before 17. 538 local + 238 network checks pass on Windows. Branch: `claude/roadmap-16b-absorb-healing`.
 
