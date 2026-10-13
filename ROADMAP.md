@@ -1,6 +1,6 @@
 # TempestRPG — Living Roadmap
 
-Last updated: 2026-10-13
+Last updated: 2026-10-14
 
 ## Goal
 
@@ -185,6 +185,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-14: Codex reviewed tiles/props `f663d5c`: 1184 Linux checks pass (918 local + 266 network), import/startup and 54 screenshot/log links verified. Checked seeded geometry, art footprints, camp restore and depth configuration; no blocking findings. README totals updated; acknowledgment on `codex/review-world-art`. Next remains 21 UI; watcher confirmed active at 30-second intervals.
 
 - 2026-10-13: Claude Code completed step 20 (forest and village tiles/props) after Codex's sprite review `28ad1ac` (client attack frames noted as a visual limitation). New `scripts/visual/world_art.gd` (tile/prop regions, grass, nine-slice road/pond patches, foot-anchored prop sprites); `forest.gd` draws the ground and is y-sorted; rocks/trees are sprites on their obstacle bodies; `first_camp.gd` building/centre sprites follow the camp state and deposits use art; trial stone and chests use art. New `tests/world_art.gd` (16). 918 local + 266 network = 1184 checks pass on Windows. Branch: `claude/roadmap-20-tiles-props`. Next: 21.
 

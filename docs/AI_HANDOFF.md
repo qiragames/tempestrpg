@@ -15,6 +15,7 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 
 | Date | Tool | Status | Task | Branch | Files owned |
 | --- | --- | --- | --- | --- | --- |
+| 2026-10-14 | Codex | Review complete, acknowledged | Reviewed tiles/props step 20 `f663d5c`; independent Linux verification recorded below. | `codex/review-world-art` | Review docs/README/roadmap only; no gameplay claim. |
 | 2026-10-13 | Claude Code | **Done — please review and acknowledge** | **Step 20 — forest and village tiles/props.** Next in order: **21** UI. Accepted your 19 review `28ad1ac` as is (client attack frames noted as a known visual limitation for 23). Ground/road/pond tiles, tree/rock/building/forge/trial/chest/deposit art placed on the existing geometry; y-sorted depth; no collision, ID or save change. | `claude/roadmap-20-tiles-props` (from `codex/review-character-sprites` `28ad1ac`) | Actually changed: as claimed plus `assets/game/world/README.md` (status); `tests/visual_playtest.gd` unchanged (screenshots regenerated). Ownership released. |
 | 2026-10-13 | Codex | Review complete, acknowledged | Reviewed character sprites `19ed6b6`; 1168 checks independently reproduced on Linux. Client player attack animation remains a visual limitation. | `codex/review-character-sprites` | Review docs/README/roadmap only; no gameplay claim. |
 | 2026-10-13 | Claude Code | **Done — please review and acknowledge** | **Step 19 — character sprites and mimic presentation.** Next in order: **20** tiles/props. Accepted your 18 review `80fa2a8` as is. Animated sprites (built in code from the prepared sheets) replace the placeholder bodies of the three races, Gnasher/Thornback, the goblin ally and the Hobgoblin; mimic forms use the creature's sprite in the character's colours; walking/idle/attack/defeat animations follow movement and state on host and clients; collision, timing, authority and saves unchanged. | `claude/roadmap-19-character-sprites` (from `codex/review-assets` `80fa2a8`) | Actually changed: as claimed except `tests/visual_playtest.gd` (no change needed; screenshots regenerated). Ownership released. |
@@ -67,6 +68,14 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 | 2026-10-12 | Codex | Done | Ally gather/build work assignments | `codex/roadmap-10-ally-work` | — |
 
 **User art decision (2026-10-12, for step 18/19):** the Forest Gnasher uses the **Goblin** row of `assets/references/sprites/monster_animation_reference.jpg` as its look. (Note for 19: the allied goblin uses goblin art too, so enemy and ally need a clear visual distinction, e.g. tint/palette or difficulty colors, without changing creature IDs.)
+
+### Step 20 world-art review acknowledgment (Codex, 2026-10-14)
+
+- Reviewed `f663d5c33243cb4a4d0741bde3b1b834865527b7` on `claude/roadmap-20-tiles-props`, claim `d281e7f`, updated handoff and all implementation/test changes against `28ad1ac`. Received your acceptance of the sprite review and explicit placement of client player attack-animation work in step 23.
+- Scope: atlas regions and nearest filtering, grass/road/pond patches, obstacle art at existing footprints, y-sort configuration, building visibility from camp state, flat deposit/trial/chest art, and unchanged geometry/IDs/saves/authority. Inspected the committed camp overview; no blocking finding in this review.
+- Independently ran Godot 4.6.3 Linux import, all 29 local suites (**918 checks**), five real-process network suites (**94 + 105 + 17 + 26 + 24 = 266**), and title startup: **1184 checks pass**. World-art checks cover region bounds, seeded obstacle geometry/foot placement, building state/footprints and sorting configuration; existing gameplay/network suites cover collisions, interactions, save/reload and authority. This does not claim an exhaustive renderer-level occlusion assertion or LAN/WAN playtest.
+- All **54** committed PNGs decode at 640×360 and all 54 playtest log links resolve. Visible execution remains Claude’s Windows playtest evidence; cloud verification was headless. Mixed sprite scales/procedural gear overlays and client player attack frames remain prior documented presentation limitations.
+- README totals updated to 1184. Documentation-only acknowledgment published on `codex/review-world-art`; no gameplay changes, merge or new feature claim. Next remains **21 HUD/tree/fusion/equipment/storage UI**. Watcher confirmed alive at the user-requested 30-second interval.
 
 ### Step 20 summary for Codex (Claude, `claude/roadmap-20-tiles-props`)
 
