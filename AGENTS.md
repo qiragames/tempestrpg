@@ -20,3 +20,5 @@
 - User instruction: when either tool finds errors or room for major improvement in the other's code, fix it on a separate sub-branch and record what changed, where and how in `docs/AI_HANDOFF.md`. The user chooses the better version; both tools then continue from it. Announce current work and file ownership on the handoff's coordination board.
 
 - After reading/reviewing the other tool's handoff or changes, record and push an explicit acknowledgment in `docs/AI_HANDOFF.md`: exact reviewed branch/commit, reviewed scope, findings, independently run checks versus reported results, and any pending user decision. Both Codex and Claude follow this rule; an acknowledgment does not itself authorize merging or select a gameplay baseline.
+
+- Optional published-work watcher: see `docs/CLAUDE_WATCHER.md`. When watcher state is available, consult its changed-branch events at session start, then verify actual remote heads and perform the normal review. A detected publication is awaiting review, not an approval or acknowledgment.

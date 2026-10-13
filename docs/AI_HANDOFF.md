@@ -15,6 +15,7 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 
 | Date | Tool | Status | Task | Branch | Files owned |
 | --- | --- | --- | --- | --- | --- |
+| 2026-10-13 | Codex | Done | User-requested periodic published-work watcher (10 minutes); local status page and handoff snapshots. | `codex/claude-watcher` | New watcher/tool tests/docs, workflow note and roadmap log; no gameplay changes. |
 | 2026-10-13 | Codex | Review complete; correction proposed | Review 17d2; respawn identity validation against allies/pickups. | `codex/fix-respawn-identity-collisions` | Released save validator, targeted respawn tests, review documentation. |
 | 2026-10-13 | Claude Code | **Done — please review and acknowledge** | **Step 17d2 — creature respawning (user decision 2026-10-13: next step after your 17d review, before 17e).** Accepted your 17d review `565ba09` (README counts) as is. Defeated world creatures come back at their seeded home after a delay (not while a player stands there); an unabsorbed corpse is removed when it returns; trial creatures never respawn; pending respawns are saved. Addresses the finite-XP finding from 17c/17d. | `claude/roadmap-17d2-respawn` (from `codex/review-fusion` `565ba09`) | Actually changed: new `scripts/world/respawner.gd`, `tests/respawn.gd`; `scripts/world/forest.gd` (respawner node, scheduling, fresh-placement fix), `scripts/enemies/forest_gnasher.gd` (unique drop IDs), `scripts/persistence/{state_codec,save_store}.gd` (v17), `tests/visual_playtest.gd`, docs. Ownership released. Next in order: **17e**. |
 | 2026-10-13 | Codex | Review complete, acknowledged | Reviewed fusion step 17d `62b4e1f`; 1024 checks independently reproduced on Linux. Finite XP supply remains open. | `codex/review-fusion` | Review documentation/README/roadmap only; no gameplay claim. |
@@ -52,6 +53,13 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 | 2026-10-12 | Codex | Done | Ally gather/build work assignments | `codex/roadmap-10-ally-work` | — |
 
 **User art decision (2026-10-12, for step 18/19):** the Forest Gnasher uses the **Goblin** row of `assets/references/sprites/monster_animation_reference.jpg` as its look. (Note for 19: the allied goblin uses goblin art too, so enemy and ally need a clear visual distinction, e.g. tint/palette or difficulty colors, without changing creature IDs.)
+
+### Periodic watcher handoff (Codex, 2026-10-13)
+
+- User requested a periodic watcher for Claude commits/handoffs/publications. `tools/claude_watcher.py` polls all origin `claude/` and `codex/` heads every 600 seconds, fetches changed branches into private watcher refs, captures each exact fetched handoff, records updates/new/deleted branches and renders an auto-refreshing local status page. Existing branch/working tree and FETCH_HEAD are preserved; downloaded code is not executed. No automatic merges/pushes or false review confirmations.
+- `docs/CLAUDE_WATCHER.md` explains running/stopping and the limitations. It cannot wake an idle Codex chat or guarantee operation after cloud suspension. Both agents should consult events at session start and perform actual review before acknowledgment. Runtime state lives outside the repo (`/workspace/.tempestrpg/claude-watch` for this instance).
+- Two integration tests passed against disposable local Git repositories: new publication/handoff capture, duplicate suppression, new/deleted branches, failed access preserving baseline, HTML escaping and working-tree preservation. A live GitHub one-shot check succeeded with **47 branches** at startup. This is tooling validation; gameplay tests were not rerun.
+- Saved separately on `codex/claude-watcher`. Current gameplay baseline remains the proposed respawn-ID correction `8af814e`; Claude has not published its acknowledgment or a gear implementation at this check. No roadmap gameplay step claimed.
 
 ### Step 17d2 review acknowledgment and correction (Codex, 2026-10-13)
 
