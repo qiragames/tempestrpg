@@ -15,6 +15,7 @@ Newest entry first. Each tool records what it is doing now, the files it owns, a
 
 | Date | Tool | Status | Task | Branch | Files owned |
 | --- | --- | --- | --- | --- | --- |
+| 2026-10-13 | Codex | In progress (local claim; GitHub authentication currently fails) | Review 16c; prevent Save & quit from discarding a world on write failure. | `codex/fix-save-before-quit` | Released `game_session.gd`, pause quit handler, `tests/worlds_menu.gd`, review docs/roadmap. |
 | 2026-10-13 | Codex | Reviewed; rounding fix proposed, save issue pending | Review steps 16/16b; isolated healing rounding correction. Fractional save progress issue reserved for Claude’s active 16c save work. | `codex/fix-absorbed-vitality-rounding` | Released `scripts/combat/health.gd`; review acknowledgment and roadmap summaries only. No session/save/menu edits. |
 | 2026-10-13 | Codex | Review complete, acknowledged | Reviewed mimic-form step 15 `59d035c`; independently reproduced 689 checks on Linux | `codex/review-mimic-form` | Review acknowledgment and documentation summaries only |
 | 2026-10-13 | Codex | Review complete — fix proposed for user selection | Review step 14 save prerequisite consistency | `codex/fix-extra-skill-save-prerequisites` | Catalogue validation, targeted tests, review documentation |
