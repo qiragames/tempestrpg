@@ -85,6 +85,14 @@ Milestones are ordered by dependencies. Later phases remain provisional until th
 - Balance naming costs, skill acquisition, and recovery against actual playtests.
 - Exit goal: the core slice is readable, enjoyable, and balanced before adding world scale.
 
+### M4.5 — World and item expansion (user requests, 2026-10-13) · Planned, requires 17g
+
+Requested by the user after 17e; exact order and scope to be confirmed with the user before each step. References: the user pointed at the Farever database and the Siagarta map (metaforge.app) as **inspiration only** — categories, item structure, stat/rarity curves and the overall world theme may guide us; names, descriptions, images and the exact map are our own (user agreed: no 1:1 copies).
+- **World map:** an archipelago of distinct biome regions (lush main island with a central lake fortress, dense forest and rocky crater highlands; a walled-town island; a large autumn/savanna continent with ruins and a harbour; small volcanic islets), connected by bridges and open sea, with original names. The current clearing becomes the starting region.
+- **Sea travel:** ferry NPCs on the coast of each region take you across for **currency or quest vouchers**; you can also **buy or craft your own ship** and sail it. Needs currency (merchants/trade), quests (vouchers) and the region map.
+- **More item categories:** tools (gathering), materials (expanded), consumables, mounts, runes and augments (socketed upgrades for gear), plus the jewellery/weapons already planned — original content benchmarked against the reference's stat curves.
+- Exit goal: several regions reachable by ferry and by player ship, with the new item categories obtainable and saved.
+
 ### M5 — Nation building and diplomacy · Planned, requires M4
 
 - Expand settlement services, citizen roles, trade routes, and faction relationships.
@@ -177,6 +185,8 @@ This file is the shared source of truth. At the beginning of project work, read 
 Updates happen during our project work, not through an unattended background process. Future agents follow `AGENTS.md`; work outside these sessions needs a corresponding roadmap update.
 
 ## Progress log
+
+- 2026-10-13: User requests recorded (Claude Code): an archipelago world map with original regions inspired by the theme of the Farever Siagarta map, sea travel by coastal ferries (currency or quest vouchers) or an own bought/crafted ship, and item categories tools/materials/consumables/mounts/runes/augments inspired by the Farever database structure — all original names, numbers and art (no 1:1 copies). Added as M4.5, planned after 17g; order to be confirmed with the user.
 
 - 2026-10-13: Claude Code completed step 17e (gear foundation) on Codex's accepted `codex/fix-respawn-identity-collisions` (via `codex/claude-watcher`). New `scripts/items/gear_catalogue.gd`, `scripts/ui/gear_panel.gd`; `Player` gear (`add_item`, `equip`, `unequip`, `use_gear_active`, `gear_bonus`, `gear_passive`, `on_damaged_by`, looks); `Health.armor` and thorns hook; `MeleeAttack` gear strike, keen, lifesteal; `gear` intent; G key; `SaveStore` v18. New `tests/gear.gd` (38), +1 network check. 821 local + 266 network = 1087 checks pass on Windows. Branch: `claude/roadmap-17e-gear`. Next: 17f.
 

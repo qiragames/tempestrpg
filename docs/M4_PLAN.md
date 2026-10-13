@@ -197,6 +197,12 @@ Creature drops by tier (elite creatures drop higher rarities), seeded chests at 
 ### Effects on later steps
 19 draws all three races, the weapon types and gear looks. 21 becomes the reference-style presentation of the skill tree, fusion window, paper doll/equipment and bag (the "assistant" panel is dropped). 24 balances races, levels, tree, fusion and gear together.
 
+## Requested after 17e (user, 2026-10-13): world and item expansion — planned as M4.5 after 17g
+
+- **Reference use:** the Farever database (items) and Siagarta map (world) on metaforge.app are inspiration. Allowed: category lists, slot/socket/rarity structure, stat-range shapes and progression curves as balance benchmarks, the overall world theme. Not allowed: copying or lightly renaming item names, descriptions, icons/art, or the exact map layout. User agreed ("don't 1:1 copy name, stat and image").
+- **Proposed steps (to confirm):** W1 region map and region travel (bridges, coastlines, the clearing as the start region; seeds keep working per region); W2 currency and merchants (pulls the M5 merchant work forward); W3 quests with ferry vouchers as rewards; W4 ferry NPCs on each coastline (pay currency or a voucher; host-authoritative transfer of the whole character with save/rejoin safety); W5 own ship (buy from a shipwright or craft at a camp dock from materials; sailing movement, docking, ship saved per character); W6+ item categories: tools (gathering yields), consumables, mounts (speed, summon/dismount), runes and augments (sockets on gear; slot/rarity rules like 17e).
+- **Network/save notes:** every region change and ship state is host-authoritative and saved with versioned migrations; friends in different regions of the same hosted world need region-scoped snapshots — a real architectural step to plan before W1.
+
 ## Added after approval (user decisions, 2026-10-13)
 
 ### 16b — Healing on absorb (Claude) — **Done**
