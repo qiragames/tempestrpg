@@ -98,9 +98,38 @@ func _run() -> void:
     _check(not STORE.validate(bad), "Implausible heal rate rejected")
     var legacy := data.duplicate(true)
     legacy.version = 10
+    legacy.erase("meta")
     legacy.players.host.health.erase("regen_rate")
     legacy.players.host.health.erase("regen_left")
+    legacy.players.host.health.erase("regen_carry")
     var migrated: Dictionary = STORE.migrate(legacy)
     _check(STORE.validate(migrated) and migrated.players.host.health.regen_left == 0.0, "v10 characters migrate without healing")
+    # Codex review of 16b: frame rounding and fractional progress across save/reload.
+    health.current = 10
+    health.clear_regen()
+    health.start_regen(25.0)
+    for _i in range(601):
+        health._process(1.0 / 60.0)
+    _check(health.current == 35, "A 25 HP heal ticked at 60 fps restores all 25 HP (no rounding loss)")
+    health.current = 10
+    health.clear_regen()
+    health.start_regen(25.0)
+    health._process(0.3)
+    var mid: Dictionary = CODEC.capture_player(actor)
+    _check(mid.health.regen_carry > 0.0 and mid.health.regen_carry < 1.0, "Fractional healing progress is captured")
+    var fresh = load("res://scenes/player/player.tscn").instantiate()
+    fresh.local_controlled = false
+    world.add_child(fresh)
+    await _frames(1)
+    restored.get_node("Health")._regen_carry = 0.9
+    CODEC.apply_player(fresh, JSON.parse_string(JSON.stringify(mid)), world, false)
+    CODEC.apply_player(restored, JSON.parse_string(JSON.stringify(mid)), world, false)
+    for target in [health, fresh.get_node("Health"), restored.get_node("Health")]:
+        target._process(target.regen_left)
+    _check(health.current == 35 and fresh.get_node("Health").current == 35 and restored.get_node("Health").current == 35, "Uninterrupted, reloaded and overwritten heals all end at 35 HP")
+    var carry_doc := data.duplicate(true)
+    for value in [1.0, -0.1]:
+        carry_doc.players.host.health.regen_carry = value
+        _check(not STORE.validate(carry_doc), "Invalid healing remainder %s rejected" % value)
     print("Absorb healing checks: %d passed, %d failed" % [checks - failures, failures])
     quit(1 if failures else 0)

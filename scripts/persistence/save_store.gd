@@ -65,7 +65,7 @@ static func validate_player(state: Variant, id: String) -> bool:
     var pool = state.get("magicules")
     if not health is Dictionary or not pool is Dictionary:
         return false
-    if not _number(health.get("maximum"), 1, 1000000, true) or not _number(health.get("current"), 0, health.maximum, true) or not _number(health.get("immunity"), 0, 60) or not _number(health.get("immunity_seconds"), 0, 60) or not _number(health.get("regen_rate"), 0, 10) or not _number(health.get("regen_left"), 0, 10):
+    if not _number(health.get("maximum"), 1, 1000000, true) or not _number(health.get("current"), 0, health.maximum, true) or not _number(health.get("immunity"), 0, 60) or not _number(health.get("immunity_seconds"), 0, 60) or not _number(health.get("regen_rate"), 0, 10) or not _number(health.get("regen_left"), 0, 10) or not _number(health.get("regen_carry"), 0, 0.999999999):
         return false
     if not _number(pool.get("maximum"), 1, 1000000) or not _number(pool.get("current"), 0, pool.maximum) or not _number(pool.get("regen"), 0, 1000) or not _number(pool.get("regen_delay"), 0, 60) or not _number(pool.get("delay"), 0, 60) or not pool.get("enabled") is bool:
         return false
@@ -308,6 +308,13 @@ static func migrate(data: Variant) -> Variant:
         data = data.duplicate(true)
         data.version = VERSION
         data["meta"] = data.get("meta", {"name": "Earlier world", "seed": 0, "created": 0, "last_played": 0})
+        # Fractional healing progress is saved from v12 on (Codex review of 16b).
+        if not data.get("players") is Dictionary:
+            return null
+        for state in data.players.values():
+            if not state is Dictionary or not state.get("health") is Dictionary:
+                return null
+            state.health["regen_carry"] = state.health.get("regen_carry", 0.0)
     return data
 
 static func _read(path: String) -> Dictionary:

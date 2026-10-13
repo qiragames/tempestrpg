@@ -86,7 +86,7 @@ The `trial {operation: "start"}` intent carries no target or owner; the host che
 
 ## Absorbed vitality (schema v11)
 
-Character `health` adds `regen_rate` (0–10 HP/s) and `regen_left` (0–10 s). The host starts a heal when an analysis completes (`TIER_STATS.absorb_heal` of the consumed creature) and ticks it in `Health._process`; replicas only display the replicated values. A heal replaces the running one only if it restores more; it is capped at maximum HP and cleared on defeat. v10→v11 adds zero healing. Covered by `tests/absorb_healing.gd` (21).
+Character `health` adds `regen_rate` (0–10 HP/s), `regen_left` (0–10 s) and, from v12, `regen_carry` (the fractional HP not yet applied, 0 ≤ carry < 1, always overwritten on load). The host starts a heal when an analysis completes (`TIER_STATS.absorb_heal` of the consumed creature) and ticks it in `Health._process`; replicas only display the replicated values. A heal replaces the running one only if it restores more; it is capped at maximum HP and cleared on defeat. v10→v11 adds zero healing. Covered by `tests/absorb_healing.gd` (21).
 
 ## Worlds, save slots and Open to friends (schema v12)
 

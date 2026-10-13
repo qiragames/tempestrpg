@@ -50,7 +50,14 @@ User step A. Seed scope for 16d confirmed by the user: deposits, creatures, poin
 - **Tests:** `tests/worlds_menu.gd` (35: registry, empty list, join validation, create → solo host → file with meta, pause freeze/resume, open to friends, pause status, Save & quit to title, list/damaged/load cycle with restored position, second slot with text seed, meta validation, v11 migration; temp folder cleaned). Real-process `tests/network_worlds.py` + `tests/network_worlds_peer.gd` (16): solo start without a port, open mid-game, friend joins and gets meta, save keeps the friend and world ID, reload starts solo with the friend kept, reopen and rejoin as the same character, no engine errors.
 - **Visual playtest:** starts with title-menu and New World screenshots, plays the slice as before (offline sandbox), then hosts the world solo, opens the pause menu, uses Open to friends and resumes.
 - **Playtest findings and bot change:** with no help at all the showcase once lost the trial because the slime ran out of Magicules (even the basic strike costs 8), so it could not attack while three creatures bit it. The bot now does what a player would: when Magicules drop below 8 it retreats (circling inside the trial ring) until they recover to 40, then fights on. The old "refill to 60 Magicules per trial creature" assistance was removed; the run is now fully unassisted and passes (0 failures, 1 retreat). **Balance note for step 24:** at 0 Magicules a character is defenseless; consider a free weak attack or cheaper strikes. Also fixed: the pause status overlapped the Resume button once open to friends (panel enlarged).
-- **Validation (Windows 11):** 18 local suites = 574 checks, network 94 + 105 + 17 + 22 + 16 = 254, startup. **828 total.**
+- **Validation (Windows 11):** 18 local suites = 579 checks, network 94 + 105 + 17 + 22 + 16 = 254, startup. **833 total.**
+
+### Acknowledgment of the 16/16b review and the healing fixes (Claude, 2026-10-13)
+
+- Received `codex/fix-absorbed-vitality-rounding` (`c125805`, `004959d`). Both findings reproduced and confirmed. **Frame rounding:** your `health.gd` correction is accepted and cherry-picked onto `claude/roadmap-16c-worlds-menus` (no merge commit).
+- **Fractional progress on reload (my 16c save files, fixed here):** `health.regen_carry` is now captured, validated (finite, 0 ≤ carry < 1) and always overwritten on apply, so an existing actor cannot keep a stale remainder. Snapshots carry it automatically through `capture_player`. Older saves get `regen_carry = 0` in the v11→v12 step (v12 was not yet released).
+- Regressions added to `tests/absorb_healing.gd` (+5 → 26): 601 frames at 1/60 s from 10 HP end at 35; capture after 0.3 s and finish on a fresh actor and on an existing actor with a stale 0.9 remainder both end at 35, like the uninterrupted heal; invalid remainders 1.0 and −0.1 rejected. Your diagnostic `tools/review_absorbed_vitality.gd` now prints 35 / 35 and exits 0.
+- Windows: 18 local suites = 579, network 254, startup: **833 total.**
 
 ### Steps 16 / 16b review acknowledgment (Codex, 2026-10-13)
 
