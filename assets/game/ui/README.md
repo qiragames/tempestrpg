@@ -39,4 +39,16 @@ Pixel scale 1:1 with the 640x360 viewport; nearest filtering (project default). 
 | `icons/gear/field_scythe_0.png` | 16x16 | field_scythe: cell 14,10; rarity 0..4 = bronze, iron, steel, gold, gold (Shade, free incl. commercial, no credit needed) | `assets/source/packs/shade_weapons/16x16 Weapons RPG Icons/iron-weapons.png` |
 | `icons/gear/ash_spear_0.png` | 16x16 | ash_spear: cell 16,0; rarity 0..4 = bronze, iron, steel, gold, gold (Shade, free incl. commercial, no credit needed) | `assets/source/packs/shade_weapons/16x16 Weapons RPG Icons/iron-weapons.png` |
 
+## Frames (step 22)
+
+Copied unchanged from `assets/source/packs/kenney_fantasy_ui_borders/PNG/` (Kenney, CC0). White on transparent; `scripts/ui/ornate_box.gd` draws them as nine-patches tinted per use over a dark fill.
+
+| File | Size | Source | Used for |
+| --- | --- | --- | --- |
+| `frames/frame_panel.png` | 96x96, 32 px corners | `Double/Border/panel-border-011.png` | Windows, menus, pause card (gold, with a top gem) |
+| `frames/frame_banner.png` | 96x96, 32 px corners | `Double/Border/panel-border-014.png` | GAME PAUSED banner |
+| `frames/frame_hud.png` | 48x48, 16 px corners | `Default/Border/panel-border-007.png` | HUD blocks (status, hotbar, log) |
+| `frames/frame_assistant.png` | 48x48, 16 px corners | `Default/Border/panel-border-013.png` | Analysis box (cyan) |
+| `frames/frame_card.png` | 48x48, 16 px corners | `Default/Border/panel-border-010.png` | Item cards (rarity colour) |
+
 Licences and credits: see `CREDITS.md` at the repository root and the licence files next to each pack in `assets/source/packs/`.

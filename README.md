@@ -4,13 +4,14 @@ A Godot **4.6.3** / GDScript prototype for a top-down pixel-art Isekai RPG.
 
 ## Screenshots
 
-Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 54 captures are in `docs/playtest/` with `docs/playtest/log.md`.
+Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 55 captures are in `docs/playtest/` with `docs/playtest/log.md`.
 
 <table>
-<tr><td align="center"><img src="docs/playtest/23_camp_overview.png" width="400" alt="The first goblin camp: hut, storehouse, shrine and forge"><br><sub>The first goblin camp: hut, storehouse, shrine and forge</sub></td><td align="center"><img src="docs/playtest/04_combat.png" width="400" alt="Fighting a Gnasher on the road"><br><sub>Fighting a Gnasher on the road</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/42_equipment.png" width="400" alt="Equipment window with an item card"><br><sub>Equipment window with an item card</sub></td><td align="center"><img src="docs/playtest/54_races.png" width="400" alt="Slime, Human and Demon"><br><sub>Slime, Human and Demon</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/13_camp_menu.png" width="400" alt="Camp menu"><br><sub>Camp menu</sub></td><td align="center"><img src="docs/playtest/07_skill_tree.png" width="400" alt="Skill tree"><br><sub>Skill tree</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/29_fusion_done.png" width="400" alt="Skill fusion"><br><sub>Skill fusion</sub></td><td align="center"><img src="docs/playtest/01_title_menu.png" width="400" alt="Title menu"><br><sub>Title menu</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/01_title_menu.png" width="400" alt="Title screen"><br><sub>Title screen</sub></td><td align="center"><img src="docs/playtest/52_pause_open.png" width="400" alt="Pause overlay (open to friends)"><br><sub>Pause overlay (open to friends)</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/24_camp_overview.png" width="400" alt="The first goblin camp: hut, storehouse, shrine and forge"><br><sub>The first goblin camp: hut, storehouse, shrine and forge</sub></td><td align="center"><img src="docs/playtest/05_combat.png" width="400" alt="Fighting a Gnasher on the road"><br><sub>Fighting a Gnasher on the road</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/43_equipment.png" width="400" alt="Equipment window with an item card"><br><sub>Equipment window with an item card</sub></td><td align="center"><img src="docs/playtest/55_races.png" width="400" alt="Slime, Human and Demon"><br><sub>Slime, Human and Demon</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/14_camp_menu.png" width="400" alt="Camp menu"><br><sub>Camp menu</sub></td><td align="center"><img src="docs/playtest/08_skill_tree.png" width="400" alt="Skill tree"><br><sub>Skill tree</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/30_fusion_done.png" width="400" alt="Skill fusion"><br><sub>Skill fusion</sub></td><td align="center"><img src="docs/playtest/02_credits.png" width="400" alt="Credits"><br><sub>Credits</sub></td></tr>
 </table>
 
 ## Play
@@ -90,6 +91,7 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/world_art.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/ui_style.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/item_card.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/title_pause.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
 python3 tests/network_forms.py
@@ -240,7 +242,7 @@ Completing it teaches the first **Unique** skill, **Predator Focus** (placeholde
 
 ## Art
 
-Characters and creatures use real pixel-art sprites (step 19): the Slime, Human and Demon walk, idle, attack and fall in four directions; Gnashers, Thornbacks, your goblin ally and the evolved Hobgoblin run and idle and play a death animation. Mimic forms show the creature's body in your own colours, Elite creatures are reddish and a little larger, and a Gnasher flashes red right before it bites. The clearing itself uses real tiles and props (step 20): grass, dirt roads, the pond, trees and boulders, the hut, storehouse, shrine, forge and campfire, deposits and chests; you walk behind tree canopies and buildings. The HUD and every window use one dark/gold theme after the reference (step 21): a status card with your portrait and HP, Magicule and XP bars, the cyan analysis box, a framed hotbar with key badges, and item/gear icons in the bag and equipment window. Gear details are item cards (step 21b): framed in the rarity colour with badges, DPS and attack speed for weapons, green bonuses and red penalties with their roll ranges, passives and the active; hover an item or a worn slot to preview it. Art credits: `CREDITS.md`. Tests: `tests/sprites.gd` (24), `tests/world_art.gd` (16), `tests/ui_style.gd` (17), `tests/item_card.gd` (15).
+Characters and creatures use real pixel-art sprites (step 19): the Slime, Human and Demon walk, idle, attack and fall in four directions; Gnashers, Thornbacks, your goblin ally and the evolved Hobgoblin run and idle and play a death animation. Mimic forms show the creature's body in your own colours, Elite creatures are reddish and a little larger, and a Gnasher flashes red right before it bites. The clearing itself uses real tiles and props (step 20): grass, dirt roads, the pond, trees and boulders, the hut, storehouse, shrine, forge and campfire, deposits and chests; you walk behind tree canopies and buildings. The HUD and every window use one dark/gold theme after the reference (step 21): a status card with your portrait and HP, Magicule and XP bars, the cyan analysis box, a framed hotbar with key badges, and item/gear icons in the bag and equipment window. The title screen (step 22) has a storm backdrop, the logo and an ornamented menu with a slime marking your choice: **Continue** opens the world you played last (damaged saves are skipped), plus New Game, Load Game, Join a Friend, **Settings** (fullscreen, window size — saved on this computer only), **Credits** and Quit. **Esc** in a world opens the pause overlay: Resume, shortcuts into the bag/equipment, skill tree and fusion (closing them returns to the pause menu), Open to friends, Save, Options and Save & quit, next to a card with your character and world (HP, Magicules, level, zone, world, map, players, world time). Windows and menus use ornamented gold frames (Kenney Fantasy UI Borders). Gear details are item cards (step 21b): framed in the rarity colour with badges, DPS and attack speed for weapons, green bonuses and red penalties with their roll ranges, passives and the active; hover an item or a worn slot to preview it. Art credits: `CREDITS.md`. Tests: `tests/sprites.gd` (24), `tests/world_art.gd` (16), `tests/ui_style.gd` (17), `tests/item_card.gd` (15), `tests/title_pause.gd` (31).
 
 ## Finding gear
 

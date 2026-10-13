@@ -67,6 +67,7 @@ func _ready() -> void:
     add_child(fusion)
     gear_panel = load("res://scripts/ui/gear_panel.gd").new(self)
     add_child(gear_panel)
+    _hook_pause_returns()
     get_parent().system_message.connect(fusion.show_message)
     _ally_dialog = load("res://scripts/ui/ally_dialog.gd").new()
     add_child(_ally_dialog)
@@ -86,15 +87,16 @@ func bind_player(actor: Node2D) -> void:
     inventory.changed.connect(_refresh_inventory)
     _refresh_inventory()
 
-func _panel_style(kind: String = "frame") -> StyleBoxFlat:
-    return UI.box(kind)
+## Window frames are ornamented (step 22); other kinds are the plain boxes of ui_style.
+func _panel_style(kind: String = "frame") -> StyleBox:
+    return UI.ornate() if kind == "frame" else UI.box(kind)
 
 ## A framed panel drawn behind the scene's HUD nodes (they come first in the scene).
 func _backdrop(rect: Rect2, kind: String = "frame") -> Panel:
     var back := Panel.new()
     back.position = rect.position
     back.size = rect.size
-    back.add_theme_stylebox_override("panel", UI.box(kind))
+    back.add_theme_stylebox_override("panel", UI.ornate("hud") if kind == "frame" else UI.ornate("assistant") if kind == "assistant" else UI.box(kind))
     back.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(back)
     move_child(back, 0)
@@ -461,30 +463,147 @@ var _pause_status: Label
 var _pause_buttons: Dictionary = {}
 var _pause_blocking: bool = false
 var _paused_before_pause: bool = false
+var _pause_menu: Panel
+var _pause_options: Panel
+var _pause_card: Dictionary = {}
+## A window opened from the pause menu returns to it when closed.
+var _back_to_pause: bool = false
+const SETTINGS := preload("res://scripts/ui/settings.gd")
+const MARKER := preload("res://scripts/ui/menu_marker.gd")
+const LAYOUT := preload("res://scripts/world/world_layout.gd")
 
-## Pause menu: resume, open the hosted world to friends, save, and leave to the title menu.
+## Pause overlay after the user's reference (step 22): dimmed world, GAME PAUSED banner, the menu
+## with the slime marker, a character/world card, Options, and shortcuts into the bag, skill tree
+## and fusion window (closing those returns here).
 func _build_pause_panel() -> void:
     _pause_panel = Panel.new()
-    _pause_panel.position = Vector2(190, 56)
-    _pause_panel.size = Vector2(260, 244)
-    _pause_panel.add_theme_stylebox_override("panel", _panel_style())
+    _pause_panel.name = "PausePanel"
+    _pause_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    var dim := StyleBoxFlat.new()
+    dim.bg_color = Color(0.02, 0.02, 0.05, 0.8)
+    _pause_panel.add_theme_stylebox_override("panel", dim)
     add_child(_pause_panel)
-    UI.heading(_label("GAME PAUSED", Vector2(14, 10), Vector2(232, 22), _pause_panel, 15))
-    _pause_status = _label("", Vector2(14, 34), Vector2(232, 62), _pause_panel, 10)
-    var entries := [["resume", "Resume"], ["open", "Open to friends"], ["save", "Save world"], ["quit", "Save & quit to title"]]
+    var banner := Panel.new()
+    banner.position = Vector2(200, 12)
+    banner.size = Vector2(240, 40)
+    banner.add_theme_stylebox_override("panel", UI.ornate("banner"))
+    _pause_panel.add_child(banner)
+    var title := UI.heading(_label("GAME PAUSED", Vector2(0, 6), Vector2(240, 28), banner, 22))
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _pause_menu = Panel.new()
+    _pause_menu.position = Vector2(206, 62)
+    _pause_menu.size = Vector2(228, 228)
+    _pause_menu.add_theme_stylebox_override("panel", UI.ornate())
+    _pause_panel.add_child(_pause_menu)
+    var entries := [["resume", "RESUME"], ["bag", "INVENTORY & EQUIPMENT"], ["tree", "SKILL TREE"], ["fusion", "SKILL FUSION"], ["open", "OPEN TO FRIENDS"], ["save", "SAVE WORLD"], ["options", "OPTIONS"], ["quit", "SAVE & QUIT TO TITLE"]]
     for index in range(entries.size()):
-        var button := _button(entries[index][1], Vector2(14, 104 + index * 32), Vector2(232, 26), _pause_panel)
+        var button := _button(entries[index][1], Vector2(10, 8 + index * 27), Vector2(208, 25), _pause_menu)
+        UI.menu_entry(button)
         _pause_buttons[entries[index][0]] = button
+    _pause_panel.add_child(MARKER.new(_pause_buttons.values()))
     _pause_buttons.resume.pressed.connect(close_pause)
+    _pause_buttons.bag.pressed.connect(_from_pause.bind(open_inventory))
+    _pause_buttons.tree.pressed.connect(_from_pause.bind(func(): skill_tree.open()))
+    _pause_buttons.fusion.pressed.connect(_from_pause.bind(func(): fusion.open()))
     _pause_buttons.open.pressed.connect(func(): session.open_to_friends(); _refresh_pause())
     _pause_buttons.save.pressed.connect(func():
         var result: Error = session.save_world()
         get_parent()._announce("World saved." if result == OK else "Saving failed; the previous save is retained.")
     )
+    _pause_buttons.options.pressed.connect(func():
+        _pause_menu.hide()
+        _pause_options.show()
+        _pause_options.get_meta("first").grab_focus()
+    )
     _pause_buttons.quit.pressed.connect(func():
         session.quit_to_title()
     )
+    _pause_options = Panel.new()
+    _pause_options.position = Vector2(170, 62)
+    _pause_options.size = Vector2(300, 214)
+    _pause_options.add_theme_stylebox_override("panel", UI.ornate())
+    _pause_panel.add_child(_pause_options)
+    _pause_options.set_meta("first", SETTINGS.build(_pause_options, _close_options))
+    _pause_options.hide()
+    _build_pause_card()
+    _pause_status = _label("", Vector2(448, 240), Vector2(186, 90), _pause_panel, 9)
+    _outline(_pause_status)
+    var hint := _label("Esc: resume · Enter: choose · Arrow keys: move", Vector2(0, 342), Vector2(634, 14), _pause_panel, 9)
+    hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    hint.add_theme_color_override("font_color", UI.TEXT_DIM)
     _pause_panel.hide()
+
+## Windows opened from the pause menu bring it back when they close (called once they exist).
+func _hook_pause_returns() -> void:
+    for window in [_modal, skill_tree, fusion, gear_panel]:
+        window.visibility_changed.connect(func():
+            if not window.visible and _back_to_pause:
+                _return_to_pause.call_deferred()
+        )
+
+## Right-hand card: who you are and where (all live values; nothing invented).
+func _build_pause_card() -> void:
+    var card := Panel.new()
+    card.position = Vector2(446, 62)
+    card.size = Vector2(188, 172)
+    card.add_theme_stylebox_override("panel", UI.ornate())
+    _pause_panel.add_child(card)
+    var well := Panel.new()
+    well.position = Vector2(8, 8)
+    well.size = Vector2(38, 38)
+    well.add_theme_stylebox_override("panel", UI.box("well"))
+    card.add_child(well)
+    var portrait := TextureRect.new()
+    portrait.position = Vector2(11, 11)
+    portrait.size = Vector2(32, 32)
+    portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+    portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+    card.add_child(portrait)
+    _pause_card.portrait = portrait
+    _pause_card.name = UI.heading(_label("", Vector2(52, 6), Vector2(130, 14), card, 11))
+    _pause_card.level = _label("", Vector2(52, 20), Vector2(130, 14), card, 9)
+    for entry in [["hp", 50, UI.HP], ["mag", 64, UI.MAGICULES]]:
+        var bar := ProgressBar.new()
+        UI.style_bar(bar, entry[2])
+        bar.position = Vector2(8, entry[1])
+        bar.size = Vector2(172, 11)
+        card.add_child(bar)
+        _pause_card[entry[0]] = bar
+        var text := _label("", Vector2(8, entry[1] - 1), Vector2(172, 13), card, 9)
+        text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        _outline(text)
+        _pause_card[entry[0] + "_text"] = text
+    var rows := ["zone", "world", "map", "players", "time"]
+    for index in range(rows.size()):
+        var key := _label("", Vector2(8, 84 + index * 16), Vector2(70, 14), card, 9)
+        key.add_theme_color_override("font_color", UI.GOLD_LIGHT)
+        var value := _label("", Vector2(70, 84 + index * 16), Vector2(110, 14), card, 9)
+        value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+        value.clip_text = true
+        value.autowrap_mode = TextServer.AUTOWRAP_OFF
+        _pause_card[rows[index]] = [key, value]
+
+## Open a window from the pause menu; closing it comes back to the pause menu.
+func _from_pause(open_window: Callable) -> void:
+    close_pause()
+    open_window.call()
+    _back_to_pause = menu_open()
+
+func _return_to_pause() -> void:
+    if menu_open() or not _back_to_pause:
+        return
+    _back_to_pause = false
+    open_pause()
+
+func _close_options() -> void:
+    _pause_options.hide()
+    _pause_menu.show()
+    _pause_buttons.options.grab_focus()
+
+static func play_time_text(seconds: float) -> String:
+    var minutes := int(seconds) / 60
+    return "%dh %02dm" % [minutes / 60, minutes % 60]
 
 func open_pause() -> void:
     if menu_open():
@@ -498,6 +617,8 @@ func open_pause() -> void:
     else:
         get_tree().paused = true
     _pause_panel.show()
+    _pause_options.hide()
+    _pause_menu.show()
     _refresh_pause()
     _pause_buttons.resume.grab_focus()
 
@@ -522,6 +643,30 @@ func _refresh_pause() -> void:
     else:
         _pause_status.text = "\"%s\" · %s · playing solo\nOpen to friends lets up to 7 friends join." % [session.world_meta.get("name", "World"), load("res://scripts/world/world_layout.gd").describe(session.world_meta)]
     _pause_buttons.open.disabled = not hosting or session.listening
-    _pause_buttons.open.text = "Open to friends" if not session.listening else "Open to friends (on)"
+    _pause_buttons.open.text = "OPEN TO FRIENDS" if not session.listening else "OPEN TO FRIENDS (ON)"
     _pause_buttons.save.disabled = not hosting
-    _pause_buttons.quit.text = "Leave to title" if session.replica_world else "Save & quit to title" if hosting else "Quit to title"
+    _pause_buttons.quit.text = "LEAVE TO TITLE" if session.replica_world else "SAVE & QUIT TO TITLE" if hosting else "QUIT TO TITLE"
+    # Character and world card.
+    var health: Node = player.get_node("Health")
+    var magicules: Node = player.get_node("Magicules")
+    _pause_card.portrait.texture = _portrait.texture
+    _pause_card.portrait.modulate = _portrait.modulate
+    _pause_card.name.text = _name.text
+    _pause_card.level.text = level_text(player.progression)
+    _pause_card.hp.max_value = health.maximum
+    _pause_card.hp.value = health.current
+    _pause_card.hp_text.text = "HP %d / %d" % [health.current, health.maximum]
+    _pause_card.mag.max_value = magicules.maximum
+    _pause_card.mag.value = magicules.current
+    _pause_card.mag_text.text = "Magicules %.0f / %.0f" % [magicules.current, magicules.maximum]
+    var world_time: float = float(get_parent().progression.get("world_time", 0.0))
+    var values := {
+        "zone": ["ZONE", "The First Clearing"],
+        "world": ["WORLD", session.world_meta.get("name", "Sandbox") if session.active else "Offline sandbox"],
+        "map": ["MAP", LAYOUT.describe(session.world_meta) if session.active else "original map"],
+        "players": ["PLAYERS", "%d / 8" % maxi(1, session.owners.size()) if session.active else "1 (offline)"],
+        "time": ["WORLD TIME", play_time_text(world_time) if not session.replica_world else "on the host"],
+    }
+    for key in values:
+        _pause_card[key][0].text = values[key][0]
+        _pause_card[key][1].text = values[key][1]

@@ -127,7 +127,9 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 
 **Done evidence:** actual values match host snapshots; keyboard/mouse focus, contrast, tooltips and modal exclusivity work; no overlap at ×2/×3. Visual multiplayer test shows each guest's own inventory/skills. Reference sample levels, gear, currency, minimap and quests are not fabricated into gameplay.
 
-## 22 — Title and pause flow (Claude)
+## 22 — Title and pause flow (Claude) — **Done**
+
+**Status 2026-10-14:** integrated on `claude/roadmap-22-title-pause`. Continue = most recently played valid world from `WorldRegistry.list` (damaged saves skipped; Load Game still lists them as damaged). Settings are local (`user://settings.cfg`: fullscreen, 1x/2x/3x window) and applied at the title. Pause keeps the 16c semantics (solo freezes, with guests only this character stops) and adds shortcuts that return to the pause menu. `GameSession` unchanged. Ornamented frames (`OrnateBox`, Kenney CC0 borders) replaced the plain panel boxes at the user's request.
 
 **Goal/dependencies:** requires 21. Implement New offline sandbox, Continue/Host saved world, Join and a usable pause overlay using stored references.
 

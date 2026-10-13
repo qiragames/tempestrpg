@@ -1,11 +1,29 @@
 extends Control
-## Functional title menu (final presentation follows in step 22): new world with name and seed,
-## saved worlds, join a friend, quit. Every world is hosted and saved; solo play opens no port.
+## Title screen after the user's reference (step 22): storm backdrop, logo, a framed menu with the
+## slime marker. Continue opens the most recently played valid world; New Game creates a world
+## (name, seed, race); Load Game lists saves (damaged ones shown, not loadable); Join a Friend;
+## Settings (local display options); Credits; Quit. Every world is hosted and saved; solo play
+## opens no port.
 const RACES := preload("res://scripts/races/race_catalogue.gd")
 const REGISTRY := preload("res://scripts/menu/world_registry.gd")
+const UI := preload("res://scripts/ui/ui_style.gd")
+const SETTINGS := preload("res://scripts/ui/settings.gd")
+const MARKER := preload("res://scripts/ui/menu_marker.gd")
+const MAIN := Rect2(40, 92, 200, 206)
+const SUB := Rect2(24, 74, 300, 214)
+## Third-party art credits (CREDITS.md). Kyrise's line is required by CC BY 4.0.
+const CREDITS := [
+    ["TempestRPG", "A private game by qiragames for friends. Built with Godot Engine 4.6 (MIT)."],
+    ["Ninja Adventure Asset Pack", "Pixel-Boy and AAA · CC0 · characters, tiles, props, icons"],
+    ["Pixel Crawler", "Anokolisa · creatures, crafting stations"],
+    ["Gear icons", "Gear icons by Kyrise (https://kyrise.itch.io/) · CC BY 4.0"],
+    ["16x16 Weapon RPG Icons", "Shade (merchant-shade) · scythe and spear icons"],
+    ["Fantasy UI Borders", "Kenney (www.kenney.nl) · CC0 · ornamented frames"],
+]
 ## Tests point this at a temporary folder.
 var worlds_dir: String = REGISTRY.DEFAULT_DIR
 var _panels: Dictionary = {}
+var _first_focus: Dictionary = {}
 var _status: Label
 var _name_field: LineEdit
 var _new_race: OptionButton
@@ -15,34 +33,60 @@ var _address_field: LineEdit
 var _world_list: ItemList
 var _play: Button
 var _worlds: Array = []
+var _entries: Dictionary = {}
+var _continue_hint: Label
+var _marker: Control
+var _current: String = ""
 @onready var session: Node = get_node("/root/GameSession")
 
 func _ready() -> void:
-    # Shared interface look (step 21); the full title/pause flow is step 22.
-    preload("res://scripts/ui/ui_style.gd").install()
+    UI.install()
+    SETTINGS.apply(SETTINGS.load_settings())
     set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    var back := ColorRect.new()
-    back.color = Color("0f1a24")
-    back.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    add_child(back)
-    var title := _label("TEMPEST RPG", Vector2(0, 34), Vector2(640, 40), self, 28)
-    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    title.add_theme_color_override("font_color", Color("a6ebdc"))
-    var subtitle := _label("Prototype · placeholder title screen", Vector2(0, 74), Vector2(640, 18), self, 10)
-    subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    _status = _label("", Vector2(40, 318), Vector2(560, 32), self, 10)
-    _status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    add_child(load("res://scripts/menu/title_backdrop.gd").new())
+    _build_logo()
+    _status = _label("", Vector2(24, 304), Vector2(592, 16), self, 10)
+    _outline(_status)
     _build_main()
     _build_new()
     _build_load()
     _build_join()
+    _build_settings()
+    _build_credits()
     _show("main")
 
-func _panel(id: String) -> Panel:
+func _outline(label: Label) -> Label:
+    label.add_theme_color_override("font_outline_color", Color(0.03, 0.02, 0.06))
+    label.add_theme_constant_override("outline_size", 4)
+    return label
+
+func _build_logo() -> void:
+    var presents := _outline(_label("qiragames PRESENTS", Vector2(330, 46), Vector2(290, 14), self, 10))
+    presents.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    var tempest := _outline(_label("TEMPEST", Vector2(330, 58), Vector2(290, 60), self, 52))
+    tempest.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    tempest.add_theme_color_override("font_color", Color("d9dde6"))
+    tempest.add_theme_color_override("font_outline_color", Color("2a2238"))
+    tempest.add_theme_constant_override("outline_size", 10)
+    tempest.add_theme_color_override("font_shadow_color", UI.GOLD)
+    tempest.add_theme_constant_override("shadow_offset_y", 3)
+    var rpg := _outline(_label("RPG", Vector2(330, 112), Vector2(290, 48), self, 40))
+    rpg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    rpg.add_theme_color_override("font_color", Color("e0466a"))
+    rpg.add_theme_color_override("font_outline_color", Color("3a1030"))
+    rpg.add_theme_constant_override("outline_size", 8)
+    var developer := _outline(_label("DEVELOPED BY qiragames", Vector2(0, 340), Vector2(640, 14), self, 9))
+    developer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    var version := _outline(_label("prototype build", Vector2(500, 340), Vector2(132, 14), self, 9))
+    version.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    version.add_theme_color_override("font_color", UI.TEXT_DIM)
+
+func _panel(id: String, rect: Rect2 = SUB) -> Panel:
     var panel := Panel.new()
-    panel.position = Vector2(170, 104)
-    panel.size = Vector2(300, 206)
-    panel.add_theme_stylebox_override("panel", preload("res://scripts/ui/ui_style.gd").box())
+    panel.name = id.capitalize() + "Panel"
+    panel.position = rect.position
+    panel.size = rect.size
+    panel.add_theme_stylebox_override("panel", UI.ornate())
     add_child(panel)
     _panels[id] = panel
     return panel
@@ -77,45 +121,78 @@ func _field(placeholder: String, at: Vector2, parent: Node) -> LineEdit:
     return field
 
 func _build_main() -> void:
-    var panel := _panel("main")
-    var entries := [["New World", func(): _show("new")], ["Load World", func(): _show("load")], ["Join a Friend", func(): _show("join")], ["Quit", func(): get_tree().quit()]]
+    var panel := _panel("main", MAIN)
+    var entries := [
+        ["new", "NEW GAME", func(): _show("new")],
+        ["continue", "CONTINUE", continue_last],
+        ["load", "LOAD GAME", func(): _show("load")],
+        ["join", "JOIN A FRIEND", func(): _show("join")],
+        ["settings", "SETTINGS", func(): _show("settings")],
+        ["credits", "CREDITS", func(): _show("credits")],
+        ["quit", "QUIT", func(): get_tree().quit()],
+    ]
     for index in range(entries.size()):
-        _button(entries[index][0], Vector2(14, 16 + index * 46), Vector2(272, 36), panel, entries[index][1])
+        var button := _button(entries[index][1], Vector2(12, 8 + index * 27), Vector2(176, 25), panel, entries[index][2])
+        UI.menu_entry(button)
+        _entries[entries[index][0]] = button
+    _continue_hint = _outline(_label("", Vector2(MAIN.position.x, MAIN.end.y + 2), Vector2(260, 14), self, 9))
+    _continue_hint.add_theme_color_override("font_color", UI.CYAN)
+    _marker = MARKER.new(_entries.values())
+    add_child(_marker)
+    _first_focus["main"] = _entries.new
 
 func _build_new() -> void:
     var panel := _panel("new")
-    _label("NEW WORLD", Vector2(14, 10), Vector2(272, 20), panel, 13)
+    UI.heading(_label("NEW WORLD", Vector2(14, 10), Vector2(272, 20), panel, 13))
     _label("Name", Vector2(14, 34), Vector2(272, 16), panel, 10)
     _name_field = _field("My World", Vector2(14, 50), panel)
     _name_field.max_length = REGISTRY.NAME_LENGTH
     _label("Seed (empty = random, numbers or any text)", Vector2(14, 84), Vector2(272, 16), panel, 10)
     _seed_field = _field("random", Vector2(14, 100), panel)
-    _new_race = _race_picker(Vector2(14, 130), panel)
-    _button("Create and play", Vector2(14, 158), Vector2(170, 32), panel, create_world)
-    _button("Back", Vector2(190, 158), Vector2(96, 32), panel, func(): _show("main"))
+    _new_race = _race_picker(Vector2(14, 134), panel)
+    _button("Create and play", Vector2(14, 170), Vector2(170, 32), panel, create_world)
+    _button("Back", Vector2(190, 170), Vector2(96, 32), panel, func(): _show("main"))
+    _first_focus["new"] = _name_field
 
 func _build_load() -> void:
     var panel := _panel("load")
-    _label("SAVED WORLDS", Vector2(14, 10), Vector2(272, 20), panel, 13)
+    UI.heading(_label("SAVED WORLDS", Vector2(14, 10), Vector2(272, 20), panel, 13))
     _world_list = ItemList.new()
     _world_list.position = Vector2(14, 34)
-    _world_list.size = Vector2(272, 116)
+    _world_list.size = Vector2(272, 128)
     _world_list.add_theme_font_size_override("font_size", 10)
     _world_list.item_selected.connect(func(_index): _play.disabled = not _selected_ok())
     _world_list.item_activated.connect(func(_index): load_selected())
     panel.add_child(_world_list)
-    _play = _button("Play", Vector2(14, 158), Vector2(170, 32), panel, load_selected)
-    _button("Back", Vector2(190, 158), Vector2(96, 32), panel, func(): _show("main"))
+    _play = _button("Play", Vector2(14, 170), Vector2(170, 32), panel, load_selected)
+    _button("Back", Vector2(190, 170), Vector2(96, 32), panel, func(): _show("main"))
+    _first_focus["load"] = _world_list
 
 func _build_join() -> void:
     var panel := _panel("join")
-    _label("JOIN A FRIEND", Vector2(14, 10), Vector2(272, 20), panel, 13)
+    UI.heading(_label("JOIN A FRIEND", Vector2(14, 10), Vector2(272, 20), panel, 13))
     _label("Your friend opens their world to friends (Esc → Open to friends) and tells you their address.", Vector2(14, 34), Vector2(272, 44), panel, 10)
     _address_field = _field("e.g. 192.168.1.10", Vector2(14, 84), panel)
-    _label("Race for a new character (returning characters keep theirs)", Vector2(14, 114), Vector2(272, 14), panel, 9)
-    _join_race = _race_picker(Vector2(14, 128), panel)
-    _button("Join", Vector2(14, 158), Vector2(170, 32), panel, join_world)
-    _button("Back", Vector2(190, 158), Vector2(96, 32), panel, func(): _show("main"))
+    _label("Race for a new character (returning characters keep theirs)", Vector2(14, 118), Vector2(272, 14), panel, 9)
+    _join_race = _race_picker(Vector2(14, 134), panel)
+    _button("Join", Vector2(14, 170), Vector2(170, 32), panel, join_world)
+    _button("Back", Vector2(190, 170), Vector2(96, 32), panel, func(): _show("main"))
+    _first_focus["join"] = _address_field
+
+func _build_settings() -> void:
+    var panel := _panel("settings")
+    _first_focus["settings"] = SETTINGS.build(panel, func(): _show("main"))
+
+func _build_credits() -> void:
+    var panel := _panel("credits")
+    UI.heading(_label("CREDITS", Vector2(14, 10), Vector2(272, 20), panel, 13))
+    var y := 34
+    for entry in CREDITS:
+        UI.heading(_label(entry[0], Vector2(14, y), Vector2(272, 14), panel, 10))
+        var line := _label(entry[1], Vector2(14, y + 12), Vector2(272, 14), panel, 9)
+        y += 25
+        line.name = entry[0].replace(" ", "")
+    _first_focus["credits"] = _button("Back", Vector2(14, 182), Vector2(96, 24), panel, func(): _show("main"))
 
 ## Slime, Human or Demon with a one-line summary of its racial ability.
 func _race_picker(at: Vector2, parent: Node) -> OptionButton:
@@ -131,11 +208,53 @@ func _race_picker(at: Vector2, parent: Node) -> OptionButton:
     return picker
 
 func _show(id: String) -> void:
+    _current = id
     for key in _panels:
         _panels[key].visible = key == id
     _status.text = ""
+    _marker.visible = id == "main"
+    _continue_hint.visible = id == "main"
+    _marker.set_process(id == "main")
+    if id == "main":
+        _refresh_continue()
     if id == "load":
         refresh_worlds()
+    if _first_focus.has(id):
+        _focus.call_deferred(_first_focus[id])
+
+## Deferred focus, skipped if the menu left the tree meanwhile (e.g. a world was launched).
+func _focus(control: Control) -> void:
+    if is_instance_valid(control) and control.is_inside_tree() and control.is_visible_in_tree():
+        control.grab_focus()
+
+func _unhandled_input(event: InputEvent) -> void:
+    # Esc steps back from any sub-menu.
+    if event.is_action_pressed("ui_cancel") and _current != "main":
+        _show("main")
+        get_viewport().set_input_as_handled()
+
+## The most recently played world that loads (damaged saves are skipped), or {}.
+func last_world() -> Dictionary:
+    for world in REGISTRY.list(worlds_dir):
+        if world.ok:
+            return world
+    return {}
+
+func _refresh_continue() -> void:
+    var last := last_world()
+    _entries["continue"].disabled = last.is_empty()
+    _continue_hint.text = "Continue: %s · %s" % [last.name, last.map] if not last.is_empty() else ""
+    if _first_focus.main == _entries["continue"] and last.is_empty():
+        _first_focus.main = _entries.new
+    elif not last.is_empty():
+        _first_focus.main = _entries["continue"]
+
+func continue_last() -> void:
+    var last := last_world()
+    if last.is_empty():
+        _status.text = "No saved world to continue. Start a new game first."
+        return
+    _launch({"mode": "host", "path": last.path, "listen": false})
 
 func refresh_worlds() -> void:
     _worlds = REGISTRY.list(worlds_dir)

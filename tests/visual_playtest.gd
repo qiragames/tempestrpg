@@ -211,6 +211,10 @@ func _gather_here() -> bool:
 
 func _run() -> void:
     DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
+    # Numbering shifts when captures are added; clear old ones so the folder matches the log.
+    for file in DirAccess.get_files_at(ProjectSettings.globalize_path(OUT)):
+        if file.ends_with(".png"):
+            DirAccess.remove_absolute(ProjectSettings.globalize_path(OUT).path_join(file))
     session = root.get_node("GameSession")
     # Title menu first (with an empty temporary save folder), then the gameplay world.
     var temp_worlds := OS.get_temp_dir().path_join("tempestrpg-showcase-" + Crypto.new().generate_random_bytes(6).hex_encode())
@@ -222,7 +226,9 @@ func _run() -> void:
     await _wait(0.3)
     lines.append("# Visual playtest — full first slice\n")
     _log("## 0. Title menu")
-    await _shot("title_menu", "Title menu: New World, Load World, Join a Friend, Quit")
+    await _shot("title_menu", "Title screen: storm backdrop, logo, ornamented menu with the slime marker (New Game, Continue, Load Game, Join a Friend, Settings, Credits, Quit)")
+    title._show("credits")
+    await _shot("credits", "Credits: every art pack, including the required Kyrise attribution")
     title._show("new")
     title._name_field.text = "Showcase World"
     title._seed_field.text = "goblin camp"
@@ -531,7 +537,7 @@ func _run() -> void:
     await _wait(0.2)
     await _tap("ui_cancel")
     _check(await _until(func(): return hud._pause_panel.visible and paused), "Esc opens the pause menu and freezes the solo world")
-    await _shot("pause_solo", "Pause menu while playing solo: Resume, Open to friends, Save, Save & quit")
+    await _shot("pause_solo", "Pause overlay while playing solo: GAME PAUSED banner, menu with shortcuts (bag, skill tree, fusion), Open to friends, Save, Options, Save & quit; character and world card")
     hud._pause_buttons.open.pressed.emit()
     _check(await _until(func(): return session.listening), "Open to friends starts listening without a restart")
     await _wait(0.1)

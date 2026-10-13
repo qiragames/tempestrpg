@@ -27,6 +27,34 @@ const ICONS := {
 }
 
 static var _theme: Theme
+const ORNATE := preload("res://scripts/ui/ornate_box.gd")
+## Ornamented frames (Kenney Fantasy UI Borders, CC0): white, tinted per use. Windows and banners
+## use the large 96 px "Double" frames (32 px corners, 2 px lines); HUD blocks, item cards
+## and the analysis box the 48 px ones (16 px corners) so they stay slim.
+const FRAMES := {
+    "panel": "res://assets/game/ui/frames/frame_panel.png",
+    "hud": "res://assets/game/ui/frames/frame_hud.png",
+    "assistant": "res://assets/game/ui/frames/frame_assistant.png",
+    "banner": "res://assets/game/ui/frames/frame_banner.png",
+    "card": "res://assets/game/ui/frames/frame_card.png",
+}
+
+## An ornamented frame: "panel" (windows, menus), "hud" (HUD blocks), "assistant" (cyan
+## analysis), "banner" (titles), "card" (item cards; pass the rarity colour).
+static func ornate(kind: String = "panel", color: Color = GOLD) -> StyleBox:
+    var style := ORNATE.new()
+    style.texture = load(FRAMES[kind])
+    style.border_color = CYAN if kind == "assistant" else color
+    style.corner = 32 if kind in ["panel", "banner"] else 16
+    style.inset = 0.0 if style.corner == 32 else 2.0
+    style.outset = 6.0 if style.corner == 32 else 0.0
+    style.crest = kind in ["panel", "banner"]
+    if kind == "assistant":
+        style.bg_color = Color(0.04, 0.10, 0.12, 0.92)
+    elif kind == "card":
+        style.bg_color = Color(0.08, 0.06, 0.11, 0.97)
+    style.set_content_margin_all(10 if style.corner == 32 else (6 if kind == "card" else 8))
+    return style
 
 ## A framed box: gold trim on a dark fill (kind "frame"), cyan for analysis ("assistant"),
 ## a hotbar/inventory cell ("slot"), or a flat inner well ("well").
@@ -80,8 +108,8 @@ static func theme() -> Theme:
         return _theme
     var built := Theme.new()
     built.default_font_size = 11
-    built.set_stylebox("panel", "Panel", box())
-    built.set_stylebox("panel", "PanelContainer", box())
+    built.set_stylebox("panel", "Panel", ornate())
+    built.set_stylebox("panel", "PanelContainer", ornate())
     built.set_color("font_color", "Label", TEXT)
     for state in ["normal", "hover", "pressed", "disabled", "focus"]:
         built.set_stylebox(state, "Button", box({"normal": "slot", "hover": "slot_hover", "pressed": "slot_pressed", "disabled": "slot_disabled", "focus": "focus"}[state]))
@@ -137,6 +165,21 @@ static func gear_icon(item: Dictionary) -> Texture2D:
         return null
     var path := "res://assets/game/ui/icons/gear/%s_%d.png" % [item.base, clampi(int(item.rarity), 0, 4)]
     return load(path) if ResourceLoader.exists(path) else null
+
+## A menu entry in the title/pause reference style: gold capitals, a gold bar when focused or hovered.
+static func menu_entry(button: Button) -> void:
+    button.add_theme_font_size_override("font_size", 13)
+    button.add_theme_color_override("font_color", GOLD_LIGHT)
+    button.add_theme_color_override("font_focus_color", Color.WHITE)
+    button.add_theme_color_override("font_hover_color", Color.WHITE)
+    button.add_theme_color_override("font_disabled_color", Color(0.45, 0.42, 0.38))
+    var empty := StyleBoxEmpty.new()
+    button.add_theme_stylebox_override("normal", empty)
+    button.add_theme_stylebox_override("disabled", empty)
+    for state in ["hover", "focus", "pressed"]:
+        var bar := box("selected")
+        bar.bg_color = Color(0.36, 0.27, 0.12, 0.9)
+        button.add_theme_stylebox_override(state, bar)
 
 ## Section title in gold.
 static func heading(label: Label) -> Label:

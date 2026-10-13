@@ -65,12 +65,7 @@ func show_item(item_data: Dictionary, where: String = "") -> void:
         return
     var rarity: int = int(item.rarity)
     var color := Color(GEAR.RARITY_COLORS[rarity])
-    var frame := UI.box()
-    frame.bg_color = Color(0.08, 0.06, 0.11, 0.97)
-    frame.border_color = color
-    frame.set_border_width_all(2)
-    frame.set_content_margin_all(6)
-    add_theme_stylebox_override("panel", frame)
+    add_theme_stylebox_override("panel", UI.ornate("card", color))
     # Header: framed icon, name, badges.
     var header := HBoxContainer.new()
     header.add_theme_constant_override("separation", 6)

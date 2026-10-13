@@ -148,6 +148,16 @@
       "status": "available",
       "sha256_zip": "19a35361c9dee07bd2dbef6fb018fdde62a6dde1f21d01c7f2ff27bc819e11c9",
       "notes": "Scythe and spear icons in bronze/iron/steel/gold."
+    },
+    {
+      "id": "kenney_fantasy_ui_borders",
+      "title": "Fantasy UI Borders",
+      "path": "assets/source/packs/kenney_fantasy_ui_borders",
+      "source": "https://kenney.nl/assets/fantasy-ui-borders (kenney_fantasy-ui-borders.zip, 359 kB)",
+      "licence": "CC0 1.0 (License.txt)",
+      "status": "available",
+      "sha256_zip": "59532da3bd61195a425585455b40baa6cbf1eda8227c42adcef31a535a737769",
+      "notes": "White pixel frames (48 px Default, 96 px Double) and dividers; tinted in code. Used for all panel frames from step 22."
     }
   ]
 }

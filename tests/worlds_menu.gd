@@ -80,7 +80,7 @@ func _run() -> void:
     _check(session.open_to_friends(port) == ERR_UNAVAILABLE, "Opening twice is refused")
     hud.open_pause()
     _check(paused and hud._pause_status.text.contains("open to friends on UDP %d" % port) and hud._pause_buttons.open.disabled, "Pause shows the open port; nobody joined yet, so the world still freezes")
-    _check(hud._pause_buttons.quit.text == "Save & quit to title", "Host leaves with Save & quit")
+    _check(hud._pause_buttons.quit.text == "SAVE & QUIT TO TITLE", "Host leaves with Save & quit")
     # A write failure must preserve the live world and its pause menu for a retry.
     var blocked_path := dir.path_join("not_a_directory")
     var blocker := FileAccess.open(blocked_path, FileAccess.WRITE)

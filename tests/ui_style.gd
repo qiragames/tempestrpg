@@ -31,8 +31,8 @@ func _run() -> void:
     var actor = world.get_local_player()
     # --- Theme
     _check(UI.installed and UI.theme() == UI.theme() and ThemeDB.get_default_theme().get_stylebox("panel", "Panel").border_color == UI.GOLD, "One shared theme is installed for every interface")
-    var frame: StyleBoxFlat = UI.theme().get_stylebox("panel", "Panel")
-    _check(frame.border_color == UI.GOLD and frame.bg_color.a > 0.9 and UI.box("assistant").border_color == UI.CYAN, "Panels are dark with gold trim; analysis uses cyan")
+    var frame = UI.theme().get_stylebox("panel", "Panel")
+    _check(frame.border_color == UI.GOLD and frame.bg_color.a > 0.9 and frame.texture != null and UI.ornate("assistant").border_color == UI.CYAN and UI.ornate("card", Color.RED).border_color == Color.RED, "Panels are dark with ornamented gold frames; analysis uses cyan; cards take the rarity colour")
     var button := Button.new()
     hud.add_child(button)
     _check(button.get_theme_stylebox("hover").border_color == UI.GOLD_LIGHT and button.get_theme_stylebox("focus").border_color == UI.CYAN, "Buttons highlight in gold on hover and show a cyan keyboard focus")
