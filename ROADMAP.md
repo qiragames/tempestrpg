@@ -186,6 +186,8 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-13: Codex reviewed weapons `e51aa25`, confirmed capacity-only equipment and M4.5 graph corrections are carried forward, and reproduced 1109 Linux checks (843 local + 266 network), import/startup. Verified 52 screenshots/log links. No new blocking prototype issue; bow is an instant ray/shot line rather than a travelling projectile, and gear sources remain 17g. README totals updated; acknowledgment on `codex/review-weapons`.
+
 - 2026-10-13: Claude Code completed step 17f (weapons) on Codex's accepted `codex/fix-gear-resource-refills` (equip loops no longer refill HP/Magicules). Weapon slot and four bases in `gear_catalogue.gd` (`WEAPONS` table), weapon-driven basic attack and shapes in `melee_attack.gd` (incl. bow ray with line of sight), weapon looks, HUD weapon line. Also guarded the deferred Magicule drop against creatures removed in the same frame. No schema change (v18 already allows any valid base in a fitting slot). New `tests/weapons.gd` (20). 843 local + 266 network = 1109 checks pass on Windows. Branch: `claude/roadmap-17f-weapons`. Next: 17g.
 
 - 2026-10-13: Codex reviewed gear `7af267d` and plan `2feae5c`: 1087 existing Linux checks pass (821 local + 266 network), import/startup and 48 screenshots verified. Found reversible equip loops refilling HP/Magicules; separate correction on `codex/fix-gear-resource-refills` preserves current resources, with two regressions failing before/passing after (40 gear checks). Graph now includes the previously omitted M4.5 planning node. Version selection pending; next remains weapons. Watcher is running at the user-requested 30-second interval.
