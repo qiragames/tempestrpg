@@ -5,6 +5,7 @@ const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const LEVELING := preload("res://scripts/progression/leveling.gd")
 const RACES := preload("res://scripts/races/race_catalogue.gd")
 const TREE := preload("res://scripts/skills/skill_tree.gd")
+const GEAR := preload("res://scripts/items/gear_catalogue.gd")
 ## Movement delegates health and attacks to reusable combat components.
 
 @export var move_speed: float = 95.0
@@ -19,6 +20,8 @@ var remote_direction := Vector2.ZERO
 var last_input_msec: int = 0
 var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "race": "Slime", "quests": {}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}}
 ## Current mimic form and the time until it can change again (host-owned, saved).
+## Gear (17e): owned items and active cooldowns; equipped item IDs live in progression.equipment.
+var gear: Dictionary = {"items": [], "cooldowns": {}}
 var form: String = FORMS.BASE
 var form_cooldown: float = 0.0
 
@@ -48,10 +51,11 @@ func choose_race(id: String) -> bool:
     # Base stats plus any bought tree upgrades, so re-applying never loses purchased stats.
     var nodes: Array = progression.get("tree", {}).get("nodes", [])
     move_speed = stats.move_speed + TREE.stat_bonus(nodes, "speed")
-    $Health.maximum = stats.hp + int(TREE.stat_bonus(nodes, "hp"))
+    # Base stats plus tree upgrades plus equipped gear.
+    $Health.maximum = stats.hp + int(TREE.stat_bonus(nodes, "hp")) + int(gear_bonus("hp"))
     $Health.current = $Health.maximum
     $Health.changed.emit($Health.current, $Health.maximum)
-    $Magicules.maximum = stats.magicules + TREE.stat_bonus(nodes, "magicules")
+    $Magicules.maximum = stats.magicules + TREE.stat_bonus(nodes, "magicules") + gear_bonus("magicules")
     $Magicules._current = $Magicules.maximum
     $Magicules.changed.emit($Magicules.current, $Magicules.maximum)
     if not stats.mimic and form != FORMS.BASE:
@@ -173,7 +177,113 @@ func _physics_process(_delta: float) -> void:
     queue_redraw()
 
 func current_speed() -> float:
-    return move_speed * FORMS.FORMS[form].speed
+    return maxf(10.0, move_speed + gear_bonus("speed")) * FORMS.FORMS[form].speed
+
+## ---- Gear (17e) ----
+func item_by_id(id: String) -> Dictionary:
+    for item in gear.items:
+        if item.id == id:
+            return item
+    return {}
+
+func equipped_items() -> Array:
+    var result: Array = []
+    for slot in GEAR.SLOTS:
+        var item: Dictionary = item_by_id(progression.get("equipment", {}).get(slot, ""))
+        if not item.is_empty():
+            result.append(item)
+    return result
+
+func gear_passive(id: String) -> bool:
+    return equipped_items().any(func(item): return id in item.passives)
+
+## Sum of a stat over equipped items, including the passives that are plain stat bonuses.
+func gear_bonus(stat: String) -> float:
+    var total := 0.0
+    for item in equipped_items():
+        total += float(item.stats.get(stat, 0))
+        if stat == "speed" and "swift" in item.passives:
+            total += 5.0
+        if stat == "regen" and "wellspring" in item.passives:
+            total += 0.5
+    return total
+
+## Saved maxima and regeneration already include equipped gear; this re-derives the live parts.
+func refresh_gear() -> void:
+    $Health.armor = int(gear_bonus("defense"))
+    queue_redraw()
+
+func _apply_item(item: Dictionary, sign: int) -> void:
+    var hp: int = int(item.stats.get("hp", 0)) * sign
+    $Health.maximum += hp
+    $Health.current = clampi($Health.current + (hp if hp > 0 and $Health.current > 0 else 0), 0, $Health.maximum)
+    $Health.changed.emit($Health.current, $Health.maximum)
+    var mp: float = float(item.stats.get("magicules", 0)) * sign
+    $Magicules.maximum += mp
+    $Magicules._current = clampf($Magicules._current + (mp if mp > 0 else 0.0), 0.0, $Magicules.maximum)
+    $Magicules.changed.emit($Magicules.current, $Magicules.maximum)
+    $Magicules.regeneration_per_second = maxf(0.0, $Magicules.regeneration_per_second + (float(item.stats.get("regen", 0)) + (0.5 if "wellspring" in item.passives else 0.0)) * sign)
+
+## Host-only: put an owned item into a slot (swapping out what was there).
+func add_item(item: Dictionary) -> bool:
+    if not AUTHORITY.can_mutate(self) or not GEAR.valid_item(item) or gear.items.size() >= GEAR.MAX_ITEMS or not item_by_id(item.id).is_empty():
+        return false
+    gear.items.append(item.duplicate(true))
+    return true
+
+func equip(id: String, slot: String) -> bool:
+    if not AUTHORITY.can_mutate(self) or not slot in GEAR.SLOTS:
+        return false
+    var item: Dictionary = item_by_id(id)
+    if item.is_empty() or not GEAR.slot_fits(item.base, slot):
+        session.notify_character(character_id, "That item does not fit there.")
+        return false
+    var equipment: Dictionary = progression.equipment
+    for other in equipment.keys():
+        if equipment[other] == id:
+            unequip(other)
+    if equipment.has(slot):
+        unequip(slot)
+    equipment[slot] = id
+    _apply_item(item, 1)
+    refresh_gear()
+    session.notify_character(character_id, "Equipped %s." % GEAR.display_name(item))
+    session.queue_save()
+    return true
+
+func unequip(slot: String) -> bool:
+    if not AUTHORITY.can_mutate(self) or not progression.equipment.has(slot):
+        return false
+    var item: Dictionary = item_by_id(progression.equipment[slot])
+    progression.equipment.erase(slot)
+    if not item.is_empty():
+        _apply_item(item, -1)
+    refresh_gear()
+    session.queue_save()
+    return true
+
+## G: use the first ready active of the equipped items (slot order).
+func use_gear_active() -> bool:
+    if not AUTHORITY.can_mutate(self) or $Health.current <= 0 or is_exhausted():
+        return false
+    for item in equipped_items():
+        if item.active.is_empty() or gear.cooldowns.get(item.id, 0.0) > 0.0:
+            continue
+        match item.active:
+            "barrier":
+                $Health.immunity_left = maxf($Health.immunity_left, 2.0)
+            "surge":
+                $Magicules.restore(30.0)
+        gear.cooldowns[item.id] = GEAR.ACTIVES[item.active].cooldown
+        session.notify_character(character_id, "%s: %s." % [GEAR.ACTIVES[item.active].name, GEAR.ACTIVES[item.active].text])
+        return true
+    session.notify_character(character_id, "No gear active is ready.")
+    return false
+
+## Thorns: a creature that lands a hit takes damage back (host).
+func on_damaged_by(source: Node) -> void:
+    if gear_passive("thorns") and is_instance_valid(source) and source.is_in_group("enemies") and source.has_node("Health"):
+        source.get_node("Health").take_damage(3, self)
 
 func form_strike_bonus() -> int:
     return FORMS.FORMS[form].strike_bonus
@@ -245,6 +355,10 @@ func _process(delta: float) -> void:
     if session.replica_world:
         return
     form_cooldown = maxf(0.0, form_cooldown - delta)
+    for id in gear.cooldowns.keys():
+        gear.cooldowns[id] = maxf(0.0, gear.cooldowns[id] - delta)
+        if gear.cooldowns[id] <= 0.0:
+            gear.cooldowns.erase(id)
     if not exhaustion_active or $Health.current <= 0:
         return
     exhaustion_left = maxf(0.0, exhaustion_left - delta)
@@ -267,6 +381,12 @@ func _unhandled_input(event: InputEvent) -> void:
             session.request_action("transform", {"form": target})
         else:
             try_transform(target)
+        return
+    if event.is_action_pressed("gear_active") and not event.is_echo():
+        if session.active:
+            session.request_action("gear", {"operation": "use"})
+        else:
+            use_gear_active()
         return
     if session.active:
         if event.is_action_pressed("restart") and not event.is_echo():
@@ -291,6 +411,40 @@ func configure_replica() -> void:
         component.set_process(false)
 
 func _draw() -> void:
+    _draw_body()
+    if has_node("Health") and $Health.current > 0 and not exhaustion_active and form == FORMS.BASE:
+        _draw_gear()
+
+## Distinct, rarity-coloured looks per item base (placeholders until the sprite step).
+func _draw_gear() -> void:
+    for slot in GEAR.SLOTS:
+        var item: Dictionary = item_by_id(progression.get("equipment", {}).get(slot, ""))
+        if item.is_empty():
+            continue
+        var color := Color(GEAR.RARITY_COLORS[int(item.rarity)])
+        match GEAR.BASES[item.base].look:
+            "hood":
+                draw_rect(Rect2(-6, -12, 12, 4), color.darkened(0.2))
+            "helm":
+                draw_rect(Rect2(-6, -13, 12, 4), color)
+                draw_rect(Rect2(-1, -15, 2, 2), color.lightened(0.3))
+            "vest":
+                draw_rect(Rect2(-5, 2, 10, 4), color.darkened(0.15))
+            "mail":
+                draw_rect(Rect2(-6, 1, 12, 5), color)
+                draw_rect(Rect2(-4, 2, 8, 1), color.lightened(0.4))
+            "gloves":
+                draw_rect(Rect2(-8, 3, 2, 2), color)
+                draw_rect(Rect2(6, 3, 2, 2), color)
+            "boots":
+                draw_rect(Rect2(-5, 7, 3, 2), color)
+                draw_rect(Rect2(2, 7, 3, 2), color)
+            "ring":
+                draw_circle(Vector2(7, 4), 1.2, color)
+            "amulet":
+                draw_rect(Rect2(-1, 0, 2, 2), color)
+
+func _draw_body() -> void:
     if has_node("Health") and $Health.current <= 0:
         draw_rect(Rect2(-8, 2, 16, 4), Color("447c88"))
         return

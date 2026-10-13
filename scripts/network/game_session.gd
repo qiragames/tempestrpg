@@ -438,6 +438,17 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             rejected_requests += 1
             return false
         return actor.buy_node(payload.id) if payload.operation == "buy" else actor.activate_skill(payload.id)
+    if action == "gear":
+        # Clients name an owned item and a slot (or a slot to empty); the host checks the rest.
+        var operation: Variant = payload.get("operation")
+        if operation == "equip" and payload.size() == 3 and payload.get("id") is String and payload.id.length() <= 64 and payload.get("slot") is String and payload.slot.length() <= 16:
+            return actor.equip(payload.id, payload.slot)
+        if operation == "unequip" and payload.size() == 2 and payload.get("slot") is String and payload.slot.length() <= 16:
+            return actor.unequip(payload.slot)
+        if operation == "use" and payload.size() == 1:
+            return false if actor.input_blocked else actor.use_gear_active()
+        rejected_requests += 1
+        return false
     if action == "fusion":
         # Clients name the skills to fuse or the fused skill to split; the host checks everything else.
         var fuse: bool = payload.get("operation") == "fuse"

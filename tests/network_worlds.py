@@ -63,7 +63,8 @@ try:
     check(opened["listening"], "Open to friends starts listening without restarting the world")
     guest, guest_report = start("guest", mode="client", port=udp, identity=WORK / "identity.json", race="Demon", buy="demon_hunger")
     joined = wait(guest_report, "joined")
-    check(joined["race"] == "Demon" and joined["max_hp"] == 90, "A new friend chooses a race on first join (Demon: HP 90)")
+    check(joined["race"] == "Demon", "A new friend chooses a race on first join (Demon)")
+    check(joined["items"] == 1 and joined["equipment"] == {"body": "item_netvest00000001"} and joined["max_hp"] == 100, "The friend equips a vest through the host (HP 90 + 10); the wrong slot is refused")
     check(joined["points_before"] == 1 and joined["points"] == 0 and joined["nodes"] == ["demon_hunger"] and joined["magicules"] == 140, "The friend buys a Demon tree node through the host (Magicules 130 + 10); a Slime node is refused")
     forged, forged_report = start("forged", mode="client", port=udp, identity=WORK / "forged.json", race="Orc")
     denied = wait(forged_report, "denied")
@@ -85,7 +86,7 @@ try:
     guest, guest_report = start("guest_again", mode="client", port=udp, identity=WORK / "identity.json", race="Human")
     rejoined = wait(guest_report, "joined")
     check(rejoined["id"] == joined["id"], "The friend rejoins as the same character after reopening")
-    check(rejoined["race"] == "Demon" and rejoined["max_hp"] == 90 and rejoined["nodes"] == ["demon_hunger"] and rejoined["magicules"] == 140, "A returning character keeps its race and tree even if another race is requested")
+    check(rejoined["race"] == "Demon" and rejoined["max_hp"] == 100 and rejoined["nodes"] == ["demon_hunger"] and rejoined["magicules"] == 140 and rejoined["equipment"] == {"body": "item_netvest00000001"}, "A returning character keeps its race, tree and equipped gear even if another race is requested")
     finish(guest, "guest_again")
     finish(host, "reload")
     for _, log, name in processes:

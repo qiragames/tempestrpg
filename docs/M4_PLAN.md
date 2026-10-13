@@ -183,7 +183,9 @@ A window with the character's active skills listed on the right; drag two skills
 
 Inserted after 17d at the user's request to fix the finite-XP finding. Defeated creatures (not trial creatures) are scheduled on defeat and return after 60 s at their home with the same ID, kind and difficulty; an unabsorbed corpse is removed at that moment (not while being absorbed); nobody gets a creature spawned on top of them (160 px clearance, 5 s retry). Rewards (XP, drops, absorption evidence/materials) repeat. Saved as top-level `respawns` (v17).
 
-### 17e — Gear foundation: armor and accessories
+### 17e — Gear foundation: armor and accessories — **Done**
+
+**Status 2026-10-13:** implemented on `claude/roadmap-17e-gear`. Eight bases (cloth hood, iron helm, padded vest, scale mail, leather gloves, travel boots, copper ring, spirit amulet); rarity scale 1.0/1.25/1.5/1.8/2.2 on positive ranges; passives 0/0/1/1/2; one active on Epic/Legendary (Barrier 30 s, Mana Surge 45 s), G uses the first ready one in slot order. Max HP/Magicules and regeneration are adjusted on equip/unequip (saved values include gear); speed, strike and defense are derived live. No sources yet — 17g.
 Equipment slots (proposal: head, body, hands, feet, two accessories, weapon). Items are instances with stable IDs, a base type, a **rarity** (Common, Uncommon, Rare, Epic, Legendary), stat rolls within the base type's range, **passives** from Rare and an **active** on Epic/Legendary, and a distinct look per base type/rarity. Equip/unequip per character from the bag; stats apply on the host; the existing inventory reference (paper doll, bag, item details) is the layout guide. Saved, validated (stats within ranges, passives/actives allowed for the rarity, no duplicated instance IDs) and replicated.
 
 ### 17f — Weapons: sword, spear, scythe, bow

@@ -31,6 +31,12 @@ func _run() -> void:
             _report({"error": "Solo host could not start"})
             quit(1)
             return
+        # 17e: the host hands each new friend one vest (gear sources arrive in 17g).
+        session.player_joined.connect(func(actor: Node2D):
+            if actor.gear.items.is_empty() and not FileAccess.file_exists(options.save + ".gave_vest"):
+                actor.add_item({"id": "item_netvest00000001", "base": "padded_vest", "rarity": 0, "stats": {"hp": 10}, "passives": [], "active": ""})
+                FileAccess.open(options.save + ".gave_vest", FileAccess.WRITE).store_string("1")
+        )
         _report({"ready": true, "listening": session.listening, "offline_peer": session.multiplayer.multiplayer_peer is OfflineMultiplayerPeer, "records": session.records.keys(), "meta": session.world_meta, "layout": _layout()})
     else:
         session.session_failed.connect(func(message: String):
@@ -47,9 +53,11 @@ func _run() -> void:
         if options.has("buy"):
             session.request_action("tree", {"operation": "buy", "id": "slime_vitality"})
             session.request_action("tree", {"operation": "buy", "id": options.buy})
+            session.request_action("gear", {"operation": "equip", "id": "item_netvest00000001", "slot": "body"})
+            session.request_action("gear", {"operation": "equip", "id": "item_netvest00000001", "slot": "head"})
             await create_timer(0.5).timeout
         var mine: Dictionary = session.latest_snapshot.players[session.local_character_id]
-        _report({"joined": true, "points_before": tree_before.skill_points, "points": mine.progression.skill_points, "nodes": mine.progression.tree.nodes, "id": session.local_character_id, "meta": session.latest_snapshot.get("meta", {}), "players": session.latest_snapshot.players.keys(), "layout": _layout(), "race": session.latest_snapshot.players[session.local_character_id].progression.race, "max_hp": session.latest_snapshot.players[session.local_character_id].health.maximum, "magicules": session.latest_snapshot.players[session.local_character_id].magicules.maximum})
+        _report({"joined": true, "points_before": tree_before.skill_points, "points": mine.progression.skill_points, "nodes": mine.progression.tree.nodes, "equipment": mine.progression.equipment, "items": mine.gear.items.size(), "id": session.local_character_id, "meta": session.latest_snapshot.get("meta", {}), "players": session.latest_snapshot.players.keys(), "layout": _layout(), "race": session.latest_snapshot.players[session.local_character_id].progression.race, "max_hp": session.latest_snapshot.players[session.local_character_id].health.maximum, "magicules": session.latest_snapshot.players[session.local_character_id].magicules.maximum})
 func _process(_delta: float) -> bool:
     if Time.get_ticks_msec() > deadline:
         _report({"error": "Worlds integration timed out"})

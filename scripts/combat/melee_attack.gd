@@ -28,6 +28,7 @@ func attack(facing: Vector2) -> bool:
     # Mimic forms and Human weapon mastery strengthen the basic strike; skills keep their own damage.
     var bonus: int = get_parent().form_strike_bonus() if get_parent().has_method("form_strike_bonus") else 0
     bonus += get_parent().tree_strike_bonus() if get_parent().has_method("tree_strike_bonus") else 0
+    bonus += int(get_parent().gear_bonus("strike")) if get_parent().has_method("gear_bonus") else 0
     var race := _race()
     return _strike(facing, damage + bonus + race.strike_bonus, magicule_cost, cooldown * race.recovery)
 
@@ -40,7 +41,8 @@ func attack_skill(facing: Vector2, skill_id: StringName) -> bool:
     # Effects are dispatched by stable ID; new effect types are added here deliberately.
     # Demons hit harder with skills and drain part of the damage; Humans recover faster.
     var race := _race()
-    var power := int(round(skill.damage * (1.0 + race.skill_bonus)))
+    var keen: float = 0.1 if get_parent().has_method("gear_passive") and get_parent().gear_passive("keen") else 0.0
+    var power := int(round(skill.damage * (1.0 + race.skill_bonus + keen)))
     match skill.effect:
         &"strike":
             return _strike(facing, power, skill.magicule_cost, skill.cooldown * race.recovery, &"strike", race.drain)
@@ -89,6 +91,7 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
     query.collision_mask = 4
     var space := get_world_2d().direct_space_state
     var dealt := 0
+    var hits := 0
     for hit in space.intersect_shape(query):
         var target: Node2D = hit.collider
         var offset := target.global_position - global_position
@@ -99,8 +102,12 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
             var before: int = target.get_node("Health").current
             if target.get_node("Health").take_damage(strike_damage, get_parent()):
                 dealt += before - target.get_node("Health").current
+                hits += 1
     if drain > 0.0 and dealt > 0:
         get_parent().get_node("Health").heal(int(round(dealt * drain)))
+    # Lifesteal gear: basic strikes heal 1 HP per creature hit.
+    if effect == &"strike" and drain == 0.0 and hits > 0 and get_parent().has_method("gear_passive") and get_parent().gear_passive("lifesteal"):
+        get_parent().get_node("Health").heal(hits)
     return true
 
 func _draw() -> void:

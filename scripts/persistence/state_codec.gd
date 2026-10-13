@@ -39,7 +39,8 @@ static func capture_player(actor: Node2D) -> Dictionary:
         "skill_ids": known, "slots": slots, "skill_evidence": book.evidence.duplicate(true), "inventory": {"capacity": bag.capacity, "counts": counts},
         "attack_recovery": actor.get_node("MeleeAttack").cooldown_left,
         "analysis": {"target": absorption._target.entity_id if absorption.active else "", "remaining": absorption.time_left, "focus": absorption.focus_left},
-        "progression": actor.progression.duplicate(true)
+        "progression": actor.progression.duplicate(true),
+        "gear": actor.gear.duplicate(true)
     }
 
 static func apply_player(actor: Node2D, state: Dictionary, world: Node2D, replica: bool) -> void:
@@ -90,6 +91,9 @@ static func apply_player(actor: Node2D, state: Dictionary, world: Node2D, replic
         bag._entries[StringName(id)] = {"id": StringName(id), "name": specimen.material_name, "description": specimen.material_description, "category": "Materials", "count": int(state.inventory.counts[id])}
     bag.changed.emit()
     actor.get_node("MeleeAttack").cooldown_left = state.attack_recovery
+    # Saved maxima/regeneration already include equipped gear; only derived values are refreshed.
+    actor.gear = state.gear.duplicate(true)
+    actor.refresh_gear()
     var absorption = actor.get_node("Absorption")
     # Replicas show the channel. Reload/reconnect interrupts it without refunding cost.
     absorption._target = world.entity_by_id(state.analysis.target) if replica else null

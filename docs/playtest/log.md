@@ -138,7 +138,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.2 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.0 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](24_shrine.png)
@@ -249,33 +249,48 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 *Skill tree: Gel Vitality bought (+10 max HP)* (640x360)
 
 - [x] Bought a stat node: Gel Vitality +10 max HP
+## 11c. Gear (armor and accessories)
+- (Showcase items: a Rare helm, an Epic mail and a Legendary ring were handed over; sources arrive in 17g)
+- [x] I opens the bag
+- [x] The bag's Equipment button opens the equipment window
+
+![Equipment window: slots, owned items in rarity colours, details of the Legendary ring](42_equipment.png)
+*Equipment window: slots, owned items in rarity colours, details of the Legendary ring* (640x360)
+
+- [x] I closes the equipment window
+- [x] Equipped: +34 max HP and 6 defense
+- [x] G uses the mail's Barrier active
+
+![Gear looks on the slime: helm and mail in rarity colours](43_gear_looks.png)
+*Gear looks on the slime: helm and mail in rarity colours* (640x360)
+
 ## 12. Pause menu and Open to friends
 - [x] World is hosted solo and saved, no port open
 - [x] Esc opens the pause menu and freezes the solo world
 
-![Pause menu while playing solo: Resume, Open to friends, Save, Save & quit](42_pause_solo.png)
+![Pause menu while playing solo: Resume, Open to friends, Save, Save & quit](44_pause_solo.png)
 *Pause menu while playing solo: Resume, Open to friends, Save, Save & quit* (640x360)
 
 - [x] Open to friends starts listening without a restart
 
-![Pause menu after Open to friends: port and LAN address for friends](43_pause_open.png)
+![Pause menu after Open to friends: port and LAN address for friends](45_pause_open.png)
 *Pause menu after Open to friends: port and LAN address for friends* (640x360)
 
 - [x] Esc resumes
 ## 13. Seeded worlds
 
-![Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed](44_seed_goblin_camp.png)
+![Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed](46_seed_goblin_camp.png)
 *Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed* (640x360)
 
 
-![Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed](45_seed_tempest.png)
+![Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed](47_seed_tempest.png)
 *Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed* (640x360)
 
 - [x] Different seeds lay out different worlds; the same seed repeats exactly
 ## 14. Playable races
 - [x] Human and Demon are created with their own stats
 
-![Playable races, left to right: Slime, Human, Demon (placeholder looks)](46_races.png)
+![Playable races, left to right: Slime, Human, Demon (placeholder looks)](48_races.png)
 *Playable races, left to right: Slime, Human, Demon (placeholder looks)* (640x360)
 
 
@@ -338,10 +353,14 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Recovered 16.0 Magicules.
 - +130 XP (showcase assistance). Level 4 reached: +1 skill point.
 - Skill tree: Gel Vitality. +10 max HP
+- Equipped Rare Iron Helm.
+- Equipped Epic Scale Mail.
+- Equipped Legendary Copper Ring.
+- Barrier: 2 s of invulnerability.
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 
 The bot retreated 1 time(s) to let Magicules recover.
 XP assistance for skill points: 130 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 46 screenshots.**
+**Result: 0 failed checks, 48 screenshots.**

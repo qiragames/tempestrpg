@@ -442,6 +442,39 @@ func _run() -> void:
     await _shot("level_hud", "Level, XP and unspent skill points in the top-right of the HUD")
     var hp_before: int = player.get_node("Health").maximum
     _check(await _use_tree("slime_vitality", "tree_node", "Skill tree: Gel Vitality bought (+10 max HP)") and player.get_node("Health").maximum == hp_before + 10, "Bought a stat node: Gel Vitality +10 max HP")
+    _log("## 11c. Gear (armor and accessories)")
+    # Gear sources (drops, chests, forge) arrive in 17g, so the showcase hands over three items.
+    var gear_catalogue = load("res://scripts/items/gear_catalogue.gd")
+    var showcase_items := [
+        {"id": "item_showcase_helm", "base": "iron_helm", "rarity": 2, "stats": {"hp": 12, "defense": 2}, "passives": ["thorns"], "active": ""},
+        {"id": "item_showcase_mail", "base": "scale_mail", "rarity": 3, "stats": {"hp": 22, "defense": 4, "speed": -4}, "passives": ["lifesteal"], "active": "barrier"},
+        {"id": "item_showcase_ring", "base": "copper_ring", "rarity": 4, "stats": {"magicules": 18}, "passives": ["keen", "wellspring"], "active": "surge"},
+    ]
+    for item in showcase_items:
+        player.add_item(item)
+    _log("- (Showcase items: a Rare helm, an Epic mail and a Legendary ring were handed over; sources arrive in 17g)")
+    var max_before: int = player.get_node("Health").maximum
+    await _tap("inventory")
+    _check(await _until(func(): return hud._modal.visible), "I opens the bag")
+    for child in hud._modal.get_children():
+        if child is Button and child.text == "Equipment":
+            child.pressed.emit()
+    _check(await _until(func(): return hud.gear_panel.visible and paused), "The bag's Equipment button opens the equipment window")
+    for item in showcase_items:
+        hud.gear_panel._selected = item.id
+        hud.gear_panel.refresh()
+        hud.gear_panel._equip.pressed.emit()
+        await _wait(0.2)
+    hud.gear_panel._selected = "item_showcase_ring"
+    await _wait(0.2)
+    await _shot("equipment", "Equipment window: slots, owned items in rarity colours, details of the Legendary ring")
+    await _tap("inventory")
+    _check(await _until(func(): return not hud.gear_panel.visible and not paused), "I closes the equipment window")
+    _check(player.get_node("Health").maximum == max_before + 34 and player.get_node("Health").armor == 6, "Equipped: +34 max HP and 6 defense")
+    player.get_node("Health").immunity_left = 0.0
+    await _tap("gear_active")
+    _check(await _until(func(): return player.get_node("Health").immunity_left >= 1.5), "G uses the mail's Barrier active")
+    await _shot("gear_looks", "Gear looks on the slime: helm and mail in rarity colours")
     _log("## 12. Pause menu and Open to friends")
     # Turn this sandbox into a solo-hosted world (as the title menu does), then use Esc.
     # This sandbox was played on the reference map, so it is hosted as an unseeded world (16d).

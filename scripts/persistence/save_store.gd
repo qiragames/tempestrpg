@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 17
+const VERSION := 18
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
 ## Initial saved state of the v8 encounter; matches scenes/world/forest.tscn.
@@ -12,6 +12,7 @@ const LEVELING := preload("res://scripts/progression/leveling.gd")
 const RACES := preload("res://scripts/races/race_catalogue.gd")
 const TREE := preload("res://scripts/skills/skill_tree.gd")
 const RESPAWNER := preload("res://scripts/world/respawner.gd")
+const GEAR := preload("res://scripts/items/gear_catalogue.gd")
 const ALLY := preload("res://scripts/allies/goblin_ally.gd")
 const MAX_BYTES := 4 * 1024 * 1024
 const CODEC := preload("res://scripts/persistence/state_codec.gd")
@@ -125,6 +126,9 @@ static func validate_player(state: Variant, id: String) -> bool:
     if form.id != FORMS.BASE and not RACES.stats(progression.race).mimic:
         return false
     if not progression.get("quests") is Dictionary or not progression.get("equipment") is Dictionary:
+        return false
+    # Gear (v18): valid items, equipment slots pointing at owned items that fit, sane cooldowns.
+    if not GEAR.valid_gear(state.get("gear"), progression.equipment):
         return false
     return true
 
@@ -422,7 +426,7 @@ static func migrate(data: Variant) -> Variant:
         if not data.get("enemies") is Array:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 17
         var layout: Dictionary = LAYOUT.generate(LAYOUT.seed_of(data.meta) if data.get("meta") is Dictionary else 0)
         var respawns: Array = []
         for id in LAYOUT.CREATURE_IDS:
@@ -435,6 +439,18 @@ static func migrate(data: Variant) -> Variant:
             var spot: Dictionary = layout.creatures[id]
             respawns.append({"id": id, "kind": "thornback" if id.begins_with("thornback") else "gnasher", "difficulty": int(saved.difficulty) if saved != null else int(spot.difficulty), "home": saved.home if saved != null else [spot.position.x, spot.position.y], "remaining": RESPAWNER.RESPAWN_SECONDS})
         data["respawns"] = respawns
+    # v18 (17e): gear. Every character starts with no items; the reserved equipment dictionary
+    # was always empty, so it is reset to {} (no item could be referenced before).
+    if data.get("version") == 17:
+        if not data.get("players") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = VERSION
+        for state in data.players.values():
+            if not state is Dictionary or not state.get("progression") is Dictionary:
+                return null
+            state["gear"] = {"items": [], "cooldowns": {}}
+            state.progression["equipment"] = {}
     return data
 
 static func _read(path: String) -> Dictionary:

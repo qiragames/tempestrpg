@@ -17,6 +17,8 @@ var _regen_carry: float = 0.0
 
 ## Who landed the latest hit (host only, never saved).
 var last_hit_by: Node
+## Flat reduction per hit from equipped gear (derived, never saved). A hit always deals at least 1.
+var armor: int = 0
 func _ready() -> void:
     current = maximum
 
@@ -70,9 +72,11 @@ func take_damage(amount: int, source: Node = null) -> bool:
     if amount <= 0 or current <= 0 or immunity_left > 0.0:
         return false
     last_hit_by = source
-    current = maxi(0, current - amount)
+    current = maxi(0, current - maxi(1, amount - armor))
     immunity_left = immunity_seconds
     changed.emit(current, maximum)
     if current == 0:
         defeated.emit()
+    elif is_instance_valid(source) and get_parent().has_method("on_damaged_by"):
+        get_parent().on_damaged_by(source)
     return true

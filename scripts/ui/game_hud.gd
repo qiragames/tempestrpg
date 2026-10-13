@@ -7,6 +7,8 @@ var _slots: Array[Button] = []
 var skill_tree: Control
 ## Skill fusion window (U), see fusion_panel.gd.
 var fusion: Control
+## Equipment window (from the bag), see gear_panel.gd.
+var gear_panel: Control
 var _modal: Control
 var _items: ItemList
 var _details: Label
@@ -55,6 +57,8 @@ func _ready() -> void:
     add_child(skill_tree)
     fusion = load("res://scripts/ui/fusion_panel.gd").new(self)
     add_child(fusion)
+    gear_panel = load("res://scripts/ui/gear_panel.gd").new(self)
+    add_child(gear_panel)
     get_parent().system_message.connect(fusion.show_message)
     _ally_dialog = load("res://scripts/ui/ally_dialog.gd").new()
     add_child(_ally_dialog)
@@ -62,7 +66,7 @@ func _ready() -> void:
     add_child(_camp_dialog)
 
 func menu_open() -> bool:
-    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible)
+    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible)
 
 func bind_player(actor: Node2D) -> void:
     if player == actor:
@@ -222,6 +226,11 @@ func _build_inventory() -> void:
     )
     _close = _button("Close", o + Vector2(348, 6), Vector2(80, 26), _modal)
     _close.pressed.connect(close_inventory)
+    var equipment_button := _button("Equipment", o + Vector2(258, 6), Vector2(84, 26), _modal)
+    equipment_button.pressed.connect(func():
+        close_inventory()
+        gear_panel.open()
+    )
     _label("I / Esc: close · Multiplayer continues while browsing", o + Vector2(14, 218), Vector2(400, 16), _modal, 10)
     _modal.hide()
 
@@ -290,6 +299,10 @@ func _unhandled_input(event: InputEvent) -> void:
             fusion.open()
         get_viewport().set_input_as_handled()
         return
+    if gear_panel.visible and (event.is_action_pressed("ui_cancel") or (event.is_action_pressed("inventory") and not event.is_echo())):
+        gear_panel.close()
+        get_viewport().set_input_as_handled()
+        return
     if fusion.visible and event.is_action_pressed("ui_cancel"):
         fusion.close()
         get_viewport().set_input_as_handled()
@@ -322,6 +335,8 @@ func _exit_tree() -> void:
         get_tree().paused = skill_tree._paused_before_open
     if is_instance_valid(fusion) and fusion.visible:
         get_tree().paused = fusion._paused_before_open
+    if is_instance_valid(gear_panel) and gear_panel.visible:
+        get_tree().paused = gear_panel._paused_before_open
 
 var _pause_panel: Panel
 var _pause_status: Label
