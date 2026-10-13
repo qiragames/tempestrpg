@@ -79,7 +79,9 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 
 **Done evidence:** the model distinguishes unknown/known traits, locked tiers, interrupted analysis and exhausted state; each client sees its own discoveries; advice matches actual costs/timers and never invents gear/quests/stats.
 
-## 18 — Prepare sprite, tileset and UI assets (Claude; parallel lane)
+## 18 — Prepare sprite, tileset and UI assets (Claude; parallel lane) — **Done**
+
+**Status 2026-10-13:** prepared on `claude/roadmap-18-assets` from four licence-checked packs (see `CREDITS.md`, `assets/references/index.json`). Role mapping: Slime = Ninja `Slime3`, Human = `Boy`, Demon = `DemonRed`; Gnasher = Pixel Crawler `Orc` (user: Goblin look), Thornback = `Orc - Shaman`, goblin ally = `Orc - Rogue`, Hobgoblin = `Orc - Warrior`; gear icons per base and rarity (Kyrise a..e; Shade metals for scythe/spear). Pixel Crawler creatures are side-view only (flip for the other side); Ninja sheets have columns = down, up, left, right. Integration is 19–21.
 
 **Goal/dependencies:** M4 approval; can run alongside 13–17. Prepare a small usable export set from the seven preserved references at 640×360 without touching gameplay files.
 

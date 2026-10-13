@@ -85,5 +85,47 @@
       "notes": "Terrain/auto-tiles (grass, dirt path, cobblestone, cliff, stairs), trees/foliage/rocks/stumps, modular thatched roofs/walls/palisades/gates and two huts, props (barrels, crates, stalls, campfires, cauldrons, well, ladders, torches, tents, fences).",
       "documentation": "docs/ART_REFERENCES.md"
     }
+  ],
+  "packs": [
+    {
+      "id": "ninja_adventure",
+      "title": "Ninja Adventure – Asset Pack",
+      "path": "assets/source/packs/ninja_adventure",
+      "source": "https://pixel-boy.itch.io/ninja-adventure-asset-pack (Ninja Adventure - Asset Pack.zip, 89 MB, update #8 2026-03-29)",
+      "licence": "CC0 1.0 (LICENSE.txt)",
+      "status": "available",
+      "sha256_zip": "95a06f4fdcfd1882f061a45ff313b7c905dbe2de1e8512b281d7937df62a7b15",
+      "notes": "Main style: 16x16 characters, monsters, tilesets, items, UI, FX, audio. Full pack committed (user decision 2026-10-13)."
+    },
+    {
+      "id": "pixel_crawler",
+      "title": "Pixel Crawler – Free Pack 2.11",
+      "path": "assets/source/packs/pixel_crawler",
+      "source": "https://anokolisa.itch.io/free-pixel-art-asset-pack-topdown-tileset-rpg-16x16-sprites (Pixel Crawler - Free Pack 2.11.zip, 2.3 MB)",
+      "licence": "Free incl. commercial use; no resale of the art (Terms.txt)",
+      "status": "available",
+      "sha256_zip": "b7b228ca232da9958f191b01db87764dddb67610116151e06e8dd8ade6de94b8",
+      "notes": "Goblin-look orcs for Gnashers/allies, crafting stations (anvil, bonfire)."
+    },
+    {
+      "id": "kyrise_icons",
+      "title": "Kyrise's Free 16x16 RPG Icon Pack V1.3",
+      "path": "assets/source/packs/kyrise_icons",
+      "source": "https://kyrise.itch.io/kyrises-free-16x16-rpg-icon-pack (Kyrises_16x16_RPG_Icon_Pack_V1.3.zip, 879 kB)",
+      "licence": "CC BY 4.0 — credit Kyrise (readme.txt, CREDITS.md)",
+      "status": "available",
+      "sha256_zip": "dbbc407c39b57979cb498a396d52dab96b153b681608e54c5600a3adeb470208",
+      "notes": "Armor, accessory, sword and bow icons; variants a..e used as rarities 0..4."
+    },
+    {
+      "id": "shade_weapons",
+      "title": "16x16 Weapon RPG Icons",
+      "path": "assets/source/packs/shade_weapons",
+      "source": "https://merchant-shade.itch.io/free-16x16-weapon-rpg-icons (16x16 Weapon RPG Icons.zip, 305 kB)",
+      "licence": "Free incl. commercial use, no credit required (LICENSE_NOTE.md)",
+      "status": "available",
+      "sha256_zip": "19a35361c9dee07bd2dbef6fb018fdde62a6dde1f21d01c7f2ff27bc819e11c9",
+      "notes": "Scythe and spear icons in bronze/iron/steel/gold."
+    }
   ]
 }

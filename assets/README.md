@@ -12,6 +12,10 @@ Both tools use this directory for artwork received from the user and artwork pre
 | `game/ui/` | Prepared transparent frames, icons, portraits and backgrounds | Imported normally |
 | `game/world/` | Prepared tile atlases and separate props | Imported normally |
 
+## Third-party packs (step 18)
+
+`assets/source/packs/` holds four downloaded packs with their licence files (Ninja Adventure CC0, Pixel Crawler free incl. commercial, Kyrise CC BY 4.0, Shade free). They are listed under `packs` in `references/index.json`; credits in `../CREDITS.md`. `tools/prepare_assets.py` copies the chosen sheets into `game/` unchanged (plus 16x16 gear icons per rarity) and renders x3/x4 previews into `../docs/asset_previews/`. Prepared ≠ integrated: scenes keep the code-drawn placeholders until steps 19–21.
+
 ## Original references
 
 `references/index.json` lists the reference images and their paths. Their descriptions are in `docs/ART_REFERENCES.md` and `docs/UI_REFERENCES.md`. As of 2026-10-12, all seven originals are in Git (monster chart, ogre sheet, title screen, pause menu, inventory, gameplay HUD, forest/goblin village tileset; added by Claude from the user's PC/chat). Do not mark an entry available or imported until the actual file exists.
@@ -22,7 +26,7 @@ When the user supplies PNG/JPG files or a ZIP, place each original at the path i
 
 - Preserve originals; save edits/crops/atlases in `source/` and exported textures in `game/`.
 - Use lowercase descriptive names, for example `slime_idle.png` or `forest_terrain_atlas.png`. Add a nearby Markdown note for sprite frame dimensions, animation order/timing, tile dimensions, pivots, transparency and intended scene usage.
-- Prefer transparent PNG for individual sprites/UI pieces. Use nearest filtering; preserve consistent foot pivots, collision geometry and pixel scale. Current viewport: 480 × 320.
+- Prefer transparent PNG for individual sprites/UI pieces. Use nearest filtering; preserve consistent foot pivots, collision geometry and pixel scale. Current viewport: 640 × 360 (shown at ×3 = 1920 × 1080).
 - Reference charts contain labels, backgrounds and irregular frames; storing them does not make them ready-to-use animation/TileSet assets. Prepare and inspect real exports before replacing placeholders.
 - Keep UI labels/stats dynamic rather than baked into gameplay textures. Keep combat timing, costs, authority and saves independent of art.
 - Store source images and preparation notes in Git. Godot's generated `.godot/` cache remains ignored. A stored/prepared asset is not integrated until scenes/resources use it and relevant checks pass.
