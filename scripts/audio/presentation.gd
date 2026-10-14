@@ -33,7 +33,7 @@ func _ready() -> void:
     process_mode = Node.PROCESS_MODE_PAUSABLE
     audio = get_node_or_null("/root/Audio")
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
     if world == null or not is_instance_valid(world.get_local_player()):
         return
     var me: CharacterBody2D = world.get_local_player()
@@ -43,7 +43,7 @@ func _process(_delta: float) -> void:
         if node.is_in_group("enemies"):
             _creature(node)
         elif node is CharacterBody2D and node.has_method("race"):
-            _character(node, node == me)
+            _character(node, node == me, delta)
         elif node.is_in_group("allies"):
             _ally(node)
     _pickups_changed(me)
@@ -73,10 +73,14 @@ func _creature(node: Node2D) -> void:
     _seen[key] = hp
     _seen[state_key] = state
 
-func _character(actor: CharacterBody2D, local: bool) -> void:
+func _character(actor: CharacterBody2D, local: bool, delta: float) -> void:
     var key: String = "player:" + actor.character_id
     var hp: int = actor.get_node("Health").current
     var attack: Node = actor.get_node("MeleeAttack")
+    # Replica combat timers are disabled. Tick only the cosmetic pose here;
+    # recovery and all gameplay state remain owned by the host/snapshots.
+    if not attack.is_processing():
+        attack.flash_left = maxf(0.0, attack.flash_left - delta)
     var recovery: float = attack.cooldown_left
     var level: int = int(actor.progression.get("level", 1))
     var skills: int = actor.get_node("SkillBook").known_ids().size()

@@ -98,6 +98,8 @@ func _run() -> void:
     await process_frame
     await process_frame
     _check(friend.get_node("MeleeAttack").flash_left > 0.0 and friend.body_sprite.animation.begins_with("attack_") and _played("swing") == swings + 2, "Other characters' attacks show their attack frame and sound (from the replicated recovery timer)")
+    await _frames(12)
+    _check(friend.get_node("MeleeAttack").flash_left == 0.0 and not friend.body_sprite.animation.begins_with("attack_") and friend.get_node("MeleeAttack").cooldown_left == 0.5 and _played("swing") == swings + 2, "A replica's attack pose expires without ticking recovery or replaying the cue")
     # Level, chest, form, pickups, evolution, building.
     var levels := _played("level_up")
     actor.progression["level"] = int(actor.progression.get("level", 1)) + 1
