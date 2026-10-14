@@ -185,6 +185,23 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 
 **Done evidence:** user-visible full slice and eight-total-player checks, meaningful cost/recovery/cooldown measurements, Extra/Unique unlock evidence, race/form/skill-tree/fusion/equipment UI usability, host save/reload, no duplicate rewards/audio. Validate real LAN with the user's machines; WAN/encryption remain separately scoped. Record unresolved issues and user feedback before marking M4 Done.
 
+## M4.5c — Bigger world, towns and trade (Zeni, merchants)
+
+**User decisions (2026-10-14, Q&A after M4 acceptance):** one step (not split), reviewed by Codex as a whole.
+- *World:* the map grows to about **9× the area** (3× width and height). New regions with their own themes (from the Siagarta reference's spirit, original names) — every region gets **one bigger town and tiny theme-fitting villages**. Assets may be downloaded if needed.
+- *Currency:* **Zeni** (coin icon). Sources: creature drops (split by damage share, replacing "Magicules until gold exists"), selling to merchants, chests; quests later.
+- *Wallet:* per character; a defeat drops **10%** of your Zeni into your pile.
+- *Merchants:* one in each region (in its big town); a **gear smith** and a **general trader** can be hired for your settlement (build a stall/smithy with wood and stone after the hut, then pay Zeni once to hire); a **travelling merchant** appears rarely at a random spot, unannounced and unmarked, with better wares.
+- *Wares:* gear by region level, materials (buy and sell), simple consumables (not too strong), skill scrolls. Common-rare scrolls teach skills that can also be obtained otherwise; **much rarer, pricier scrolls teach skills you cannot get otherwise** — sold by the travelling merchant and only very, very rarely by big-town merchants.
+- *Economy defaults:* selling gives 30% of the buy price; merchants restock every 15 min; prices scale with rarity and region level.
+
+**Design (Claude, 2026-10-14):**
+- *Grid:* 1200 × 768 tiles (19,200 × 12,288 px). Existing tile coordinates keep their meaning (the old map sits in the middle; new land lies at negative and larger tile coordinates), so every saved position, region content entry and the clearing stay valid.
+- *Regions:* Verdant Isle (Thornwood, Mirror Lake, Cinder Crater), Harrowmere, Ambervale (autumn), Emberreach Isles (volcanic) plus new **Frostpeak** (snow, igloos, north), **Sunscorch Desert** (sand, palms, desert houses, west), **Sakura Vale** (cherry blossom, torii and pagoda-style houses, east), **Mirewood Marsh** (mud, dead trees, stilt huts, southwest). All are reachable on foot over land and long bridges for now; ferries/ships (M4.5d) become shortcuts.
+- *Performance:* the world is precomputed into a shipped cache (map masks, collision rectangles, tile layers, prop list) rebuilt by a tool; a test checks the cache is current. Props are spawned in chunks around characters instead of all at once.
+- *Creatures:* the new regions get creatures with levels fitting their distance from the clearing and two hidden leveling spots each; the balance probe is extended and rerun.
+- *Saves:* schema v23 (Zeni per character, merchant stock/restock, hired settlement staff, travelling merchant, consumable cooldowns).
+
 ## Parallel work and approval
 
 The original steps were approved on 2026-10-12. The user's 2026-10-13 direction below supersedes the original assistant scope and ownership proposal: systems first (17, 17b–17g), then asset preparation/presentation (18+). Claude continues in order with 17 unless reassigned; Codex reviews released work. No unclaimed future file ownership is implied. Completed steps and their review history remain intact.
