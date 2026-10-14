@@ -370,6 +370,30 @@ func _request_action(action: String, payload: Dictionary) -> void:
         return
     apply_action(world.player_by_id(owners[peer]), action, payload)
 
+## Host: bring a defeated character back (24a): at the camp flag if the camp is founded, else at
+## the clearing's spawn, with full HP and Magicules.
+func respawn_character(actor: Node2D) -> void:
+    if actor.get_node("Health").current > 0 or not is_instance_valid(world):
+        return
+    if actor.get_node("Absorption").active:
+        actor.get_node("Absorption")._cancel("Analysis interrupted.")
+    var camp: Node2D = world.camp
+    actor.position = camp.SITE + Vector2(0, 26) if camp.state.founded else preload("res://scripts/world/world_layout.gd").SPAWN
+    actor.death_left = 0.0
+    var health: Node = actor.get_node("Health")
+    health.current = health.maximum
+    health.immunity_left = 1.0
+    health.changed.emit(health.current, health.maximum)
+    var pool: Node = actor.get_node("Magicules")
+    pool.enabled = true
+    pool._current = pool.maximum
+    pool.changed.emit(pool.current, pool.maximum)
+    actor.get_node("MeleeAttack").cooldown_left = 0.0
+    actor.remote_direction = Vector2.ZERO
+    actor.queue_redraw()
+    notify_character(actor.character_id, "Respawned at %s." % ("the camp" if camp.state.founded else "the clearing"))
+    queue_save()
+
 func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bool:
     if actor == null or (active and not multiplayer.is_server()):
         return false
@@ -381,19 +405,10 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
         actor.remote_direction = Vector2.ZERO
         return true
     if action == "respawn":
-        if not payload.is_empty() or actor.get_node("Health").current > 0 or actor.input_blocked:
+        # 24a: respawning is automatic after RESPAWN_DELAY; an early request is refused.
+        if not payload.is_empty() or actor.get_node("Health").current > 0 or actor.input_blocked or actor.death_left > 0.0:
             return false
-        if actor.get_node("Absorption").active:
-            actor.get_node("Absorption")._cancel("Analysis interrupted.")
-        actor.position = Vector2(480, 340)
-        actor.get_node("Health").current = actor.get_node("Health").maximum
-        actor.get_node("Health").immunity_left = 1.0
-        actor.get_node("Health").changed.emit(actor.get_node("Health").current, actor.get_node("Health").maximum)
-        actor.get_node("Magicules").enabled = true
-        actor.get_node("MeleeAttack").cooldown_left = 0.0
-        actor.remote_direction = Vector2.ZERO
-        actor.queue_redraw()
-        queue_save()
+        respawn_character(actor)
         return true
     if actor.get_node("Health").current <= 0:
         return false
@@ -501,7 +516,7 @@ func _wire_remote(actor: Node2D) -> void:
     _track_actor(actor)
     actor.get_node("Absorption").status_changed.connect(func(message: String): notify_character(actor.character_id, message, true))
     actor.get_node("Magicules").spend_rejected.connect(func(_cost: float): notify_character(actor.character_id, "Insufficient Magicules. Action unavailable."))
-    actor.get_node("Health").defeated.connect(func(): notify_character(actor.character_id, "Vital signs depleted. Press R to respawn."))
+    actor.get_node("Health").defeated.connect(func(): notify_character(actor.character_id, "Vital signs depleted. Respawning in %d s." % int(actor.RESPAWN_DELAY)))
 
 func _track_actor(actor: Node2D) -> void:
     if actor.has_meta("save_wired"):

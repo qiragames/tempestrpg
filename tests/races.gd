@@ -67,7 +67,7 @@ func _run() -> void:
     actor.choose_race("Human")
     var human_cost: float = ally_script.naming_cost(actor)
     actor.choose_race("Demon")
-    _check(human_cost == 56.0 and ally_script.naming_cost(actor) == 104.0, "Naming costs 80% of max Magicules: Human 56 (affordable at level 1), Demon 104")
+    _check(human_cost == 26.0 and ally_script.naming_cost(actor) == 49.0 and is_equal_approx(ally_script.naming_share(1), 0.375) and is_equal_approx(ally_script.naming_share(30), 0.9), "Naming the level-1 goblin costs 37.5%% of max Magicules: Human 26, Demon 49; stronger monsters cost more, at most 90%%")
     # --- Basic strike: Human weapon mastery
     actor.choose_race("Slime")
     var slime_hit := _hit(actor, "r_slime")

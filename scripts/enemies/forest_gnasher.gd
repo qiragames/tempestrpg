@@ -12,6 +12,22 @@ const TIER_STATS := {
 const PICKUP_SCENE := preload("res://scenes/pickups/magicule_pickup.tscn")
 const LEVELING := preload("res://scripts/progression/leveling.gd")
 const SPRITES := preload("res://scripts/visual/sprite_library.gd")
+const REGION := preload("res://scripts/world/region_content.gd")
+const CLAIM := preload("res://scripts/pickups/claim.gd")
+## 24a (user decisions): characters with at least this share of a creature's damage get its full
+## XP, may absorb it and take part in its loot; loot goes out by damage rank.
+const CREDIT_SHARE := 0.1
+## Extra HP per additional living character within GROUP_RADIUS when a fight starts (max 8).
+const GROUP_HP_BONUS := 0.25
+const GROUP_RADIUS := 300.0
+## Sprites are drawn smaller than the art (it is ~26 px tall next to 16 px characters).
+const SPRITE_SCALE := 0.75
+const ELITE_SPRITE_SCALE := 0.85
+## Character id -> damage dealt (host only; a respawned creature starts fresh).
+var credit: Dictionary = {}
+## Level from RegionContent (shown above the health bar).
+var level: int = 1
+var _group_scaled := false
 ## Tier tints: Easy creatures look paler, Elites redder and a little larger.
 const TIER_TINT := {0: Color(0.82, 1.0, 0.82), 1: Color.WHITE, 2: Color(1.0, 0.72, 0.72)}
 var body_sprite: AnimatedSprite2D
@@ -45,6 +61,44 @@ func _ready() -> void:
     add_child(body_sprite)
     health.changed.connect(func(_current: int, _maximum: int): queue_redraw())
     health.defeated.connect(_defeat)
+    health.damaged.connect(_credit)
+    level = REGION.level_of(entity_id, int(difficulty))
+
+func _credit(amount: int, source: Node) -> void:
+    if is_instance_valid(source) and source.is_in_group("player") and amount > 0:
+        credit[source.character_id] = int(credit.get(source.character_id, 0)) + amount
+
+## [character id, share] of everyone with at least CREDIT_SHARE of the damage, most damage first.
+func qualifying() -> Array:
+    var total := 0
+    for id in credit:
+        total += int(credit[id])
+    var ranked: Array = []
+    for id in credit:
+        var share: float = float(credit[id]) / float(total) if total > 0 else 0.0
+        if share >= CREDIT_SHARE - 0.000001:
+            ranked.append([id, share])
+    ranked.sort_custom(func(a, b): return a[1] > b[1] or (a[1] == b[1] and String(a[0]) < String(b[0])))
+    return ranked
+
+## Absorbing needs a share of the damage (anyone may absorb a creature no character hurt).
+func may_absorb(character_id: String) -> bool:
+    return credit.is_empty() or qualifying().any(func(entry): return entry[0] == character_id)
+
+## When a fight starts at full health, more HP for each extra character nearby.
+func _scale_for_group() -> void:
+    if _group_scaled or health.current < health.maximum:
+        return
+    _group_scaled = true
+    var nearby := 0
+    for actor in get_tree().get_nodes_in_group("player"):
+        if actor.get_node("Health").current > 0 and actor.global_position.distance_to(global_position) <= GROUP_RADIUS:
+            nearby += 1
+    var extra: int = clampi(nearby, 1, 8) - 1
+    if extra > 0:
+        health.maximum = int(round(TIER_STATS[difficulty].health * (1.0 + GROUP_HP_BONUS * extra)))
+        health.current = health.maximum
+        health.changed.emit(health.current, health.maximum)
 
 ## Apply a tier's stats at full health (fresh creatures; restores set health from the save).
 func set_difficulty(value: int) -> void:
@@ -77,6 +131,7 @@ func _physics_process(delta: float) -> void:
     match state:
         State.IDLE:
             if nearby and target_alive:
+                _scale_for_group()
                 state = State.CHASE
             elif global_position.distance_to(home) > 3.0:
                 velocity = global_position.direction_to(home) * speed
@@ -112,33 +167,49 @@ func _defeat() -> void:
     $CollisionShape2D.set_deferred("disabled", true)
     # Defer creation because defeat can originate during a physics callback.
     if drops_rewards:
-        _drop_magicules.call_deferred()
-        # Gear drop (17g): chance and rarity by tier.
         var world := get_parent()
+        var ranked := qualifying()
+        # Magicules split by damage share into personal pickups (one unowned pickup if no
+        # character took part); everyone with a share gets the full XP (24a).
+        _drop_magicules.call_deferred(ranked)
+        # One gear roll (17g); its item goes to the top damage dealer.
         if world != null and world.has_method("drop_gear"):
             var item: Dictionary = world.SOURCES.roll_drop(difficulty, world.loot_rng)
             if not item.is_empty():
-                world.drop_gear.call_deferred(item, position + Vector2(10, 6))
-        # Experience for the character who landed the defeating blow (trial creatures give none).
+                world.drop_gear.call_deferred(item, position + Vector2(10, 6), "", ranked[0][0] if not ranked.is_empty() else "")
+        var rewarded := false
+        for entry in ranked:
+            var actor: Node = world.player_by_id(entry[0]) if world != null and world.has_method("player_by_id") else null
+            if is_instance_valid(actor):
+                actor.gain_experience(LEVELING.DEFEAT_XP[difficulty], "defeat")
+                rewarded = true
+        # A creature no character damaged keeps the old last-hit rule.
         var victor: Node = health.last_hit_by
-        if is_instance_valid(victor) and victor.is_in_group("player"):
+        if not rewarded and is_instance_valid(victor) and victor.is_in_group("player"):
             victor.gain_experience(LEVELING.DEFEAT_XP[difficulty], "defeat")
     # Retain the defeated creature for the next absorption milestone.
     queue_redraw()
 
-func _drop_magicules() -> void:
+func _drop_magicules(ranked: Array = []) -> void:
     # Deferred: the creature may have been removed in the same frame (e.g. a respawn replaced it).
     if not is_inside_tree():
         return
-    var pickup = PICKUP_SCENE.instantiate()
-    pickup.amount = TIER_STATS[difficulty].drop
-    # Respawned creatures reuse their ID, so each drop gets its own suffix.
-    pickup.entity_id = "drop_%s_%s" % [entity_id, Crypto.new().generate_random_bytes(4).hex_encode()]
-    pickup.position = position
     var world := get_parent()
-    if world.has_method("announce_magicule_pickup"):
-        pickup.collected_by.connect(world.announce_magicule_pickup)
-    world.add_child(pickup)
+    var shares: Array = ranked if not ranked.is_empty() else [["", 1.0]]
+    var total_share := 0.0
+    for entry in shares:
+        total_share += float(entry[1])
+    for index in range(shares.size()):
+        var pickup = PICKUP_SCENE.instantiate()
+        pickup.amount = TIER_STATS[difficulty].drop * float(shares[index][1]) / total_share
+        # Respawned creatures reuse their ID, so each drop gets its own suffix.
+        pickup.entity_id = "drop_%s_%s" % [entity_id, Crypto.new().generate_random_bytes(4).hex_encode()]
+        pickup.position = position + Vector2(index * 8 - (shares.size() - 1) * 4, 0)
+        pickup.owner_id = shares[index][0]
+        pickup.claim_until = CLAIM.until(world) if not String(pickup.owner_id).is_empty() else 0.0
+        if world.has_method("announce_magicule_pickup"):
+            pickup.collected_by.connect(world.announce_magicule_pickup)
+        world.add_child(pickup)
 
 func _nearest_player() -> CharacterBody2D:
     var nearest: CharacterBody2D
@@ -162,7 +233,10 @@ func _process(_delta: float) -> void:
     elif is_instance_valid(target):
         body_sprite.flip_h = target.position.x < position.x
     _last_position = position
-    body_sprite.scale = Vector2.ONE * (1.15 if difficulty == Difficulty.ELITE else 1.0)
+    var drawn: float = ELITE_SPRITE_SCALE if difficulty == Difficulty.ELITE else SPRITE_SCALE
+    body_sprite.scale = Vector2.ONE * drawn
+    # Keep the feet where they were at full size.
+    body_sprite.position.y = SPRITES.FEET_Y * (1.0 - drawn)
     if state == State.DEFEATED:
         body_sprite.modulate = Color(0.5, 1.0, 1.0) if being_analyzed else Color(0.85, 0.85, 0.85)
         SPRITES.play(body_sprite, "death")
@@ -174,8 +248,9 @@ func _process(_delta: float) -> void:
 func _draw() -> void:
     if is_instance_valid(body_sprite):
         if state != State.DEFEATED and is_instance_valid(health):
-            draw_rect(Rect2(-12, -24, 24, 3), Color("352d36"))
-            draw_rect(Rect2(-12, -24, 24.0 * health.current / health.maximum, 3), Color("c6d58a"))
+            draw_rect(Rect2(-12, -22, 24, 3), Color("352d36"))
+            draw_rect(Rect2(-12, -22, 24.0 * health.current / health.maximum, 3), Color("c6d58a"))
+            draw_string(ThemeDB.fallback_font, Vector2(-12, -25), "Lv %d" % level, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(1, 0.92, 0.75, 0.95))
         return
     if state == State.DEFEATED:
         draw_rect(Rect2(-10, 0, 20, 5), Color("71e4d4") if being_analyzed else Color("656653"))

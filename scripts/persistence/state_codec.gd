@@ -108,6 +108,7 @@ static func capture_entities(world: Node2D) -> Dictionary:
     var pickups: Array = []
     var allies: Array = []
     var loot: Array = []
+    var piles: Array = []
     for node in world.get_children():
         if node.is_queued_for_deletion():
             continue
@@ -115,12 +116,14 @@ static func capture_entities(world: Node2D) -> Dictionary:
             var health = node.get_node("Health")
             enemies.append({"id": node.entity_id, "kind": node.kind, "position": vector(node.position), "home": vector(node.home), "difficulty": node.difficulty, "hp": health.current, "maximum_hp": health.maximum, "immunity": health.immunity_left, "state": node.state, "state_time": node.state_time, "target": node.target.character_id if is_instance_valid(node.target) else ""})
         elif node.is_in_group("gear_pickups"):
-            loot.append({"id": node.entity_id, "position": vector(node.position), "item": node.item.duplicate(true)})
+            loot.append({"id": node.entity_id, "position": vector(node.position), "item": node.item.duplicate(true), "owner": node.owner_id, "claim_until": node.claim_until})
         elif node.is_in_group("magicule_pickups"):
-            pickups.append({"id": node.entity_id, "position": vector(node.position), "amount": node.amount})
+            pickups.append({"id": node.entity_id, "position": vector(node.position), "amount": node.amount, "owner": node.owner_id, "claim_until": node.claim_until})
+        elif node.is_in_group("item_piles"):
+            piles.append(node.capture())
         elif node.is_in_group("allies"):
             allies.append({"id": node.entity_id, "position": vector(node.position), "owner": node.owner_id, "name": node.display_name, "race": node.race, "maximum_hp": node.maximum_hp, "power": node.power, "speed": node.follow_speed, "work": {"role": node.work_role, "target": node.work_target, "remaining": node.work_left}})
-    return {"enemies": enemies, "pickups": pickups, "allies": allies, "camp": world.camp.state.duplicate(true), "trial": world.trial.state.duplicate(true), "respawns": world.respawner.capture(), "loot": loot}
+    return {"enemies": enemies, "pickups": pickups, "allies": allies, "camp": world.camp.state.duplicate(true), "trial": world.trial.state.duplicate(true), "respawns": world.respawner.capture(), "loot": loot, "piles": piles}
 
 static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> void:
     world.camp.restore(data.camp)
@@ -185,17 +188,32 @@ static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> vo
             world.add_child(pickup)
         pickup.position = to_vector(state.position)
         pickup.amount = state.amount
+        pickup.owner_id = String(state.get("owner", ""))
+        pickup.claim_until = float(state.get("claim_until", 0.0))
         pickup.set_physics_process(not replica)
     for state in data.get("loot", []):
         wanted[state.id] = true
         var lying = world.entity_by_id(state.id)
         if lying == null:
-            lying = world.drop_gear(state.item, to_vector(state.position), state.id)
+            lying = world.drop_gear(state.item, to_vector(state.position), state.id, String(state.get("owner", "")), float(state.get("claim_until", 0.0)))
         if lying != null:
+            lying.owner_id = String(state.get("owner", ""))
+            lying.claim_until = float(state.get("claim_until", 0.0))
             lying.position = to_vector(state.position)
             lying.set_physics_process(not replica)
             lying.queue_redraw()
+    for state in data.get("piles", []):
+        wanted[state.id] = true
+        var pile = world.entity_by_id(state.id)
+        if pile == null:
+            pile = world.drop_pile(state.owner, state.materials, state.items, to_vector(state.position), state.id, float(state.claim_until))
+        if pile != null:
+            pile.materials = state.materials.duplicate()
+            pile.items = state.items.duplicate(true)
+            pile.position = to_vector(state.position)
+            pile.set_physics_process(not replica)
+            pile.queue_redraw()
     for node in world.get_children():
-        if (node.is_in_group("enemies") or node.is_in_group("magicule_pickups") or node.is_in_group("allies") or node.is_in_group("gear_pickups")) and not wanted.has(node.entity_id):
+        if (node.is_in_group("enemies") or node.is_in_group("magicule_pickups") or node.is_in_group("allies") or node.is_in_group("gear_pickups") or node.is_in_group("item_piles")) and not wanted.has(node.entity_id):
             world.remove_child(node)
             node.queue_free()

@@ -36,7 +36,7 @@ func attempt_absorb() -> bool:
     var distance: float = reach + 1.0
     for candidate in get_tree().get_nodes_in_group("absorbable_creatures"):
         var candidate_distance: float = player.global_position.distance_to(candidate.global_position)
-        if candidate_distance <= reach and candidate_distance < distance and _reachable(candidate):
+        if candidate_distance <= reach and candidate_distance < distance and _reachable(candidate) and (not candidate.has_method("may_absorb") or candidate.may_absorb(player.character_id)):
             nearest = candidate
             distance = candidate_distance
     if nearest == null:

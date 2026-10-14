@@ -38,12 +38,14 @@ func _run() -> void:
     # --- Defeat schedules; the corpse waits
     gnasher.get_node("Health").take_damage(999, actor)
     var xp_first: int = actor.progression.experience
-    _check(respawner.scheduled("gnasher_1") and respawner.pending[0].kind == "gnasher" and respawner.pending[0].remaining == RESPAWNER.RESPAWN_SECONDS and respawner.pending[0].home == [home.x, home.y], "A defeat schedules a respawn at the creature's home in %d s" % int(RESPAWNER.RESPAWN_SECONDS))
+    # 24a: respawn time by tier (Easy 45 s, Standard 90 s, Elite 180 s).
+    var delay: float = preload("res://scripts/world/region_content.gd").respawn_seconds("gnasher_1", tier)
+    _check(delay == [45.0, 90.0, 180.0][tier] and respawner.scheduled("gnasher_1") and respawner.pending[0].kind == "gnasher" and respawner.pending[0].remaining == delay and respawner.pending[0].home == [home.x, home.y], "A defeat schedules a respawn at the creature's home after its tier's delay (%d s)" % int(delay))
     gnasher.get_node("Health").take_damage(999, actor)
     _check(respawner.pending.size() == 1, "A creature is scheduled once")
     await _frames()
     var first_drop: Array = get_nodes_in_group("magicule_pickups").map(func(pickup): return pickup.entity_id)
-    respawner._physics_process(RESPAWNER.RESPAWN_SECONDS - 1.0)
+    respawner._physics_process(delay - 1.0)
     _check(world.entity_by_id("gnasher_1") == gnasher and gnasher.get_node("Health").current == 0, "Nothing returns before the delay")
     # --- Respawn replaces an unabsorbed corpse, same ID/kind/difficulty, at home, full health
     respawner._physics_process(1.5)

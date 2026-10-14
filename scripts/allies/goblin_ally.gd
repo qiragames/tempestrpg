@@ -2,11 +2,19 @@ extends CharacterBody2D
 ## Citizens belong to stable character IDs; disconnecting never transfers ownership.
 const AUTHORITY := preload("res://scripts/network/authority.gd")
 const INTERACTION_RANGE := 40.0
-## Naming drains 80% of the namer's maximum Magicules (user decision: every race can name).
-const NAMING_SHARE := 0.8
+
+## 24a (user decision): naming costs 35% of the namer's maximum Magicules plus 2.5% per level of
+## the monster, at most 90%. The nameless goblin is level 1 (37.5%).
+const NAMING_BASE_SHARE := 0.35
+const NAMING_SHARE_PER_LEVEL := 0.025
+const NAMING_MAX_SHARE := 0.9
+const LEVEL := 1
+
+static func naming_share(monster_level: int) -> float:
+    return minf(NAMING_MAX_SHARE, NAMING_BASE_SHARE + NAMING_SHARE_PER_LEVEL * monster_level)
 
 static func naming_cost(actor: Node) -> float:
-    return roundf(actor.get_node("Magicules").maximum * NAMING_SHARE)
+    return roundf(actor.get_node("Magicules").maximum * naming_share(LEVEL))
 const RECOVERY_SECONDS := 8.0
 const GATHER_SECONDS := 3.0
 const BUILD_SECONDS := 4.0
@@ -47,6 +55,9 @@ func _process(delta: float) -> void:
     _last_position = position
     _moving_time = 0.15 if moved else maxf(0.0, _moving_time - delta)
     SPRITES.play(body_sprite, "run" if _moving_time > 0.0 else "idle")
+    # Drawn at 75% like the creatures (24a), feet kept in place.
+    body_sprite.scale = Vector2.ONE * 0.75
+    body_sprite.position.y = SPRITES.FEET_Y * 0.25
 
 func can_reach(actor: Node2D) -> bool:
     if actor.global_position.distance_to(global_position) > INTERACTION_RANGE:

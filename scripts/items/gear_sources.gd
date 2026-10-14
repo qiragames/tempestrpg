@@ -70,6 +70,9 @@ static func valid_opened(opened: Variant, chest_ids: Array) -> bool:
 
 ## Saved ground loot: [{id: loot_<hex>, position, item}].
 static func valid_loot(entry: Variant) -> bool:
-    if not entry is Dictionary or entry.size() != 3 or not entry.get("id") is String or not entry.id.begins_with("loot_") or entry.id.length() > 64:
+    if not entry is Dictionary or entry.size() != 5 or not entry.get("id") is String or not entry.id.begins_with("loot_") or entry.id.length() > 64:
+        return false
+    # 24a: loot handed out by damage rank has an owner and a claim window ("" / 0 = anyone).
+    if not entry.get("owner") is String or not (entry.get("claim_until") is float or entry.get("claim_until") is int) or not is_finite(float(entry.claim_until)) or float(entry.claim_until) < 0.0:
         return false
     return entry.get("position") is Array and entry.position.size() == 2 and GEAR.valid_item(entry.get("item"))

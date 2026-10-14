@@ -81,11 +81,13 @@ try:
     owner = results[0]["allies"][0]["owner"]
     check(owner in {r["state"]["id"] for r in results}, "Concurrent recruitment must assign one connected character")
     check(all(r["allies"][0]["owner"] == owner for r in results), "All clients must observe the same ally ownership")
-    check(abs(sum(r["state"]["magicules"]["current"] for r in results) - 108) < 0.01, "Concurrent/repeated naming charges exactly one 80-Magicule cost")
+    # 24a: naming the level-1 goblin costs 37.5% of max Magicules (38 of 100), not 80.
+    check(abs(sum(r["state"]["magicules"]["current"] for r in results) - 150) < 0.01, "Concurrent/repeated naming charges exactly one 38-Magicule cost")
     for result in results:
         ally = result["allies"][0]
         check(ally["name"] == "Aster" and ally["race"] == "Hobgoblin" and ally["maximum_hp"] == 60 and ally["power"] == 8, "All clients observe the same evolved ally")
-        check(result["state"]["exhaustion"]["active"] == (result["state"]["id"] == owner), "Only the authoritative namer enters recovery")
+        low = result["state"]["magicules"]["current"] < result["state"]["magicules"]["maximum"] * 0.25
+        check(result["state"]["exhaustion"]["active"] == (result["state"]["id"] == owner and low), "Only the authoritative namer can enter recovery, and only if naming left them below 25%")
     time.sleep(0.3)
     server_stop.touch()
     saved = wait_report(server_report, lambda d: d.get("saved"))

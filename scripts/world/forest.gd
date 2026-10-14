@@ -54,7 +54,7 @@ func _ready() -> void:
     for enemy in [$ForestGnasher, $SecondGnasher, $ThornbackGnasher]:
         wire_enemy(enemy)
     # M4.5b: the regions' creatures (fixed homes and IDs; saves and snapshots restore them).
-    for entry in REGION.CREATURES:
+    for entry in REGION.all_creatures():
         var creature = load(CODEC.ENEMY_SCENES[entry[1]]).instantiate()
         creature.entity_id = entry[0]
         creature.difficulty = entry[3]
@@ -113,13 +113,32 @@ func apply_layout(seed: int, fresh: bool) -> void:
     queue_redraw()
 
 ## Host: put an item on the ground as loot (a creature drop).
-func drop_gear(item: Dictionary, at: Vector2, id: String = "") -> Node2D:
+## Host: a defeated character's bag as a pile at `at` (24a).
+func drop_pile(owner_id: String, materials: Dictionary, items: Array, at: Vector2, id: String = "", claim_until: float = -1.0) -> Node2D:
+    if materials.is_empty() and items.is_empty():
+        return null
+    var script := preload("res://scripts/pickups/item_pile.gd")
+    if get_tree().get_nodes_in_group("item_piles").size() >= script.MAX_PILES:
+        return null
+    var pile = script.new()
+    pile.entity_id = id if not id.is_empty() else "pile_" + Crypto.new().generate_random_bytes(8).hex_encode()
+    pile.owner_id = owner_id
+    pile.claim_until = claim_until if claim_until >= 0.0 else preload("res://scripts/pickups/claim.gd").until(self)
+    pile.materials = materials.duplicate()
+    pile.items = items.duplicate(true)
+    pile.position = at
+    add_child(pile)
+    return pile
+
+func drop_gear(item: Dictionary, at: Vector2, id: String = "", owner_id: String = "", claim_until: float = -1.0) -> Node2D:
     if item.is_empty() or get_tree().get_nodes_in_group("gear_pickups").size() >= SOURCES.MAX_LOOT:
         return null
     var pickup = GEAR_PICKUP.instantiate()
     pickup.item = item.duplicate(true)
     pickup.entity_id = id if not id.is_empty() else "loot_" + Crypto.new().generate_random_bytes(8).hex_encode()
     pickup.position = at
+    pickup.owner_id = owner_id
+    pickup.claim_until = claim_until if claim_until >= 0.0 else (preload("res://scripts/pickups/claim.gd").until(self) if not owner_id.is_empty() else 0.0)
     add_child(pickup)
     return pickup
 
@@ -211,7 +230,7 @@ func entity_by_id(id: String) -> Node2D:
     if id.is_empty():
         return null
     for actor in get_children():
-        if (actor.is_in_group("enemies") or actor.is_in_group("magicule_pickups") or actor.is_in_group("allies") or actor.is_in_group("gear_pickups")) and actor.entity_id == id and not actor.is_queued_for_deletion():
+        if (actor.is_in_group("enemies") or actor.is_in_group("magicule_pickups") or actor.is_in_group("allies") or actor.is_in_group("gear_pickups") or actor.is_in_group("item_piles")) and actor.entity_id == id and not actor.is_queued_for_deletion():
             return actor
     return null
 
@@ -220,11 +239,27 @@ func _process(delta: float) -> void:
         return
     if not session.active or multiplayer.is_server():
         progression.world_time += delta
+        _discover_spots()
     var absorption = local_player.get_node("Absorption")
     $HUD/AnalysisProgress.visible = absorption.active
     $HUD/AnalysisProgress.value = 1.0 - absorption.time_left / maxf(absorption.channel_seconds, 0.001)
     _health_changed(local_player.get_node("Health").current, local_player.get_node("Health").maximum)
     _magicules_changed(local_player.get_node("Magicules").current, local_player.get_node("Magicules").maximum)
+
+## Host: hidden leveling spots (24a) become known to a character who comes close; only then do
+## the world map and minimap show them to that character.
+func _discover_spots() -> void:
+    for actor in get_children():
+        if not actor is CharacterBody2D or not actor.has_method("race") or actor.get_node("Health").current <= 0:
+            continue
+        var known: Array = actor.progression.get("spots", [])
+        for spot in REGION.SPOTS:
+            if spot[0] in known or actor.global_position.distance_to(REGION.at(spot[2])) > REGION.DISCOVER_RADIUS:
+                continue
+            actor.progression["spots"] = known + [spot[0]]
+            known = actor.progression.spots
+            session.notify_character(actor.character_id, "Leveling spot discovered: %s. Its creatures return three times faster." % REGION.SPOT_NAMES[spot[0]])
+            session.queue_save()
 
 func _analysis_changed(message: String) -> void:
     $HUD/Analysis.text = message

@@ -99,7 +99,7 @@ func _run() -> void:
     _check(thing.body_sprite.sprite_frames == gnasher and thornback.body_sprite.sprite_frames == SPRITES.frames("thornback"), "Gnasher and Thornback have their own bodies")
     thing.set_difficulty(2)
     await process_frame
-    _check(is_equal_approx(thing.body_sprite.scale.x, 1.15) and thing.body_sprite.modulate == thing.TIER_TINT[2], "Elites are tinted and slightly larger")
+    _check(is_equal_approx(thing.body_sprite.scale.x, thing.ELITE_SPRITE_SCALE) and thing.ELITE_SPRITE_SCALE > thing.SPRITE_SCALE and thing.body_sprite.modulate == thing.TIER_TINT[2], "Creatures are drawn at 75%; Elites tinted and a little larger (85%)")
     thing.state = thing.State.WINDUP
     await process_frame
     _check(thing.body_sprite.modulate.g < 0.5, "The bite wind-up flashes red")

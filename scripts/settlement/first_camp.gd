@@ -24,6 +24,10 @@ const DEPOSITS := {
 }
 ## Deposit IDs placed by the world seed (the rest are fixed region deposits).
 const SEEDED_DEPOSITS := ["wood_1", "wood_2", "stone_1", "wood_3", "stone_2", "stone_3"]
+## 24a (user decision): an emptied region deposit refills completely after this many seconds.
+## `refills` counts completed refills per deposit (so the stock check knows the extra income);
+## `refill_left` holds the running timers. Clearing deposits stay finite.
+const REFILL_SECONDS := 900.0
 const HUT_COST := {"wood": 12, "stone": 6}
 ## Build order is the dictionary order. `key` is the boolean field in the saved camp state.
 const STRUCTURES := {
@@ -54,13 +58,13 @@ static func initial_state(table: Dictionary = DEPOSITS) -> Dictionary:
     var deposits: Dictionary = {}
     for id in table:
         deposits[id] = table[id].amount
-    return {"id": "camp_1", "founded": false, "founder": "", "wood": 0, "stone": 0, "essence": 0, "essence_offered": 0, "hut": false, "storehouse": false, "shrine": false, "forge": false, "deposits": deposits}
+    return {"id": "camp_1", "founded": false, "founder": "", "wood": 0, "stone": 0, "essence": 0, "essence_offered": 0, "hut": false, "storehouse": false, "shrine": false, "forge": false, "deposits": deposits, "refills": {}, "refill_left": {}}
 
 static func _whole(value: Variant, high: float = 1000000) -> bool:
     return (value is float or value is int) and value >= 0 and value <= high and value == floor(value)
 
 static func valid_state(value: Variant, players: Dictionary, table: Dictionary = DEPOSITS) -> bool:
-    if not value is Dictionary or value.size() != 12 or value.get("id") != "camp_1" or not value.get("founded") is bool or not value.get("founder") is String:
+    if not value is Dictionary or value.size() != 14 or value.get("id") != "camp_1" or not value.get("founded") is bool or not value.get("founder") is String:
         return false
     for id in STRUCTURES:
         if not value.get(STRUCTURES[id].key) is bool:
@@ -84,6 +88,15 @@ static func valid_state(value: Variant, players: Dictionary, table: Dictionary =
             return false
     if not _whole(value.get("essence_offered")) or (not value.founded and value.essence_offered != 0):
         return false
+    if not value.get("refills") is Dictionary or not value.get("refill_left") is Dictionary:
+        return false
+    for id in value.refills:
+        if not table.has(id) or id in SEEDED_DEPOSITS or not _whole(value.refills[id], 100000):
+            return false
+    for id in value.refill_left:
+        var left: Variant = value.refill_left[id]
+        if not table.has(id) or id in SEEDED_DEPOSITS or not (left is float or left is int) or left < 0 or left > REFILL_SECONDS or value.deposits[id] != 0:
+            return false
     for resource in RESOURCES:
         var stock: Variant = value.get(resource)
         if not stock is float and not stock is int:
@@ -91,7 +104,7 @@ static func valid_state(value: Variant, players: Dictionary, table: Dictionary =
         var income: int = int(value.essence_offered) if resource == "essence" else 0
         for id in table:
             if table[id].resource == resource:
-                income += table[id].amount - int(value.deposits[id])
+                income += table[id].amount * (1 + int(value.refills.get(id, 0))) - int(value.deposits[id])
         for id in STRUCTURES:
             if value[STRUCTURES[id].key]:
                 income -= STRUCTURES[id].cost.get(resource, 0)
@@ -272,6 +285,8 @@ func harvest(id: String) -> bool:
         return false
     state[sites[id].resource] += state.deposits[id]
     state.deposits[id] = 0
+    if not id in SEEDED_DEPOSITS:
+        state.refill_left[id] = REFILL_SECONDS
     queue_redraw()
     get_node("/root/GameSession").queue_save()
     return true
@@ -291,7 +306,10 @@ func complete_hut() -> bool:
     return complete("hut_1")
 
 func _physics_process(delta: float) -> void:
-    if not state.shrine or not AUTHORITY.can_mutate(self):
+    if not AUTHORITY.can_mutate(self):
+        return
+    _refill(delta)
+    if not state.shrine:
         return
     # Resting at the shrine doubles recovery once the character's normal regeneration delay has passed.
     for actor in get_tree().get_nodes_in_group("player"):
@@ -320,3 +338,16 @@ func _draw() -> void:
             ART.draw_prop(self, "stones", point + Vector2(0, 7))
     if state.shrine:
         draw_arc(STRUCTURES.shrine_1.site, SHRINE_RANGE, 0, TAU, 32, Color(0.44, 0.89, 0.83, 0.25), 1)
+
+## Region deposits come back REFILL_SECONDS after they were emptied (host).
+func _refill(delta: float) -> void:
+    if state.refill_left.is_empty():
+        return
+    for id in state.refill_left.keys():
+        state.refill_left[id] = maxf(0.0, float(state.refill_left[id]) - delta)
+        if state.refill_left[id] <= 0.0 and sites.has(id):
+            state.refill_left.erase(id)
+            state.deposits[id] = sites[id].amount
+            state.refills[id] = int(state.refills.get(id, 0)) + 1
+            queue_redraw()
+            get_node("/root/GameSession").queue_save()

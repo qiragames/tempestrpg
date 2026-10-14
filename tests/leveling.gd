@@ -81,10 +81,19 @@ func _run() -> void:
     var before: int = actor.progression.experience
     elite.get_node("Health").immunity_left = 0.0
     elite.get_node("Health").take_damage(999, other)
-    _check(actor.progression.experience == before and other.progression.experience == LEVELING.DEFEAT_XP[2], "Only the defeating character is credited (Elite: %d XP)" % LEVELING.DEFEAT_XP[2])
+    # 24a (user decision): everyone with at least 10% of the damage gets the full XP.
+    _check(actor.progression.experience == before + LEVELING.DEFEAT_XP[2] and other.progression.experience == LEVELING.DEFEAT_XP[2], "Everyone with at least 10%% of the damage gets the full XP (Elite: %d XP each)" % LEVELING.DEFEAT_XP[2])
+    before = actor.progression.experience
+    var helper_before: int = other.progression.experience
+    var shared := _creature("xp_share", 1, Vector2(170, 600))
+    shared.get_node("Health").take_damage(28, actor)
+    shared.get_node("Health").immunity_left = 0.0
+    shared.get_node("Health").take_damage(999, other)
+    _check(actor.progression.experience == before + LEVELING.DEFEAT_XP[1] and other.progression.experience == helper_before, "A last hit worth under 10%% of the damage earns no XP (the main attacker still does)")
+    before = actor.progression.experience
     var unowned := _creature("xp_none", 1, Vector2(180, 600))
     unowned.get_node("Health").take_damage(999)
-    _check(actor.progression.experience == before and other.progression.experience == LEVELING.DEFEAT_XP[2], "Defeats without a character source give no XP")
+    _check(actor.progression.experience == before and other.progression.experience == helper_before, "Defeats without a character source give no XP")
     var trial_creature := _creature("trial_xp", 1, Vector2(200, 600))
     trial_creature.drops_rewards = false
     trial_creature.get_node("Health").take_damage(999, actor)

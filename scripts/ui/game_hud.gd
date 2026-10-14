@@ -13,6 +13,10 @@ var _xp_bar: ProgressBar
 var _portrait: TextureRect
 var _portrait_id: String = ""
 var _name: Label
+## Round minimap (24a) and the respawn countdown shown while defeated.
+var minimap: Control
+var _respawn_label: Label
+var _respawn_left: float = 0.0
 var _slots: Array[Button] = []
 ## Skill tree window (K), see skill_tree_panel.gd.
 var skill_tree: Control
@@ -170,19 +174,44 @@ func _build_status() -> void:
     $Title.add_theme_color_override("font_color", UI.GOLD_LIGHT)
     _outline($Title)
     $SystemVoice.position = Vector2(234, 20)
-    $SystemVoice.size = Vector2(400, 14)
+    $SystemVoice.size = Vector2(312, 14)
+    $SystemVoice.clip_text = true
+    $SystemVoice.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
     $SystemVoice.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     $SystemVoice.add_theme_font_size_override("font_size", 9)
     $SystemVoice.add_theme_color_override("font_color", UI.CYAN)
     _outline($SystemVoice)
     # Analysis: the cyan box on the right.
-    _backdrop(Rect2(446, 40, 190, 82), "assistant")
-    $Analysis.position = Vector2(452, 44)
+    _backdrop(Rect2(446, 118, 190, 82), "assistant")
+    $Analysis.position = Vector2(452, 122)
     $Analysis.size = Vector2(178, 60)
     $Analysis.add_theme_font_size_override("font_size", 10)
     UI.style_bar($AnalysisProgress, UI.CYAN)
-    $AnalysisProgress.position = Vector2(452, 108)
+    $AnalysisProgress.position = Vector2(452, 186)
+    # Minimap under the region name, top right (24a).
+    minimap = load("res://scripts/ui/minimap.gd").new(self)
+    minimap.position = Vector2(552, 28)
+    add_child(minimap)
+    var ring: Control = minimap.get_meta("ring")
+    ring.position = minimap.position
+    add_child(ring)
+    _respawn_label = _label("", Vector2(120, 150), Vector2(400, 40), self, 16)
+    _respawn_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _respawn_label.add_theme_color_override("font_color", UI.GOLD_LIGHT)
+    _outline(_respawn_label)
+    _respawn_label.hide()
     $AnalysisProgress.size = Vector2(178, 7)
+
+## While defeated in a hosted world: "Respawning in N" (the host respawns after RESPAWN_DELAY;
+## clients count down locally from the moment they see the defeat).
+func _refresh_respawn(delta: float) -> void:
+    var defeated: bool = player.get_node("Health").current <= 0 and session.active
+    if defeated and not _respawn_label.visible:
+        _respawn_left = player.RESPAWN_DELAY
+    _respawn_label.visible = defeated
+    if defeated:
+        _respawn_left = maxf(0.0, _respawn_left - delta)
+        _respawn_label.text = "DEFEATED\nRespawning in %d…" % int(ceil(_respawn_left))
 
 ## Live status-card values that have no signal of their own.
 func _refresh_status() -> void:
@@ -290,6 +319,7 @@ func _process(_delta: float) -> void:
         $Title.set_meta("region", region)
         $Title.text = WORLD_MAP.REGION_NAMES[region].to_upper()
     _refresh_status()
+    _refresh_respawn(_delta)
     var trial: Dictionary = get_parent().trial.state if get_parent().get("trial") != null else {}
     _trial_back.visible = trial.get("active", false)
     _trial_label.visible = _trial_back.visible

@@ -511,7 +511,10 @@ func _run() -> void:
         player.get_node("MeleeAttack").cooldown_left = 0.0
         player.get_node("Magicules")._current = player.get_node("Magicules").maximum
         await _tap("attack")
-        await _shot("weapon_" + kind, "%s: %s" % [gear_catalogue.WEAPONS[kind].name, gear_catalogue.WEAPONS[kind].text])
+        await _shot("weapon_" + kind, "%s: %s" % [gear_catalogue.WEAPONS[kind].name, gear_catalogue.WEAPONS[kind].text + (" (the arrow in flight)" if kind == "bow" else "")])
+        if kind == "bow":
+            # 24a: arrows fly (320 px/s); wait for it to arrive.
+            await _wait(0.6)
         var hit_all: bool = targets.all(func(dummy): return dummy.get_node("Health").current < dummy.get_node("Health").maximum)
         _check(hit_all, "%s hits its %d practice target(s)" % [gear_catalogue.WEAPONS[kind].name, targets.size()])
         for dummy in targets:
@@ -620,6 +623,23 @@ func _run() -> void:
     _check(hud.visible and hud.world_map.is_visible_in_tree() and paused, "M opens the world map (HUD and map window visible)")
     await _shot("world_map", "World map (M): Verdant Isle with the clearing, Thornwood, Mirror Lake, Cinder Crater; Harrowmere by bridge; Ambervale and the Emberreach Isles across the sea")
     hud.world_map.close()
+    _log("## 17. Death piles, minimap and leveling spots (step 24a)")
+    var me = world.get_local_player()
+    me.position = Vector2(560, 360)
+    var pile: Node2D = world.drop_pile(me.character_id, {"gnasher_essence": 2}, [], me.position + Vector2(-150, 60))
+    await _wait(0.3)
+    _check(pile != null and pile.owner_id == me.character_id and hud.minimap.is_visible_in_tree(), "A dropped bag lies as your pile and shows on the minimap")
+    await _shot("pile_minimap", "Your dropped bag (pile) and its gold marker on the round minimap (creatures red, chests yellow)")
+    var spot_entry: Array = preload("res://scripts/world/region_content.gd").SPOTS[0]
+    me.position = preload("res://scripts/world/region_content.gd").at(spot_entry[2]) + Vector2(0, 40)
+    await _wait(0.4)
+    _check(spot_entry[0] in me.progression.get("spots", []), "Coming close discovers the hidden leveling spot \"%s\"" % preload("res://scripts/world/region_content.gd").SPOT_NAMES[spot_entry[0]])
+    await _shot("leveling_spot", "A hidden leveling spot discovered (Gnasher Hollow): its creatures return three times faster; levels above the health bars")
+    hud.world_map.open()
+    await _wait(0.3)
+    await _shot("world_map_markers", "World map: your pile (gold X) and discovered leveling spots (violet)")
+    hud.world_map.close()
+    await _wait(0.2)
     _log("## 16. Sound and effects (step 23)")
     var audio: Node = root.get_node("Audio")
     var cues: Array = audio.played.keys()

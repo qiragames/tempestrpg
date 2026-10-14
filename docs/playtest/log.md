@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.0 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.1 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -287,8 +287,8 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 
 - [x] Scythe hits its 3 practice target(s)
 
-![Bow: shot at the first creature up to 200 px](48_weapon_bow.png)
-*Bow: shot at the first creature up to 200 px* (640x360)
+![Bow: shot at the first creature up to 200 px (the arrow in flight)](48_weapon_bow.png)
+*Bow: shot at the first creature up to 200 px (the arrow in flight)* (640x360)
 
 - [x] Bow hits its 1 practice target(s)
 ## 11e. Chests
@@ -298,7 +298,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 *A closed chest (gold lock) at a point of interest* (640x360)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Uncommon Copper Ring
+- [x] The chest gave an Uncommon-or-better item: Rare Padded Vest
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (640x360)
@@ -378,8 +378,23 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 ![World map (M): Verdant Isle with the clearing, Thornwood, Mirror Lake, Cinder Crater; Harrowmere by bridge; Ambervale and the Emberreach Isles across the sea](64_world_map.png)
 *World map (M): Verdant Isle with the clearing, Thornwood, Mirror Lake, Cinder Crater; Harrowmere by bridge; Ambervale and the Emberreach Isles across the sea* (640x360)
 
+## 17. Death piles, minimap and leveling spots (step 24a)
+- [x] A dropped bag lies as your pile and shows on the minimap
+
+![Your dropped bag (pile) and its gold marker on the round minimap (creatures red, chests yellow)](65_pile_minimap.png)
+*Your dropped bag (pile) and its gold marker on the round minimap (creatures red, chests yellow)* (640x360)
+
+- [x] Coming close discovers the hidden leveling spot "Gnasher Hollow"
+
+![A hidden leveling spot discovered (Gnasher Hollow): its creatures return three times faster; levels above the health bars](66_leveling_spot.png)
+*A hidden leveling spot discovered (Gnasher Hollow): its creatures return three times faster; levels above the health bars* (640x360)
+
+
+![World map: your pile (gold X) and discovered leveling spots (violet)](67_world_map_markers.png)
+*World map: your pile (gold X) and discovered leveling spots (violet)* (640x360)
+
 ## 16. Sound and effects (step 23)
-- Sounds played during this run: analysis ×3, build ×4, chest ×1, defeat ×10, evolve ×1, exhausted ×1, form ×2, gather ×6, hit ×20, hurt ×13, learned ×3, level_up ×3, magicules ×4, swing ×21, ui_accept ×16, ui_move ×11
+- Sounds played during this run: analysis ×3, build ×4, chest ×1, defeat ×10, evolve ×1, form ×2, gather ×6, hit ×20, hurt ×13, learned ×3, level_up ×3, magicules ×4, swing ×21, ui_accept ×16, ui_move ×12
 - Effects shown: aura ×3, boost ×4, claw ×15, hit_spark ×34, ring ×7, slash ×21, smoke ×12, sparkle ×5
 - [x] The run produced the "swing" cue
 - [x] The run produced the "hit" cue
@@ -392,7 +407,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - [x] The run produced the "evolve" cue
 - [x] The run produced the "build" cue
 
-![Effects: hit flash, sparkle (pickups, chests), level-up glow, ring (skills, buildings)](65_effects.png)
+![Effects: hit flash, sparkle (pickups, chests), level-up glow, ring (skills, buildings)](68_effects.png)
 *Effects: hit flash, sparkle (pickups, chests), level-up glow, ring (skills, buildings)* (640x360)
 
 
@@ -407,8 +422,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Analysis complete. Common: Rending Bite acquired. Activate it in the skill tree (K).
 - Skill activated: Rending Bite.
 - A nameless goblin has joined you.
-- Aster evolved into a Hobgoblin. 80 Magicules transferred.
-- Aura stabilized. Recovery complete.
+- Aster evolved into a Hobgoblin. 38 Magicules transferred.
 - Camp founded.
 - Aster: gather assigned.
 - Aster gathered materials for camp.
@@ -448,7 +462,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +60 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Epic Iron Sword.
+- Trial reward: Rare Iron Helm.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +20 XP (defeat).
@@ -464,11 +478,11 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Uncommon Copper Ring.
+- Chest opened: Rare Padded Vest.
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 
 The bot retreated 1 time(s) to let Magicules recover.
 XP assistance for skill points: 130 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 65 screenshots.**
+**Result: 0 failed checks, 68 screenshots.**

@@ -163,6 +163,8 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 - *Camp:* costs unchanged; region deposits refill (one full deposit every 15 min).
 - *After M4:* M4.5c currency and merchants.
 
+**24a status (2026-10-14, Claude): done** on `claude/roadmap-24a-systems` — all systems above except the numbers (race strikes, skill curve/effects, XP curve, region XP) which are 24b. Death applies in hosted worlds; the offline sandbox keeps R to retry.
+
 **Goal/dependencies:** requires 14–17 and 19–23. Playtest the approved skill/form/settlement loop, tune bounded values from recorded evidence and decide whether M4 is ready for nation-scale work.
 
 **Files/systems:** gameplay definitions/configs and targeted fixes on separate reviewed branches, `docs/playtest/`, tests, roadmap and handoff. Assign each tuning/fix file before concurrent edits; no broad refactor bundled with balance.

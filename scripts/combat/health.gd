@@ -4,6 +4,8 @@ const AUTHORITY := preload("res://scripts/network/authority.gd")
 
 signal changed(current: int, maximum: int)
 signal defeated
+## Host: a hit landed for `amount` (after armor) from `source` (24a damage credit).
+signal damaged(amount: int, source: Node)
 
 @export var maximum: int = 100
 @export var immunity_seconds: float = 0.65
@@ -72,8 +74,10 @@ func take_damage(amount: int, source: Node = null) -> bool:
     if amount <= 0 or current <= 0 or immunity_left > 0.0:
         return false
     last_hit_by = source
+    var dealt: int = mini(current, maxi(1, amount - armor))
     current = maxi(0, current - maxi(1, amount - armor))
     immunity_left = immunity_seconds
+    damaged.emit(dealt, source)
     changed.emit(current, maximum)
     if current == 0:
         defeated.emit()

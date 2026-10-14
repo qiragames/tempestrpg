@@ -1,7 +1,8 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 20
+const VERSION := 21
+const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
 ## Initial saved state of the v8 encounter; matches scenes/world/forest.tscn.
@@ -138,6 +139,16 @@ static func validate_player(state: Variant, id: String) -> bool:
     # Chests opened by this character (v19): IDs are the same in every seed.
     if not SOURCES.valid_opened(progression.get("chests"), LAYOUT.ALL_CHEST_IDS):
         return false
+    # Discovered hidden leveling spots (v21; optional for older characters).
+    if progression.has("spots"):
+        var spots: Variant = progression.spots
+        if not spots is Array or spots.size() > REGION.SPOTS.size():
+            return false
+        var found := {}
+        for spot_id in spots:
+            if not spot_id is String or found.has(spot_id) or not REGION.SPOTS.any(func(spot): return spot[0] == spot_id):
+                return false
+            found[spot_id] = true
     return true
 
 static func valid_meta(meta: Variant) -> bool:
@@ -244,9 +255,22 @@ static func validate(data: Variant) -> bool:
         item_ids[entry.item.id] = true
         ids[entry.id] = true
     for pickup in data.pickups:
-        if not pickup is Dictionary or not _id(pickup.get("id")) or ids.has(pickup.id) or respawning.has(pickup.id) or not _position(pickup.get("position")) or not _number(pickup.get("amount"), 0.000001, 1000000):
+        if not pickup is Dictionary or pickup.size() != 5 or not _id(pickup.get("id")) or ids.has(pickup.id) or respawning.has(pickup.id) or not _position(pickup.get("position")) or not _number(pickup.get("amount"), 0.000001, 1000000):
+            return false
+        if not _id(pickup.get("owner"), true) or not _number(pickup.get("claim_until"), 0, 1e12):
             return false
         ids[pickup.id] = true
+    # Defeated characters' bags (v21).
+    if not data.get("piles") is Array or data.piles.size() > PILE.MAX_PILES:
+        return false
+    for pile in data.piles:
+        if not PILE.valid(pile) or not _position(pile.position) or ids.has(pile.id) or not _id(pile.owner, true):
+            return false
+        for item in pile.items:
+            if item_ids.has(item.id):
+                return false
+            item_ids[item.id] = true
+        ids[pile.id] = true
     return true
 
 static func migrate(data: Variant) -> Variant:
@@ -492,10 +516,28 @@ static func migrate(data: Variant) -> Variant:
         if not data.get("camp") is Dictionary or not data.camp.get("deposits") is Dictionary or not data.get("enemies") is Array:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 20
         for id in REGION.deposits():
             data.camp.deposits[id] = data.camp.deposits.get(id, REGION.deposits()[id].amount)
         for entry in REGION.CREATURES:
+            if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == entry[0]):
+                data.enemies.append(REGION.fresh_enemy(entry))
+    # v21 (24a): owners on loot and Magicule drops (none before), item piles, refilling region
+    # deposits and the hidden leveling spots' creatures.
+    if data.get("version") == 20:
+        if not data.get("camp") is Dictionary or not data.get("enemies") is Array or not data.get("pickups") is Array:
+            return null
+        data = data.duplicate(true)
+        data.version = VERSION
+        for list in [data.get("loot", []), data.pickups]:
+            for entry in list:
+                if entry is Dictionary:
+                    entry["owner"] = ""
+                    entry["claim_until"] = 0.0
+        data["piles"] = []
+        data.camp["refills"] = {}
+        data.camp["refill_left"] = {}
+        for entry in REGION.spot_creatures():
             if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == entry[0]):
                 data.enemies.append(REGION.fresh_enemy(entry))
     return data

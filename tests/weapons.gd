@@ -25,7 +25,7 @@ func _frames(count: int = 3) -> void:
 func _weapon(base: String, damage: int, rarity: int = 0) -> Dictionary:
     return {"id": "item_w" + Crypto.new().generate_random_bytes(6).hex_encode(), "base": base, "rarity": rarity, "stats": {"damage": damage}, "passives": [] if rarity < 2 else (["lifesteal"] if rarity < 4 else ["lifesteal", "keen"]), "active": "" if rarity < 3 else "barrier"}
 ## Place creatures at offsets from the actor, swing once facing right, return the damage each took.
-func _swing(offsets: Array) -> Array:
+func _swing(offsets: Array, wait: int = 0) -> Array:
     var creatures: Array = []
     for offset in offsets:
         serial += 1
@@ -40,6 +40,9 @@ func _swing(offsets: Array) -> Array:
     actor.get_node("MeleeAttack").cooldown_left = 0.0
     actor.get_node("Magicules")._current = actor.get_node("Magicules").maximum
     actor.get_node("MeleeAttack").attack(Vector2.RIGHT)
+    # Arrows fly (24a): give them time to arrive.
+    if wait > 0:
+        await _frames(wait)
     var result: Array = creatures.map(func(enemy): return 30 - enemy.get_node("Health").current)
     for enemy in creatures:
         world.remove_child(enemy)
@@ -93,13 +96,15 @@ func _run() -> void:
     # --- Bow: ranged, first creature, line of sight
     actor.equip(bow.id, "weapon")
     hits = await _swing([Vector2(150, 0)])
-    _check(hits == [10] and is_equal_approx(melee.cooldown_left, 0.6), "Bow: 10 damage at 150 px, 0.6 s")
-    hits = await _swing([Vector2(80, 0), Vector2(140, 0)])
+    _check(hits == [0] and get_nodes_in_group("enemies").size() >= 0, "Bow: the arrow has not arrived in the same frame (it flies)")
+    hits = await _swing([Vector2(150, 0)], 40)
+    _check(hits == [10] and melee.cooldown_left < 0.6, "Bow: the arrow hits for 10 damage at 150 px after flying")
+    hits = await _swing([Vector2(80, 0), Vector2(140, 0)], 40)
     _check(hits == [10, 0], "Bow: only the first creature in line is hit")
-    hits = await _swing([Vector2(230, 0)])
+    hits = await _swing([Vector2(230, 0)], 50)
     _check(hits == [0], "Bow: nothing beyond 200 px")
     world._add_obstacle(Rect2(AT + Vector2(60, -12), Vector2(6, 24)))
-    hits = await _swing([Vector2(120, 0)])
+    hits = await _swing([Vector2(120, 0)], 40)
     _check(hits == [0] and melee.shot_end.x < 70, "Bow: terrain stops the shot")
     # --- Bonuses stack on the weapon
     actor.equip(sword.id, "weapon")

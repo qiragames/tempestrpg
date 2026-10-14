@@ -145,22 +145,32 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
     return true
 
 ## Bow: the first thing in line of sight up to BOW_RANGE takes the hit (terrain stops the shot).
+## Bow (24a): a flying arrow does the hit when it arrives (see Arrow).
 func _shoot(shot_damage: int) -> bool:
-    var space := get_world_2d().direct_space_state
-    var ray := PhysicsRayQueryParameters2D.create(global_position, global_position + direction * BOW_RANGE, 1 | 4)
-    ray.exclude = [get_parent().get_rid()]
-    var hit := space.intersect_ray(ray)
-    shot_end = (hit.position - global_position) if not hit.is_empty() else direction * BOW_RANGE
-    if not hit.is_empty() and hit.collider.has_node("Health") and hit.collider.is_in_group("enemies"):
-        if hit.collider.get_node("Health").take_damage(shot_damage, get_parent()) and get_parent().has_method("gear_passive") and get_parent().gear_passive("lifesteal"):
-            get_parent().get_node("Health").heal(1)
+    spawn_arrow(get_parent(), direction, shot_damage, false, self)
     return true
+
+## Launch an arrow from `shooter` into the world. Cosmetic arrows only fly (clients' view of
+## other characters' shots).
+static func spawn_arrow(shooter: Node2D, toward: Vector2, shot_damage: int, cosmetic: bool, attack: Node = null) -> Node2D:
+    var world: Node = shooter.get_parent()
+    if world == null:
+        return null
+    var arrow: Node2D = preload("res://scripts/combat/arrow.gd").new()
+    arrow.direction = toward.normalized()
+    arrow.damage = shot_damage
+    arrow.shooter = shooter
+    arrow.attack = attack
+    arrow.cosmetic = cosmetic
+    arrow.position = shooter.position + arrow.direction * 6.0
+    world.add_child(arrow)
+    return arrow
 
 func _draw() -> void:
     var tint := Color("f4e2b8")
     if flash_left > 0.0 and flash_effect == &"bow":
-        draw_line(direction * 8.0, shot_end, tint, 1.0)
-        draw_rect(Rect2(shot_end - Vector2(1.5, 1.5), Vector2(3, 3)), tint)
+        # The arrow itself flies (Arrow); only a short release flash here.
+        draw_line(direction * 4.0, direction * 10.0, tint, 1.0)
     elif flash_left > 0.0 and flash_effect == &"spear":
         draw_line(direction * 6.0, direction * (SPEAR_LENGTH + 4.0), tint, 2.0)
     elif flash_left > 0.0 and flash_effect == &"sword":

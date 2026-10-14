@@ -8,6 +8,25 @@ extends RefCounted
 ## the keep's and the crater's use the trial's better rarity odds. Harrowmere is peaceful.
 const MAP := preload("res://scripts/world/world_map.gd")
 
+## Creature levels (24a): the clearing's by tier, the regions' by place. Levels show above the
+## health bar, scale XP and set the Magicule cost of naming a monster.
+const TIER_LEVELS := [1, 2, 4]
+const LEVELS := {
+    "thornwood_gnasher_1": 6, "thornwood_gnasher_2": 6, "thornwood_gnasher_3": 8, "thornwood_thornback_1": 7,
+    "meadow_gnasher_1": 2, "meadow_gnasher_2": 2, "meadow_gnasher_3": 3,
+    "lakeshore_gnasher_1": 5, "lakeshore_thornback_1": 5,
+    "crater_thornback_1": 11, "crater_thornback_2": 11, "crater_gnasher_1": 12,
+    "beach_gnasher_1": 2,
+}
+
+static func level_of(id: String, difficulty: int) -> int:
+    if LEVELS.has(id):
+        return LEVELS[id]
+    for spot in SPOTS:
+        if id.begins_with(spot[0] + "_"):
+            return spot[4]
+    return TIER_LEVELS[clampi(difficulty, 0, 2)]
+
 ## [id, kind, tile, difficulty (0 Easy, 1 Standard, 2 Elite)]
 const CREATURES := [
     ["thornwood_gnasher_1", "gnasher", Vector2(96, 78), 1],
@@ -24,6 +43,50 @@ const CREATURES := [
     ["crater_gnasher_1", "gnasher", Vector2(256, 186), 2],
     ["beach_gnasher_1", "gnasher", Vector2(174, 186), 0],
 ]
+## Hidden leveling spots (24a, user decision: two per creature region, unmarked until a character
+## discovers them): [id, kind, centre tile, difficulty, level, creatures]. Their creatures respawn
+## three times faster than usual.
+const SPOTS := [
+    ["spot_meadow_a", "gnasher", Vector2(140, 160), 0, 3, 3],
+    ["spot_meadow_b", "gnasher", Vector2(232, 142), 0, 3, 2],
+    ["spot_thornwood_a", "gnasher", Vector2(90, 86), 1, 7, 3],
+    ["spot_thornwood_b", "thornback", Vector2(126, 104), 1, 8, 2],
+    ["spot_lake_a", "gnasher", Vector2(214, 78), 1, 5, 2],
+    ["spot_lake_b", "thornback", Vector2(276, 62), 1, 6, 2],
+    ["spot_crater_a", "thornback", Vector2(238, 152), 2, 12, 2],
+    ["spot_crater_b", "gnasher", Vector2(274, 178), 2, 13, 3],
+]
+const SPOT_NAMES := {
+    "spot_meadow_a": "Gnasher Hollow", "spot_meadow_b": "Eastern Thicket", "spot_thornwood_a": "Fang Grove",
+    "spot_thornwood_b": "Quill Den", "spot_lake_a": "Reed Shallows", "spot_lake_b": "Keepward Rocks",
+    "spot_crater_a": "Ember Rim", "spot_crater_b": "Ashen Pit",
+}
+## Discovered within this many pixels of a spot's centre.
+const DISCOVER_RADIUS := 96.0
+const SPOT_OFFSETS := [Vector2(-2, 0), Vector2(2, 0), Vector2(0, 2)]
+## Respawn seconds by tier (Easy, Standard, Elite); leveling spots divide by SPOT_SPEEDUP.
+const RESPAWN_SECONDS := [45.0, 90.0, 180.0]
+const SPOT_SPEEDUP := 3.0
+
+## Every leveling-spot creature as a CREATURES-style entry: [id, kind, tile, difficulty].
+static func spot_creatures() -> Array:
+    var all: Array = []
+    for spot in SPOTS:
+        for index in range(spot[5]):
+            all.append(["%s_%d" % [spot[0], index + 1], spot[1], spot[2] + SPOT_OFFSETS[index], spot[3]])
+    return all
+
+## Every fixed creature outside the clearing (regions and leveling spots).
+static func all_creatures() -> Array:
+    return CREATURES + spot_creatures()
+
+static func is_spot_creature(id: String) -> bool:
+    return id.begins_with("spot_")
+
+static func respawn_seconds(id: String, difficulty: int) -> float:
+    var base: float = RESPAWN_SECONDS[clampi(difficulty, 0, 2)]
+    return base / SPOT_SPEEDUP if is_spot_creature(id) else base
+
 ## Region deposits live in the camp's reference table (FirstCamp.DEPOSITS, after the seeded
 ## ones), so every camp state and save includes them; their tiles here keep props clear.
 const DEPOSITS := [
@@ -44,7 +107,7 @@ static func at(tile: Vector2) -> Vector2:
     return MAP.to_world(tile) + Vector2(MAP.TILE / 2.0, MAP.TILE / 2.0)
 
 static func creature_ids() -> Array:
-    return CREATURES.map(func(entry): return entry[0])
+    return all_creatures().map(func(entry): return entry[0])
 
 static func chest_ids() -> Array:
     return CHESTS.map(func(entry): return entry[0])
@@ -73,7 +136,7 @@ static func fresh_enemy(entry: Array) -> Dictionary:
 ## Tiles props must keep clear of (content spots).
 static func spots() -> Array:
     var all: Array = []
-    for entry in CREATURES:
+    for entry in all_creatures():
         all.append(entry[2])
     for entry in DEPOSITS + CHESTS:
         all.append(entry[1])

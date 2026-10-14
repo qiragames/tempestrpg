@@ -25,6 +25,12 @@ var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "
 ## Current mimic form and the time until it can change again (host-owned, saved).
 ## Gear (17e): owned items and active cooldowns; equipped item IDs live in progression.equipment.
 var gear: Dictionary = {"items": [], "cooldowns": {}}
+## Step 24a (user decision): hosted worlds respawn a defeated character after RESPAWN_DELAY at the
+## camp (or the spawn); the defeat costs 10% of the XP span towards the next level (never a
+## level) and drops the bag (materials and unequipped gear) as a pile. Host only, not saved.
+const RESPAWN_DELAY := 5.0
+const DEATH_XP_SHARE := 0.1
+var death_left: float = 0.0
 var form: String = FORMS.BASE
 var form_cooldown: float = 0.0
 
@@ -46,7 +52,32 @@ func _ready() -> void:
         # Safe-form policy: defeat always returns to the base form.
         apply_form(FORMS.BASE)
         form_cooldown = 0.0
+        if session.active and AUTHORITY.can_mutate(self):
+            death_left = RESPAWN_DELAY
+            _death_penalty()
     )
+
+## XP loss and the dropped bag (host).
+func _death_penalty() -> void:
+    var level: int = int(progression.get("level", 1))
+    if level < LEVELING.LEVEL_CAP:
+        var floor_xp: int = LEVELING.xp_for_level(level)
+        var span: int = LEVELING.xp_for_level(level + 1) - floor_xp
+        var lost: int = mini(int(progression.get("experience", 0)) - floor_xp, int(floor(span * DEATH_XP_SHARE)))
+        if lost > 0:
+            progression["experience"] = int(progression.experience) - lost
+            session.notify_character(character_id, "-%d XP (defeat)." % lost)
+    var materials: Dictionary = $Inventory.take_all()
+    var worn: Array = progression.get("equipment", {}).values()
+    var dropped: Array = gear.items.filter(func(item): return not item.id in worn)
+    gear.items = gear.items.filter(func(item): return item.id in worn)
+    for item in dropped:
+        gear.cooldowns.erase(item.id)
+    var world: Node = session.world
+    if (not materials.is_empty() or not dropped.is_empty()) and is_instance_valid(world) and world.has_method("drop_pile"):
+        world.drop_pile(character_id, materials, dropped, global_position)
+        session.notify_character(character_id, "Your bag fell where you were defeated (marked on the map).")
+    session.queue_save()
 
 func race() -> String:
     return progression.get("race", RACES.DEFAULT)
@@ -410,6 +441,10 @@ func _process(delta: float) -> void:
     _animate(delta)
     if session.replica_world:
         return
+    if death_left > 0.0 and $Health.current <= 0:
+        death_left = maxf(0.0, death_left - delta)
+        if death_left <= 0.0:
+            session.respawn_character(self)
     form_cooldown = maxf(0.0, form_cooldown - delta)
     for id in gear.cooldowns.keys():
         gear.cooldowns[id] = maxf(0.0, gear.cooldowns[id] - delta)

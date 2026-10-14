@@ -102,6 +102,9 @@ func _character(actor: CharacterBody2D, local: bool, delta: float) -> void:
             var bow: bool = not weapon.is_empty() and actor.GEAR.BASES[weapon.base].get("weapon") == "bow"
             if not bow:
                 EFFECTS.spawn(world, "slash", actor.position + actor.facing.normalized() * 16.0, actor.facing.angle())
+            elif not attack.is_processing() and actor.facing != Vector2.ZERO:
+                # A replica's shot: the host's arrow is not replicated, so show a cosmetic one.
+                attack.spawn_arrow(actor, actor.facing, 0, true)
             _cue("bow" if bow else "swing", actor.position)
         if level > last.level:
             EFFECTS.spawn(world, "boost", actor.position + Vector2(0, -10))

@@ -6,6 +6,10 @@ signal collected(amount: float)
 signal collected_by(amount: float, character_id: String)
 var entity_id: String = ""
 @export var amount: float = 16.0
+## 24a: a share of a creature's Magicules belongs to its character for a while (see Claim).
+var owner_id: String = ""
+var claim_until: float = 0.0
+const CLAIM := preload("res://scripts/pickups/claim.gd")
 
 func _ready() -> void:
     if entity_id.is_empty():
@@ -19,6 +23,8 @@ func _physics_process(_delta: float) -> void:
         return
     for body in get_overlapping_bodies():
         if not body.is_in_group("player") or not body.has_node("Magicules"):
+            continue
+        if not CLAIM.can_take(get_parent(), owner_id, claim_until, body.character_id):
             continue
         # Pickups cannot pass through walls merely because their area overlaps.
         var ray := PhysicsRayQueryParameters2D.create(global_position, body.global_position, 1)

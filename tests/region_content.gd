@@ -70,7 +70,7 @@ func _run() -> void:
     var ids := {}
     for id in REGION.creature_ids() + LAYOUT.CREATURE_IDS:
         ids[id] = true
-    _check(ids.size() == REGION.CREATURES.size() + LAYOUT.CREATURE_IDS.size() and REGION.CREATURES.size() >= 12, "%d region creatures with unique stable IDs" % REGION.CREATURES.size())
+    _check(ids.size() == REGION.all_creatures().size() + LAYOUT.CREATURE_IDS.size() and REGION.CREATURES.size() >= 12, "%d region and leveling-spot creatures with unique stable IDs" % REGION.all_creatures().size())
     var crater_elite := REGION.CREATURES.filter(func(entry): return entry[0].begins_with("crater_")).all(func(entry): return entry[3] == 2)
     var meadow_easy := REGION.CREATURES.filter(func(entry): return entry[0].begins_with("meadow_gnasher_1") or entry[0].begins_with("beach_")).all(func(entry): return entry[3] == 0)
     _check(crater_elite and meadow_easy, "Danger grows with the region: easy meadows and beach, elite Cinder Crater")

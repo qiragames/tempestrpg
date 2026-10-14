@@ -37,17 +37,18 @@ func _run() -> void:
     actor.position = Vector2(100, 360)
     _check(not ally.try_name(actor, "Aster"), "Naming requires proximity")
     actor.position = Vector2(190, 360)
-    pool.try_spend(21)
+    # 24a: naming the level-1 goblin costs 37.5% of the maximum (38 of 100 Magicules).
+    pool.try_spend(63)
     _check(not ally.try_name(actor, "Aster") and ally.display_name.is_empty(), "Insufficient reserves cannot evolve the ally")
     pool.restore(1)
     var dialog = world.get_node("HUD")._ally_dialog
     dialog.open_nearest()
     dialog._name_field.text = "Aster"
     dialog._refresh()
-    _check(paused and dialog._details.text.contains("80 Magicules") and not dialog._recruit.disabled, "UI previews cost and requires valid name confirmation")
+    _check(paused and dialog._details.text.contains("38 Magicules") and not dialog._recruit.disabled, "UI previews cost and requires valid name confirmation")
     dialog._confirm()
     _check(ally.display_name == "Aster" and ally.race == "Hobgoblin" and ally.maximum_hp == 60 and ally.power == 8 and ally.follow_speed == 65, "Confirmed naming changes name, race and stats")
-    _check(pool.current == 0 and actor.is_exhausted() and actor.exhaustion_left == 8, "Naming spends exactly 80 and starts saved recovery")
+    _check(pool.current == 0 and actor.is_exhausted() and actor.exhaustion_left == 8, "Naming spends exactly 38 (level-1 goblin) and starts saved recovery")
     dialog.close_dialog()
     _check(not ally.try_name(actor, "Other") and pool.current == 0, "Repeated naming cannot charge again")
     _check(not guest.is_exhausted(), "Exhaustion belongs to the namer only")
@@ -88,7 +89,11 @@ func _run() -> void:
     _check(STORE.validate(migrated) and not migrated.players.host.exhaustion.active, "Version-2 saves migrate with awake defaults")
     actor.get_node("Health").immunity_left = 0
     actor.get_node("Health").take_damage(999)
-    _check(session.apply_action(actor, "respawn", {}) and actor.is_exhausted() and pool.current == 0, "Respawn preserves sleep while allowing defeated players to return")
+    actor.death_left = actor.RESPAWN_DELAY
+    _check(not session.apply_action(actor, "respawn", {}), "Respawning waits for the 5 s countdown (24a)")
+    actor.death_left = 0.0
+    _check(session.apply_action(actor, "respawn", {}) and actor.is_exhausted() and pool.current == pool.maximum, "Respawn returns with full Magicules but keeps the recovery (sleep) timer")
+    pool._current = 0.0
     pool.restore(24)
     actor._process(1)
     _check(actor.is_exhausted(), "Recovery still requires a quarter reserve")

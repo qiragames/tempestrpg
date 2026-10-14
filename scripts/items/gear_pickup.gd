@@ -6,6 +6,10 @@ const GEAR := preload("res://scripts/items/gear_catalogue.gd")
 
 var entity_id: String = ""
 var item: Dictionary = {}
+## 24a: loot handed out by damage rank belongs to its character for a while (see Claim).
+var owner_id: String = ""
+var claim_until: float = 0.0
+const CLAIM := preload("res://scripts/pickups/claim.gd")
 var _full_notified: Dictionary = {}
 
 func _ready() -> void:
@@ -20,6 +24,8 @@ func _physics_process(_delta: float) -> void:
         return
     for body in get_overlapping_bodies():
         if not body.is_in_group("player") or not body.has_method("add_item") or body.get_node("Health").current <= 0:
+            continue
+        if not CLAIM.can_take(get_parent(), owner_id, claim_until, body.character_id):
             continue
         var ray := PhysicsRayQueryParameters2D.create(global_position, body.global_position, 1)
         if not get_world_2d().direct_space_state.intersect_ray(ray).is_empty():

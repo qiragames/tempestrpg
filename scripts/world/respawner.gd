@@ -6,7 +6,10 @@ extends Node
 ## Host-only; the pending list is saved with the world.
 const AUTHORITY := preload("res://scripts/network/authority.gd")
 const CODEC := preload("res://scripts/persistence/state_codec.gd")
-const RESPAWN_SECONDS := 60.0
+## Longest respawn (Elite); each creature's time comes from RegionContent.respawn_seconds (24a:
+## by tier 45 / 90 / 180 s, three times faster at hidden leveling spots).
+const RESPAWN_SECONDS := 180.0
+const REGION := preload("res://scripts/world/region_content.gd")
 const RETRY_SECONDS := 5.0
 const CLEAR_RADIUS := 160.0
 const MAX_PENDING := 64
@@ -27,7 +30,7 @@ func scheduled(id: String) -> bool:
 func schedule(enemy: Node2D) -> void:
     if not AUTHORITY.can_mutate(self) or not enemy.drops_rewards or scheduled(enemy.entity_id) or pending.size() >= MAX_PENDING:
         return
-    pending.append({"id": enemy.entity_id, "kind": enemy.kind, "difficulty": int(enemy.difficulty), "home": CODEC.vector(enemy.home), "remaining": RESPAWN_SECONDS})
+    pending.append({"id": enemy.entity_id, "kind": enemy.kind, "difficulty": int(enemy.difficulty), "home": CODEC.vector(enemy.home), "remaining": REGION.respawn_seconds(enemy.entity_id, int(enemy.difficulty))})
 
 func _physics_process(delta: float) -> void:
     if pending.is_empty() or not AUTHORITY.can_mutate(self):

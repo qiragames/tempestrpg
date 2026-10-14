@@ -4,20 +4,31 @@ A Godot **4.6.3** / GDScript prototype for a top-down pixel-art Isekai RPG.
 
 ## Screenshots
 
-Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 65 captures are in `docs/playtest/` with `docs/playtest/log.md`.
+Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 68 captures are in `docs/playtest/` with `docs/playtest/log.md`.
 
 <table>
-<tr><td align="center"><img src="docs/playtest/64_world_map.png" width="400" alt="World map (M): the archipelago"><br><sub>World map (M): the archipelago</sub></td><td align="center"><img src="docs/playtest/63_thornwood_creatures.png" width="400" alt="Thornwood: Gnashers, a wood deposit and a chest"><br><sub>Thornwood: Gnashers, a wood deposit and a chest</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/67_world_map_markers.png" width="400" alt="World map: your pile and discovered leveling spots"><br><sub>World map: your pile and discovered leveling spots</sub></td><td align="center"><img src="docs/playtest/66_leveling_spot.png" width="400" alt="A hidden leveling spot, creature levels"><br><sub>A hidden leveling spot, creature levels</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/63_thornwood_creatures.png" width="400" alt="Thornwood with the round minimap"><br><sub>Thornwood with the round minimap</sub></td><td align="center"><img src="docs/playtest/65_pile_minimap.png" width="400" alt="Your dropped bag marked on the minimap"><br><sub>Your dropped bag marked on the minimap</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/60_harrowmere.png" width="400" alt="Harrowmere, the town island"><br><sub>Harrowmere, the town island</sub></td><td align="center"><img src="docs/playtest/58_mirror_lake.png" width="400" alt="Mirror Lake and the keep ruins"><br><sub>Mirror Lake and the keep ruins</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/65_effects.png" width="400" alt="Effects: hit flash, sparkle, level-up glow, ring"><br><sub>Effects: hit flash, sparkle, level-up glow, ring</sub></td><td align="center"><img src="docs/playtest/61_cinder_crater.png" width="400" alt="Cinder Crater"><br><sub>Cinder Crater</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/68_effects.png" width="400" alt="Effects"><br><sub>Effects</sub></td><td align="center"><img src="docs/playtest/61_cinder_crater.png" width="400" alt="Cinder Crater"><br><sub>Cinder Crater</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/01_title_menu.png" width="400" alt="Title screen"><br><sub>Title screen</sub></td><td align="center"><img src="docs/playtest/52_pause_open.png" width="400" alt="Pause overlay"><br><sub>Pause overlay</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/24_camp_overview.png" width="400" alt="The first goblin camp"><br><sub>The first goblin camp</sub></td><td align="center"><img src="docs/playtest/43_equipment.png" width="400" alt="Equipment window with an item card"><br><sub>Equipment window with an item card</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/55_races.png" width="400" alt="Slime, Human and Demon"><br><sub>Slime, Human and Demon</sub></td><td align="center"><img src="docs/playtest/08_skill_tree.png" width="400" alt="Skill tree"><br><sub>Skill tree</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/43_equipment.png" width="400" alt="Equipment window with an item card"><br><sub>Equipment window with an item card</sub></td><td align="center"><img src="docs/playtest/55_races.png" width="400" alt="Slime, Human and Demon"><br><sub>Slime, Human and Demon</sub></td></tr>
 </table>
 
 ## The world
 
 The First Clearing is the start of an archipelago of about 10 × 11 screens (M4.5a): **Verdant Isle** with Thornwood (dense forest), Mirror Lake (a bridge to the ruined keep on its islet), Cinder Crater (ash, boulders, a lava pool) and its beaches; **Harrowmere**, the walled-town island across a long bridge; **Ambervale**, the autumn continent, and the volcanic **Emberreach Isles** across the sea (reachable once ferries and ships exist). The clearing's roads continue as paths, the HUD names the region you are in, and **M** (or the pause menu) opens the world map with your position. Coasts, lakes and lava block movement; bridges carry you across. The regions have their own content (M4.5b): 13 creatures that respawn (easy Gnashers in the meadows and on the beach, Gnashers and a Thornback in Thornwood and by Mirror Lake, Elites in Cinder Crater; Harrowmere is peaceful), six richer deposits (Thornwood wood, crater and lakeshore stone, meadow wood) that explorers gather into the camp's stock, and five chests — the keep's and the crater's give Rare or Epic gear. Tests: `tests/world_map.gd` (23), `tests/region_content.gd` (21).
+
+## Playing together, defeat and the minimap (step 24a)
+
+- **Defeat:** after 5 s you respawn at the camp flag (or the clearing's spawn before the camp is founded) with full HP and Magicules. You lose 10% of the XP span towards your next level (never a level), and your bag — materials and unequipped gear — stays behind as a pile where you fell. Equipped gear stays with you. Piles never expire; every defeat adds one. For 5 minutes only you can pick yours up, then anyone can.
+- **Round minimap** (top right): terrain around you, you, friends, your ally, creatures, your piles (on the rim when far away), chests you haven't opened and leveling spots you have found. The world map (M) marks your piles and found spots too.
+- **Fair rewards:** everyone who dealt at least 10% of a creature's damage gets its full XP and may absorb it; its Magicules are split by damage share into personal pickups, and its item goes to the top damage dealer (each owned for 5 minutes, then free for all). Creatures get +25% HP for every extra character nearby when a fight starts.
+- **Creatures** have levels (shown above their health bar) and come back after 45 s (Easy), 90 s (Standard) or 3 min (Elite). Each creature region hides two **leveling spots** whose creatures return three times faster; they appear on your maps once you find them. Region deposits refill 15 minutes after you empty them.
+- **Naming** costs 35% of your maximum Magicules plus 2.5% per level of the monster (at most 90%): the goblin (level 1) takes 37.5%, so it no longer exhausts you on its own.
+- **Bow:** arrows really fly now and hit the first creature or wall they reach. Creature sprites are drawn at 75% so they match the characters.
+
+Tests: `tests/balance_systems.gd` (32), plus updated leveling, naming, races, respawn, sprites, weapons and network checks.
 
 ## Sound and effects
 
@@ -104,6 +115,7 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/world_map.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/region_content.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/audio_vfx.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/balance_systems.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
 python3 tests/network_forms.py

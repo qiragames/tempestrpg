@@ -73,7 +73,7 @@ func _init(owner_hud: CanvasLayer) -> void:
     _canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
     _canvas.draw.connect(_draw_map)
     add_child(_canvas)
-    hud._label("Faded names: across the sea — ferries and ships come later. M / Esc: close", FRAME.position + Vector2(14, FRAME.size.y - 22), Vector2(560, 14), self, 9).add_theme_color_override("font_color", UI.TEXT_DIM)
+    hud._label("Faded names: across the sea (ferries and ships later) · gold X: your dropped items · violet: leveling spots you found · M / Esc: close", FRAME.position + Vector2(14, FRAME.size.y - 22), Vector2(560, 14), self, 9).add_theme_color_override("font_color", UI.TEXT_DIM)
     hide()
 
 func _process(delta: float) -> void:
@@ -98,6 +98,20 @@ func _draw_map() -> void:
         var reachable: bool = region in MAP.REACHABLE or region == MAP.Region.SEA
         _canvas.draw_string_outline(font, at.round(), name, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, 3, Color(0.03, 0.04, 0.06))
         _canvas.draw_string(font, at.round(), name, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.TEXT if reachable else Color(UI.TEXT, 0.55))
+    # Discovered leveling spots (violet rings, named) and your dropped item piles (gold) — 24a.
+    var known: Array = hud.player.progression.get("spots", [])
+    var region_content := preload("res://scripts/world/region_content.gd")
+    for spot in region_content.SPOTS:
+        if spot[0] in known:
+            var at := to_map(region_content.at(spot[2])).round()
+            _canvas.draw_arc(at, 3.0, 0, TAU, 12, Color("c48bff"), 1.5)
+            _canvas.draw_string_outline(font, at + Vector2(5, 3), region_content.SPOT_NAMES[spot[0]], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.03, 0.04, 0.06))
+            _canvas.draw_string(font, at + Vector2(5, 3), region_content.SPOT_NAMES[spot[0]], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("e0c8ff"))
+    for node in hud.get_parent().get_children():
+        if node.is_in_group("item_piles") and node.owner_id == hud.player.character_id:
+            var pile := to_map(node.global_position).round()
+            _canvas.draw_line(pile + Vector2(-3, -3), pile + Vector2(3, 3), Color("f0a34a"), 2.0)
+            _canvas.draw_line(pile + Vector2(-3, 3), pile + Vector2(3, -3), Color("f0a34a"), 2.0)
     # Other characters, then you (blinking).
     for child in hud.get_parent().get_children():
         if child is CharacterBody2D and child.has_method("race") and child != hud.player:
