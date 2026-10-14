@@ -13,7 +13,7 @@
 ![New World: name and seed (numbers or any text, empty = random)](03_new_world.png)
 *New World: name and seed (numbers or any text, empty = random)* (640x360)
 
-Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). Movement, combat, absorb, skills and menus use the real input actions; menu buttons are pressed programmatically.
+Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080). Movement, combat, absorb, skills and menus use the real input actions; menu buttons are pressed programmatically.
 
 ## 1. Spawn
 - [x] Base resolution is 640x360
@@ -165,6 +165,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 
 - [x] Absorbed the Thornback
 - [x] Learned Thorn Lash (Common); the Extra now comes from fusion
+- (XP assistance: +4 XP to reach level 2 for a skill point)
 - [x] Activated Thorn Lash in the skill tree
 - [x] U opens the fusion window
 
@@ -240,14 +241,14 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 
 - [x] Defeating it again earns XP again
 ## 11b. Experience and levels
-- [x] Reached level 3 (170 XP, 0 skill points) from defeats, absorptions and the trial
-- [x] HUD title bar shows the level: Lv 3 · XP 170 / 300
+- [x] Reached level 3 (1621 XP, 0 skill points) from defeats, absorptions and the trial
+- [x] HUD title bar shows the level: Lv 3 · XP 1621 / 2167
 - [x] The System Voice announced a level-up
 
 ![Level, XP and unspent skill points in the top-right of the HUD](41_level_hud.png)
 *Level, XP and unspent skill points in the top-right of the HUD* (640x360)
 
-- (XP assistance: +130 XP to reach level 4 for a skill point)
+- (XP assistance: +546 XP to reach level 4 for a skill point)
 
 ![Skill tree: Gel Vitality bought (+10 max HP)](42_tree_node.png)
 *Skill tree: Gel Vitality bought (+10 max HP)* (640x360)
@@ -298,7 +299,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 *A closed chest (gold lock) at a point of interest* (640x360)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Rare Padded Vest
+- [x] The chest gave an Uncommon-or-better item: Rare Field Scythe
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (640x360)
@@ -394,8 +395,8 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 *World map: your pile (gold X) and discovered leveling spots (violet)* (640x360)
 
 ## 16. Sound and effects (step 23)
-- Sounds played during this run: analysis ×3, build ×4, chest ×1, defeat ×10, evolve ×1, form ×2, gather ×6, hit ×20, hurt ×13, learned ×3, level_up ×3, magicules ×4, swing ×21, ui_accept ×16, ui_move ×12
-- Effects shown: aura ×3, boost ×4, claw ×15, hit_spark ×34, ring ×7, slash ×21, smoke ×12, sparkle ×5
+- Sounds played during this run: analysis ×3, build ×3, chest ×1, defeat ×8, evolve ×1, form ×2, gather ×6, hit ×14, hurt ×8, learned ×2, level_up ×3, magicules ×4, swing ×17, ui_accept ×16, ui_move ×12
+- Effects shown: aura ×3, boost ×4, claw ×11, hit_spark ×26, ring ×7, slash ×18, smoke ×12, sparkle ×5
 - [x] The run produced the "swing" cue
 - [x] The run produced the "hit" cue
 - [x] The run produced the "defeat" cue
@@ -410,15 +411,24 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 ![Effects: hit flash, sparkle (pickups, chests), level-up glow, ring (skills, buildings)](68_effects.png)
 *Effects: hit flash, sparkle (pickups, chests), level-up glow, ring (skills, buildings)* (640x360)
 
+## 17. Skill effects and numbers (step 24b)
+- [x] Skill effects tint creatures: stunned yellow, rooted green, slowed blue, burning/bleeding violet
+- Basic strikes: Slime 12 dmg for 2 Magicules, Human 10 dmg for free, Demon 14 dmg for 4 Magicules
+- XP to reach levels 2 / 5 / 10 / 20: 100 / 4850 / 46976 / 380636 (balance report: docs/balance/report.md)
+
+![Skill effects on creatures: stunned (yellow), rooted (green), slowed (blue), burning/bleeding (violet)](69_skill_effects.png)
+*Skill effects on creatures: stunned (yellow), rooted (green), slowed (blue), burning/bleeding (violet)* (640x360)
+
 
 ## System messages seen
 
-- +20 XP (defeat).
+- +21 XP (defeat).
 - Threat neutralized. Specimen retained.
-- Recovered 16.0 Magicules.
+- Recovered 6.0 Magicules.
 - Analyzing Forest Gnasher. Remain nearby.
+- Recovered 10.0 Magicules.
 - Absorbed vitality: +25 HP over 10s.
-- +10 XP (absorption).
+- +11 XP (absorption).
 - Analysis complete. Common: Rending Bite acquired. Activate it in the skill tree (K).
 - Skill activated: Rending Bite.
 - A nameless goblin has joined you.
@@ -431,12 +441,13 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - All nearby deposits gathered. Ally returning to follow.
 - Aster: build assigned.
 - Ally completed the Goblin Hut.
-- +20 XP (defeat). Level 2 reached: +1 skill point.
+- +21 XP (defeat).
 - Threat neutralized. Specimen retained.
-- Recovered 16.0 Magicules.
+- Recovered 12.0 Magicules.
 - Analyzing Forest Gnasher. Remain nearby.
+- Recovered 4.0 Magicules.
 - Absorbed vitality: +25 HP over 10s.
-- +10 XP (absorption).
+- +11 XP (absorption).
 - Analysis complete. Common: Rending Bite already known.
 - Materials added to shared camp stock.
 - Materials added to shared camp stock.
@@ -445,13 +456,15 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Gnasher Essence offered to the camp.
 - Storehouse built. Shared materials consumed.
 - Essence Shrine built. Shared materials consumed.
-- +20 XP (defeat).
+- +21 XP (defeat).
 - Threat neutralized. Specimen retained.
-- Recovered 16.0 Magicules.
+- Recovered 12.0 Magicules.
 - Analyzing Thornback Gnasher. Remain nearby.
+- Recovered 4.0 Magicules.
 - Absorbed vitality: +25 HP over 10s.
-- +10 XP (absorption).
+- +11 XP (absorption).
 - Analysis complete. Common: Thorn Lash acquired. Activate it in the skill tree (K).
+- +4 XP (showcase assistance). Level 2 reached: +1 skill point.
 - Skill activated: Thorn Lash.
 - Fusion: Rending Bite + Thorn Lash → Piercing Fang (Extra).
 - Mimicry: Gnasher Form.
@@ -461,14 +474,14 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Threat neutralized.
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
-- +60 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Rare Iron Helm.
+- +1500 XP (trial). Level 3 reached: +1 skill point.
+- Trial reward: Rare Padded Vest.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
-- +20 XP (defeat).
+- +21 XP (defeat).
 - Threat neutralized. Specimen retained.
 - Recovered 16.0 Magicules.
-- +130 XP (showcase assistance). Level 4 reached: +1 skill point.
+- +546 XP (showcase assistance). Level 4 reached: +1 skill point.
 - Skill tree: Gel Vitality. +10 max HP
 - Equipped Rare Iron Helm.
 - Equipped Epic Scale Mail.
@@ -478,11 +491,11 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Rare Padded Vest.
+- Chest opened: Rare Field Scythe.
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 
 The bot retreated 1 time(s) to let Magicules recover.
-XP assistance for skill points: 130 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
+XP assistance for skill points: 550 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 68 screenshots.**
+**Result: 0 failed checks, 69 screenshots.**

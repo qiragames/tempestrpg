@@ -94,6 +94,8 @@ func _run() -> void:
     friend.choose_race("Human")
     await _frames(3)
     _check(_played("swing") == swings + 1, "A newly seen character makes no sound (baseline only)")
+    # The minimal mix spaces repeats of one sound; let the gap after our own swing pass.
+    audio._last_played.clear()
     friend.get_node("MeleeAttack").cooldown_left = 0.5
     await process_frame
     await process_frame
@@ -139,7 +141,7 @@ func _run() -> void:
     state.hut = true
     world.camp.restore(state)
     await _frames(2)
-    _check(_played("build") >= 2 and _spawned("ring") >= 1, "Founding and building play their cues")
+    _check(_played("build") >= 1 and _spawned("ring") >= 1, "Founding and building play their cue (once for things finished together)")
     # Trial music.
     # (Checked in place: a trial without creatures ends on its next frame.)
     world.trial.state.active = true
@@ -163,5 +165,15 @@ func _run() -> void:
     _check(leftovers == 0, "One-shot effects clean themselves up")
     world.queue_free()
     await _frames()
+    # --- Minimal mix (user feedback): quiet, short, spaced sounds
+    var loud := false
+    for id in audio.PROFILES:
+        loud = loud or audio.PROFILES[id][0] > -8.0 or audio.PROFILES[id][1] > 1.5
+    _check(not loud and audio.MUSIC_DB <= -8.0 and audio.HEARING <= 400.0, "Every sound is quiet (at most -8 dB) and short (at most 1.5 s); music sits under the effects")
+    audio._last_played.clear()
+    var pickups := _played("magicules")
+    audio.play("magicules", Vector2(10, 10))
+    audio.play("magicules", Vector2(900, 900))
+    _check(_played("magicules") == pickups + 1, "The same sound is not repeated within its gap, even from elsewhere")
     print("Audio and effects checks: %d passed, %d failed" % [checks - failures, failures])
     quit(1 if failures else 0)

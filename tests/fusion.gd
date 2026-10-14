@@ -48,7 +48,7 @@ func _run() -> void:
     _check(gained.map(func(skill): return String(skill.id)) == ["thorn_lash"] and not book.knows(&"piercing_fang"), "Knowing both Commons and the Thornback analysis no longer grants Piercing Fang automatically")
     messages.clear()
     _check(not actor.fuse_skills("rending_bite", "thorn_lash") and messages.any(func(m): return m.contains("Activate both")), "Inactive skills cannot be fused")
-    actor.gain_experience(50, "test")
+    actor.gain_experience(preload("res://scripts/progression/leveling.gd").xp_for_level(2), "test")
     _check(actor.activate_skill("rending_bite") and actor.activate_skill("thorn_lash") and progression.skill_points == 0, "Both skills activated (2 points at level 2)")
     _check(book.skill_at_slot(0).id == &"rending_bite" and book.skill_at_slot(1).id == &"thorn_lash", "Activated skills are on the hotbar")
     # --- Fuse
@@ -72,7 +72,7 @@ func _run() -> void:
     _check(book.skill_at_slot(1).id == &"rending_bite" and book.skill_at_slot(0).id == &"thorn_lash", "Split skills return to the hotbar")
     _check(actor.fuse_skills("rending_bite", "thorn_lash") and book.knows(&"piercing_fang"), "They can be fused again")
     # A tree skill never fuses.
-    actor.gain_experience(700, "test")
+    actor.gain_experience(preload("res://scripts/progression/leveling.gd").xp_for_level(5) - int(progression.experience), "test")
     actor.buy_node("slime_vitality")
     actor.buy_node("slime_reserve")
     actor.buy_node("slime_acid_splash")

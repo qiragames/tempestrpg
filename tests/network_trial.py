@@ -75,8 +75,8 @@ try:
     check("predator_focus" in qualified["progression"]["tree"]["active"] and "predator_focus" in qualified["slots"], "Activating it through the host puts Predator Focus on the hotbar")
     check(sorted(qualified["split_skills"]) == ["predator_focus", "rending_bite", "thorn_lash"] and "piercing_fang" in qualified["skills"] and "rending_bite" not in qualified["skills"], "The owner splits Piercing Fang and fuses it again through the host")
     check(helper["trials"] == [] and "predator_focus" not in helper["skills"], "The helper and the late requester are not credited")
-    check(qualified["progression"]["experience"] == 60 and qualified["progression"]["level"] == 2 and qualified["progression"]["skill_points"] == 1 and helper["progression"]["experience"] == 0, "Only the trial owner gains 60 XP (level 2: 2 points, 1 left after activating), replicated to its client")
-    check(qualified["hud_level"].startswith("Lv 2 · XP 60 / 150") and helper["hud_level"].startswith("Lv 1 · XP 0 / 50"), "Each client's HUD shows its own level and XP")
+    check(qualified["progression"]["experience"] == 1500 and qualified["progression"]["level"] == 3 and qualified["progression"]["skill_points"] == 2 and helper["progression"]["experience"] == 0, "Only the trial owner gains 1500 XP (24b: level 3, 3 points, 2 left after activating), replicated to its client")
+    check(qualified["hud_level"].startswith("Lv 3 · XP 1500 / 2167") and helper["hud_level"].startswith("Lv 1 · XP 0 / 100"), "Each client's HUD shows its own level and XP")
     for i, (proc, _) in enumerate(clients):
         finish(proc, f"guest_{i}")
     finish(host, "host")

@@ -80,7 +80,7 @@ func _run() -> void:
     _check(not actor.equip(sword.id, "head") and not actor.equip(_weapon("iron_sword", 14).id, "weapon"), "Weapons only go in the weapon slot; only owned weapons can be equipped")
     # --- Unarmed baseline
     var hits: Array = await _swing([Vector2(18, 0), Vector2(50, 0)])
-    _check(hits == [10, 0] and is_equal_approx(melee.cooldown_left, 0.4), "Unarmed: 10 damage close in, 0.4 s")
+    _check(hits == [12, 0] and is_equal_approx(melee.cooldown_left, 0.4), "Unarmed (Slime, 24b): 12 damage close in, 0.4 s")
     # --- Sword: balanced arc
     actor.equip(sword.id, "weapon")
     hits = await _swing([Vector2(30, 0), Vector2(20, 14), Vector2(-20, 0)])
@@ -110,12 +110,12 @@ func _run() -> void:
     actor.equip(sword.id, "weapon")
     actor.choose_race("Human")
     hits = await _swing([Vector2(30, 0)])
-    _check(hits == [18] and is_equal_approx(melee.cooldown_left, 0.45 * 0.75), "Human weapon mastery: sword 14 + 4 and 25% faster recovery")
+    _check(hits == [14] and is_equal_approx(melee.cooldown_left, 0.45 * 0.75), "Weapons keep their own damage for every race (sword 14); Humans recover 25%% faster")
     var gloves := {"id": "item_wgloves000001", "base": "leather_gloves", "rarity": 0, "stats": {"strike": 2}, "passives": [], "active": ""}
     actor.add_item(gloves)
     actor.equip(gloves.id, "hands")
     hits = await _swing([Vector2(30, 0)])
-    _check(hits == [20], "Gloves' strike bonus adds to the weapon (14 + 4 + 2)")
+    _check(hits == [16], "Gloves' strike bonus adds to the weapon (14 + 2)")
     var legendary := _weapon("iron_sword", 30, 4)
     actor.add_item(legendary)
     actor.equip(legendary.id, "weapon")

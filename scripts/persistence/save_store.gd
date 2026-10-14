@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 21
+const VERSION := 22
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -235,6 +235,8 @@ static func validate(data: Variant) -> bool:
             return false
         if enemy.has("group_scaled") and not enemy.group_scaled is bool:
             return false
+        if enemy.has("status") and not enemy.status in ["", "slow", "root", "stun", "dot"]:
+            return false
         var credit: Variant = enemy.get("credit", {})
         if not credit is Dictionary or credit.size() > 256:
             return false
@@ -435,8 +437,9 @@ static func migrate(data: Variant) -> Variant:
                 return null
             var level: int = mini(int(progression.level), LEVELING.LEVEL_CAP)
             # Bracket keys: dot assignment would add a StringName key, which saves reject.
-            progression["experience"] = clampi(int(progression.experience), LEVELING.xp_for_level(level), LEVELING.max_experience())
-            progression["level"] = LEVELING.level_for(progression.experience)
+            # The step-17 curve this version was written for (v22 converts to the 24b curve).
+            progression["experience"] = clampi(int(progression.experience), LEVELING.old_xp_for_level(level), LEVELING.old_xp_for_level(LEVELING.LEVEL_CAP))
+            progression["level"] = LEVELING.old_level_for(progression.experience)
             progression["skill_points"] = progression.level - 1
     # v15 adds the skill tree (17c). Every level now grants a point (level 1 included), so each
     # character gains one; skills they could already use stay active for free.
@@ -542,7 +545,7 @@ static func migrate(data: Variant) -> Variant:
         if not data.get("camp") is Dictionary or not data.get("enemies") is Array or not data.get("pickups") is Array:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 21
         for list in [data.get("loot", []), data.pickups]:
             for entry in list:
                 if entry is Dictionary:
@@ -554,6 +557,37 @@ static func migrate(data: Variant) -> Variant:
         for entry in REGION.spot_creatures():
             if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == entry[0]):
                 data.enemies.append(REGION.fresh_enemy(entry))
+    # v22 (24b): the new XP curve. Every character keeps its level, skill points and its progress
+    # within the level (as a fraction of the old span); creatures' HP grows with their level.
+    if data.get("version") == 21:
+        if not data.get("players") is Dictionary or not data.get("enemies") is Array:
+            return null
+        data = data.duplicate(true)
+        data.version = VERSION
+        for state in data.players.values():
+            if not state is Dictionary or not state.get("progression") is Dictionary:
+                return null
+            var progression: Dictionary = state.progression
+            if not _number(progression.get("level"), 1, LEVELING.LEVEL_CAP, true) or not _number(progression.get("experience"), 0, 1000000000, true):
+                return null
+            var level: int = int(progression.level)
+            if level >= LEVELING.LEVEL_CAP:
+                progression["experience"] = LEVELING.max_experience()
+                continue
+            var old_floor: int = LEVELING.old_xp_for_level(level)
+            var old_span: int = LEVELING.old_xp_for_level(level + 1) - old_floor
+            var fraction: float = clampf(float(int(progression.experience) - old_floor) / float(old_span), 0.0, 0.999)
+            var new_floor: int = LEVELING.xp_for_level(level)
+            progression["experience"] = new_floor + int(floor(fraction * (LEVELING.xp_for_level(level + 1) - new_floor)))
+        var gnasher := preload("res://scripts/enemies/forest_gnasher.gd")
+        for enemy in data.enemies:
+            if not enemy is Dictionary or not _number(enemy.get("difficulty"), 0, 2, true) or not enemy.get("id") is String:
+                return null
+            var full: int = gnasher.scaled_health(int(enemy.difficulty), REGION.level_of(enemy.id, int(enemy.difficulty)))
+            if int(enemy.get("maximum_hp", 0)) < full:
+                var ratio: float = float(enemy.get("hp", 0)) / maxf(1.0, float(enemy.get("maximum_hp", 1)))
+                enemy["maximum_hp"] = full
+                enemy["hp"] = int(round(full * ratio)) if int(enemy.get("hp", 0)) > 0 else 0
     return data
 
 static func _read(path: String) -> Dictionary:

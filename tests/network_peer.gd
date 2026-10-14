@@ -64,7 +64,7 @@ func _run() -> void:
             host.get_node("Magicules")._current = 120
             host.get_node("Magicules").regeneration_per_second = 0
             host.progression.level = 3
-            host.progression.experience = 160
+            host.progression.experience = 2000
             host.progression.skill_points = 3
             host.get_node("Inventory").add_specimen(load(CODEC.SPECIMEN))
             world.progression.quests = {"intro": {"complete": true}}
@@ -79,10 +79,12 @@ func _run() -> void:
         session.player_joined.connect(func(actor: Node2D):
             if actor.progression.level == 1:
                 actor.progression.level = 2
-                actor.progression.experience = 60
+                actor.progression.experience = 400
                 actor.progression.skill_points = 2
                 actor.position = Vector2(480, 340)
                 actor.get_node("Magicules").regeneration_per_second = 0
+                # Below the cap, so a duplicated drop could not hide behind it (24b strikes cost 2).
+                actor.get_node("Magicules")._current = 80.0
         )
         _report({"ready": true})
         return

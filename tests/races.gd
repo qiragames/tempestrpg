@@ -31,16 +31,18 @@ func _creature(id: String, at: Vector2) -> Node2D:
 func _ready_to_act(actor: Node2D) -> void:
     actor.get_node("MeleeAttack").cooldown_left = 0.0
     actor.get_node("Magicules")._current = actor.get_node("Magicules").maximum
-## Strike a fresh Standard creature (30 HP) just below the actor; returns damage dealt.
+## Strike a fresh creature (given 200 HP so no hit is capped) just below the actor; returns damage dealt.
 func _hit(actor: Node2D, id: String, skill: StringName = &"") -> int:
     var enemy := _creature(id, actor.position + Vector2(0, 18))
+    enemy.get_node("Health").maximum = 200
+    enemy.get_node("Health").current = 200
     _ready_to_act(actor)
     var melee = actor.get_node("MeleeAttack")
     if skill == &"":
         melee.attack(Vector2.DOWN)
     else:
         melee.attack_skill(Vector2.DOWN, skill)
-    var dealt: int = 30 - enemy.get_node("Health").current
+    var dealt: int = 200 - enemy.get_node("Health").current
     enemy.queue_free()
     return dealt
 
@@ -75,7 +77,14 @@ func _run() -> void:
     actor.choose_race("Human")
     var human_hit := _hit(actor, "r_human")
     var human_recovery: float = actor.get_node("MeleeAttack").cooldown_left
-    _check(slime_hit == 10 and human_hit == 14, "Human weapon mastery: basic strike 14 instead of 10")
+    var human_pool: float = actor.get_node("Magicules").current
+    actor.choose_race("Demon")
+    var demon_hit := _hit(actor, "r_demon_strike")
+    var demon_pool: float = actor.get_node("Magicules").current
+    actor.choose_race("Human")
+    # 24b (user decision): Human 10 free, Slime 12 for 2, Demon 14 for 4.
+    _check(slime_hit == 12 and human_hit == 10 and demon_hit == 14, "Basic strikes by race: Slime 12, Human 10, Demon 14")
+    _check(human_pool == actor.get_node("Magicules").maximum and is_equal_approx(demon_pool, 130.0 - 4.0) and RACES.stats("Slime").strike_cost == 2.0, "Strike costs by race: Human free, Slime 2, Demon 4 Magicules")
     _check(is_equal_approx(slime_recovery, 0.4) and is_equal_approx(human_recovery, 0.3), "Human attacks recover 25% faster (0.3 s instead of 0.4 s)")
     # --- Skills: Demon skill power and drain
     actor.get_node("SkillBook")._known[&"rending_bite"] = load("res://data/skills/rending_bite.tres")
@@ -84,8 +93,8 @@ func _run() -> void:
     actor.choose_race("Demon")
     actor.get_node("Health").current = 50
     var demon_skill := _hit(actor, "r_demon_skill", &"rending_bite")
-    _check(human_skill == 20 and demon_skill == 25, "Demon skills deal 25% more (Rending Bite 25 instead of 20)")
-    _check(actor.get_node("Health").current == 55, "Demon drain heals 20% of skill damage dealt (+5 HP)")
+    _check(human_skill == 46 and demon_skill == 58, "Demon skills deal 25%% more (Rending Bite 58 instead of 46)")
+    _check(actor.get_node("Health").current == 62, "Demon drain heals 20%% of skill damage dealt (+12 HP)")
     actor.get_node("Health").current = 90
     _hit(actor, "r_demon_full", &"rending_bite")
     _check(actor.get_node("Health").current == 90, "Drain never heals above maximum")
@@ -126,7 +135,7 @@ func _run() -> void:
     await _frames(1)
     _check(world.get_node("HUD").get_node("StrikeCost").text.contains("Demon: dark affinity"), "HUD shows the racial ability instead of mimic controls")
     # Mimicry unlocks by level for the other races (user decision 2026-10-13).
-    actor.gain_experience(500 - int(actor.progression.experience), "test")
+    actor.gain_experience(preload("res://scripts/progression/leveling.gd").xp_for_level(5) - int(actor.progression.experience), "test")
     actor.form_cooldown = 0.0
     _ready_to_act(actor)
     _check(actor.progression.level == 5 and actor.try_transform("gnasher") and actor.form == "gnasher", "A level-5 Demon can mimic")

@@ -37,10 +37,12 @@ func _run() -> void:
 
     enemy.position = player.position + Vector2(24, 0)
     await _frames(3)
-    _check(melee.attack(Vector2.RIGHT) and pool.current == 92.0, "A successful strike must cost exactly 8 Magicules")
-    _check(enemy.get_node("Health").current == 20, "Paid strike must still deal normal damage")
-    _check(not melee.attack(Vector2.RIGHT) and pool.current == 92.0, "Cooldown rejection must not charge Magicules")
-    _check(world.get_node("HUD/Magicules").text == "Magicules 92.0 / 100" and world.get_node("HUD/MagiculeBar").value == 92.0, "HUD must reflect spending")
+    # 24b: a Slime's basic strike costs 2 Magicules and deals 12.
+    _check(melee.attack(Vector2.RIGHT) and pool.current == 98.0, "A successful Slime strike must cost exactly 2 Magicules")
+    _check(enemy.get_node("Health").current == 18, "Paid strike must still deal normal damage (12)")
+    _check(not melee.attack(Vector2.RIGHT) and pool.current == 98.0, "Cooldown rejection must not charge Magicules")
+    _check(world.get_node("HUD/Magicules").text == "Magicules 98.0 / 100" and world.get_node("HUD/MagiculeBar").value == 98.0, "HUD must reflect spending")
+    pool.try_spend(6.0)
     await _frames(60)
     _check(is_equal_approx(pool.current, 92.0), "Regeneration must wait for its delay")
     await _frames(90)
@@ -48,13 +50,13 @@ func _run() -> void:
     await _frames(60)
     _check(pool.current == 100.0, "Regeneration must cap at maximum")
 
-    _check(pool.try_spend(96.0) and pool.current == 4.0, "Spending must support partial remaining reserves")
+    _check(pool.try_spend(99.0) and pool.current == 1.0, "Spending must support partial remaining reserves")
     await _frames(3)
     var before_hp: int = enemy.get_node("Health").current
-    _check(not melee.attack(Vector2.RIGHT) and pool.current == 4.0, "Insufficient reserves must reject the whole strike without partial spending")
+    _check(not melee.attack(Vector2.RIGHT) and pool.current == 1.0, "Insufficient reserves must reject the whole strike without partial spending")
     _check(melee.cooldown_left == 0.0 and melee.flash_left == 0.0 and enemy.get_node("Health").current == before_hp, "Rejected strike must not start effects, cooldown, or damage")
     _check(world.get_node("HUD/SystemVoice").text.contains("Insufficient Magicules"), "Rejected spending must explain why the action failed")
-    _check(pool.try_spend(4.0) and pool.current == 0.0 and depletion_events == 1, "Exact spending must deplete once without going negative")
+    _check(pool.try_spend(1.0) and pool.current == 0.0 and depletion_events == 1, "Exact spending must deplete once without going negative")
     _check(not pool.try_spend(1.0) and pool.current == 0.0 and depletion_events == 1, "Empty reserves must reject further costs without duplicate depletion")
     var position_before: Vector2 = player.position
     Input.action_press("move_down")

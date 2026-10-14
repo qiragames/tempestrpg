@@ -26,13 +26,16 @@ func _hit(actor: Node2D, id: String, skill: StringName = &"") -> int:
     enemy.position = actor.position + Vector2(0, 18)
     world.add_child(enemy)
     enemy.set_physics_process(false)
+    # Enough HP that no hit is capped (24b skills deal 30+).
+    enemy.get_node("Health").maximum = 200
+    enemy.get_node("Health").current = 200
     actor.get_node("MeleeAttack").cooldown_left = 0.0
     actor.get_node("Magicules")._current = actor.get_node("Magicules").maximum
     if skill == &"":
         actor.get_node("MeleeAttack").attack(Vector2.DOWN)
     else:
         actor.get_node("MeleeAttack").attack_skill(Vector2.DOWN, skill)
-    var dealt: int = 30 - enemy.get_node("Health").current
+    var dealt: int = 200 - enemy.get_node("Health").current
     enemy.queue_free()
     return dealt
 
@@ -61,7 +64,7 @@ func _run() -> void:
     _check(book.knows(&"rending_bite") and not book.is_active(&"rending_bite") and book.skill_at_slot(0) == null, "Absorbing learns Rending Bite, but it is not active or slotted")
     _check(_hit(actor, "t_locked", &"rending_bite") == 0 and not book.assign_slot(0, &"rending_bite"), "An inactive skill cannot be used or put on the hotbar")
     _check(actor.activate_skill("rending_bite") and progression.skill_points == 0 and book.is_active(&"rending_bite") and book.skill_at_slot(0).id == &"rending_bite", "Activating costs 1 point and places the skill on the hotbar")
-    _check(_hit(actor, "t_active", &"rending_bite") == 20, "The activated skill works")
+    _check(_hit(actor, "t_active", &"rending_bite") == 46, "The activated skill works (Rending Bite 46)")
     messages.clear()
     _check(not actor.activate_skill("rending_bite") and not actor.activate_skill("thorn_lash") and not actor.buy_node("slime_vitality"), "No double activation, no activating unlearned skills, no buying without points")
     _check(messages.any(func(m): return m.contains("No skill points")), "The player is told why a purchase failed")
@@ -75,7 +78,7 @@ func _run() -> void:
     _check(actor.buy_node("slime_reserve") and actor.get_node("Magicules").maximum == mp + 10, "Aura Reserve: +10 max Magicules")
     _check(not actor.buy_node("slime_vitality"), "A node is bought once")
     _check(actor.buy_node("slime_acid_splash") and book.is_active(&"acid_splash") and book.skill_at_slot(1).id == &"acid_splash" and progression.skill_points == 0, "Every third node is a new skill: Acid Splash, active at once and slotted")
-    _check(_hit(actor, "t_acid", &"acid_splash") == 18, "The tree skill works (Acid Splash 18 damage)")
+    _check(_hit(actor, "t_acid", &"acid_splash") == 40, "The tree skill works (Acid Splash 40 damage)")
     _check(TREE.valid(progression, book.evidence_ids()) and progression.skill_points + TREE.spent(progression.tree) == progression.level, "Points spent plus unspent always equal the level")
     # A Human's Weapon Drill raises the basic strike.
     var human = load("res://scenes/player/player.tscn").instantiate()
@@ -85,7 +88,7 @@ func _run() -> void:
     world.add_child(human)
     await _frames(1)
     human.choose_race("Human")
-    _check(_hit(human, "t_human_plain") == 14 and human.buy_node("human_drill") and _hit(human, "t_human_drill") == 15, "Human Weapon Drill: basic strike 14 → 15")
+    _check(_hit(human, "t_human_plain") == 10 and human.buy_node("human_drill") and _hit(human, "t_human_drill") == 11, "Human Weapon Drill: basic strike 10 → 11")
     _check(not human.buy_node("slime_vitality"), "A Human cannot buy Slime nodes")
     human.queue_free()
     # --- Host intent and client guard

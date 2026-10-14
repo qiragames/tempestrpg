@@ -50,7 +50,7 @@ func _activate_learned(actor: Node) -> void:
         if id in actor.progression.tree.active:
             continue
         while int(actor.progression.skill_points) < 1:
-            actor.gain_experience(25 * (actor.progression.level + 1) * actor.progression.level - int(actor.progression.experience), "test")
+            actor.gain_experience(preload("res://scripts/progression/leveling.gd").xp_for_level(actor.progression.level + 1) - int(actor.progression.experience), "test")
         actor.activate_skill(id)
 func _run() -> void:
     world = load("res://scenes/world/forest.tscn").instantiate()
@@ -102,12 +102,15 @@ func _run() -> void:
     pool._current = 100.0
     melee.cooldown_left = 0.0
     actor.split_skill("piercing_fang")
-    _check(melee.attack_skill(Vector2.RIGHT, &"rending_bite") and near.get_node("Health").current == 10 and far.get_node("Health").current == 30, "Rending Bite (split out again) reaches only the adjacent creature")
+    _check(melee.attack_skill(Vector2.RIGHT, &"rending_bite") and near.get_node("Health").current == 0 and far.get_node("Health").current == 30, "Rending Bite (split out again, 46 damage since 24b) reaches only the adjacent creature")
     actor.fuse_skills("rending_bite", "thorn_lash")
+    # A tougher far creature survives the 62-damage thrust (it is reused for the terrain check).
+    far.get_node("Health").maximum = 200
+    far.get_node("Health").current = 200
     await create_timer(0.85).timeout
     var before: float = pool.current
     _check(melee.attack_skill(Vector2.RIGHT, &"piercing_fang"), "Piercing Fang activates")
-    _check(near.get_node("Health").current == 0 and far.get_node("Health").current == 4 and side.get_node("Health").current == 30, "Piercing Fang damages both creatures in the line, not the one beside it")
+    _check(near.get_node("Health").current == 0 and far.get_node("Health").current == 200 - 62 and side.get_node("Health").current == 30, "Piercing Fang (62) damages the creatures in the line, not the one beside it")
     _check(is_equal_approx(pool.current, before - 18.0) and is_equal_approx(melee.cooldown_left, 1.2), "Piercing Fang costs 18 Magicules and starts a 1.2s cooldown")
     _check(not melee.attack_skill(Vector2.RIGHT, &"piercing_fang") and is_equal_approx(pool.current, before - 18.0), "Cooldown blocks a second thrust without spending")
     world._add_obstacle(Rect2(596, 588, 4, 24))

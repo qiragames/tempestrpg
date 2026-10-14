@@ -19,6 +19,9 @@ const SWORD_RADIUS := 20.0
 const SCYTHE_RADIUS := 30.0
 const BOW_RANGE := 200.0
 const BASIC_EFFECTS := [&"strike", &"sword", &"spear", &"scythe", &"bow"]
+const SKILL_EFFECTS := preload("res://scripts/skills/skill_effects.gd")
+## The skill whose utility effects the current strike applies ("" for basic strikes).
+var _skill_id: String = ""
 const GEAR := preload("res://scripts/items/gear_catalogue.gd")
 ## Where the last bow shot ended (for the flash).
 var shot_end := Vector2.ZERO
@@ -32,7 +35,11 @@ func _process(delta: float) -> void:
 
 ## Race modifiers of the attacking character (none for other attackers).
 func _race() -> Dictionary:
-    return get_parent().race_stats() if get_parent().has_method("race_stats") else {"strike_bonus": 0, "recovery": 1.0, "skill_bonus": 0.0, "drain": 0.0}
+    return get_parent().race_stats() if get_parent().has_method("race_stats") else {"strike_damage": damage, "strike_cost": magicule_cost, "strike_bonus": 0, "recovery": 1.0, "skill_bonus": 0.0, "drain": 0.0}
+
+## The basic strike's Magicule cost for this attacker (by race, 24b).
+func strike_cost() -> float:
+    return float(_race().get("strike_cost", magicule_cost))
 
 func attack(facing: Vector2) -> bool:
     # Mimic forms and Human weapon mastery strengthen the basic strike; skills keep their own damage.
@@ -43,9 +50,9 @@ func attack(facing: Vector2) -> bool:
     # An equipped weapon replaces the unarmed damage and sets the attack's shape and timing.
     var weapon: Dictionary = get_parent().equipped_weapon() if get_parent().has_method("equipped_weapon") else {}
     if weapon.is_empty():
-        return _strike(facing, damage + bonus + race.strike_bonus, magicule_cost, cooldown * race.recovery)
+        return _strike(facing, int(race.get("strike_damage", damage)) + bonus + race.strike_bonus, strike_cost(), cooldown * race.recovery)
     var kind: String = GEAR.BASES[weapon.base].weapon
-    return _strike(facing, int(weapon.stats.damage) + bonus + race.strike_bonus, magicule_cost, GEAR.WEAPONS[kind].recovery * race.recovery, StringName(kind))
+    return _strike(facing, int(weapon.stats.damage) + bonus + race.strike_bonus, strike_cost(), GEAR.WEAPONS[kind].recovery * race.recovery, StringName(kind))
 
 func attack_skill(facing: Vector2, skill_id: StringName) -> bool:
     var book = get_parent().get_node("SkillBook")
@@ -58,14 +65,19 @@ func attack_skill(facing: Vector2, skill_id: StringName) -> bool:
     var race := _race()
     var keen: float = 0.1 if get_parent().has_method("gear_passive") and get_parent().gear_passive("keen") else 0.0
     var power := int(round(skill.damage * (1.0 + race.skill_bonus + keen)))
+    var fx: Dictionary = SKILL_EFFECTS.effects(String(skill_id))
+    var drain: float = race.drain + float(fx.get("drain", 0.0))
+    var done := false
+    _skill_id = String(skill_id)
     match skill.effect:
         &"strike":
-            return _strike(facing, power, skill.magicule_cost, skill.cooldown * race.recovery, &"strike", race.drain)
+            done = _strike(facing, power, skill.magicule_cost, skill.cooldown * race.recovery, &"strike", drain)
         &"pierce":
-            return _strike(facing, power, skill.magicule_cost, skill.cooldown * race.recovery, &"pierce", race.drain)
+            done = _strike(facing, power, skill.magicule_cost, skill.cooldown * race.recovery, &"pierce", drain)
         &"focus":
-            return _focus(skill)
-    return false
+            done = _focus(skill)
+    _skill_id = ""
+    return done
 
 ## Predator Focus arms the next analysis; it cannot stack while already armed.
 func _focus(skill: Resource) -> bool:
@@ -86,7 +98,8 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
         return false
     if cooldown_left > 0.0 or get_parent().get_node("Health").current <= 0 or get_parent().is_exhausted():
         return false
-    if not get_parent().get_node("Magicules").try_spend(cost):
+    # Free strikes (Humans, 24b) spend nothing and do not delay regeneration.
+    if cost > 0.0 and not get_parent().get_node("Magicules").try_spend(cost):
         return false
     direction = facing.normalized()
     cooldown_left = recovery
@@ -94,6 +107,10 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
     flash_effect = effect
     if effect == &"bow":
         return _shoot(strike_damage)
+    var fx: Dictionary = SKILL_EFFECTS.effects(_skill_id)
+    # Lunge-style skills move the caster forward first (stopped by walls and creatures).
+    if fx.has("dash") and get_parent() is CharacterBody2D:
+        get_parent().move_and_collide(direction * float(fx.dash))
     var query := PhysicsShapeQueryParameters2D.new()
     var reach_dot := 0.25
     if effect == &"spear":
@@ -119,9 +136,11 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
         query.transform = Transform2D(direction.angle(), global_position + direction * (PIERCE_LENGTH / 2.0 + 4.0))
     else:
         var circle := CircleShape2D.new()
-        circle.radius = 16.0
+        circle.radius = float(fx.get("area", 16.0))
         query.shape = circle
         query.transform = Transform2D(0.0, global_position + direction * 18.0)
+        if fx.has("area"):
+            reach_dot = -1.0
     query.collision_mask = 4
     var space := get_world_2d().direct_space_state
     var dealt := 0
@@ -137,6 +156,8 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
             if target.get_node("Health").take_damage(strike_damage, get_parent()):
                 dealt += before - target.get_node("Health").current
                 hits += 1
+                if not fx.is_empty() and target.has_method("apply_status"):
+                    target.apply_status(fx, get_parent())
     if drain > 0.0 and dealt > 0:
         get_parent().get_node("Health").heal(int(round(dealt * drain)))
     # Lifesteal gear: basic strikes heal 1 HP per creature hit.

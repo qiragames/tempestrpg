@@ -149,7 +149,7 @@ func _run() -> void:
         world.remove_child(helper)
         helper.queue_free()
     # --- Death: XP loss, the bag as a pile, respawn after 5 s
-    LEVELING.grant(actor, LEVELING.xp_for_level(4) - int(actor.progression.experience) + 60)
+    LEVELING.grant(actor, LEVELING.xp_for_level(4) - int(actor.progression.experience) + 1000)
     var xp_before: int = int(actor.progression.experience)
     var span: int = LEVELING.xp_for_level(5) - LEVELING.xp_for_level(4)
     actor.get_node("Inventory").add_specimen(load("res://data/specimens/forest_gnasher.tres"))

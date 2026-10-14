@@ -129,9 +129,9 @@ static func is_rich_chest(id: String) -> bool:
 
 ## Saved enemy entry for a fresh region creature (used by the v20 migration).
 static func fresh_enemy(entry: Array) -> Dictionary:
-    var stats: Dictionary = preload("res://scripts/enemies/forest_gnasher.gd").TIER_STATS[entry[3]]
+    var health: int = preload("res://scripts/enemies/forest_gnasher.gd").scaled_health(entry[3], level_of(entry[0], entry[3]))
     var spot := at(entry[2])
-    return {"id": entry[0], "kind": entry[1], "position": [spot.x, spot.y], "home": [spot.x, spot.y], "difficulty": entry[3], "hp": stats.health, "maximum_hp": stats.health, "immunity": 0.0, "state": 0, "state_time": 0.0, "target": ""}
+    return {"id": entry[0], "kind": entry[1], "position": [spot.x, spot.y], "home": [spot.x, spot.y], "difficulty": entry[3], "hp": health, "maximum_hp": health, "immunity": 0.0, "state": 0, "state_time": 0.0, "target": ""}
 
 ## Tiles props must keep clear of (content spots).
 static func spots() -> Array:

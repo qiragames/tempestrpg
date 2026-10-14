@@ -57,7 +57,7 @@ func _run() -> void:
     await _frames()
     actor.get_node("MeleeAttack").cooldown_left = 0.0
     actor.get_node("MeleeAttack").attack(Vector2.RIGHT)
-    _check(dummy.get_node("Health").current == 16, "Gnasher Form basic strike deals 14 damage")
+    _check(dummy.get_node("Health").current == 14, "Gnasher Form basic strike deals 16 damage (Slime 12 + 4)")
     dummy.queue_free()
     # Waiting out the cooldown: revert is free and always fits.
     actor._process(FORMS.CHANGE_COOLDOWN)

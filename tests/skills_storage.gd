@@ -34,7 +34,7 @@ func _activate_learned(actor: Node) -> void:
         if id in actor.progression.tree.active:
             continue
         while int(actor.progression.skill_points) < 1:
-            actor.gain_experience(25 * (actor.progression.level + 1) * actor.progression.level - int(actor.progression.experience), "test")
+            actor.gain_experience(preload("res://scripts/progression/leveling.gd").xp_for_level(actor.progression.level + 1) - int(actor.progression.experience), "test")
         actor.activate_skill(id)
 func _run() -> void:
     var world: Node2D = load("res://scenes/world/forest.tscn").instantiate()
@@ -82,13 +82,13 @@ func _run() -> void:
     var before: float = pool.current
     _input(&"skill_1")
     await _frames(2)
-    _check(second.get_node("Health").current == 10, "Skill input must deal 20 damage to the second enemy")
+    _check(second.get_node("Health").current == 0, "Skill input (Rending Bite, 46 damage since 24b) must defeat the 30-HP second enemy")
     _check(is_equal_approx(pool.current, before - 12.0), "Acquired skill must charge its 12-Magicule cost")
     _check(melee.cooldown_left > 0.7 and hud._slots[0].disabled, "Skill must start its 0.8-second cooldown and disable its hotbar button")
     _input(&"attack")
     _input(&"skill_1")
     await _frames(1)
-    _check(is_equal_approx(pool.current, before - 12.0) and second.get_node("Health").current == 10, "Shared attack cooldown must prevent basic/skill spam without extra spending")
+    _check(is_equal_approx(pool.current, before - 12.0) and second.get_node("Health").current == 0, "Shared attack cooldown must prevent basic/skill spam without extra spending")
     _input(&"skill_2")
     await _frames(1)
     _check(is_equal_approx(pool.current, before - 12.0), "An empty slot must not charge resources")

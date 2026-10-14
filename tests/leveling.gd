@@ -34,13 +34,18 @@ func _progress(level: int, experience: int, points: int) -> Dictionary:
 
 func _run() -> void:
     # --- Curve and validation
-    _check(LEVELING.xp_for_level(1) == 0 and LEVELING.xp_for_level(2) == 50 and LEVELING.xp_for_level(3) == 150 and LEVELING.xp_for_level(5) == 500, "Level curve: 50, 150, 300, 500, ...")
-    _check(LEVELING.level_for(0) == 1 and LEVELING.level_for(49) == 1 and LEVELING.level_for(50) == 2 and LEVELING.level_for(149) == 2 and LEVELING.level_for(150) == 3, "Level follows total experience")
+    # 24b curve: 100 * (level - 1)^2.8 -> 100, 696, 2167, 4850, ... (tuned by tests/balance_probe.gd)
+    _check(LEVELING.xp_for_level(1) == 0 and LEVELING.xp_for_level(2) == 100 and LEVELING.xp_for_level(3) == 696 and LEVELING.xp_for_level(4) == 2167 and LEVELING.xp_for_level(5) == 4850, "Level curve (24b): 100, 696, 2167, 4850, ...")
+    var increasing := true
+    for level in range(2, LEVELING.LEVEL_CAP):
+        increasing = increasing and LEVELING.xp_for_level(level + 1) - LEVELING.xp_for_level(level) > LEVELING.xp_for_level(level) - LEVELING.xp_for_level(level - 1)
+    _check(increasing and LEVELING.max_experience() > 45000, "Each level needs more XP than the one before (long tail to level 20: %d XP)" % LEVELING.max_experience())
+    _check(LEVELING.level_for(0) == 1 and LEVELING.level_for(99) == 1 and LEVELING.level_for(100) == 2 and LEVELING.level_for(695) == 2 and LEVELING.level_for(696) == 3, "Level follows total experience")
     _check(LEVELING.level_for(LEVELING.max_experience()) == LEVELING.LEVEL_CAP and LEVELING.level_for(99999999) == LEVELING.LEVEL_CAP, "Levels stop at the M4 cap of %d" % LEVELING.LEVEL_CAP)
-    _check(LEVELING.valid(_progress(1, 0, 0)) and LEVELING.valid(_progress(3, 160, 2)) and LEVELING.valid(_progress(3, 160, 0)), "Consistent progression is valid (points may be spent)")
-    var fractional := _progress(2, 60, 0)
-    fractional["experience"] = 60.5
-    var bad := [_progress(2, 10, 0), _progress(1, 60, 0), _progress(3, 160, 4), _progress(1, -5, 0), _progress(1, 0, -1), _progress(LEVELING.LEVEL_CAP, LEVELING.max_experience() + 1, 0), fractional]
+    _check(LEVELING.valid(_progress(1, 0, 0)) and LEVELING.valid(_progress(3, 2000, 2)) and LEVELING.valid(_progress(3, 2000, 0)), "Consistent progression is valid (points may be spent)")
+    var fractional := _progress(2, 400, 0)
+    fractional["experience"] = 400.5
+    var bad := [_progress(2, 10, 0), _progress(1, 400, 0), _progress(3, 2000, 4), _progress(1, -5, 0), _progress(1, 0, -1), _progress(LEVELING.LEVEL_CAP, LEVELING.max_experience() + 1, 0), fractional]
     var rejected := true
     for entry in bad:
         rejected = rejected and not LEVELING.valid(entry)
@@ -58,18 +63,18 @@ func _run() -> void:
     for enemy in get_nodes_in_group("enemies"):
         enemy.set_physics_process(false)
     _check(actor.progression.level == 1 and actor.progression.experience == 0 and actor.progression.skill_points == 1, "New characters start at level 1 with no XP and one skill point")
-    actor.gain_experience(60, "test")
-    _check(actor.progression.level == 2 and actor.progression.experience == 60 and actor.progression.skill_points == 2, "Reaching 50 XP gives level 2 and one more skill point")
-    _check(messages.any(func(m): return m.contains("+60 XP") and m.contains("Level 2 reached")), "Level-up is announced")
-    actor.gain_experience(300, "test")
+    actor.gain_experience(400, "test")
+    _check(actor.progression.level == 2 and actor.progression.experience == 400 and actor.progression.skill_points == 2, "Reaching 100 XP gives level 2 and one more skill point")
+    _check(messages.any(func(m): return m.contains("+400 XP") and m.contains("Level 2 reached")), "Level-up is announced")
+    actor.gain_experience(4400, "test")
     _check(actor.progression.level == 4 and actor.progression.skill_points == 4, "A large award can grant several levels and points at once")
     actor.gain_experience(0, "test")
     actor.gain_experience(-50, "test")
-    _check(actor.progression.experience == 360, "Zero or negative awards change nothing")
+    _check(actor.progression.experience == 4800, "Zero or negative awards change nothing")
     # Defeat credit goes to the character who landed the defeating blow.
     var easy := _creature("xp_easy", 0, Vector2(140, 600))
     easy.get_node("Health").take_damage(999, actor)
-    _check(actor.progression.experience == 360 + LEVELING.DEFEAT_XP[0], "Defeating an Easy creature gives %d XP" % LEVELING.DEFEAT_XP[0])
+    _check(actor.progression.experience == 4800 + LEVELING.DEFEAT_XP[0], "Defeating an Easy creature gives %d XP" % LEVELING.DEFEAT_XP[0])
     var elite := _creature("xp_elite", 2, Vector2(160, 600))
     elite.get_node("Health").take_damage(30, actor)
     var other = load("res://scenes/player/player.tscn").instantiate()
@@ -139,8 +144,8 @@ func _run() -> void:
     _check(actor.progression.experience == before, "Clients cannot award themselves experience")
     session.replica_world = false
     # --- HUD text
-    _check(HUD.level_text(_progress(1, 20, 0)) == "Lv 1 · XP 20 / 50", "HUD shows level and XP toward the next level")
-    _check(HUD.level_text(_progress(3, 160, 2)) == "Lv 3 · XP 160 / 300 · 2 skill points" and HUD.level_text(_progress(LEVELING.LEVEL_CAP, LEVELING.max_experience(), 0)) == "Lv %d · XP max" % LEVELING.LEVEL_CAP, "HUD shows unspent points and the cap")
+    _check(HUD.level_text(_progress(1, 20, 0)) == "Lv 1 · XP 20 / 100", "HUD shows level and XP toward the next level")
+    _check(HUD.level_text(_progress(3, 2000, 2)) == "Lv 3 · XP 2000 / 2167 · 2 skill points" and HUD.level_text(_progress(LEVELING.LEVEL_CAP, LEVELING.max_experience(), 0)) == "Lv %d · XP max" % LEVELING.LEVEL_CAP, "HUD shows unspent points and the cap")
     await _frames(1)
     _check(world.get_node("HUD")._level.text == HUD.level_text(actor.progression), "Live HUD label follows the local character")
     # --- Save, reload, validation and migration
@@ -163,7 +168,7 @@ func _run() -> void:
     legacy.version = 13
     legacy.players.host.progression = {"level": 3, "experience": 45, "race": "Slime", "quests": {}, "equipment": {}}
     var migrated: Variant = STORE.migrate(legacy)
-    _check(migrated is Dictionary and STORE.validate(migrated) and migrated.players.host.progression.level == 3 and migrated.players.host.progression.experience == 150 and migrated.players.host.progression.skill_points == 3, "v13 characters keep their level (XP raised to its threshold) and gain its skill points (one per level from v15)")
+    _check(migrated is Dictionary and STORE.validate(migrated) and migrated.players.host.progression.level == 3 and migrated.players.host.progression.experience == LEVELING.xp_for_level(3) and migrated.players.host.progression.skill_points == 3, "v13 characters keep their level (XP raised to its threshold) and gain its skill points (one per level from v15)")
     legacy.players.host.progression = {"level": 1, "experience": 0, "race": "Slime", "quests": {}, "equipment": {}}
     migrated = STORE.migrate(legacy)
     _check(migrated is Dictionary and STORE.validate(migrated) and migrated.players.host.progression.skill_points == 1, "Fresh v13 characters migrate to level 1 with its one point")

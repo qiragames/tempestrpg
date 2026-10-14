@@ -68,15 +68,17 @@ func heal(amount: int) -> void:
     changed.emit(current, maximum)
 
 ## `source` is the attacker (a character or creature); the last one to land a hit gets defeat credit.
-func take_damage(amount: int, source: Node = null) -> bool:
+## `over_time` (damage over time from skills, 24b) ignores immunity and does not start it.
+func take_damage(amount: int, source: Node = null, over_time: bool = false) -> bool:
     if not AUTHORITY.can_mutate(self):
         return false
-    if amount <= 0 or current <= 0 or immunity_left > 0.0:
+    if amount <= 0 or current <= 0 or (immunity_left > 0.0 and not over_time):
         return false
     last_hit_by = source
     var dealt: int = mini(current, maxi(1, amount - armor))
     current = maxi(0, current - maxi(1, amount - armor))
-    immunity_left = immunity_seconds
+    if not over_time:
+        immunity_left = immunity_seconds
     damaged.emit(dealt, source)
     changed.emit(current, maximum)
     if current == 0:

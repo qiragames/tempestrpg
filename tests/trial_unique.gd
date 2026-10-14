@@ -40,7 +40,7 @@ func _activate_learned(actor: Node) -> void:
         if id in actor.progression.tree.active:
             continue
         while int(actor.progression.skill_points) < 1:
-            actor.gain_experience(25 * (actor.progression.level + 1) * actor.progression.level - int(actor.progression.experience), "test")
+            actor.gain_experience(preload("res://scripts/progression/leveling.gd").xp_for_level(actor.progression.level + 1) - int(actor.progression.experience), "test")
         actor.activate_skill(id)
 func _run() -> void:
     world = load("res://scenes/world/forest.tscn").instantiate()

@@ -116,7 +116,7 @@ static func capture_entities(world: Node2D) -> Dictionary:
             continue
         if node.is_in_group("enemies"):
             var health = node.get_node("Health")
-            enemies.append({"id": node.entity_id, "kind": node.kind, "position": vector(node.position), "home": vector(node.home), "difficulty": node.difficulty, "hp": health.current, "maximum_hp": health.maximum, "immunity": health.immunity_left, "state": node.state, "state_time": node.state_time, "target": node.target.character_id if is_instance_valid(node.target) else "", "credit": node.credit.duplicate(), "group_scaled": node._group_scaled})
+            enemies.append({"id": node.entity_id, "kind": node.kind, "position": vector(node.position), "home": vector(node.home), "difficulty": node.difficulty, "hp": health.current, "maximum_hp": health.maximum, "immunity": health.immunity_left, "state": node.state, "state_time": node.state_time, "target": node.target.character_id if is_instance_valid(node.target) else "", "credit": node.credit.duplicate(), "group_scaled": node._group_scaled, "status": node.shown_status})
         elif node.is_in_group("gear_pickups"):
             loot.append({"id": node.entity_id, "position": vector(node.position), "item": node.item.duplicate(true), "owner": node.owner_id, "claim_until": node.claim_until})
         elif node.is_in_group("magicule_pickups"):
@@ -164,11 +164,13 @@ static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> vo
         actor.home = to_vector(state.home)
         actor.difficulty = int(state.difficulty)
         actor.speed = actor.TIER_STATS[actor.difficulty].speed
-        actor.damage = actor.TIER_STATS[actor.difficulty].damage
+        actor.level = actor.REGION.level_of(actor.entity_id, actor.difficulty)
+        actor.damage = actor.scaled_damage(actor.difficulty, actor.level)
         actor.get_node("Health").maximum = int(state.maximum_hp)
         actor.get_node("Health").current = int(state.hp)
         actor.credit = state.get("credit", {}).duplicate()
-        actor._group_scaled = bool(state.get("group_scaled", state.maximum_hp > actor.TIER_STATS[actor.difficulty].health))
+        actor.shown_status = String(state.get("status", ""))
+        actor._group_scaled = bool(state.get("group_scaled", state.maximum_hp > actor.scaled_health(actor.difficulty, actor.level)))
         actor.get_node("Health").immunity_left = state.immunity
         actor.state = int(state.state)
         actor.state_time = state.state_time

@@ -4,13 +4,13 @@ A Godot **4.6.3** / GDScript prototype for a top-down pixel-art Isekai RPG.
 
 ## Screenshots
 
-Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 68 captures are in `docs/playtest/` with `docs/playtest/log.md`.
+Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 69 captures are in `docs/playtest/` with `docs/playtest/log.md`.
 
 <table>
+<tr><td align="center"><img src="docs/playtest/69_skill_effects.png" width="400" alt="Skill effects: stunned, rooted, slowed, bleeding"><br><sub>Skill effects: stunned, rooted, slowed, bleeding</sub></td><td align="center"><img src="docs/playtest/61_cinder_crater.png" width="400" alt="Cinder Crater"><br><sub>Cinder Crater</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/67_world_map_markers.png" width="400" alt="World map: your pile and discovered leveling spots"><br><sub>World map: your pile and discovered leveling spots</sub></td><td align="center"><img src="docs/playtest/66_leveling_spot.png" width="400" alt="A hidden leveling spot, creature levels"><br><sub>A hidden leveling spot, creature levels</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/63_thornwood_creatures.png" width="400" alt="Thornwood with the round minimap"><br><sub>Thornwood with the round minimap</sub></td><td align="center"><img src="docs/playtest/65_pile_minimap.png" width="400" alt="Your dropped bag marked on the minimap"><br><sub>Your dropped bag marked on the minimap</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/60_harrowmere.png" width="400" alt="Harrowmere, the town island"><br><sub>Harrowmere, the town island</sub></td><td align="center"><img src="docs/playtest/58_mirror_lake.png" width="400" alt="Mirror Lake and the keep ruins"><br><sub>Mirror Lake and the keep ruins</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/68_effects.png" width="400" alt="Effects"><br><sub>Effects</sub></td><td align="center"><img src="docs/playtest/61_cinder_crater.png" width="400" alt="Cinder Crater"><br><sub>Cinder Crater</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/01_title_menu.png" width="400" alt="Title screen"><br><sub>Title screen</sub></td><td align="center"><img src="docs/playtest/52_pause_open.png" width="400" alt="Pause overlay"><br><sub>Pause overlay</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/43_equipment.png" width="400" alt="Equipment window with an item card"><br><sub>Equipment window with an item card</sub></td><td align="center"><img src="docs/playtest/55_races.png" width="400" alt="Slime, Human and Demon"><br><sub>Slime, Human and Demon</sub></td></tr>
 </table>
@@ -30,9 +30,19 @@ The First Clearing is the start of an archipelago of about 10 × 11 screens (M4.
 
 Tests: `tests/balance_systems.gd` (32), plus updated leveling, naming, races, respawn, sprites, weapons and network checks.
 
+## Numbers and balance (step 24b)
+
+- **Basic strikes by race:** Slime 12 damage for 2 Magicules, Human 10 damage for free (and 25% faster recovery), Demon 14 damage for 4 Magicules. Weapons deal their own damage for every race.
+- **Skills** hit harder the more they cost (12 × (cost / 2)^0.75: Thorn Lash 34 … Piercing Fang and Dark Lance 62) and each has an effect: **slow** (Thorn Lash, Dark Lance), **root** (Engulf), **stun** that cancels a creature's bite wind-up (Power Slash, Piercing Fang), **knockback** (Power Slash, Lunge), **area** (Acid Splash), **bleed/burn** over a few seconds (Acid Splash, Rending Bite, Engulf, Piercing Fang), **dash** (Lunge) and **drain** (Shadow Claw). Affected creatures are tinted for everyone (stunned yellow, rooted green, slowed blue, bleeding violet); the hotbar tooltip lists a skill's effects.
+- **Creatures** get 30% more HP and 8% stronger bites per level above their tier's base, so Cinder Crater's Elites (levels 11–13) need your skills.
+- **XP:** a defeat gives (10 + 2.5 × creature level) × 1 / 1.4 / 2 for Easy / Standard / Elite, an absorption half of that, the trial 1500. Levels need 100 × (level − 1)^2.8 XP in total: level 2 after about 5 creatures, level 5 after ~20 minutes, level 10 after ~2 hours, level 20 after ~11–12 hours of play (bot estimate in [`docs/balance/report.md`](docs/balance/report.md)).
+- Older characters keep their level and skill points; their progress within the level carries over (schema **v22**).
+
+Tests: `tests/skill_numbers.gd` (15) and the bot balance probe `tests/balance_probe.gd` (8 checks; it rewrites the report).
+
 ## Sound and effects
 
-Every region has its own music (the clearing, Thornwood's dark forest, the mystical Mirror Lake, tense Cinder Crater, Harrowmere's village tune, a sea shanty on the bridge) and a running trial switches to fight music. Strikes swoosh with a slash arc, hits flash and thud, defeated creatures vanish in smoke, Gnasher bites show a claw, Magicule pickups chime, analysis glows on its target, and level-ups, new skills, chests, evolution and buildings have their own jingles and effects. Your friends' attacks now show their attack pose on your screen too. Settings (title or pause → Options): music and effects volume, mute and reduced effects — stored on your computer only. Tests: `tests/audio_vfx.gd` (22).
+Every region has its own music (the clearing, Thornwood's dark forest, the mystical Mirror Lake, tense Cinder Crater, Harrowmere's village tune, a sea shanty on the bridge) and a running trial switches to fight music. The mix is deliberately minimal (user feedback): sounds are quiet and short, the same sound is spaced out instead of repeating, at most four effects ring at once, distant ones fade out and the music sits under them. Strikes swoosh with a slash arc, hits flash and thud, defeated creatures vanish in smoke, Gnasher bites show a claw, Magicule pickups chime, analysis glows on its target, and level-ups, new skills, chests, evolution and buildings have their own jingles and effects. Your friends' attacks now show their attack pose on your screen too. Settings (title or pause → Options): music and effects volume, mute and reduced effects — stored on your computer only. Tests: `tests/audio_vfx.gd` (22).
 
 ## Play
 
@@ -40,7 +50,7 @@ Open `project.godot` in Godot 4.6.3 and press **F5** to run the project. The gam
 
 The game renders at a 640 × 360 base resolution (×2 = 1280 × 720 default window, ×3 = 1920 × 1080 fullscreen), integer scaling, nearest texture filtering, and a bounded player camera. Characters, creatures, the clearing and the interface use real pixel art (see Art below). One Forest Gnasher notices you within 180 pixels, chases at 55 pixels/second, and pauses for a 0.35-second bite windup. Dodge away while it turns orange. It recovers for 0.9 seconds before attacking again. Its basic AI can collide with terrain; pathfinding is not implemented.
 
-The player has 100 HP and 0.65-second damage immunity. Bites deal 12 damage; aura-assisted directional strikes deal 10 damage, cost **8 Magicules**, and have a 0.4-second cooldown. A strike spends its cost even if it misses. The shared Magicule pool starts at **100**, regenerates **6 per second** after **1.5 seconds** without successful spending, and is shown as a number and bar. Unaffordable strikes fail without damage or cooldown; moving remains free so you can retreat and recover. Cooldown rejection does not spend resources or postpone recovery. Defeat stops recovery; restarting restores the pool.
+The player has 100 HP and 0.65-second damage immunity. Bites deal 12 damage; aura-assisted directional strikes deal **12** damage for **2 Magicules** as a Slime (Human 10 for free, Demon 14 for 4) and have a 0.4-second cooldown. A strike spends its cost even if it misses. The shared Magicule pool starts at **100**, regenerates **6 per second** after **1.5 seconds** without successful spending, and is shown as a number and bar. Unaffordable strikes fail without damage or cooldown; moving remains free so you can retreat and recover. Cooldown rejection does not spend resources or postpone recovery. Defeat stops recovery; restarting restores the pool.
 
 The two starting enemies have 30 HP each and visible health bars. Strike range and obstruction checks prevent attacks through terrain. Defeated creatures remain available for absorption; a defeated player must restart. Naming can cause temporary sleep; current numbers are prototype balance values.
 
@@ -52,7 +62,7 @@ Skill/specimen definitions live in `data/skills` and `data/specimens`. Hosted ch
 
 ## Skill hotbar and dimensional storage
 
-Analysis learns Rending Bite; press **K** and spend a skill point to activate it. Activation fills the first free hotbar slot. Use **1** or click its button for a directional **20-damage** strike costing **12 Magicules**, with a **0.8-second cooldown**. It shares attack recovery with the basic strike so alternating keys cannot bypass cooldowns. Other slots fill as you activate acquired skills or buy tree skill nodes. The hotbar shows resource costs and cooldown state, and rejects use before acquisition, after defeat, or with insufficient Magicules. A second Gnasher in the clearing lets you try the acquired skill.
+Analysis learns Rending Bite; press **K** and spend a skill point to activate it. Activation fills the first free hotbar slot. Use **1** or click its button for a directional **46-damage** strike that makes the creature bleed (15 more over 3 s), costing **12 Magicules**, with a **0.8-second cooldown**. It shares attack recovery with the basic strike so alternating keys cannot bypass cooldowns. Other slots fill as you activate acquired skills or buy tree skill nodes. The hotbar shows resource costs and cooldown state, and rejects use before acquisition, after defeat, or with insufficient Magicules. A second Gnasher in the clearing lets you try the acquired skill.
 
 Each completed analysis retains one **Gnasher Essence** in dimensional storage, even when its skill was already known. **I** opens a dark framed material bag with stack counts, capacity, item details, and **Discard 1**. **I / Escape / Close** resumes the game. In offline mode, opening the bag pauses gameplay. In hosted multiplayer, it blocks only the local player’s movement/actions; enemies, other players, resources, and analysis continue. The capacity is **20 material units**; a full bag prevents absorption without charging its cost. If it fills during analysis, the channel cancels and retains the corpse. Discarding essence does not remove learned skills.
 
@@ -117,6 +127,8 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/audio_vfx.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/balance_systems.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/balance_persistence.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/skill_numbers.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/balance_probe.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
 python3 tests/network_forms.py
@@ -125,7 +137,7 @@ python3 tests/network_worlds.py
 "$GODOT_BIN" --headless --path . --quit-after 120
 ```
 
-The cloud checks validate import, 37 local gameplay/persistence/UI/visual suites (1095 checks including state-preservation regressions) and 266 real multi-process networking checks (1361 total through step 24a, independently verified on Linux; Claude reports 1350 Windows checks before the added regressions; use `python3` on Linux or `python` on Windows). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
+The checks validate import, 39 local gameplay/persistence/UI/visual suites (1122 checks including the bot balance probe) and 266 real multi-process networking checks (1388 total through step 24b on Windows; use `python3` on Linux or `python` on Windows). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
 
 ## Structure
 
@@ -255,7 +267,7 @@ Review fix: saved Extra/Unique/Ultimate skills must retain their required known 
 
 ## Mimicry: Gnasher Form
 
-After your character has analyzed a Forest Gnasher, press **T** to take **Gnasher Form** for **20 Magicules**: you move 30% faster and your basic strike deals 14 instead of 10 damage. Skills keep their own damage. Press **T** again to turn back into a slime for free. Changing form has a 2-second cooldown, shown next to the form name in the HUD. The Gnasher body is slightly larger, so you need a little room away from walls to transform; if there is none, nothing is charged. Transforming never restores HP or Magicules and is impossible while asleep, defeated or in a menu. Defeat always turns you back into a slime. Each character's form is saved (schema **v9**; older characters start as slimes) and every player sees it. Tests: `tests/mimic_form.gd` (30) and `python3 tests/network_forms.py` (17 real-process checks).
+After your character has analyzed a Forest Gnasher, press **T** to take **Gnasher Form** for **20 Magicules**: you move 30% faster and your basic strike deals 4 more damage (16 instead of 12). Skills keep their own damage. Press **T** again to turn back into a slime for free. Changing form has a 2-second cooldown, shown next to the form name in the HUD. The Gnasher body is slightly larger, so you need a little room away from walls to transform; if there is none, nothing is charged. Transforming never restores HP or Magicules and is impossible while asleep, defeated or in a menu. Defeat always turns you back into a slime. Each character's form is saved (schema **v9**; older characters start as slimes) and every player sees it. Tests: `tests/mimic_form.gd` (30) and `python3 tests/network_forms.py` (17 real-process checks).
 
 ## Proving Trial and the first Unique skill (placeholder story)
 
@@ -303,14 +315,14 @@ Press **K** to open your race's **skill tree**. Every level (level 1 included) g
 When you create a world (or join a friend's world for the first time) you choose your race:
 
 - **Slime** — HP 100, Magicules 100. Absorbs fastest and gains the full absorbed vitality; takes **mimic forms** from the start.
-- **Human** — HP 120, Magicules 70. **Weapon mastery:** +4 strike damage and every attack recovers 25% faster.
+- **Human** — HP 120, Magicules 70. **Weapon mastery:** free basic strikes (10 damage) and every attack recovers 25% faster.
 - **Demon** — HP 90, Magicules 130, a little faster. **Dark affinity:** skills deal 25% more damage and drain 20% of the damage dealt back as HP.
 
 Everyone can absorb creatures and learn their skills; Humans and Demons just take longer (1.8 s instead of 1.2 s) and heal half as much from it. **Mimicry** comes to every race: Slimes from level 1, Demons from level 5, Humans only at the endgame (level 20). **Naming** an ally costs **80% of your maximum Magicules** (Slime 80, Human 56, Demon 104), so every race can name its first ally. Your race is kept with your character in that world. The art is placeholder until the sprite step. Tests: `tests/races.gd` (30).
 
 ## Experience and levels
 
-You earn **XP** for the defeating blow on a creature (Easy 10, Standard 20, Elite 40), for every completed **absorption** (5 / 10 / 20) and for completing the **trial** (60). Levels need 50, 150, 300, 500 … total XP, up to **level 20** for now. Each level (level 1 included) gives **one skill point** for the skill tree (K). The top-right of the HUD shows your level, XP toward the next level and unspent points, and the System Voice announces level-ups. Only the player who earns XP gets it; trial creatures give no XP of their own. Saved with your character (schema **v14**). Tests: `tests/leveling.gd` (29).
+You earn **XP** for defeating creatures (in the clearing Easy 13, Standard 21, Elite 40; more for higher-level creatures elsewhere), for every completed **absorption** (half of that) and for completing the **trial** (1500). Levels need 100, 696, 2167, 4850 … total XP, up to **level 20** for now (step 24b). Each level (level 1 included) gives **one skill point** for the skill tree (K). The top-right of the HUD shows your level, XP toward the next level and unspent points, and the System Voice announces level-ups. Only the player who earns XP gets it; trial creatures give no XP of their own. Saved with your character (schema **v14**). Tests: `tests/leveling.gd` (29).
 
 ## Healing: absorbed vitality
 

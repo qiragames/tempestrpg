@@ -56,7 +56,7 @@ func _shot(name: String, caption: String) -> void:
 ## so the bot is still given any missing XP for points; logged.
 func _use_tree(id: String, shot: String = "", caption: String = "") -> bool:
     if int(player.progression.skill_points) < 1:
-        var need: int = 25 * (player.progression.level + 1) * player.progression.level - int(player.progression.experience)
+        var need: int = preload("res://scripts/progression/leveling.gd").xp_for_level(player.progression.level + 1) - int(player.progression.experience)
         player.gain_experience(need, "showcase assistance")
         xp_assist += need
         _log("- (XP assistance: +%d XP to reach level %d for a skill point)" % [need, player.progression.level])
@@ -658,6 +658,28 @@ func _run() -> void:
         effects.spawn(world, ["hit_spark", "sparkle", "boost", "ring"][index], showcase.position + Vector2(-60 + index * 40, -20))
     await _wait(0.12)
     await _shot("effects", "Effects: hit flash, sparkle (pickups, chests), level-up glow, ring (skills, buildings)")
+    _log("## 17. Skill effects and numbers (step 24b)")
+    # Four frozen creatures, each under one skill effect, show the status tints every peer sees.
+    var statuses := [["stun", {"stun": 30.0}], ["root", {"root": 30.0}], ["slow", {"slow": [0.5, 30.0]}], ["dot", {"dot": [0, 30.0]}]]
+    var tinted: Array = []
+    for index in range(statuses.size()):
+        var creature = load("res://scenes/enemies/forest_gnasher.tscn").instantiate()
+        creature.entity_id = "showcase_status_%d" % index
+        creature.position = showcase.position + Vector2(-60 + index * 40, 24)
+        world.add_child(creature)
+        world.wire_enemy(creature)
+        creature.set_physics_process(false)
+        creature.apply_status(statuses[index][1], showcase)
+        tinted.append(creature)
+    await _wait(0.2)
+    _check(tinted.map(func(creature): return creature.shown_status) == ["stun", "root", "slow", "dot"], "Skill effects tint creatures: stunned yellow, rooted green, slowed blue, burning/bleeding violet")
+    var leveling := preload("res://scripts/progression/leveling.gd")
+    var races := preload("res://scripts/races/race_catalogue.gd")
+    _log("- Basic strikes: " + ", ".join(races.ORDER.map(func(race): return "%s %d dmg for %s" % [race, races.stats(race).strike_damage, "free" if races.stats(race).strike_cost == 0.0 else "%d Magicules" % int(races.stats(race).strike_cost)])))
+    _log("- XP to reach levels 2 / 5 / 10 / 20: %d / %d / %d / %d (balance report: docs/balance/report.md)" % [leveling.xp_for_level(2), leveling.xp_for_level(5), leveling.xp_for_level(10), leveling.xp_for_level(20)])
+    await _shot("skill_effects", "Skill effects on creatures: stunned (yellow), rooted (green), slowed (blue), burning/bleeding (violet)")
+    for creature in tinted:
+        creature.queue_free()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

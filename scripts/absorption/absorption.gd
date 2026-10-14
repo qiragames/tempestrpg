@@ -95,7 +95,7 @@ func _process(delta: float) -> void:
         # The skill book applies the catalogue's unlock rules to this character's evidence.
         var gained: Array = get_parent().get_node("SkillBook").record_analysis(specimen.id)
         if "difficulty" in _target:
-            get_parent().gain_experience(LEVELING.ABSORB_XP[_target.difficulty], "absorption")
+            get_parent().gain_experience(LEVELING.absorb_xp(_target.level, _target.difficulty), "absorption")
         _target.queue_free()
         _target = null
         analyzed.emit(specimen, not gained.is_empty())

@@ -122,12 +122,14 @@ func _run() -> void:
     pool._current = pool.maximum
     var hurt: int = health.current
     actor.get_node("MeleeAttack").attack(Vector2.DOWN)
-    _check(target.get_node("Health").current == 30 - 12 and health.current == hurt + 1, "Gloves +2 strike (12 damage) and Lifesteal heals 1 HP per hit")
+    _check(target.get_node("Health").current == 30 - 14 and health.current == hurt + 1, "Gloves +2 strike (Slime 12 + 2 = 14 damage) and Lifesteal heals 1 HP per hit")
     var second := _creature("g_second", actor.position + Vector2(0, 18))
+    second.get_node("Health").maximum = 200
+    second.get_node("Health").current = 200
     target.queue_free()
     actor.get_node("MeleeAttack").cooldown_left = 0.0
     actor.get_node("MeleeAttack").attack_skill(Vector2.DOWN, &"rending_bite")
-    _check(second.get_node("Health").current == 30 - 22, "Keen: Rending Bite deals 22 instead of 20")
+    _check(second.get_node("Health").current == 200 - 51, "Keen: Rending Bite deals 51 instead of 46")
     second.queue_free()
     # --- Actives on G
     pool._current = 10.0

@@ -23,6 +23,18 @@ const GROUP_RADIUS := 300.0
 ## Sprites are drawn smaller than the art (it is ~26 px tall next to 16 px characters).
 const SPRITE_SCALE := 0.75
 const ELITE_SPRITE_SCALE := 0.85
+## Skill effects on this creature (24b, host): seconds left and strength. Not saved (they last a
+## few seconds); `shown_status` mirrors the strongest one for presentation on every peer.
+var slow_left := 0.0
+var slow_factor := 1.0
+var root_left := 0.0
+var stun_left := 0.0
+var dot_left := 0.0
+var dot_rate := 0.0
+var dot_source: Node
+var _dot_carry := 0.0
+var shown_status: String = ""
+const STATUS_TINT := {"stun": Color(1.0, 0.95, 0.45), "root": Color(0.55, 0.95, 0.5), "slow": Color(0.55, 0.75, 1.0), "dot": Color(0.85, 0.55, 1.0)}
 ## Character id -> damage dealt (host only; a respawned creature starts fresh).
 var credit: Dictionary = {}
 ## Level from RegionContent (shown above the health bar).
@@ -96,19 +108,75 @@ func _scale_for_group() -> void:
             nearby += 1
     var extra: int = clampi(nearby, 1, 8) - 1
     if extra > 0:
-        health.maximum = int(round(TIER_STATS[difficulty].health * (1.0 + GROUP_HP_BONUS * extra)))
+        health.maximum = int(round(scaled_health(difficulty, level) * (1.0 + GROUP_HP_BONUS * extra)))
         health.current = health.maximum
         health.changed.emit(health.current, health.maximum)
 
-## Apply a tier's stats at full health (fresh creatures; restores set health from the save).
+## 24b: each level above its tier's base level adds 30% HP and 8% damage.
+const LEVEL_HEALTH := 0.30
+const LEVEL_DAMAGE := 0.08
+
+static func scaled_health(tier: int, creature_level: int) -> int:
+    return int(round(TIER_STATS[tier].health * (1.0 + LEVEL_HEALTH * maxi(0, creature_level - REGION.TIER_LEVELS[tier]))))
+
+static func scaled_damage(tier: int, creature_level: int) -> int:
+    return int(round(TIER_STATS[tier].damage * (1.0 + LEVEL_DAMAGE * maxi(0, creature_level - REGION.TIER_LEVELS[tier]))))
+
+## Apply a tier's (and level's) stats at full health (fresh creatures; restores set health from the save).
 func set_difficulty(value: int) -> void:
     difficulty = value
+    level = REGION.level_of(entity_id, difficulty)
     var stats: Dictionary = TIER_STATS[difficulty]
-    health.maximum = stats.health
+    health.maximum = scaled_health(difficulty, level)
     health.current = health.maximum
-    damage = stats.damage
+    damage = scaled_damage(difficulty, level)
     speed = stats.speed
     queue_redraw()
+
+## Host: a skill's utility effects land on this creature (24b).
+func apply_status(fx: Dictionary, source: Node) -> void:
+    if not AUTHORITY.can_mutate(self) or state == State.DEFEATED:
+        return
+    if fx.has("slow"):
+        slow_factor = minf(slow_factor if slow_left > 0.0 else 1.0, float(fx.slow[0]))
+        slow_left = maxf(slow_left, float(fx.slow[1]))
+    if fx.has("root"):
+        root_left = maxf(root_left, float(fx.root))
+    if fx.has("stun"):
+        stun_left = maxf(stun_left, float(fx.stun))
+        if state == State.WINDUP:
+            # A stun interrupts the bite wind-up.
+            state = State.RECOVER
+            state_time = maxf(state_time, float(fx.stun))
+    if fx.has("dot"):
+        dot_rate = maxf(dot_rate if dot_left > 0.0 else 0.0, float(fx.dot[0]))
+        dot_left = maxf(dot_left, float(fx.dot[1]))
+        dot_source = source
+    if fx.has("knockback") and is_instance_valid(source):
+        move_and_collide(source.global_position.direction_to(global_position) * float(fx.knockback))
+    _update_shown_status()
+
+func _update_shown_status() -> void:
+    shown_status = "stun" if stun_left > 0.0 else ("root" if root_left > 0.0 else ("slow" if slow_left > 0.0 else ("dot" if dot_left > 0.0 else "")))
+
+func _tick_status(delta: float) -> void:
+    slow_left = maxf(0.0, slow_left - delta)
+    root_left = maxf(0.0, root_left - delta)
+    stun_left = maxf(0.0, stun_left - delta)
+    if dot_left > 0.0:
+        var step := minf(delta, dot_left)
+        dot_left -= step
+        _dot_carry += dot_rate * step
+        var whole := int(floor(_dot_carry + 0.000001))
+        if whole > 0:
+            _dot_carry -= whole
+            health.take_damage(whole, dot_source, true)
+    if slow_left <= 0.0:
+        slow_factor = 1.0
+    _update_shown_status()
+
+func _speed() -> float:
+    return speed * (slow_factor if slow_left > 0.0 else 1.0)
 
 func _physics_process(delta: float) -> void:
     if not AUTHORITY.can_mutate(self):
@@ -117,12 +185,15 @@ func _physics_process(delta: float) -> void:
     state_time = maxf(0.0, state_time - delta)
     if state == State.DEFEATED:
         return
+    _tick_status(delta)
+    if state == State.DEFEATED or stun_left > 0.0:
+        return
     if state != State.WINDUP or not is_instance_valid(target) or not target.is_inside_tree():
         target = _nearest_player()
     if not is_instance_valid(target):
         state = State.IDLE
-        if global_position.distance_to(home) > 3.0:
-            velocity = global_position.direction_to(home) * speed
+        if global_position.distance_to(home) > 3.0 and root_left <= 0.0:
+            velocity = global_position.direction_to(home) * _speed()
             move_and_slide()
         return
     var distance := global_position.distance_to(target.global_position)
@@ -134,7 +205,7 @@ func _physics_process(delta: float) -> void:
                 _scale_for_group()
                 state = State.CHASE
             elif global_position.distance_to(home) > 3.0:
-                velocity = global_position.direction_to(home) * speed
+                velocity = global_position.direction_to(home) * _speed()
         State.CHASE:
             if not nearby or not target_alive:
                 state = State.IDLE
@@ -142,7 +213,7 @@ func _physics_process(delta: float) -> void:
                 state = State.WINDUP
                 state_time = 0.35
             else:
-                velocity = global_position.direction_to(target.global_position) * speed
+                velocity = global_position.direction_to(target.global_position) * _speed()
         State.WINDUP:
             if state_time <= 0.0:
                 var ray := PhysicsRayQueryParameters2D.create(global_position, target.global_position, 1)
@@ -153,6 +224,8 @@ func _physics_process(delta: float) -> void:
         State.RECOVER:
             if state_time <= 0.0:
                 state = State.IDLE
+    if root_left > 0.0:
+        velocity = Vector2.ZERO
     move_and_slide()
     queue_redraw()
 
@@ -181,12 +254,12 @@ func _defeat() -> void:
         for entry in ranked:
             var actor: Node = world.player_by_id(entry[0]) if world != null and world.has_method("player_by_id") else null
             if is_instance_valid(actor):
-                actor.gain_experience(LEVELING.DEFEAT_XP[difficulty], "defeat")
+                actor.gain_experience(LEVELING.defeat_xp(level, difficulty), "defeat")
                 rewarded = true
         # A creature no character damaged keeps the old last-hit rule.
         var victor: Node = health.last_hit_by
         if not rewarded and is_instance_valid(victor) and victor.is_in_group("player"):
-            victor.gain_experience(LEVELING.DEFEAT_XP[difficulty], "defeat")
+            victor.gain_experience(LEVELING.defeat_xp(level, difficulty), "defeat")
     # Retain the defeated creature for the next absorption milestone.
     queue_redraw()
 
@@ -241,8 +314,8 @@ func _process(_delta: float) -> void:
         body_sprite.modulate = Color(0.5, 1.0, 1.0) if being_analyzed else Color(0.85, 0.85, 0.85)
         SPRITES.play(body_sprite, "death")
         return
-    # The wind-up flashes red so players can read the coming bite.
-    body_sprite.modulate = Color(1.0, 0.45, 0.4) if state == State.WINDUP else TIER_TINT[difficulty]
+    # The wind-up flashes red so players can read the coming bite; skill effects tint (24b).
+    body_sprite.modulate = Color(1.0, 0.45, 0.4) if state == State.WINDUP else (STATUS_TINT[shown_status] if STATUS_TINT.has(shown_status) else TIER_TINT[difficulty])
     SPRITES.play(body_sprite, "run" if moved or state == State.CHASE else "idle")
 
 func _draw() -> void:

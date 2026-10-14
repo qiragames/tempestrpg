@@ -77,12 +77,14 @@ try:
     check(sum(sum(r["state"]["inventory"]["counts"].values()) for r in results) == 1, "Concurrent absorption must award one material")
     check(sorted(len(r["state"]["skill_evidence"]["analyzed"]) for r in results) == [0, 1], "Concurrent absorption records unlock evidence for exactly one character")
     check(all(len(r["state"]["skill_ids"]) == len(r["state"]["skill_evidence"]["analyzed"]) for r in results), "Replicated skills match each character's own evidence")
-    check(abs(sum(r["pre_naming"] for r in results) - 188) < 0.01, "Two paid attacks, one absorption, and one shared drop must balance without duplicate rewards")
+    # 24b: both start at 80 and Slime strikes cost 2 (78 each), plus the one +4 drop.
+    pre_naming = sum(r["pre_naming"] for r in results)
+    check(abs(pre_naming - 160) < 0.01, f"Two paid attacks, one absorption, and one shared drop must balance without duplicate rewards (got {pre_naming})")
     owner = results[0]["allies"][0]["owner"]
     check(owner in {r["state"]["id"] for r in results}, "Concurrent recruitment must assign one connected character")
     check(all(r["allies"][0]["owner"] == owner for r in results), "All clients must observe the same ally ownership")
     # 24a: naming the level-1 goblin costs 37.5% of max Magicules (38 of 100), not 80.
-    check(abs(sum(r["state"]["magicules"]["current"] for r in results) - 150) < 0.01, "Concurrent/repeated naming charges exactly one 38-Magicule cost")
+    check(abs(sum(r["state"]["magicules"]["current"] for r in results) - 122) < 0.01, "Concurrent/repeated naming charges exactly one 38-Magicule cost (160 - 38)")
     for result in results:
         ally = result["allies"][0]
         check(ally["name"] == "Aster" and ally["race"] == "Hobgoblin" and ally["maximum_hp"] == 60 and ally["power"] == 8, "All clients observe the same evolved ally")

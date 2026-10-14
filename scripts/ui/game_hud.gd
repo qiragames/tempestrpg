@@ -8,6 +8,7 @@ const GEAR := preload("res://scripts/items/gear_catalogue.gd")
 const UI := preload("res://scripts/ui/ui_style.gd")
 const SPRITES := preload("res://scripts/visual/sprite_library.gd")
 const LEVELING := preload("res://scripts/progression/leveling.gd")
+const SKILL_EFFECTS := preload("res://scripts/skills/skill_effects.gd")
 var _hp_bar: ProgressBar
 var _xp_bar: ProgressBar
 var _portrait: TextureRect
@@ -213,6 +214,10 @@ func _refresh_respawn(delta: float) -> void:
         _respawn_left = maxf(0.0, _respawn_left - delta)
         _respawn_label.text = "DEFEATED\nRespawning in %d…" % int(ceil(_respawn_left))
 
+func _cost_text() -> String:
+    var cost: float = player.get_node("MeleeAttack").strike_cost()
+    return "free" if cost <= 0.0 else "%d Magicules" % int(cost)
+
 ## Live status-card values that have no signal of their own.
 func _refresh_status() -> void:
     var health: Node = player.get_node("Health")
@@ -328,11 +333,11 @@ func _process(_delta: float) -> void:
     var shape: Dictionary = player.FORMS.FORMS[player.form]
     var weapon: Dictionary = player.equipped_weapon()
     if not weapon.is_empty():
-        $StrikeCost.text = "%s: %d dmg, 8 Magicules · %s" % [GEAR.WEAPONS[GEAR.BASES[weapon.base].weapon].name, int(weapon.stats.damage), GEAR.WEAPONS[GEAR.BASES[weapon.base].weapon].text]
+        $StrikeCost.text = "%s: %d dmg, %s · %s" % [GEAR.WEAPONS[GEAR.BASES[weapon.base].weapon].name, int(weapon.stats.damage), _cost_text(), GEAR.WEAPONS[GEAR.BASES[weapon.base].weapon].text]
     elif player.can_mimic():
-        $StrikeCost.text = "Strike: 8 Magicules · Form: %s%s" % [shape.name, " (%.1fs)" % player.form_cooldown if player.form_cooldown > 0.0 else " · T: mimic"]
+        $StrikeCost.text = "Strike: %d dmg, %s · Form: %s%s" % [int(player.race_stats().strike_damage), _cost_text(), shape.name, " (%.1fs)" % player.form_cooldown if player.form_cooldown > 0.0 else " · T: mimic"]
     else:
-        $StrikeCost.text = "Strike: 8 Magicules · %s: %s" % [player.race(), player.race_stats().ability.get_slice(":", 0).to_lower()]
+        $StrikeCost.text = "Strike: %d dmg, %s · %s: %s" % [int(player.race_stats().strike_damage), _cost_text(), player.race(), player.race_stats().ability.get_slice(":", 0).to_lower()]
     _recovery.text = "Recovering: %.1fs · need %.0f Magicules" % [player.exhaustion_left, player.get_node("Magicules").maximum * 0.25]
     for index in range(_slots.size()):
         var skill: Resource = player.get_node("SkillBook").skill_at_slot(index)
@@ -343,7 +348,8 @@ func _process(_delta: float) -> void:
             continue
         var cooldown: float = player.get_node("MeleeAttack").cooldown_left
         button.text = "%s\n%s" % [skill.display_name, "%.1fs" % cooldown if cooldown > 0.0 else "%.0f Magicules" % skill.magicule_cost]
-        button.tooltip_text = "%s · %s\n%d damage · %.1fs cooldown" % [skill.tier, skill.display_name, skill.damage, skill.cooldown]
+        var effect_text: String = SKILL_EFFECTS.describe(String(skill.id))
+        button.tooltip_text = "%s · %s\n%d damage · %.1fs cooldown%s" % [skill.tier, skill.display_name, skill.damage, skill.cooldown, "\n" + effect_text.left(1).to_upper() + effect_text.substr(1) if effect_text != "" else ""]
         button.disabled = player.is_exhausted() or get_tree().paused or player.input_blocked or (session.replica_world and not session.active) or player.get_node("Health").current <= 0 or cooldown > 0.0 or player.get_node("Magicules").current < skill.magicule_cost
 
 func record_event(message: String) -> void:

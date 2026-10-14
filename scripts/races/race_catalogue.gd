@@ -1,23 +1,25 @@
 extends RefCounted
 ## Playable races (step 17b). Chosen once when a character is created, stored in
 ## `progression.race`. Base stats apply at creation; the modifiers below apply live on the host.
-## Starting numbers, tuned in step 24.
+## Step 24b (user decision): the unarmed basic strike differs by race — Human 10 damage for free,
+## Slime 12 for 2 Magicules, Demon 14 for 4. Weapons keep their own damage for every race but
+## cost the race's strike price. Humans keep their faster recovery.
 const DEFAULT := "Slime"
 const ORDER := ["Slime", "Human", "Demon"]
 const RACES := {
     "Slime": {
         "hp": 100, "magicules": 100.0, "move_speed": 95.0,
-        "absorb_time": 1.0, "absorb_heal": 1.0, "strike_bonus": 0, "recovery": 1.0, "skill_bonus": 0.0, "drain": 0.0, "mimic_level": 1,
+        "absorb_time": 1.0, "absorb_heal": 1.0, "strike_damage": 12, "strike_cost": 2.0, "strike_bonus": 0, "recovery": 1.0, "skill_bonus": 0.0, "drain": 0.0, "mimic_level": 1,
         "ability": "Predator body: fastest absorption, full absorbed vitality, mimic forms",
     },
     "Human": {
         "hp": 120, "magicules": 70.0, "move_speed": 95.0,
-        "absorb_time": 1.5, "absorb_heal": 0.5, "strike_bonus": 4, "recovery": 0.75, "skill_bonus": 0.0, "drain": 0.0, "mimic_level": 20,
-        "ability": "Weapon mastery: +4 strike damage, attacks recover 25% faster",
+        "absorb_time": 1.5, "absorb_heal": 0.5, "strike_damage": 10, "strike_cost": 0.0, "strike_bonus": 0, "recovery": 0.75, "skill_bonus": 0.0, "drain": 0.0, "mimic_level": 20,
+        "ability": "Weapon mastery: free basic strikes that recover 25% faster",
     },
     "Demon": {
         "hp": 90, "magicules": 130.0, "move_speed": 100.0,
-        "absorb_time": 1.5, "absorb_heal": 0.5, "strike_bonus": 0, "recovery": 1.0, "skill_bonus": 0.25, "drain": 0.2, "mimic_level": 5,
+        "absorb_time": 1.5, "absorb_heal": 0.5, "strike_damage": 14, "strike_cost": 4.0, "strike_bonus": 0, "recovery": 1.0, "skill_bonus": 0.25, "drain": 0.2, "mimic_level": 5,
         "ability": "Dark affinity: skills deal 25% more and drain 20% of their damage as HP",
     },
 }

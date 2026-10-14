@@ -93,7 +93,7 @@ func _run() -> void:
     var spawned_ok := true
     for entry in REGION.CREATURES:
         var creature = world.entity_by_id(entry[0])
-        spawned_ok = spawned_ok and creature != null and creature.kind == entry[1] and creature.difficulty == entry[3] and creature.home == REGION.at(entry[2]) and creature.get_node("Health").maximum == creature.TIER_STATS[entry[3]].health
+        spawned_ok = spawned_ok and creature != null and creature.kind == entry[1] and creature.difficulty == entry[3] and creature.home == REGION.at(entry[2]) and creature.get_node("Health").maximum == creature.scaled_health(entry[3], REGION.level_of(entry[0], entry[3]))
     _check(spawned_ok, "Each region creature spawns at its home with its kind and difficulty")
     _check(world.layout.chests.size() == LAYOUT.CHEST_IDS.size() + REGION.CHESTS.size() and world.camp.sites.has("stone_crater_1"), "The world knows the region chests and deposits")
     # Gather a region deposit into the shared stock.
@@ -139,7 +139,7 @@ func _run() -> void:
     _check(migrated is Dictionary and migrated.version == STORE.VERSION and STORE.validate(migrated), "A v19 world migrates to v20 and validates")
     _check(migrated.camp.deposits.stone_crater_1 == 12 and migrated.camp.deposits.size() == CAMP.DEPOSITS.size(), "Migrated worlds get untouched region deposits")
     var migrated_ids: Array = migrated.enemies.map(func(enemy): return enemy.id)
-    _check(REGION.creature_ids().all(func(id): return id in migrated_ids) and migrated.enemies.filter(func(enemy): return enemy.id == "crater_gnasher_1")[0].hp == 60, "Migrated worlds get fresh region creatures at full health")
+    _check(REGION.creature_ids().all(func(id): return id in migrated_ids) and migrated.enemies.filter(func(enemy): return enemy.id == "crater_gnasher_1")[0].hp == 204, "Migrated worlds get fresh region creatures at full health (level 12 Elite: 204 HP)")
     var applied: Node2D = load("res://scenes/world/forest.tscn").instantiate()
     world.queue_free()
     root.add_child(applied)
