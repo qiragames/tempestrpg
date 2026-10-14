@@ -1,16 +1,14 @@
 extends Control
-## Shop and ferry window (M4.5c). F next to a merchant opens its stock (Buy) and what it would
-## take from you (Sell); F on a pier offers the crossing. The window only names merchant, entry
-## or dock; the host checks distance, stock, Zeni and room (WorldTrade).
+## Shop window (M4.5c). F next to a merchant opens its stock (Buy) and what it would take from
+## you (Sell). The window only names merchant and entry; the host checks distance, stock, Zeni and
+## room (WorldTrade). Harbours have their own window (harbour_panel.gd).
 const TRADE := preload("res://scripts/trade/trade_catalogue.gd")
 const GEAR := preload("res://scripts/items/gear_catalogue.gd")
-const MAP := preload("res://scripts/world/world_map.gd")
 const UI := preload("res://scripts/ui/ui_style.gd")
 const FRAME := Rect2(96, 40, 448, 276)
 
 var hud: CanvasLayer
 var merchant_id := ""
-var dock_id := ""
 var selling := false
 var _title: Label
 var _purse: Label
@@ -72,13 +70,7 @@ func world() -> Node:
 
 func open(id: String) -> void:
     merchant_id = id
-    dock_id = ""
     selling = false
-    _show()
-
-func open_ferry(id: String) -> void:
-    dock_id = id
-    merchant_id = ""
     _show()
 
 func _show() -> void:
@@ -116,21 +108,6 @@ func _refresh() -> void:
     _purse.text = "Your purse: %d Zeni" % hud.player.zeni()
     _list.clear()
     _rows.clear()
-    var ferry := not dock_id.is_empty()
-    _buy_tab.visible = not ferry
-    _sell_tab.visible = not ferry
-    _list.visible = not ferry
-    if ferry:
-        var here: Array = MAP.ferry(dock_id)
-        var there: Array = MAP.ferry(here[4])
-        _title.text = here[1].to_upper()
-        _face.texture = load("res://assets/game/sprites/ferryman/ferryman_face.png")
-        _details.position = FRAME.position + Vector2(12, 80)
-        _details.size = Vector2(420, 120)
-        _details.text = "The ferryman can take you across the sea to %s (%s).\n\nThe crossing costs %d Zeni." % [there[1], MAP.region_name(MAP.dock_position(there[0])), TRADE.FERRY_FARE]
-        _action.text = "Sail · %d Zeni" % TRADE.FERRY_FARE
-        _action.disabled = hud.player.zeni() < TRADE.FERRY_FARE
-        return
     _details.position = FRAME.position + Vector2(242, 80)
     _details.size = Vector2(194, 130)
     var entry: Array = TRADE.merchant(merchant_id)
@@ -169,7 +146,7 @@ func _refresh() -> void:
     _refresh_details()
 
 func _refresh_details() -> void:
-    if not dock_id.is_empty() or _rows.is_empty():
+    if _rows.is_empty():
         return
     var selected: PackedInt32Array = _list.get_selected_items()
     var row: Dictionary = _rows[selected[0] if not selected.is_empty() else 0]
@@ -193,10 +170,6 @@ func _refresh_details() -> void:
         _action.disabled = hud.player.zeni() < int(row.price)
 
 func _act() -> void:
-    if not dock_id.is_empty():
-        hud.session.request_action("ferry", {"dock": dock_id})
-        close()
-        return
     var selected: PackedInt32Array = _list.get_selected_items()
     if _rows.is_empty() or selected.is_empty():
         return

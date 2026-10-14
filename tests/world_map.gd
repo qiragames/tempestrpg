@@ -81,7 +81,7 @@ func _run() -> void:
         var at := Vector2i(MAP.town(town)[3])
         by_ferry = by_ferry and reach[MAP.tile_index(at.x, at.y)] == 0
     _check(by_ferry and reach[MAP.tile_index(356, 176)] == 0, "Ambervale, Mirewood Marsh, Sakura Vale and the Emberreach Isles lie across the sea")
-    var docks: Array = MAP.FERRIES.map(func(ferry): return Vector2i(ferry[2]))
+    var docks: Array = MAP.HARBOURS.map(func(ferry): return Vector2i(ferry[2]))
     var sailing := _reachable(MAP.to_tile(LAYOUT.SPAWN), docks)
     var every_town := true
     for town in MAP.TOWNS:

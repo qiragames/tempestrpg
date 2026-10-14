@@ -37,6 +37,8 @@ var _discard: Button
 var _use: Button
 ## Shop and ferry window (M4.5c), see trade_panel.gd.
 var trade_panel: Control
+## Harbour window: map travel, tickets, passes, ships (M4.5d), see harbour_panel.gd.
+var harbour_panel: Control
 var _zeni: Label
 var _close: Button
 var _log: RichTextLabel
@@ -84,6 +86,8 @@ func _ready() -> void:
     add_child(world_map)
     trade_panel = load("res://scripts/ui/trade_panel.gd").new(self)
     add_child(trade_panel)
+    harbour_panel = load("res://scripts/ui/harbour_panel.gd").new(self)
+    add_child(harbour_panel)
     _hook_pause_returns()
     get_parent().system_message.connect(fusion.show_message)
     _ally_dialog = load("res://scripts/ui/ally_dialog.gd").new()
@@ -92,7 +96,7 @@ func _ready() -> void:
     add_child(_camp_dialog)
 
 func menu_open() -> bool:
-    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible)
+    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible) or (is_instance_valid(harbour_panel) and harbour_panel.visible)
 
 func bind_player(actor: Node2D) -> void:
     if player == actor:
@@ -329,7 +333,14 @@ func _process(_delta: float) -> void:
     _recovery.visible = player.is_exhausted()
     _level.text = level_text(player.progression)
     var potion_wait: float = player.consumable_cooldown if "consumable_cooldown" in player else 0.0
-    _zeni.text = "%d Zeni%s" % [player.zeni(), " · potions in %.0f s" % ceilf(potion_wait) if potion_wait > 0.0 else ""]
+    var extras := ""
+    if potion_wait > 0.0:
+        extras += " · potions in %.0f s" % ceilf(potion_wait)
+    if not player.riding().is_empty():
+        extras += " · riding (H)"
+    if player.fishing_bite_in != -INF:
+        extras += " · BITE! press F" if player.fishing_bite_in <= 0.0 else " · fishing…"
+    _zeni.text = "%d Zeni%s" % [player.zeni(), extras]
     # Region name of where this character stands (M4.5a).
     # The town or village you are in, else the region (M4.5c).
     var place: String = WORLD_MAP.place_name(player.global_position)

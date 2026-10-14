@@ -42,7 +42,10 @@ static func capture_player(actor: Node2D) -> Dictionary:
         "attack_recovery": actor.get_node("MeleeAttack").cooldown_left,
         "analysis": {"target": absorption._target.entity_id if absorption.active else "", "remaining": absorption.time_left, "focus": absorption.focus_left},
         "progression": actor.progression.duplicate(true),
-        "gear": actor.gear.duplicate(true)
+        "gear": actor.gear.duplicate(true),
+        # M4.5d: a cast line [seconds to the bite, bite window] (replicated for the HUD; a reload
+        # cancels it).
+        "fishing": [actor.fishing_bite_in, actor.fishing_window] if actor.fishing_bite_in != -INF else []
     }
 
 static func apply_player(actor: Node2D, state: Dictionary, world: Node2D, replica: bool) -> void:
@@ -90,10 +93,13 @@ static func apply_player(actor: Node2D, state: Dictionary, world: Node2D, replic
     bag.capacity = int(state.inventory.capacity)
     bag._entries.clear()
     for id in state.inventory.counts:
-        var specimen: Resource = load(CATALOGUE.SPECIMENS[CATALOGUE.MATERIALS[id]])
-        bag._entries[StringName(id)] = {"id": StringName(id), "name": specimen.material_name, "description": specimen.material_description, "category": "Materials", "count": int(state.inventory.counts[id])}
+        # Materials and (M4.5c/d) goods: consumables, scrolls, tickets, fish, runes, augments.
+        bag.restore_stack(String(id), int(state.inventory.counts[id]))
     bag.changed.emit()
     actor.get_node("MeleeAttack").cooldown_left = state.attack_recovery
+    var fishing: Array = state.get("fishing", [])
+    actor.fishing_bite_in = float(fishing[0]) if replica and fishing.size() == 2 else -INF
+    actor.fishing_window = float(fishing[1]) if replica and fishing.size() == 2 else 0.0
     # Saved maxima/regeneration already include equipped gear; only derived values are refreshed.
     actor.gear = state.gear.duplicate(true)
     actor.refresh_gear()
@@ -126,13 +132,15 @@ static func capture_entities(world: Node2D) -> Dictionary:
             piles.append(node.capture())
         elif node.is_in_group("allies"):
             allies.append({"id": node.entity_id, "position": vector(node.position), "owner": node.owner_id, "name": node.display_name, "race": node.race, "maximum_hp": node.maximum_hp, "power": node.power, "speed": node.follow_speed, "work": {"role": node.work_role, "target": node.work_target, "remaining": node.work_left}})
-    return {"enemies": enemies, "pickups": pickups, "allies": allies, "camp": world.camp.state.duplicate(true), "trial": world.trial.state.duplicate(true), "respawns": world.respawner.capture(), "loot": loot, "piles": piles, "trade": world.trade.capture()}
+    return {"enemies": enemies, "pickups": pickups, "allies": allies, "camp": world.camp.state.duplicate(true), "trial": world.trial.state.duplicate(true), "respawns": world.respawner.capture(), "loot": loot, "piles": piles, "trade": world.trade.capture(), "harbours": world.harbours.capture()}
 
 static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> void:
     world.camp.restore(data.camp)
     world.trial.restore(data.get("trial"))
     if data.get("trade") is Dictionary:
         world.trade.restore(data.trade)
+    if data.get("harbours") is Dictionary:
+        world.harbours.restore(data.harbours)
     world.respawner.restore(data.get("respawns", []))
     var wanted: Dictionary = {}
     for state in data.get("allies", []):

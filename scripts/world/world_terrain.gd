@@ -421,7 +421,13 @@ func _plan_props() -> void:
         taken.append(_footprint(landmark[0], landmark[1]))
     for town in MAP.TOWNS:
         _plan_town(town, map, taken)
-    for ferry in MAP.FERRIES:
+    for ferry in MAP.HARBOURS:
+        var side := Vector2(ferry[3].y, ferry[3].x).abs()
+        var house: Vector2 = Vector2(ferry[2]) - Vector2(ferry[3]) * 3.0 + side * 6.0 + Vector2(0, 1)
+        var footprint := _footprint("house_wood" if not ferry[4] else "lodge", house)
+        if _fits(map, footprint, taken):
+            taken.append(footprint.grow(1.0))
+            _prop("house_wood" if not ferry[4] else "lodge", MAP.to_world(house))
         var direction := Vector2(ferry[3])
         var end: Vector2 = Vector2(ferry[2]) + direction * (MAP.PIER_LENGTH + 0.5)
         var boat: Vector2 = end + (Vector2(3.5, 2.0) if direction.x == 0 else direction * 3.0 + Vector2(0, 2.0))
@@ -559,7 +565,7 @@ func _near_landmark(tile: Vector2i, spots: Array) -> bool:
     for spot in spots:
         if Vector2(tile).distance_to(spot) < 3.0:
             return true
-    for ferry in MAP.FERRIES:
-        if Vector2(tile).distance_to(ferry[2]) < 6.0:
+    for ferry in MAP.HARBOURS:
+        if Vector2(tile).distance_to(ferry[2]) < 9.0:
             return true
     return Vector2(tile).distance_to(MAP.AREAS[1][0]) < 9.0

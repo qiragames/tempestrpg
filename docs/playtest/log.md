@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.1 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.2 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -299,7 +299,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (640x360)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Uncommon Ash Spear
+- [x] The chest gave an Uncommon-or-better item: Uncommon Travel Boots
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (640x360)
@@ -455,30 +455,55 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 ![Selling: the merchant pays 30% of the price for goods and unequipped gear](76_shop_sell.png)
 *Selling: the merchant pays 30% of the price for goods and unequipped gear* (640x360)
 
+- [x] F at a harbour opens travel by map; a ticket lets you sail
 
-![Sunfall Pier: the ferryman sails to Amberhold across the sea for 30 Zeni](77_ferry.png)
-*Sunfall Pier: the ferryman sails to Amberhold across the sea for 30 Zeni* (640x360)
+![Sunfall Harbour: pick a harbour on the map; sail with a ticket, a ferry pass or your own ship](77_harbour_map.png)
+*Sunfall Harbour: pick a harbour on the map; sail with a ticket, a ferry pass or your own ship* (640x360)
+
+
+![The voyage across the map to Amberhold](78_voyage.png)
+*The voyage across the map to Amberhold* (640x360)
 
 - [x] The ferry crosses to Ambervale (a region you cannot walk to)
 
-![Arrived at Amberhold Pier in Ambervale, the autumn continent](78_amberhold_pier.png)
-*Arrived at Amberhold Pier in Ambervale, the autumn continent* (640x360)
+![Arrived at Amberhold Harbour in Ambervale, the autumn continent](79_amberhold_pier.png)
+*Arrived at Amberhold Harbour in Ambervale, the autumn continent* (640x360)
 
 
-![Hanamura in Sakura Vale (ferry): cherry blossoms, bamboo and pagoda-style houses](79_hanamura.png)
+![Hanamura in Sakura Vale (ferry): cherry blossoms, bamboo and pagoda-style houses](80_hanamura.png)
 *Hanamura in Sakura Vale (ferry): cherry blossoms, bamboo and pagoda-style houses* (640x360)
 
 
-![The Emberreach volcano (ferry): its slopes rise in two levels around a lava crater](80_volcano.png)
+![The Emberreach volcano (ferry): its slopes rise in two levels around a lava crater](81_volcano.png)
 *The Emberreach volcano (ferry): its slopes rise in two levels around a lava crater* (640x360)
 
 
-![Bogsend in Mirewood Marsh (ferry): mud, pools and stilt huts](81_bogsend.png)
+![Bogsend in Mirewood Marsh (ferry): mud, pools and stilt huts](82_bogsend.png)
 *Bogsend in Mirewood Marsh (ferry): mud, pools and stilt huts* (640x360)
 
 
-![The world map: the home continent, the ferry lands, every town (gold) and the ferry piers](82_world_map_full.png)
+![The world map: the home continent, the ferry lands, every town (gold) and the ferry piers](83_world_map_full.png)
 *The world map: the home continent, the ferry lands, every town (gold) and the ferry piers* (640x360)
+
+## 19. Ships, tools, mounts, runes and augments (M4.5d)
+- [x] Bought a ship from Cinderport's shipwright (40,000 Zeni)
+
+![Your own ship docked at Cinderport: no more tickets, and up to three friends sail with you](84_own_ship.png)
+*Your own ship docked at Cinderport: no more tickets, and up to three friends sail with you* (640x360)
+
+- [x] Riding a horse from the stable (+60% speed, H)
+
+![Riding a horse bought at Brookhaven's stable (+60% speed on land; a hit or an attack throws you off)](85_riding.png)
+*Riding a horse bought at Brookhaven's stable (+60% speed on land; a hit or an attack throws you off)* (640x360)
+
+
+![Fishing from Sunfall's pier: the HUD calls the bite (press F); rods catch rarer fish by tier](86_fishing.png)
+*Fishing from Sunfall's pier: the HUD calls the bite (press F); rods catch rarer fish by tier* (640x360)
+
+- [x] Caught a fish
+
+![A wild desert lion: offer it viper scales (F) to tame it as a mount](87_wild_lion.png)
+*A wild desert lion: offer it viper scales (F) to tame it as a mount* (640x360)
 
 
 ## System messages seen
@@ -539,7 +564,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +1500 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Epic Cloth Hood.
+- Trial reward: Rare Spirit Amulet.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +21 XP (defeat).
@@ -556,12 +581,12 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Uncommon Ash Spear.
-- +42 Zeni (chest).
+- Chest opened: Uncommon Travel Boots.
+- +34 Zeni (chest).
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 
 The bot retreated 1 time(s) to let Magicules recover.
 XP assistance for skill points: 550 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 82 screenshots.**
+**Result: 0 failed checks, 87 screenshots.**

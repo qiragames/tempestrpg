@@ -462,11 +462,43 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             return world.trade.sell(actor, payload.merchant, payload.kind, payload.id)
         rejected_requests += 1
         return false
-    if action == "ferry":
-        if payload.size() != 1 or not payload.get("dock") is String or payload.dock.length() > 32:
+    if action == "harbour":
+        # M4.5d: tickets, passes, ships, invitations and voyages; the host checks the rest.
+        var operation: Variant = payload.get("operation")
+        var here: Variant = payload.get("harbour", "")
+        var target: Variant = payload.get("to", payload.get("guest", ""))
+        if not operation in ["ticket", "pass", "ship", "summon", "invite", "accept", "sail"] or not here is String or here.length() > 32 or not target is String or target.length() > 64 or payload.size() > 3:
             rejected_requests += 1
             return false
-        return world.trade.sail(actor, payload.dock)
+        match operation:
+            "ticket":
+                return world.harbours.buy_ticket(actor, here, target)
+            "pass":
+                return world.harbours.buy_pass(actor, here)
+            "ship":
+                return world.harbours.buy_ship(actor, here)
+            "summon":
+                return world.harbours.summon(actor, here)
+            "invite":
+                return world.harbours.invite(actor, here, target)
+            "accept":
+                return world.harbours.accept(actor)
+            "sail":
+                return world.harbours.sail(actor, here, target)
+        return false
+    if action == "fish":
+        if payload.size() != 1 or not payload.get("operation") in ["cast", "reel"]:
+            rejected_requests += 1
+            return false
+        return actor.cast_line() if payload.operation == "cast" else actor.reel()
+    if action == "mount":
+        var mount_operation: Variant = payload.get("operation")
+        if mount_operation == "toggle" and payload.size() <= 2 and payload.get("id", "") is String and String(payload.get("id", "")).length() <= 32:
+            return actor.toggle_mount(String(payload.get("id", "")))
+        if mount_operation == "tame" and payload.size() == 2 and payload.get("id") is String and payload.id.length() <= 32:
+            return actor.tame(payload.id)
+        rejected_requests += 1
+        return false
     if action == "use_item":
         if payload.size() != 1 or not payload.get("id") is String or payload.id.length() > 64:
             rejected_requests += 1

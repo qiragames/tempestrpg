@@ -51,7 +51,7 @@ func _reachable(start: Vector2i) -> PackedByteArray:
     seen.resize(MAP.COLS * MAP.ROWS)
     # On foot from the start and from every ferry pier (M4.5c: the ferry lands).
     var queue: Array = [start]
-    for ferry in MAP.FERRIES:
+    for ferry in MAP.HARBOURS:
         queue.append(Vector2i(ferry[2]))
     for tile in queue:
         seen[MAP.tile_index(tile.x, tile.y)] = 1

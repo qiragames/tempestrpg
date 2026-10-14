@@ -714,18 +714,24 @@ func _run() -> void:
     _check(showcase.zeni() == purse_before - 25 and showcase.get_node("Inventory").count_of("healing_draught") == 1, "Bought a Healing Draught for 25 Zeni")
     await _shot("shop_sell", "Selling: the merchant pays 30% of the price for goods and unequipped gear")
     hud_tour.trade_panel.close()
-    # Ferry: from Sunfall Pier across the sea to Amberhold.
-    showcase.position = tour_map.dock_position("dock_sunfall")
+    # Harbour (M4.5d): travel by map with a ferry ticket; the voyage plays across the map.
+    var harbours_tour = world.harbours
+    showcase.position = tour_map.dock_position("sunfall")
     world.terrain.ensure_props_at(showcase.position)
     await _wait(0.3)
-    hud_tour.trade_panel.open_ferry("dock_sunfall")
+    showcase.progression["zeni"] = 600
+    harbours_tour.buy_ticket(showcase, "sunfall", "amberhold")
+    hud_tour.harbour_panel.open("sunfall")
+    hud_tour.harbour_panel._pick("amberhold")
     await _wait(0.2)
-    await _shot("ferry", "Sunfall Pier: the ferryman sails to Amberhold across the sea for 30 Zeni")
-    hud_tour.trade_panel.close()
-    world.trade.sail(showcase, "dock_sunfall")
-    await _wait(0.4)
-    _check(tour_map.region_at(showcase.position) == tour_map.Region.AMBERVALE, "The ferry crosses to Ambervale (a region you cannot walk to)")
-    await _shot("amberhold_pier", "Arrived at Amberhold Pier in Ambervale, the autumn continent")
+    _check(hud_tour.harbour_panel.visible and hud_tour.harbour_panel._buttons.sail.visible and not hud_tour.harbour_panel._buttons.sail.disabled, "F at a harbour opens travel by map; a ticket lets you sail")
+    await _shot("harbour_map", "Sunfall Harbour: pick a harbour on the map; sail with a ticket, a ferry pass or your own ship")
+    hud_tour.harbour_panel._act("sail")
+    await _wait(1.2)
+    await _shot("voyage", "The voyage across the map to Amberhold")
+    await _wait(1.6)
+    _check(harbours_tour.nearest_harbour(showcase) == "amberhold" and not hud_tour.harbour_panel.visible, "The ferry crosses to Ambervale (a region you cannot walk to)")
+    await _shot("amberhold_pier", "Arrived at Amberhold Harbour in Ambervale, the autumn continent")
     for other in [["hanamura", Vector2(545, 44), "Hanamura in Sakura Vale (ferry): cherry blossoms, bamboo and pagoda-style houses"], ["volcano", Vector2(568, 366), "The Emberreach volcano (ferry): its slopes rise in two levels around a lava crater"], ["bogsend", Vector2(-170, 374), "Bogsend in Mirewood Marsh (ferry): mud, pools and stilt huts"]]:
         showcase.position = tour_map.to_world(other[1])
         world.terrain.ensure_props_at(showcase.position)
@@ -735,6 +741,41 @@ func _run() -> void:
     await _wait(0.3)
     await _shot("world_map_full", "The world map: the home continent, the ferry lands, every town (gold) and the ferry piers")
     hud_tour.world_map.close()
+    _log("## 19. Ships, tools, mounts, runes and augments (M4.5d)")
+    # Your own ship (endgame): bought at a shipwright, summoned at any harbour, seen docked.
+    showcase.position = tour_map.dock_position("cinderport")
+    world.terrain.ensure_props_at(showcase.position)
+    showcase.progression["zeni"] = 45000
+    _check(harbours_tour.buy_ship(showcase, "cinderport"), "Bought a ship from Cinderport's shipwright (40,000 Zeni)")
+    await _wait(0.4)
+    await _shot("own_ship", "Your own ship docked at Cinderport: no more tickets, and up to three friends sail with you")
+    # A horse from the Brookhaven stable, ridden on the road.
+    showcase.position = world.trade.merchant_position("merchant_brookhaven") + Vector2(-16, 0)
+    world.terrain.ensure_props_at(showcase.position)
+    world.trade.stock("merchant_brookhaven")
+    world.trade.buy(showcase, "merchant_brookhaven", "mount_horse")
+    showcase.toggle_mount()
+    showcase.facing = Vector2.RIGHT
+    await _wait(0.3)
+    _check(showcase.riding() == "horse", "Riding a horse from the stable (+60% speed, H)")
+    await _shot("riding", "Riding a horse bought at Brookhaven's stable (+60% speed on land; a hit or an attack throws you off)")
+    showcase.toggle_mount()
+    # Fishing from the pier with a rod (tools are never equipped).
+    world.trade.buy(showcase, "merchant_brookhaven", "tool_rod_1")
+    showcase.position = tour_map.dock_position("sunfall")
+    world.terrain.ensure_props_at(showcase.position)
+    showcase.facing = Vector2.DOWN
+    showcase.cast_line()
+    showcase._tick_fishing(showcase.fishing_bite_in + 0.05)
+    await _wait(0.2)
+    await _shot("fishing", "Fishing from Sunfall's pier: the HUD calls the bite (press F); rods catch rarer fish by tier")
+    _check(showcase.reel(), "Caught a fish")
+    # A wild desert lion to tame.
+    var lion_spot: Array = preload("res://scripts/travel/travel_catalogue.gd").WILD_MOUNTS.filter(func(entry): return entry[1] == "lion")[0]
+    showcase.position = tour_map.to_world(lion_spot[2]) + Vector2(-26, 8)
+    world.terrain.ensure_props_at(showcase.position)
+    await _wait(0.3)
+    await _shot("wild_lion", "A wild desert lion: offer it viper scales (F) to tame it as a mount")
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

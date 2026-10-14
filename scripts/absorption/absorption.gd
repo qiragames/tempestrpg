@@ -57,7 +57,9 @@ func attempt_absorb() -> bool:
     _target.queue_redraw()
     # Every race can absorb; Slimes are fastest (race absorb_time multiplier).
     var race: Dictionary = player.race_stats() if player.has_method("race_stats") else {"absorb_time": 1.0}
-    time_left = FOCUS_ANALYSIS_SECONDS if focused else analysis_seconds * race.absorb_time
+    # M4.5d: the Absorber augment shortens analysis.
+    var factor: float = player.absorb_factor() if player.has_method("absorb_factor") else 1.0
+    time_left = FOCUS_ANALYSIS_SECONDS if focused else analysis_seconds * race.absorb_time * factor
     channel_seconds = time_left
     _channel_reach = reach
     focus_left = 0.0

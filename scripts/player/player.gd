@@ -21,7 +21,7 @@ var exhaustion_active: bool = false
 var exhaustion_left: float = 0.0
 var remote_direction := Vector2.ZERO
 var last_input_msec: int = 0
-var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "race": "Slime", "quests": {}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": [], "zeni": 0}
+var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "race": "Slime", "quests": {}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": [], "zeni": 0, "ship": {"owned": false, "at": ""}, "ferry_pass_until": 0.0, "tools": {"axe": 0, "pickaxe": 0, "rod": 0}, "mounts": [], "mount": "", "augments": []}
 ## Current mimic form and the time until it can change again (host-owned, saved).
 ## Gear (17e): owned items and active cooldowns; equipped item IDs live in progression.equipment.
 var gear: Dictionary = {"items": [], "cooldowns": {}}
@@ -31,6 +31,16 @@ var gear: Dictionary = {"items": [], "cooldowns": {}}
 const RESPAWN_DELAY := 5.0
 const DEATH_XP_SHARE := 0.1
 const TRADE := preload("res://scripts/trade/trade_catalogue.gd")
+const TRAVEL := preload("res://scripts/travel/travel_catalogue.gd")
+const UPGRADES := preload("res://scripts/items/upgrade_catalogue.gd")
+## Fishing (M4.5d, host): seconds until a bite (negative: biting for that long), -INF when not
+## fishing; the bite window by rod tier; where the line was cast.
+var fishing_bite_in := -INF
+var fishing_window := 0.0
+var _fishing_spot := Vector2.ZERO
+var _fishing_lake := false
+var _tame_cooldown := 0.0
+var _mount_sprite: Sprite2D
 ## Consumables (M4.5c): shared cooldown and the effects still running (seconds left, per second).
 var consumable_cooldown: float = 0.0
 var _heal_left := 0.0
@@ -53,6 +63,12 @@ func _ready() -> void:
     $Camera2D.enabled = local_controlled
     # Each character resizes its own body when its form changes.
     $CollisionShape2D.shape = $CollisionShape2D.shape.duplicate()
+    # M4.5d: a hit throws you off your mount and spoils a cast.
+    $Health.damaged.connect(func(amount: int, _source: Node):
+        if amount > 0:
+            dismount()
+            fishing_bite_in = -INF
+    )
     $Health.defeated.connect(func():
         $Magicules.enabled = false
         # Safe-form policy: defeat always returns to the base form.
@@ -141,6 +157,10 @@ func use_good(id: String) -> bool:
             _tonic_left = TRADE.CONSUMABLE_SECONDS
         session.notify_character(character_id, "%s: +40 over 5 s." % TRADE.CONSUMABLES[id][0])
         return true
+    if UPGRADES.is_rune(id):
+        return socket_rune(id)
+    if UPGRADES.is_augment(id):
+        return install_augment(id)
     var skill := TRADE.scroll_skill(id)
     if skill.is_empty():
         return false
@@ -204,6 +224,35 @@ func _animate(delta: float) -> void:
     var direction := SPRITES.direction_name(facing)
     var attacking: bool = has_node("MeleeAttack") and $MeleeAttack.flash_left > 0.0
     SPRITES.play(body_sprite, ("attack_" if attacking and _body_set != "slime" else ("walk_" if walking else "idle_")) + direction)
+    _draw_mount(direction, walking)
+
+## The mount under a riding character (M4.5d): side view when moving sideways, else the front
+## view; two walk frames; the rider sits a little higher.
+func _draw_mount(direction: String, walking: bool) -> void:
+    var mount := riding()
+    if mount.is_empty() or not TRAVEL.MOUNTS.has(mount) or $Health.current <= 0:
+        if is_instance_valid(_mount_sprite):
+            _mount_sprite.visible = false
+        body_sprite.position.y = 0.0
+        return
+    if not is_instance_valid(_mount_sprite):
+        _mount_sprite = Sprite2D.new()
+        _mount_sprite.name = "MountBody"
+        _mount_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+        _mount_sprite.show_behind_parent = true
+        add_child(_mount_sprite)
+        move_child(_mount_sprite, 0)
+    _mount_sprite.visible = true
+    var side: bool = direction in ["left", "right"] or mount == "wild_boar"
+    var sheet: Texture2D = load("res://assets/game/sprites/%s/%s.png" % [TRAVEL.MOUNTS[mount][3], "side" if side else "front"])
+    var frame_width: int = sheet.get_width() / 2
+    var frame: int = int(Time.get_ticks_msec() / 160) % 2 if walking else 0
+    _mount_sprite.texture = sheet
+    _mount_sprite.region_enabled = true
+    _mount_sprite.region_rect = Rect2(frame * frame_width, 0, frame_width, sheet.get_height())
+    _mount_sprite.flip_h = side and facing.x < 0.0
+    _mount_sprite.position = Vector2(0, SPRITES.FEET_Y - sheet.get_height() / 2.0 + 1.0)
+    body_sprite.position.y = -6.0
 
 func race_stats() -> Dictionary:
     return RACES.stats(race())
@@ -349,7 +398,7 @@ func _physics_process(_delta: float) -> void:
     queue_redraw()
 
 func current_speed() -> float:
-    return maxf(10.0, move_speed + gear_bonus("speed")) * FORMS.FORMS[form].speed
+    return maxf(10.0, move_speed + gear_bonus("speed")) * FORMS.FORMS[form].speed * mount_speed()
 
 ## ---- Gear (17e) ----
 func item_by_id(id: String) -> Dictionary:
@@ -370,18 +419,35 @@ func equipped_weapon() -> Dictionary:
     return item_by_id(progression.get("equipment", {}).get("weapon", ""))
 
 func gear_passive(id: String) -> bool:
-    return equipped_items().any(func(item): return id in item.passives)
+    return equipped_items().any(func(item): return id in item.passives or item.get("runes", []).any(func(rune): return UPGRADES.RUNES[rune][1] == id))
+
+## A stat from an item's socketed runes (M4.5d).
+static func rune_bonus(item: Dictionary, stat: String) -> float:
+    var total := 0.0
+    for rune in item.get("runes", []):
+        if UPGRADES.RUNES[rune][1] == stat:
+            total += float(UPGRADES.RUNES[rune][2])
+    return total
+
+## A stat from installed augments (M4.5d).
+func augment_bonus(stat: String) -> float:
+    var total := 0.0
+    for id in progression.get("augments", []):
+        if UPGRADES.AUGMENTS[id][1] == stat:
+            total += float(UPGRADES.AUGMENTS[id][2])
+    return total
 
 ## Sum of a stat over equipped items, including the passives that are plain stat bonuses.
 func gear_bonus(stat: String) -> float:
     var total := 0.0
     for item in equipped_items():
-        total += float(item.stats.get(stat, 0))
+        total += float(item.stats.get(stat, 0)) + rune_bonus(item, stat)
         if stat == "speed" and "swift" in item.passives:
             total += 5.0
         if stat == "regen" and "wellspring" in item.passives:
             total += 0.5
-    return total
+    # Augments count like gear (their maxima are applied when installed).
+    return total + augment_bonus(stat)
 
 ## Saved maxima and regeneration already include equipped gear; this re-derives the live parts.
 func refresh_gear() -> void:
@@ -389,16 +455,224 @@ func refresh_gear() -> void:
     queue_redraw()
 
 func _apply_item(item: Dictionary, sign: int) -> void:
-    var hp: int = int(item.stats.get("hp", 0)) * sign
+    _apply_stats(int(item.stats.get("hp", 0)) + int(rune_bonus(item, "hp")), float(item.stats.get("magicules", 0)) + rune_bonus(item, "magicules"), float(item.stats.get("regen", 0)) + (0.5 if "wellspring" in item.passives else 0.0) + rune_bonus(item, "regen"), sign)
+
+## Capacity changes from gear, runes and augments: never refill current resources.
+func _apply_stats(hp_amount: int, mp_amount: float, regen_amount: float, sign: int) -> void:
+    var hp: int = hp_amount * sign
     $Health.maximum += hp
     # Reversible equipment changes capacity, never refills current resources.
     $Health.current = clampi($Health.current, 0, $Health.maximum)
     $Health.changed.emit($Health.current, $Health.maximum)
-    var mp: float = float(item.stats.get("magicules", 0)) * sign
+    var mp: float = mp_amount * sign
     $Magicules.maximum += mp
     $Magicules._current = clampf($Magicules._current, 0.0, $Magicules.maximum)
     $Magicules.changed.emit($Magicules.current, $Magicules.maximum)
-    $Magicules.regeneration_per_second = maxf(0.0, $Magicules.regeneration_per_second + (float(item.stats.get("regen", 0)) + (0.5 if "wellspring" in item.passives else 0.0)) * sign)
+    $Magicules.regeneration_per_second = maxf(0.0, $Magicules.regeneration_per_second + regen_amount * sign)
+
+## Host: socket a rune from the bag into worn gear at the camp Smithy (M4.5d). The first worn
+## item with a free socket takes it; replacing a rune destroys the old one.
+func socket_rune(rune: String, item_id: String = "", index: int = -1) -> bool:
+    if not AUTHORITY.can_mutate(self) or not UPGRADES.is_rune(rune) or $Inventory.count_of(rune) <= 0:
+        return false
+    var camp: Node = session.world.camp if is_instance_valid(session.world) else null
+    if camp == null or not camp.state.get("smithy", false) or global_position.distance_to(camp.STRUCTURES.smithy_1.site) > UPGRADES.SMITHY_REACH:
+        session.notify_character(character_id, "Runes are socketed at your camp's Smithy.")
+        return false
+    var target: Dictionary = item_by_id(item_id) if not item_id.is_empty() else {}
+    if target.is_empty():
+        for slot in ["weapon", "body", "head", "hands", "feet", "accessory_1", "accessory_2"]:
+            var worn: Dictionary = item_by_id(progression.get("equipment", {}).get(slot, ""))
+            if not worn.is_empty() and worn.get("runes", []).size() < UPGRADES.sockets(int(worn.rarity)):
+                target = worn
+                break
+    if target.is_empty() or UPGRADES.sockets(int(target.rarity)) == 0:
+        session.notify_character(character_id, "No free socket in your worn gear (Rare and Epic have 1, Legendary 2).")
+        return false
+    var runes: Array = target.get("runes", []).duplicate()
+    var equipped: bool = target.id in progression.get("equipment", {}).values()
+    if equipped:
+        _apply_item(target, -1)
+    if index >= 0 and index < runes.size():
+        runes[index] = rune
+    elif runes.size() < UPGRADES.sockets(int(target.rarity)):
+        runes.append(rune)
+    else:
+        if equipped:
+            _apply_item(target, 1)
+        return false
+    target["runes"] = runes
+    if equipped:
+        _apply_item(target, 1)
+        refresh_gear()
+    $Inventory.discard(StringName(rune), 1)
+    session.notify_character(character_id, "%s socketed into %s." % [UPGRADES.RUNES[rune][0], GEAR.display_name(target)])
+    session.queue_save()
+    return true
+
+## Host: install an augment from the bag at the Essence Shrine for Zeni (M4.5d). Slots open at
+## levels 5, 10 and 15; when all are taken the oldest returns to the bag.
+func install_augment(id: String) -> bool:
+    if not AUTHORITY.can_mutate(self) or not UPGRADES.is_augment(id) or $Inventory.count_of(id) <= 0:
+        return false
+    var camp: Node = session.world.camp if is_instance_valid(session.world) else null
+    if camp == null or not camp.state.get("shrine", false) or global_position.distance_to(camp.STRUCTURES.shrine_1.site) > UPGRADES.SHRINE_REACH:
+        session.notify_character(character_id, "Augments are installed at your camp's Essence Shrine.")
+        return false
+    var slots := UPGRADES.augment_slots(int(progression.get("level", 1)))
+    var installed: Array = progression.get("augments", [])
+    if slots == 0:
+        session.notify_character(character_id, "Augment slots open at levels 5, 10 and 15.")
+        return false
+    if id in installed:
+        session.notify_character(character_id, "That augment is already installed.")
+        return false
+    if zeni() < UPGRADES.INSTALL_COST:
+        session.notify_character(character_id, "Installing costs %d Zeni." % UPGRADES.INSTALL_COST)
+        return false
+    if installed.size() >= slots:
+        var old: String = installed[0]
+        if $Inventory.add_material(old, 1) != 1:
+            session.notify_character(character_id, "Make room in the bag for the augment you replace.")
+            return false
+        installed.remove_at(0)
+        _apply_augment(old, -1)
+    spend_zeni(UPGRADES.INSTALL_COST)
+    $Inventory.discard(StringName(id), 1)
+    installed.append(id)
+    progression["augments"] = installed
+    _apply_augment(id, 1)
+    session.notify_character(character_id, "%s installed (%d Zeni)." % [UPGRADES.AUGMENTS[id][0], UPGRADES.INSTALL_COST])
+    session.queue_save()
+    return true
+
+func _apply_augment(id: String, sign: int) -> void:
+    var entry: Array = UPGRADES.AUGMENTS[id]
+    _apply_stats(int(entry[2]) if entry[1] == "hp" else 0, float(entry[2]) if entry[1] == "magicules" else 0.0, float(entry[2]) if entry[1] == "regen" else 0.0, sign)
+    refresh_gear()
+
+## Analysis time factor from augments (Absorber: 25% faster).
+func absorb_factor() -> float:
+    return maxf(0.25, 1.0 - augment_bonus("absorb"))
+
+## --- Mounts (M4.5d)
+func riding() -> String:
+    return String(progression.get("mount", ""))
+
+func mount_speed() -> float:
+    return 1.0 + float(TRAVEL.MOUNTS[riding()][1]) if TRAVEL.MOUNTS.has(riding()) else 1.0
+
+## Host: ride an owned mount (the fastest one by default) or get off.
+func toggle_mount(id: String = "") -> bool:
+    if not AUTHORITY.can_mutate(self):
+        return false
+    if not riding().is_empty():
+        dismount()
+        return true
+    var owned: Array = progression.get("mounts", [])
+    if owned.is_empty():
+        session.notify_character(character_id, "No mount yet: buy one at a stable (Brookhaven, Amberhold, Dunemarch) or tame one in the wild.")
+        return false
+    if $Health.current <= 0 or is_exhausted() or form != FORMS.BASE or fishing_bite_in != -INF:
+        return false
+    var pick: String = id if id in owned else owned.reduce(func(best, other): return other if TRAVEL.MOUNTS[other][1] > TRAVEL.MOUNTS[best][1] else best, owned[0])
+    progression["mount"] = pick
+    session.notify_character(character_id, "Riding: %s (+%d%% speed)." % [TRAVEL.MOUNTS[pick][0], int(TRAVEL.MOUNTS[pick][1] * 100)])
+    return true
+
+func dismount() -> void:
+    if AUTHORITY.can_mutate(self) and not riding().is_empty():
+        progression["mount"] = ""
+
+## Host: try to tame the wild animal you stand beside with its favourite material.
+func tame(wild_id: String) -> bool:
+    if not AUTHORITY.can_mutate(self) or _tame_cooldown > 0.0:
+        return false
+    var wild: Array = []
+    for entry in TRAVEL.WILD_MOUNTS:
+        if entry[0] == wild_id:
+            wild = entry
+    if wild.is_empty() or global_position.distance_to(preload("res://scripts/world/world_map.gd").to_world(wild[2])) > TRAVEL.TAME_REACH + 24.0:
+        return false
+    var spec: Array = TRAVEL.MOUNTS[wild[1]]
+    if wild[1] in progression.get("mounts", []):
+        session.notify_character(character_id, "You already ride a %s." % spec[0])
+        return false
+    if $Inventory.count_of(spec[4]) < spec[5]:
+        session.notify_character(character_id, "The %s might trust you if you offer %d %s." % [spec[0], spec[5], spec[4].replace("_", " ")])
+        return false
+    for _i in range(spec[5]):
+        $Inventory.discard(StringName(spec[4]), 1)
+    _tame_cooldown = TRAVEL.TAME_COOLDOWN
+    if randf() >= float(spec[6]):
+        session.notify_character(character_id, "The %s takes the offering and runs off. Try again." % spec[0])
+        return true
+    progression.mounts.append(wild[1])
+    session.notify_character(character_id, "The %s trusts you now! Ride it with H." % spec[0])
+    session.queue_save()
+    return true
+
+## --- Fishing (M4.5d)
+## Host: cast at the water in front of you (a fishing rod needed).
+func cast_line() -> bool:
+    if not AUTHORITY.can_mutate(self) or $Health.current <= 0 or fishing_bite_in != -INF:
+        return false
+    var tier: int = int(progression.get("tools", {}).get("rod", 0))
+    if tier <= 0:
+        session.notify_character(character_id, "You need a fishing rod (town merchants sell them).")
+        return false
+    var map := preload("res://scripts/world/world_map.gd")
+    var spot: Vector2 = global_position + facing.normalized() * TRAVEL.FISH_REACH
+    var tile: Vector2i = map.to_tile(spot)
+    if not map.in_grid(tile):
+        return false
+    var data: Dictionary = map.data()
+    var lake: bool = data.lake[map.vertex_index(tile.x, tile.y)] == 1
+    if not lake and data.ocean[map.vertex_index(tile.x, tile.y)] == 0:
+        session.notify_character(character_id, "Face the water to fish.")
+        return false
+    dismount()
+    _fishing_lake = lake
+    _fishing_spot = global_position
+    fishing_window = TRAVEL.BITE_WINDOW[tier]
+    fishing_bite_in = randf_range(TRAVEL.BITE_DELAY[0], TRAVEL.BITE_DELAY[1])
+    session.notify_character(character_id, "You cast your line… press F when it bites.")
+    return true
+
+## Host: pull in the line: a catch inside the bite window, nothing too early or too late.
+func reel() -> bool:
+    if not AUTHORITY.can_mutate(self) or fishing_bite_in == -INF:
+        return false
+    var biting: bool = fishing_bite_in <= 0.0 and -fishing_bite_in <= fishing_window
+    fishing_bite_in = -INF
+    if not biting:
+        session.notify_character(character_id, "Too early — it swam off.")
+        return false
+    var map := preload("res://scripts/world/world_map.gd")
+    var rng := RandomNumberGenerator.new()
+    rng.randomize()
+    var fish: String = TRAVEL.catch_fish(map.region_name(_fishing_spot), _fishing_lake, int(progression.get("tools", {}).get("rod", 0)), rng)
+    if $Inventory.add_material(fish, 1) != 1:
+        session.notify_character(character_id, "Caught a %s, but the bag is full." % TRAVEL.FISH[fish][0])
+        return false
+    session.notify_character(character_id, "Caught a %s!" % TRAVEL.FISH[fish][0])
+    session.queue_save()
+    return true
+
+func _tick_fishing(delta: float) -> void:
+    _tame_cooldown = maxf(0.0, _tame_cooldown - delta)
+    if fishing_bite_in == -INF:
+        return
+    if global_position.distance_to(_fishing_spot) > 6.0 or $Health.current <= 0:
+        fishing_bite_in = -INF
+        return
+    var before := fishing_bite_in
+    fishing_bite_in -= delta
+    if before > 0.0 and fishing_bite_in <= 0.0:
+        session.notify_character(character_id, "A bite! Press F!")
+    elif fishing_bite_in < -fishing_window:
+        fishing_bite_in = -INF
+        session.notify_character(character_id, "It got away.")
 
 ## Host-only: put an owned item into a slot (swapping out what was there).
 func add_item(item: Dictionary) -> bool:
@@ -538,6 +812,7 @@ func _process(delta: float) -> void:
     form_cooldown = maxf(0.0, form_cooldown - delta)
     if $Health.current > 0:
         _tick_consumables(delta)
+    _tick_fishing(delta)
     for id in gear.cooldowns.keys():
         gear.cooldowns[id] = maxf(0.0, gear.cooldowns[id] - delta)
         if gear.cooldowns[id] <= 0.0:
@@ -564,6 +839,9 @@ func _unhandled_input(event: InputEvent) -> void:
             session.request_action("transform", {"form": target})
         else:
             try_transform(target)
+        return
+    if event.is_action_pressed("mount") and not event.is_echo():
+        session.request_action("mount", {"operation": "toggle"})
         return
     for potion in [["use_draught", "healing_draught"], ["use_tonic", "magicule_tonic"]]:
         if event.is_action_pressed(potion[0]) and not event.is_echo():

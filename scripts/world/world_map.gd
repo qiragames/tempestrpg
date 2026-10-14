@@ -43,7 +43,7 @@ const REGION_NAMES := {
 ## The home continent (user decision, M4.5c): Verdant Isle joined by land to Frostpeak and the
 ## Sunscorch Desert, plus Harrowmere over its bridge — all reachable on foot. The southern
 ## continent (Ambervale and Mirewood Marsh), Sakura Vale and the Emberreach Isles are reached by
-## ferry (FERRIES).
+## ferry from the harbours (HARBOURS).
 const REACHABLE := [Region.CLEARING, Region.THORNWOOD, Region.MIRROR_LAKE, Region.CINDER_CRATER, Region.VERDANT, Region.HARROWMERE, Region.FROSTPEAK, Region.SUNSCORCH]
 const BY_FERRY := [Region.AMBERVALE, Region.MIREWOOD, Region.SAKURA_VALE, Region.EMBERREACH]
 ## Ground of each region's open land.
@@ -132,17 +132,18 @@ const PATHS := [
     [Vector2(200.5, 62), Vector2(200, 10), Vector2(195, -70)],
     [Vector2(195, -70), Vector2(120, -88), Vector2(60, -100)],
     [Vector2(195, -70), Vector2(270, -100), Vector2(330, -120)],
+    [Vector2(330, -120), Vector2(327, -165)],
     # West to the Sunscorch Desert and south to Mirewood Marsh.
     [Vector2(132, 116.5), Vector2(60, 117.5), Vector2(-4, 117.5), Vector2(-60, 118), Vector2(-120, 120)],
     [Vector2(-120, 120), Vector2(-165, 72)],
     [Vector2(-120, 120), Vector2(-180, 170), Vector2(-220, 190)],
-    [Vector2(-120, 120), Vector2(-150, 200), Vector2(-150, 244)],
+    [Vector2(-120, 120), Vector2(-150, 200), Vector2(-154, 244)],
     [Vector2(-150, 292), Vector2(-170, 370)],
     [Vector2(-170, 370), Vector2(-250, 320)],
     [Vector2(-170, 370), Vector2(-100, 440)],
     [Vector2(-170, 370), Vector2(-90, 330), Vector2(-40, 320), Vector2(40, 300)],
     # South to Ambervale and on to the Emberreach Isles.
-    [Vector2(186, 236), Vector2(180, 320)],
+    [Vector2(195, 235), Vector2(180, 320)],
     [Vector2(40, 300), Vector2(110, 312), Vector2(180, 320)],
     [Vector2(180, 320), Vector2(260, 340), Vector2(320, 350)],
     [Vector2(320, 350), Vector2(380, 320), Vector2(424, 304)],
@@ -162,19 +163,21 @@ const BRIDGES := [
     Rect2i(282, 90, 40, 3), Rect2i(245, 74, 3, 14),
     Rect2i(-84, 318, 36, 3),
 ]
-## Ferries (M4.5c): [id, name, dock tile (on the shore), pier direction, other dock id]. Each
-## dock has a short pier; a character standing on it can pay Zeni to sail to the other dock.
-const FERRIES := [
-    ["dock_sunfall", "Sunfall Pier", Vector2(186, 194), Vector2i.DOWN, "dock_amberhold"],
-    ["dock_amberhold", "Amberhold Pier", Vector2(186, 236), Vector2i.UP, "dock_sunfall"],
-    ["dock_harrowmere", "Harrowmere Pier", Vector2(378, 94), Vector2i.RIGHT, "dock_hanamura"],
-    ["dock_hanamura", "Hanamura Pier", Vector2(416, 70), Vector2i.LEFT, "dock_harrowmere"],
-    ["dock_copperleaf", "Copperleaf Pier", Vector2(424, 304), Vector2i.RIGHT, "dock_cinderport"],
-    ["dock_cinderport", "Cinderport Pier", Vector2(456, 304), Vector2i.LEFT, "dock_copperleaf"],
-    ["dock_dunemarch", "Dunemarch Pier", Vector2(-150, 244), Vector2i.DOWN, "dock_bogsend"],
-    ["dock_bogsend", "Bogsend Pier", Vector2(-150, 292), Vector2i.UP, "dock_dunemarch"],
+## Harbours (M4.5c piers, M4.5d proper harbours in every region): [id, name, dock tile (on the
+## shore), pier direction, has a shipwright]. Each has a pier, a ferryman selling tickets and
+## passes to every other harbour, and a berth where an owner's ship can be summoned.
+const HARBOURS := [
+    ["sunfall", "Sunfall Harbour", Vector2(186, 194), Vector2i.DOWN, false],
+    ["harrowmere", "Harrowmere Harbour", Vector2(378, 94), Vector2i.RIGHT, true],
+    ["rimehaven", "Rimehaven", Vector2(327, -165), Vector2i.UP, false],
+    ["dunemarch", "Dunemarch Harbour", Vector2(-154, 244), Vector2i.DOWN, false],
+    ["amberhold", "Amberhold Harbour", Vector2(195, 235), Vector2i.UP, true],
+    ["copperleaf", "Copperleaf Harbour", Vector2(424, 304), Vector2i.RIGHT, false],
+    ["bogsend", "Bogsend Harbour", Vector2(-150, 292), Vector2i.UP, false],
+    ["hanamura", "Hanamura Harbour", Vector2(416, 70), Vector2i.LEFT, false],
+    ["cinderport", "Cinderport Harbour", Vector2(456, 304), Vector2i.LEFT, true],
 ]
-const PIER_LENGTH := 5
+const PIER_LENGTH := 6
 const BEACH := 2
 ## Verticality (M4.5c, user request): raised plateaus and peaks — [centre, radii, level]. A
 ## plateau's rim is a ledge nobody can climb, and its south face is a two-tile rock wall; roads
@@ -503,10 +506,10 @@ static func place_name(world: Vector2) -> String:
     var town := town_at(world)
     return town[1] if not town.is_empty() else region_name(world)
 
-## The pier of each ferry dock (tile rects, 2 wide, PIER_LENGTH long towards the sea).
+## The pier of each harbour (tile rects, 2 wide, PIER_LENGTH long towards the sea).
 static func piers() -> Array:
     var rects: Array = []
-    for ferry in FERRIES:
+    for ferry in HARBOURS:
         var dock := Vector2i(ferry[2])
         var direction: Vector2i = ferry[3]
         var end := dock + direction * PIER_LENGTH
@@ -518,16 +521,28 @@ static func piers() -> Array:
             rects.append(Rect2i(from.x, from.y, to.x - from.x + 1, 2))
     return rects
 
-static func ferry(id: String) -> Array:
-    for entry in FERRIES:
+static func harbour(id: String) -> Array:
+    for entry in HARBOURS:
         if entry[0] == id:
             return entry
     return []
 
-## World position where a character arrives at a dock (on the pier, just off the shore).
+## World position where a character arrives at a harbour (on the pier, just off the shore).
 static func dock_position(id: String) -> Vector2:
-    var entry := ferry(id)
+    var entry := harbour(id)
     return to_world(Vector2(entry[2]) + Vector2(entry[3]) * 1.5 + Vector2(1, 0.5))
+
+## Where the harbour's ferryman stands (on the shore beside the pier).
+static func ferryman_position(id: String) -> Vector2:
+    var entry := harbour(id)
+    var side := Vector2(entry[3].y, entry[3].x).abs()
+    return to_world(Vector2(entry[2]) - Vector2(entry[3]) * 1.0 + side * 3.0 + Vector2(0.5, 0.5))
+
+## Where an owner's ship lies at the harbour (beside the pier's end, on the water).
+static func berth_position(id: String) -> Vector2:
+    var entry := harbour(id)
+    var side := Vector2(entry[3].y, entry[3].x).abs()
+    return to_world(Vector2(entry[2]) + Vector2(entry[3]) * (PIER_LENGTH - 1.0) - side * 3.5 + Vector2(1, 1))
 
 static func town(id: String) -> Array:
     for entry in TOWNS:

@@ -1,5 +1,5 @@
 extends Node2D
-## Merchants, ferries and the travelling merchant of one world (M4.5c). The host owns the stock
+## Merchants and the travelling merchant of one world (M4.5c; harbours are WorldHarbours). The host owns the stock
 ## and every transaction: clients only name a merchant and an entry (or a dock); the host checks
 ## distance, availability, Zeni and bag room, then moves the goods. State (stock per merchant,
 ## the traveller's schedule) is saved with the world and replicated in snapshots, so every peer
@@ -8,6 +8,7 @@ const CATALOGUE := preload("res://scripts/trade/trade_catalogue.gd")
 const MAP := preload("res://scripts/world/world_map.gd")
 const SPRITES := preload("res://scripts/visual/sprite_library.gd")
 const AUTHORITY := preload("res://scripts/network/authority.gd")
+const TRAVEL := preload("res://scripts/travel/travel_catalogue.gd")
 ## Camp staff stand beside their structures (camp-local offsets).
 const STAFF_OFFSET := Vector2(0, 22)
 
@@ -71,13 +72,6 @@ func nearest_merchant(actor: Node2D) -> String:
             distance = current
     return best
 
-## The ferry dock an actor stands at ("" if none).
-func nearest_dock(actor: Node2D) -> String:
-    for ferry in MAP.FERRIES:
-        if actor.global_position.distance_to(MAP.dock_position(ferry[0])) <= 40.0:
-            return ferry[0]
-    return ""
-
 ## Current stock of a merchant (host: restocked when its cycle changed).
 func stock(id: String) -> Array:
     _restock(id)
@@ -118,6 +112,17 @@ func buy(actor: Node2D, merchant_id: String, entry_id: String) -> bool:
             if actor.gear.items.size() >= actor.GEAR.MAX_ITEMS:
                 return _refuse(actor, "Gear bag full.")
             actor.add_item(entry.item.duplicate(true))
+        "tool":
+            # M4.5d: tools are never equipped; owning one improves its work from now on.
+            var tool: Array = TRAVEL.parse_tool(entry.id)
+            if int(actor.progression.get("tools", {}).get(tool[0], 0)) >= tool[1]:
+                return _refuse(actor, "You already own an equal or better %s." % TRAVEL.TOOLS[tool[0]][0].to_lower())
+            actor.progression.tools[tool[0]] = tool[1]
+        "mount":
+            var mount: String = entry.id.trim_prefix("mount_")
+            if mount in actor.progression.get("mounts", []):
+                return _refuse(actor, "You already own that mount.")
+            actor.progression.mounts.append(mount)
         _:
             if actor.get_node("Inventory").add_material(entry.id, 1) != 1:
                 return _refuse(actor, "No room in the bag.")
@@ -157,24 +162,6 @@ func sell(actor: Node2D, merchant_id: String, kind: String, item_id: String) -> 
     session().queue_save()
     return true
 
-## Host: sail from the dock the actor stands at to its partner dock.
-func sail(actor: Node2D, dock_id: String) -> bool:
-    if not AUTHORITY.can_mutate(self) or session().replica_world or actor.get_node("Health").current <= 0:
-        return false
-    if nearest_dock(actor) != dock_id or MAP.ferry(dock_id).is_empty():
-        return false
-    if actor.zeni() < CATALOGUE.FERRY_FARE:
-        return _refuse(actor, "The ferry costs %d Zeni." % CATALOGUE.FERRY_FARE)
-    var target: String = MAP.ferry(dock_id)[4]
-    actor.spend_zeni(CATALOGUE.FERRY_FARE)
-    actor.global_position = MAP.dock_position(target)
-    actor.velocity = Vector2.ZERO
-    if world.has_node("WorldTerrain"):
-        world.get_node("WorldTerrain").ensure_props_at(actor.global_position)
-    session().notify_character(actor.character_id, "Sailed to %s (%d Zeni)." % [MAP.ferry(target)[1], CATALOGUE.FERRY_FARE])
-    session().queue_save()
-    return true
-
 func _can_trade(actor: Node2D, merchant_id: String) -> bool:
     if not AUTHORITY.can_mutate(self) or session().replica_world or actor.get_node("Health").current <= 0:
         return false
@@ -192,6 +179,11 @@ static func describe(entry: Dictionary) -> String:
             return preload("res://scripts/items/gear_catalogue.gd").display_name(entry.item)
         "material":
             return entry.id.replace("_", " ").capitalize()
+        "tool":
+            var tool: Array = TRAVEL.parse_tool(entry.id)
+            return "%s %s" % [TRAVEL.TOOL_TIERS[tool[1]], TRAVEL.TOOLS[tool[0]][0]]
+        "mount":
+            return "Mount: %s" % TRAVEL.MOUNTS[entry.id.trim_prefix("mount_")][0]
     return CATALOGUE.good_info(entry.id)[0]
 
 ## Host: the travelling merchant's schedule (arrives at a random roadside spot, leaves after a

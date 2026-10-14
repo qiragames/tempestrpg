@@ -64,13 +64,13 @@ static func initial_state(table: Dictionary = DEPOSITS) -> Dictionary:
     var deposits: Dictionary = {}
     for id in table:
         deposits[id] = table[id].amount
-    return {"id": "camp_1", "founded": false, "founder": "", "wood": 0, "stone": 0, "essence": 0, "essence_offered": 0, "hut": false, "storehouse": false, "shrine": false, "forge": false, "stall": false, "smithy": false, "staff": {"trader": false, "smith": false}, "deposits": deposits, "refills": {}, "refill_left": {}}
+    return {"id": "camp_1", "founded": false, "founder": "", "wood": 0, "stone": 0, "essence": 0, "essence_offered": 0, "hut": false, "storehouse": false, "shrine": false, "forge": false, "stall": false, "smithy": false, "staff": {"trader": false, "smith": false}, "tool_yield": {"wood": 0, "stone": 0}, "deposits": deposits, "refills": {}, "refill_left": {}}
 
 static func _whole(value: Variant, high: float = 1000000) -> bool:
     return (value is float or value is int) and value >= 0 and value <= high and value == floor(value)
 
 static func valid_state(value: Variant, players: Dictionary, table: Dictionary = DEPOSITS) -> bool:
-    if not value is Dictionary or value.size() != 17 or value.get("id") != "camp_1" or not value.get("founded") is bool or not value.get("founder") is String:
+    if not value is Dictionary or value.size() != 18 or value.get("id") != "camp_1" or not value.get("founded") is bool or not value.get("founder") is String:
         return false
     for id in STRUCTURES:
         if not value.get(STRUCTURES[id].key) is bool:
@@ -79,6 +79,10 @@ static func valid_state(value: Variant, players: Dictionary, table: Dictionary =
         if not players.has(value.founder):
             return false
     elif not value.founder.is_empty() or value.hut or value.storehouse or value.shrine or value.forge:
+        return false
+    # Extra wood/stone gathered with an axe or pickaxe (M4.5d), part of the camp's books below.
+    var tool_yield: Variant = value.get("tool_yield")
+    if not tool_yield is Dictionary or tool_yield.size() != 2 or not _whole(tool_yield.get("wood")) or not _whole(tool_yield.get("stone")):
         return false
     # Staff (M4.5c): hired only where their structure stands.
     var staff: Variant = value.get("staff")
@@ -114,7 +118,7 @@ static func valid_state(value: Variant, players: Dictionary, table: Dictionary =
         var stock: Variant = value.get(resource)
         if not stock is float and not stock is int:
             return false
-        var income: int = int(value.essence_offered) if resource == "essence" else 0
+        var income: int = int(value.essence_offered) if resource == "essence" else int(value.tool_yield.get(resource, 0))
         for id in table:
             if table[id].resource == resource:
                 income += table[id].amount * (1 + int(value.refills.get(id, 0))) - int(value.deposits[id])
@@ -250,8 +254,18 @@ func transact(actor: Node2D, operation: String, id: String) -> bool:
         "gather":
             if not sites.has(id) or state.deposits[id] <= 0 or not can_reach(actor, sites[id].position, 36):
                 return false
+            var amount: int = int(state.deposits[id])
+            var resource: String = sites[id].resource
             harvest(id)
             message = "Materials added to shared camp stock."
+            # M4.5d: an owned axe (wood) or pickaxe (stone) gathers more.
+            var tool: String = "axe" if resource == "wood" else "pickaxe"
+            var tier: int = int(actor.progression.get("tools", {}).get(tool, 0)) if "progression" in actor else 0
+            var bonus: int = int(round(amount * preload("res://scripts/travel/travel_catalogue.gd").GATHER_BONUS[tier]))
+            if bonus > 0:
+                state[resource] += bonus
+                state.tool_yield[resource] = int(state.tool_yield[resource]) + bonus
+                message = "Materials added to shared camp stock (+%d %s from your %s)." % [bonus, resource, tool]
         "build":
             if not STRUCTURES.has(id) or not can_build(actor, id):
                 return false

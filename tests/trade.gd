@@ -52,7 +52,7 @@ func _run() -> void:
     var traveller_stock: Array = TRADE.roll_stock(TRADE.merchant("traveller"), rng)
     var smith_stock: Array = TRADE.roll_stock(TRADE.merchant("camp_smith"), rng)
     _check(TRADE.valid_stock(town_stock) and TRADE.valid_stock(traveller_stock) and TRADE.valid_stock(smith_stock), "Rolled stock is valid")
-    _check(traveller_stock.filter(func(e): return e.kind == "gear").all(func(e): return int(e.item.rarity) >= 2) and smith_stock.all(func(e): return e.kind == "gear"), "The traveller sells Rare or better gear; the smith only gear")
+    _check(traveller_stock.filter(func(e): return e.kind == "gear").all(func(e): return int(e.item.rarity) >= 2) and smith_stock.all(func(e): return e.kind == "gear" or e.id.begins_with("rune_")), "The traveller sells Rare or better gear; the smith gear (and now and then a rune)")
     var rare_seen := 0
     var town_rare := 0
     for seed in range(400):
@@ -176,13 +176,14 @@ func _run() -> void:
     _check(not camp.transact(actor, "hire", "trader"), "Staff are hired once")
     _at(world.trade.merchant_position("camp_trader") + Vector2(0, 8))
     _check(not world.trade.sell(actor, "camp_trader", "gear", worn.id), "The trader does not buy gear")
-    # --- Ferry
-    _at(MAP.dock_position("dock_sunfall"))
+    # --- Ferry (M4.5d: harbours and tickets; see tests/travel.gd for the rest)
+    var harbours = world.harbours
+    _at(MAP.dock_position("sunfall"))
     actor.progression["zeni"] = 10
-    _check(world.trade.nearest_dock(actor) == "dock_sunfall" and not world.trade.sail(actor, "dock_sunfall"), "The ferry needs its fare")
+    _check(harbours.nearest_harbour(actor) == "sunfall" and not harbours.sail(actor, "sunfall", "amberhold"), "Sailing needs a ticket, a pass or a ship")
     actor.progression["zeni"] = 100
-    _check(world.trade.sail(actor, "dock_sunfall") and actor.global_position.distance_to(MAP.dock_position("dock_amberhold")) < 1.0 and actor.zeni() == 100 - TRADE.FERRY_FARE and MAP.region_at(actor.global_position) == MAP.Region.AMBERVALE, "Sailing pays the fare and lands at the other pier, across the sea")
-    _check(not world.trade.sail(actor, "dock_hanamura"), "You can only sail from the pier you stand on")
+    var fare: int = preload("res://scripts/travel/travel_catalogue.gd").fare("sunfall", "amberhold")
+    _check(harbours.buy_ticket(actor, "sunfall", "amberhold") and harbours.sail(actor, "sunfall", "amberhold") and actor.global_position.distance_to(MAP.dock_position("amberhold")) < 12.0 and actor.zeni() == 100 - fare and harbours.nearest_harbour(actor) == "amberhold", "A ticket takes you across the sea to the chosen harbour")
     # --- The travelling merchant
     world.progression["world_time"] = float(world.trade.state.traveller.arrive) + 1.0
     await _frames(2)
@@ -228,7 +229,7 @@ func _run() -> void:
         state.skill_ids = state.skill_ids.filter(func(id): return SKILLS.RULES[id].tier != "Unique" and not id in ["frost_maul"])
     legacy.enemies = legacy.enemies.filter(func(enemy): return not String(enemy.id).begins_with("frost_bear"))
     var migrated: Variant = STORE.migrate(legacy)
-    _check(migrated is Dictionary and migrated.version == 23 and migrated.players.host.progression.zeni == 0 and migrated.players.host.skill_evidence.scrolls == [] and migrated.camp.staff == {"trader": false, "smith": false} and migrated.trade is Dictionary and migrated.enemies.any(func(enemy): return enemy.id == "frost_bear_1"), "v22 worlds gain purses, scroll evidence, camp staff, merchants and the new regions' creatures")
+    _check(migrated is Dictionary and migrated.version == STORE.VERSION and migrated.players.host.progression.zeni == 0 and migrated.players.host.skill_evidence.scrolls == [] and migrated.camp.staff == {"trader": false, "smith": false} and migrated.trade is Dictionary and migrated.enemies.any(func(enemy): return enemy.id == "frost_bear_1"), "v22 worlds gain purses, scroll evidence, camp staff, merchants and the new regions' creatures")
     var forged: Dictionary = _document(world)
     forged.players.host.progression.zeni = -5
     var forged_stock: Dictionary = _document(world)

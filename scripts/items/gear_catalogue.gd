@@ -99,7 +99,8 @@ static func _whole_or_tenth(stat: String, value: Variant) -> bool:
 ## One saved item: known base and rarity, exactly the base's stats inside the rarity's range,
 ## the right number of distinct known passives, and an active only on Epic/Legendary.
 static func valid_item(item: Variant) -> bool:
-    if not item is Dictionary or item.size() != 6 or not item.get("id") is String or not item.id.begins_with("item_") or item.id.length() > 64:
+    # "runes" (M4.5d) is optional: socketed runes, at most the rarity's sockets.
+    if not item is Dictionary or item.size() != (7 if item.has("runes") else 6) or not item.get("id") is String or not item.id.begins_with("item_") or item.id.length() > 64:
         return false
     if not BASES.has(item.get("base")) or not (item.get("rarity") is int or item.get("rarity") is float) or item.rarity != floor(item.rarity) or item.rarity < 0 or item.rarity >= RARITIES.size():
         return false
@@ -120,6 +121,10 @@ static func valid_item(item: Variant) -> bool:
         seen[passive] = true
     if not item.get("active") is String:
         return false
+    if item.has("runes"):
+        var upgrades := preload("res://scripts/items/upgrade_catalogue.gd")
+        if not item.runes is Array or item.runes.size() > upgrades.sockets(rarity) or item.runes.any(func(rune): return not rune is String or not upgrades.is_rune(rune)):
+            return false
     return ACTIVES.has(item.active) if rarity >= 3 else item.active.is_empty()
 
 ## A character's gear: items (bag), equipment slots and active cooldowns.

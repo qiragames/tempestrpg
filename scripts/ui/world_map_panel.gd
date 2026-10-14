@@ -123,7 +123,7 @@ func _draw_map() -> void:
         if big:
             _canvas.draw_string_outline(font, spot + Vector2(4, 9), town[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 7, 3, Color(0.03, 0.04, 0.06))
             _canvas.draw_string(font, spot + Vector2(4, 9), town[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 7, UI.GOLD_LIGHT)
-    for ferry in MAP.FERRIES:
+    for ferry in MAP.HARBOURS:
         var pier := tile_to_map(ferry[2]).round()
         _canvas.draw_arc(pier, 2.5, 0, TAU, 10, Color(0.03, 0.04, 0.06), 2.0)
         _canvas.draw_arc(pier, 2.0, 0, TAU, 10, Color("9fe8ff"), 1.0)

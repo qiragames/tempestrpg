@@ -55,6 +55,8 @@ Copies of Ninja Adventure sheets (CC0): 64x64, four columns (down, up, left, rig
 | `amber_owl`, `burrow_mole` | Monster/Owl, Monster/Mole | Ambervale creatures |
 | `ember_flame`, `salamander` | Monster/Flam, Monster/Reptile2 | Emberreach creatures |
 | `merchant_verdant`, `merchant_harrow`, `merchant_frost`, `merchant_desert`, `merchant_sakura`, `merchant_amber`, `merchant_marsh`, `merchant_ember` | Character/Villager, Noble, Eskimo, Sultan, Monk, Hunter, Shaman, OldMan | Town merchants |
-| `camp_trader`, `camp_smith`, `traveller`, `ferryman` | Character/Woman, FighterWhite, MaskRacoon, OldMan2 | Hired camp staff, the travelling merchant, the ferry piers |
+| `camp_trader`, `camp_smith`, `traveller`, `ferryman`, `shipwright` | Character/Woman, FighterWhite, MaskRacoon, OldMan2, Inspector | Hired camp staff, the travelling merchant, the harbours' ferrymen and shipwrights |
+
+Mounts (M4.5d): `mount_donkey`, `mount_horse`, `mount_black_horse`, `mount_wild_boar`, `mount_lion` hold `front.png` and `side.png` copied from Actor/Animal (Donkey grey, Horse brown/black, WildBoar, Lion orange); two walk frames each (the boar has only a side view).
 
 Licences and credits: see `CREDITS.md` at the repository root and the licence files next to each pack in `assets/source/packs/`.

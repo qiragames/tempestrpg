@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 23
+const VERSION := 24
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -21,6 +21,9 @@ const MAX_BYTES := 4 * 1024 * 1024
 const CODEC := preload("res://scripts/persistence/state_codec.gd")
 const TRADE := preload("res://scripts/trade/trade_catalogue.gd")
 const WORLD_TRADE := preload("res://scripts/trade/world_trade.gd")
+const HARBOURS := preload("res://scripts/travel/world_harbours.gd")
+const TRAVEL := preload("res://scripts/travel/travel_catalogue.gd")
+const UPGRADES := preload("res://scripts/items/upgrade_catalogue.gd")
 
 static func _number(value: Variant, low: float, high: float, whole: bool = false) -> bool:
     if typeof(value) not in [TYPE_INT, TYPE_FLOAT]:
@@ -139,6 +142,27 @@ static func validate_player(state: Variant, id: String) -> bool:
         return false
     # Zeni (v23): a whole number in the purse.
     if not _number(progression.get("zeni"), 0, TRADE.MAX_ZENI, true):
+        return false
+    # Travel and items (v24): ship and ferry pass, tools by tier, owned mounts (riding one of
+    # them), installed augments within the level's slots, an optional cast line.
+    if not HARBOURS.valid_progression(progression):
+        return false
+    var tools: Variant = progression.get("tools")
+    if not tools is Dictionary or tools.size() != TRAVEL.TOOLS.size():
+        return false
+    for tool in TRAVEL.TOOLS:
+        if not _number(tools.get(tool), 0, 3, true):
+            return false
+    var mounts: Variant = progression.get("mounts")
+    if not mounts is Array or mounts.size() > TRAVEL.MOUNTS.size() or mounts.any(func(id): return not id is String or not TRAVEL.MOUNTS.has(id)) or mounts.size() != _unique(mounts):
+        return false
+    if not progression.get("mount") is String or (not progression.mount.is_empty() and not progression.mount in mounts):
+        return false
+    var augments: Variant = progression.get("augments")
+    if not augments is Array or augments.size() > UPGRADES.augment_slots(int(progression.get("level", 1))) or augments.any(func(id): return not id is String or not UPGRADES.is_augment(id)) or augments.size() != _unique(augments):
+        return false
+    var fishing: Variant = state.get("fishing", [])
+    if not fishing is Array or not fishing.size() in [0, 2] or fishing.any(func(value): return not (value is float or value is int) or not is_finite(float(value)) or absf(float(value)) > 60.0):
         return false
     # Gear (v18): valid items, equipment slots pointing at owned items that fit, sane cooldowns.
     if not GEAR.valid_gear(state.get("gear"), progression.equipment):
@@ -294,6 +318,9 @@ static func validate(data: Variant) -> bool:
         ids[pile.id] = true
     # Merchants' stock and the travelling merchant's schedule (v23).
     if not WORLD_TRADE.valid_state(data.get("trade")):
+        return false
+    # Ship invitations and crews (v24).
+    if not HARBOURS.valid_state(data.get("harbours")):
         return false
     return true
 
@@ -623,7 +650,27 @@ static func migrate(data: Variant) -> Variant:
         for entry in REGION.all_creatures():
             if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == entry[0]):
                 data.enemies.append(REGION.fresh_enemy(entry))
+    # v24 (M4.5d): no ship, pass, tools, mounts or augments yet; the camp's tool yield; harbours.
+    if data.get("version") == 23:
+        if not data.get("players") is Dictionary or not data.get("camp") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = 24
+        for state in data.players.values():
+            if not state is Dictionary or not state.get("progression") is Dictionary:
+                return null
+            var defaults := {"ship": {"owned": false, "at": ""}, "ferry_pass_until": 0.0, "tools": {"axe": 0, "pickaxe": 0, "rod": 0}, "mounts": [], "mount": "", "augments": []}
+            for key in defaults:
+                state.progression[key] = state.progression.get(key, defaults[key])
+        data.camp["tool_yield"] = data.camp.get("tool_yield", {"wood": 0, "stone": 0})
+        data["harbours"] = data.get("harbours", HARBOURS.initial_state())
     return data
+
+static func _unique(values: Array) -> int:
+    var seen := {}
+    for value in values:
+        seen[value] = true
+    return seen.size()
 
 ## Entries introduced by older migrations must start on the old HP scale;
 ## the final v21->v22 step applies level/group scaling exactly once.

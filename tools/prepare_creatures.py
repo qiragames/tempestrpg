@@ -38,7 +38,19 @@ NPCS = {
     "merchant_verdant": "Villager", "merchant_frost": "Eskimo", "merchant_desert": "Sultan",
     "merchant_sakura": "Monk", "merchant_amber": "Hunter", "merchant_marsh": "Shaman",
     "merchant_ember": "OldMan", "merchant_harrow": "Noble", "camp_trader": "Woman",
-    "camp_smith": "FighterWhite", "traveller": "MaskRacoon", "ferryman": "OldMan2",
+    "camp_smith": "FighterWhite", "traveller": "MaskRacoon", "ferryman": "OldMan2", "shipwright": "Inspector",
+}
+
+
+ANIMALS = ROOT / "assets/source/packs/ninja_adventure/Actor/Animal"
+# Mounts (M4.5d): mount sprite set -> (front sheet, side sheet); two walk frames each. The boar
+# has only a side view (used for every direction).
+MOUNTS = {
+    "mount_donkey": ("Donkey/SpriteSheetGrey.png", "Donkey/SpriteSheeGreySide.png"),
+    "mount_horse": ("Horse/SpriteSheetBrown.png", "Horse/SpriteSheetBrownSide.png"),
+    "mount_black_horse": ("Horse/SpriteSheetBlack.png", "Horse/SpriteSheetBlackSide.png"),
+    "mount_wild_boar": ("WildBoar/SpriteSheet.png", "WildBoar/SpriteSheet.png"),
+    "mount_lion": ("Lion/SpriteSheetOrange.png", "Lion/SpriteSheetOrangeSide.png"),
 }
 
 
@@ -63,9 +75,14 @@ def main():
         target.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(CHARACTERS / folder / "SeparateAnim" / "Walk.png", target / f"{npc}_walk.png")
         shutil.copyfile(CHARACTERS / folder / "Faceset.png", target / f"{npc}_face.png")
+    for mount, (front, side) in MOUNTS.items():
+        target = SPRITES / mount
+        target.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ANIMALS / front, target / "front.png")
+        shutil.copyfile(ANIMALS / side, target / "side.png")
     PREVIEW.parent.mkdir(parents=True, exist_ok=True)
     preview.save(PREVIEW)
-    print(f"prepared {len(KINDS)} creature sheets, {len(NPCS)} shopkeepers and {PREVIEW.relative_to(ROOT)}")
+    print(f"prepared {len(KINDS)} creature sheets, {len(NPCS)} shopkeepers, {len(MOUNTS)} mounts and {PREVIEW.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

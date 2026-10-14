@@ -62,6 +62,17 @@ func take_all() -> Dictionary:
     changed.emit()
     return counts
 
+## Restore a saved stack (materials and goods alike).
+func restore_stack(id: String, count: int) -> void:
+    var trade := preload("res://scripts/trade/trade_catalogue.gd")
+    var catalogue := preload("res://scripts/skills/skill_catalogue.gd")
+    if trade.is_good(id):
+        var info: Array = trade.good_info(id)
+        _entries[StringName(id)] = {"id": StringName(id), "name": info[0], "description": info[2], "category": info[1], "count": count}
+    elif catalogue.MATERIALS.has(id):
+        var specimen: Resource = load(catalogue.SPECIMENS[catalogue.MATERIALS[id]])
+        _entries[StringName(id)] = {"id": StringName(id), "name": specimen.material_name, "description": specimen.material_description, "category": "Materials", "count": count}
+
 func count_of(id: String) -> int:
     return int(_entries.get(StringName(id), {}).get("count", 0))
 

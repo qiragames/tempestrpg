@@ -223,6 +223,16 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 - *Runes:* **sockets by rarity** (Common 0, Uncommon 0, Rare 1, Epic 1, Legendary 2); runes drop from Elites and are sold by the travelling merchant; socketed at the camp Smithy; removing a rune destroys it.
 - *Augments:* **slots by level** (1 at level 5, 2 at 10, 3 at 15); bought or crafted; swapped at a shrine for Zeni.
 
+**Status (2026-10-14, Claude): done** on `claude/m45d-ships-items`.
+- *Harbours:* `WorldMap.HARBOURS` (9: Sunfall, Harrowmere, Rimehaven (new, Frostpeak), Dunemarch, Amberhold, Copperleaf, Bogsend, Hanamura, Cinderport), piers of 6 tiles, a harbour house (a lodge at shipwrights), ferrymen and shipwrights (`WorldHarbours`). The harbour window is a map: pick a harbour, sail; a 2.4 s voyage plays.
+- *Tickets / pass / ship:* tickets are bag goods per destination (20 Zeni + distance/10); the pass (400 Zeni) lasts 3600 s of world time; the ship (40,000 Zeni) is summoned at any harbour, drawn at its berth with the owner's name, and sails with up to 3 invited characters (invitations expire after 120 s; crews are replicated and saved). Ferries carry only the ticket holder.
+- *Tools:* `progression.tools` (axe, pickaxe, rod: 0-3); gathering bonus accounted in the camp's `tool_yield`; fishing: cast (rod, water ahead), bite after 2-5 s, window 0.9/1.15/1.45 s, regional and rare fish (bag goods, sold to merchants).
+- *Mounts:* donkey, horse, black horse (stables), wild boar and desert lion (tamed with 3 owl feathers / viper scales, 35% / 25% per attempt, 10 s apart); `progression.mounts`/`mount`; H rides, speed x1.4-1.8, dismount on hit or attack; drawn under the rider on every peer.
+- *Runes:* 8 kinds (6 stats, leeching, thorns) as bag goods; sockets 0/0/1/1/2 by rarity (`item.runes`, optional); socketed at the camp Smithy; worn items apply their runes' maxima like their stats.
+- *Augments:* 7 kinds; slots at 5/10/15; installed at the Essence Shrine for 100 Zeni; the oldest returns to the bag when full; the Absorber shortens analysis by 25%.
+- *Saves:* schema v24 (character travel/items fields, camp `tool_yield`, top-level `harbours`); a reload restores any bag good (fixing an M4.5c reload crash with goods in the bag).
+- *Limits:* the voyage is a map animation (no free sailing, by user decision); crews are not shown on the ship; no ship customisation yet (later, by user decision); mounts cannot be renamed or stored; runes cannot be taken out (only replaced); no dedicated network test for harbours yet.
+
 **Design (Claude, 2026-10-14):** nine harbours (one per region plus Harrowmere and a second in Ambervale) with piers, boats, a ferryman and, in harbour towns, a shipwright; ferry tickets per destination (price by distance) and a one-hour pass; the world map's port list drives travel with a sailing animation; ship ownership, docked ship and party invitations are host-authoritative and saved (schema v24). Tool tiers (Basic, Fine, Master) raise gathering yields (accounted in the camp's books) and fishing (bite window, rare fish); fishing is a short timing game. Mounts from the Ninja Adventure animals; riding +60% speed on land, dismount when hit or attacking. Runes as bag goods with stat or small strike effects. Augments as stat upgrades. Balance probe and tests extended.
 
 ## Parallel work and approval

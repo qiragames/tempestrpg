@@ -50,10 +50,23 @@ func open_nearest() -> void:
         if not merchant.is_empty():
             hud.trade_panel.open(merchant)
             return
-        var dock: String = trade.nearest_dock(hud.player)
-        if not dock.is_empty():
-            hud.trade_panel.open_ferry(dock)
+    # M4.5d: harbours (travel by map), wild animals to tame, fishing.
+    var harbours = hud.get_parent().get("harbours")
+    if harbours != null:
+        var harbour: String = harbours.nearest_harbour(hud.player)
+        if not harbour.is_empty():
+            hud.harbour_panel.open(harbour)
             return
+    var wild: String = preload("res://scripts/travel/wild_mounts.gd").nearest(hud.player.global_position)
+    if not wild.is_empty():
+        session.request_action("mount", {"operation": "tame", "id": wild})
+        return
+    if hud.player.fishing_bite_in != -INF:
+        session.request_action("fish", {"operation": "reel"})
+        return
+    if int(hud.player.progression.get("tools", {}).get("rod", 0)) > 0 and _facing_water():
+        session.request_action("fish", {"operation": "cast"})
+        return
     var closest: Node2D
     var distance: float = 40.1
     for candidate in get_tree().get_nodes_in_group("allies"):
@@ -105,6 +118,14 @@ func _confirm() -> void:
         session.request_action("name_ally", {"id": ally_id, "name": _name_field.text})
     else:
         session.request_action("recruit", {"id": ally_id})
+
+func _facing_water() -> bool:
+    var map := preload("res://scripts/world/world_map.gd")
+    var tile: Vector2i = map.to_tile(hud.player.global_position + hud.player.facing.normalized() * preload("res://scripts/travel/travel_catalogue.gd").FISH_REACH)
+    if not map.in_grid(tile):
+        return false
+    var data: Dictionary = map.data()
+    return data.ocean[map.vertex_index(tile.x, tile.y)] == 1 or data.lake[map.vertex_index(tile.x, tile.y)] == 1
 
 func close_dialog() -> void:
     if not visible:

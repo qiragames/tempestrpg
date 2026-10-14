@@ -28,6 +28,7 @@ const FOUR := {
     "camp_smith": {"walk": "res://assets/game/sprites/camp_smith/camp_smith_walk.png"},
     "traveller": {"walk": "res://assets/game/sprites/traveller/traveller_walk.png"},
     "ferryman": {"walk": "res://assets/game/sprites/ferryman/ferryman_walk.png"},
+    "shipwright": {"walk": "res://assets/game/sprites/shipwright/shipwright_walk.png"},
     "frost_bear": {"walk": "res://assets/game/sprites/frost_bear/frost_bear_walk.png"},
     "snow_wisp": {"walk": "res://assets/game/sprites/snow_wisp/snow_wisp_walk.png"},
     "dune_viper": {"walk": "res://assets/game/sprites/dune_viper/dune_viper_walk.png"},

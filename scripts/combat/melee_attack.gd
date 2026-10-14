@@ -103,6 +103,9 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
         return false
     direction = facing.normalized()
     cooldown_left = recovery
+    # M4.5d: attacking from the saddle dismounts.
+    if get_parent().has_method("dismount"):
+        get_parent().dismount()
     flash_left = 0.12
     flash_effect = effect
     if effect == &"bow":

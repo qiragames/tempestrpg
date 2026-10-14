@@ -8,12 +8,13 @@ extends RefCounted
 const GEAR := preload("res://scripts/items/gear_catalogue.gd")
 const SOURCES := preload("res://scripts/items/gear_sources.gd")
 const MAP := preload("res://scripts/world/world_map.gd")
+const TRAVEL := preload("res://scripts/travel/travel_catalogue.gd")
+const UPGRADES := preload("res://scripts/items/upgrade_catalogue.gd")
 
 const DEATH_SHARE := 0.1
 const SELL_SHARE := 0.3
 const RESTOCK_SECONDS := 900.0
 const MAX_ZENI := 10000000
-const FERRY_FARE := 30
 const REACH := 36.0
 const CONSUMABLE_COOLDOWN := 20.0
 const CONSUMABLE_SECONDS := 5.0
@@ -62,11 +63,16 @@ static func scroll_skill(id: String) -> String:
 static func is_rare_scroll(id: String) -> bool:
     return scroll_skill(id) in RARE_SCROLLS
 
-## Every good id (consumables and scrolls).
+## Every good id: consumables, scrolls and (M4.5d) ferry tickets, fish, runes and augments.
 static func goods() -> Array:
     var all: Array = CONSUMABLES.keys()
     for skill in COMMON_SCROLLS + RARE_SCROLLS:
         all.append(scroll_id(skill))
+    for harbour in MAP.HARBOURS:
+        all.append(TRAVEL.ticket_id(harbour[0]))
+    all.append_array(TRAVEL.FISH.keys())
+    all.append_array(UPGRADES.RUNES.keys())
+    all.append_array(UPGRADES.AUGMENTS.keys())
     return all
 
 ## Anything a bag may hold: creature materials, consumables and scrolls.
@@ -74,12 +80,21 @@ static func bag_item(id: String) -> bool:
     return preload("res://scripts/skills/skill_catalogue.gd").MATERIALS.has(id) or is_good(id)
 
 static func is_good(id: String) -> bool:
-    return CONSUMABLES.has(id) or scroll_skill(id) in COMMON_SCROLLS + RARE_SCROLLS
+    return CONSUMABLES.has(id) or scroll_skill(id) in COMMON_SCROLLS + RARE_SCROLLS or not TRAVEL.ticket_harbour(id).is_empty() or TRAVEL.is_fish(id) or UPGRADES.is_rune(id) or UPGRADES.is_augment(id)
 
 ## [name, category, description] of a good.
 static func good_info(id: String) -> Array:
     if CONSUMABLES.has(id):
         return [CONSUMABLES[id][0], CONSUMABLES[id][1], CONSUMABLES[id][3]]
+    if not TRAVEL.ticket_harbour(id).is_empty():
+        var harbour: Array = MAP.harbour(TRAVEL.ticket_harbour(id))
+        return ["Ferry ticket: %s" % harbour[1], "Tickets", "One trip to %s with the ferry, from any harbour. Hand it in at the harbour (F)." % harbour[1]]
+    if TRAVEL.is_fish(id):
+        return [TRAVEL.FISH[id][0], "Fish", "Caught with a fishing rod. Merchants buy fish."]
+    if UPGRADES.is_rune(id):
+        return [UPGRADES.RUNES[id][0], "Runes", UPGRADES.describe(id)]
+    if UPGRADES.is_augment(id):
+        return [UPGRADES.AUGMENTS[id][0], "Augments", UPGRADES.describe(id)]
     var skill := scroll_skill(id)
     var data: Resource = load(preload("res://scripts/skills/skill_catalogue.gd").SKILLS[skill])
     return ["Scroll: %s" % data.display_name, "Scrolls", ("A very rare scroll teaching %s, a skill found nowhere else. Read it from the bag." if skill in RARE_SCROLLS else "Teaches %s without analysis. Read it from the bag.") % data.display_name]
@@ -90,6 +105,12 @@ static func price(id: String) -> int:
         return MATERIAL_PRICE[id]
     if CONSUMABLES.has(id):
         return CONSUMABLES[id][2]
+    if TRAVEL.is_fish(id):
+        return TRAVEL.FISH[id][1]
+    if UPGRADES.is_rune(id):
+        return UPGRADES.RUNES[id][3]
+    if UPGRADES.is_augment(id):
+        return UPGRADES.AUGMENTS[id][3]
     var skill := scroll_skill(id)
     if skill in RARE_SCROLLS:
         return RARE_SCROLL_PRICE
@@ -116,6 +137,8 @@ const MERCHANTS := [
     ["camp_smith", "Camp Smith", "camp_smith", "smith", "", 6],
     ["traveller", "Travelling Merchant", "traveller", "traveller", "", 16],
 ]
+## Stables (M4.5d): merchant → mounts it sells.
+const STABLES := {"merchant_brookhaven": ["donkey", "horse"], "merchant_amberhold": ["horse", "black_horse"], "merchant_dunemarch": ["donkey", "horse"]}
 ## Where the town merchant stands, from the plaza centre (tiles).
 const STALL_OFFSET := Vector2(3, 1.5)
 
@@ -151,6 +174,26 @@ static func roll_stock(entry: Array, rng: RandomNumberGenerator) -> Array:
     for _i in range(gear_count):
         var item: Dictionary = GEAR.roll(SOURCES._base(rng), SOURCES._weighted(rng, rarity_weights(kind, level)), rng)
         stock.append({"kind": "gear", "id": item.id, "item": item, "price": gear_price(item, level), "count": 1})
+    # Tools (M4.5d): every town sells the tiers its level allows (fixed, not random).
+    if kind == "town":
+        var top: int = 1 if level < 10 else (2 if level < 15 else 3)
+        for tool in TRAVEL.TOOLS:
+            for tier in range(1, top + 1):
+                stock.append({"kind": "tool", "id": TRAVEL.tool_item(tool, tier), "price": TRAVEL.tool_price(tool, tier), "count": 99})
+    # Mounts at the stables of Brookhaven, Amberhold and Dunemarch.
+    for mount in STABLES.get(entry[0], []):
+        stock.append({"kind": "mount", "id": TRAVEL.mount_item(mount), "price": TRAVEL.MOUNTS[mount][2], "count": 99})
+    # Runes and augments: now and then in towns, more often from the traveller.
+    var rune_chance: float = {"town": 0.12, "trader": 0.0, "smith": 0.25, "traveller": 1.0}[kind]
+    for _i in range(2 if kind == "traveller" else 1):
+        if rng.randf() < rune_chance:
+            var rune: String = UPGRADES.RUNES.keys()[rng.randi_range(0, UPGRADES.RUNES.size() - 1)]
+            if not stock.any(func(existing): return existing.id == rune):
+                stock.append({"kind": "good", "id": rune, "price": price(rune), "count": 1})
+    var augment_chance: float = {"town": 0.3 if level >= 10 else 0.0, "trader": 0.0, "smith": 0.0, "traveller": 0.8}[kind]
+    if rng.randf() < augment_chance:
+        var augment: String = UPGRADES.AUGMENTS.keys()[rng.randi_range(0, UPGRADES.AUGMENTS.size() - 1)]
+        stock.append({"kind": "good", "id": augment, "price": price(augment), "count": 1})
     if kind in ["town", "trader", "traveller"]:
         for id in CONSUMABLES:
             stock.append({"kind": "good", "id": id, "price": price(id), "count": rng.randi_range(3, 6)})
@@ -173,11 +216,11 @@ static func roll_stock(entry: Array, rng: RandomNumberGenerator) -> Array:
     return stock
 
 static func valid_stock(stock: Variant) -> bool:
-    if not stock is Array or stock.size() > 24:
+    if not stock is Array or stock.size() > 40:
         return false
     var ids := {}
     for entry in stock:
-        if not entry is Dictionary or not entry.get("kind") in ["gear", "good", "material"] or not entry.get("id") is String or ids.has(entry.id):
+        if not entry is Dictionary or not entry.get("kind") in ["gear", "good", "material", "tool", "mount"] or not entry.get("id") is String or ids.has(entry.id):
             return false
         ids[entry.id] = true
         if not _whole(entry.get("price"), 1, 100000) or not _whole(entry.get("count"), 0, 99):
@@ -191,6 +234,12 @@ static func valid_stock(stock: Variant) -> bool:
                     return false
             "material":
                 if entry.size() != 4 or not MATERIAL_PRICE.has(entry.id):
+                    return false
+            "tool":
+                if entry.size() != 4 or TRAVEL.parse_tool(entry.id)[0] == "":
+                    return false
+            "mount":
+                if entry.size() != 4 or not TRAVEL.MOUNTS.has(entry.id.trim_prefix("mount_")):
                     return false
     return true
 

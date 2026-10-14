@@ -18,6 +18,8 @@ var camp: Node2D
 var trial: Node2D
 ## Merchants, ferries and the travelling merchant (M4.5c).
 var trade: Node2D
+## Harbours, tickets, ships and crews (M4.5d).
+var harbours: Node2D
 var respawner: Node
 ## Host-side randomness for gear drops, chests, trial rewards and the forge (17g).
 var loot_rng := RandomNumberGenerator.new()
@@ -40,6 +42,9 @@ func _ready() -> void:
     add_child(camp)
     trade = load("res://scripts/trade/world_trade.gd").new()
     add_child(trade)
+    harbours = load("res://scripts/travel/world_harbours.gd").new()
+    add_child(harbours)
+    add_child(load("res://scripts/travel/wild_mounts.gd").new())
     trial = load("res://scripts/trials/proving_trial.gd").new()
     trial.name = "ProvingTrial"
     trial.y_sort_enabled = true
