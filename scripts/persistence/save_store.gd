@@ -538,7 +538,7 @@ static func migrate(data: Variant) -> Variant:
             data.camp.deposits[id] = data.camp.deposits.get(id, REGION.deposits()[id].amount)
         for entry in REGION.CREATURES:
             if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == entry[0]):
-                data.enemies.append(REGION.fresh_enemy(entry))
+                data.enemies.append(_legacy_region_enemy(entry))
     # v21 (24a): owners on loot and Magicule drops (none before), item piles, refilling region
     # deposits and the hidden leveling spots' creatures.
     if data.get("version") == 20:
@@ -556,7 +556,7 @@ static func migrate(data: Variant) -> Variant:
         data.camp["refill_left"] = {}
         for entry in REGION.spot_creatures():
             if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == entry[0]):
-                data.enemies.append(REGION.fresh_enemy(entry))
+                data.enemies.append(_legacy_region_enemy(entry))
     # v22 (24b): the new XP curve. Every character keeps its level, skill points and its progress
     # within the level (as a fraction of the old span); creatures' HP grows with their level.
     if data.get("version") == 21:
@@ -584,11 +584,27 @@ static func migrate(data: Variant) -> Variant:
             if not enemy is Dictionary or not _number(enemy.get("difficulty"), 0, 2, true) or not enemy.get("id") is String:
                 return null
             var full: int = gnasher.scaled_health(int(enemy.difficulty), REGION.level_of(enemy.id, int(enemy.difficulty)))
-            if int(enemy.get("maximum_hp", 0)) < full:
-                var ratio: float = float(enemy.get("hp", 0)) / maxf(1.0, float(enemy.get("maximum_hp", 1)))
-                enemy["maximum_hp"] = full
-                enemy["hp"] = int(round(full * ratio)) if int(enemy.get("hp", 0)) > 0 else 0
+            if not _number(enemy.get("maximum_hp"), 1, 1000000, true) or not _number(enemy.get("hp"), 0, enemy.maximum_hp, true):
+                return null
+            var old_max: int = int(enemy.maximum_hp)
+            var new_max: int = int(round(full * float(old_max) / gnasher.TIER_STATS[int(enemy.difficulty)].health))
+            var factor: float = float(new_max) / old_max
+            enemy["maximum_hp"] = new_max
+            enemy["hp"] = maxi(1, int(round(int(enemy.hp) * factor))) if int(enemy.hp) > 0 else 0
+            if enemy.get("credit") is Dictionary:
+                for character in enemy.credit:
+                    if not _number(enemy.credit[character], 1, old_max, true):
+                        return null
+                    enemy.credit[character] = int(floor(float(enemy.credit[character]) * factor))
     return data
+
+## Entries introduced by older migrations must start on the old HP scale;
+## the final v21->v22 step applies level/group scaling exactly once.
+static func _legacy_region_enemy(entry: Array) -> Dictionary:
+    var fresh := REGION.fresh_enemy(entry)
+    fresh.maximum_hp = preload("res://scripts/enemies/forest_gnasher.gd").TIER_STATS[int(entry[3])].health
+    fresh.hp = fresh.maximum_hp
+    return fresh
 
 static func _read(path: String) -> Dictionary:
     var file := FileAccess.open(path, FileAccess.READ)

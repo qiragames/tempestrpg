@@ -32,6 +32,7 @@ var stun_left := 0.0
 var dot_left := 0.0
 var dot_rate := 0.0
 var dot_source: Node
+var dot_character: String = ""
 var _dot_carry := 0.0
 var shown_status: String = ""
 const STATUS_TINT := {"stun": Color(1.0, 0.95, 0.45), "root": Color(0.55, 0.95, 0.5), "slow": Color(0.55, 0.75, 1.0), "dot": Color(0.85, 0.55, 1.0)}
@@ -149,9 +150,15 @@ func apply_status(fx: Dictionary, source: Node) -> void:
             state = State.RECOVER
             state_time = maxf(state_time, float(fx.stun))
     if fx.has("dot"):
-        dot_rate = maxf(dot_rate if dot_left > 0.0 else 0.0, float(fx.dot[0]))
-        dot_left = maxf(dot_left, float(fx.dot[1]))
-        dot_source = source
+        # One active DoT: stronger casts replace it; only its caster can refresh
+        # an equal-strength cast. Weaker casts cannot transfer damage credit.
+        var character: String = source.character_id if is_instance_valid(source) and source.is_in_group("player") else ""
+        if dot_left <= 0.0 or float(fx.dot[0]) > dot_rate or (float(fx.dot[0]) == dot_rate and character == dot_character):
+            dot_rate = float(fx.dot[0])
+            dot_left = float(fx.dot[1])
+            dot_source = source
+            dot_character = character
+            _dot_carry = 0.0
     if fx.has("knockback") and is_instance_valid(source):
         move_and_collide(source.global_position.direction_to(global_position) * float(fx.knockback))
     _update_shown_status()
@@ -170,7 +177,13 @@ func _tick_status(delta: float) -> void:
         var whole := int(floor(_dot_carry + 0.000001))
         if whole > 0:
             _dot_carry -= whole
-            health.take_damage(whole, dot_source, true)
+            var source: Node = dot_source if is_instance_valid(dot_source) else null
+            # A disconnected character's Node is freed. Preserve stable credit
+            # before the lethal hit emits defeat and calculates reward shares.
+            if source == null and not dot_character.is_empty() and health.current > 0:
+                var dealt: int = mini(health.current, maxi(1, whole - health.armor))
+                credit[dot_character] = int(credit.get(dot_character, 0)) + dealt
+            health.take_damage(whole, source, true)
     if slow_left <= 0.0:
         slow_factor = 1.0
     _update_shown_status()

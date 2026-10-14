@@ -21,7 +21,7 @@ Time to kill (s) and share of the character's HP lost, basic strikes only / with
 | Standard L8 (rending_bite) | 84 | 18 | 2.5 s, 36% / 0.8 s, 18% | 2.5 s, 30% / 0.6 s, 15% | 2.1 s, 40% / 0.8 s, 16% |
 | Elite L11 (piercing_fang) | 186 | 31 | died / 2.4 s, 62% | died / 2.7 s, 26% | died / 2.4 s, 47% |
 | Elite L12 (piercing_fang) | 204 | 33 | died / 3.6 s, 66% | died / 2.7 s, 28% | died / 2.4 s, 47% |
-| Elite L13 (piercing_fang) | 222 | 34 | died / 3.6 s, 68% | died / 2.7 s, 28% | died / 2.4 s, 46% |
+| Elite L13 (piercing_fang) | 222 | 34 | died / 3.6 s, 68% | died / 2.7 s, 28% | died / 2.4 s, 44% |
 
 ## Leveling projection
 
@@ -29,9 +29,9 @@ Per kill: the measured fight with the band's skill, 8 s finding the next creatur
 
 | Band | XP needed | Slime | Human | Demon |
 | --- | --- | --- | --- | --- |
-| Clearing, Meadow and Beach (L1-4) | 2167 | 0.2 h (396 kills/h, 11688 XP/h) | 0.2 h (376 kills/h, 11104 XP/h) | 0.2 h (377 kills/h, 11128 XP/h) |
-| Lakeshore and Thornwood (L4-9) | 31612 | 1.5 h (365 kills/h, 20752 XP/h) | 1.6 h (355 kills/h, 20165 XP/h) | 1.6 h (355 kills/h, 20165 XP/h) |
-| Cinder Crater (L9-20) | 346857 | 9.8 h (292 kills/h, 35487 XP/h) | 9.7 h (293 kills/h, 35632 XP/h) | 9.5 h (302 kills/h, 36680 XP/h) |
-| **Level 1 to 20** | 380636 | **11.5 h** | **11.5 h** | **11.2 h** |
+| Clearing, Meadow and Beach (L1-4) | 2167 | 0.2 h (387 kills/h, 11436 XP/h) | 0.2 h (364 kills/h, 10766 XP/h) | 0.2 h (365 kills/h, 10789 XP/h) |
+| Lakeshore and Thornwood (L4-9) | 31612 | 1.6 h (358 kills/h, 20339 XP/h) | 1.6 h (344 kills/h, 19586 XP/h) | 1.6 h (344 kills/h, 19586 XP/h) |
+| Cinder Crater (L9-20) | 346857 | 9.9 h (288 kills/h, 34920 XP/h) | 10.0 h (286 kills/h, 34780 XP/h) | 9.7 h (295 kills/h, 35778 XP/h) |
+| **Level 1 to 20** | 380636 | **11.7 h** | **11.8 h** | **11.5 h** |
 
-Milestones (average of the races): level 2 after 5 Easy creatures; level 5 after 19 min, level 10 after 2.1 h, level 15 after 5.3 h, level 20 after 11.4 h.
+Milestones (average of the races): level 2 after 5 Easy creatures; level 5 after 20 min, level 10 after 2.2 h, level 15 after 5.4 h, level 20 after 11.7 h.

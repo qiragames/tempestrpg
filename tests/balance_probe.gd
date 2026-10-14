@@ -210,7 +210,7 @@ func _project(results: Dictionary) -> void:
             var respawn_cap := 0.0
             for creature in creatures:
                 var r: Dictionary = results["%s|%d|%d|skills" % [race, creature[0], creature[1]]]
-                cycle += r.ttk + TRAVEL + float(RACES.stats(race).absorb_time)
+                cycle += r.ttk + TRAVEL + actor.get_node("Absorption").analysis_seconds * float(RACES.stats(race).absorb_time)
                 xp += LEVELING.defeat_xp(creature[1], creature[0]) + LEVELING.absorb_xp(creature[1], creature[0])
                 respawn_cap += 3600.0 / float(creature[2])
             cycle /= creatures.size()
