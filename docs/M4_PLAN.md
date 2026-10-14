@@ -211,6 +211,20 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 - *Balance (probe):* level 20 in ~11.8 h; the ferry lands' Elites are beatable one on one in an Epic set (the probe now wears Rare gear from level 9 and Epic in the ferry lands).
 - *Limits:* consumable cooldowns and running draughts are not saved (a reload clears them, like skill effects); trade has no dedicated real-network test yet (snapshot replication and host intents are covered locally); towns' merchants do not walk; the world map is a scaled overview without zoom.
 
+## M4.5d — Harbours, ships and item categories (tools, mounts, runes, augments)
+
+**User decisions (2026-10-14, Q&A after M4.5c; order: M4.5d, then the party system):**
+- *Ships:* your own ship is **endgame, price only** (about 40,000 Zeni) from a **shipwright** in harbour towns. Until then you travel by **ferry**: buy **single tickets** or a pricier **time pass** from the ferryman; everyone needs their own ticket (no taking friends on a ferry).
+- *Travel:* **fast travel by map** — click a port on the map, a sailing animation plays, you arrive (no free sailing).
+- *Own ship:* **summoned at any port**; you can **invite characters standing near you at the harbour** — up to **4 people in total** sail with you; owning a ship means no more tickets; you can **see your ship docked** at the port; customization later.
+- *Harbours:* **proper harbours in every region** (more ports than the M4.5c piers).
+- *Tools:* never equipped — **once bought, a tool is used automatically** for its work: **axe and pickaxe** (more wood/stone when gathering), **fishing rod** (fishing at shores, piers and lakes; fish are materials).
+- *Mounts:* **bought** at stables **and tamed** in the wild (rare ones); summon to ride faster on land.
+- *Runes:* **sockets by rarity** (Common 0, Uncommon 0, Rare 1, Epic 1, Legendary 2); runes drop from Elites and are sold by the travelling merchant; socketed at the camp Smithy; removing a rune destroys it.
+- *Augments:* **slots by level** (1 at level 5, 2 at 10, 3 at 15); bought or crafted; swapped at a shrine for Zeni.
+
+**Design (Claude, 2026-10-14):** nine harbours (one per region plus Harrowmere and a second in Ambervale) with piers, boats, a ferryman and, in harbour towns, a shipwright; ferry tickets per destination (price by distance) and a one-hour pass; the world map's port list drives travel with a sailing animation; ship ownership, docked ship and party invitations are host-authoritative and saved (schema v24). Tool tiers (Basic, Fine, Master) raise gathering yields (accounted in the camp's books) and fishing (bite window, rare fish); fishing is a short timing game. Mounts from the Ninja Adventure animals; riding +60% speed on land, dismount when hit or attacking. Runes as bag goods with stat or small strike effects. Augments as stat upgrades. Balance probe and tests extended.
+
 ## Parallel work and approval
 
 The original steps were approved on 2026-10-12. The user's 2026-10-13 direction below supersedes the original assistant scope and ownership proposal: systems first (17, 17b–17g), then asset preparation/presentation (18+). Claude continues in order with 17 unless reassigned; Codex reviews released work. No unclaimed future file ownership is implied. Completed steps and their review history remain intact.
