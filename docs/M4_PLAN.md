@@ -153,6 +153,16 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 
 ## 24 — Balance and M4 acceptance (Claude visible tests; Codex authority checks)
 
+**User decisions (2026-10-14, Q&A before 24):** split into two halves — **24a systems**, **24b numbers + acceptance** (bot playtests only; real LAN test skipped for M4).
+- *Pace/difficulty:* about 10–15 h to level 20; moderate solo difficulty. XP curve: fast start, long tail (Lv 2 after ~4 creatures, Lv 5 ~30 min, Lv 10 ~3 h, Lv 20 ~12 h); harder regions give more XP.
+- *Death:* respawn after 5 s at the camp if founded, else the spawn, full HP/Magicules; lose 10% of the XP towards the next level (never a level); the bag (materials and unequipped gear) drops as a pile where you fell, equipped gear stays. Piles never expire; each death adds a pile; all are marked on the world map and a new round **minimap** (top right). Only the owner can pick a pile up for 5 minutes, then anyone.
+- *Multiplayer fairness:* everyone with ≥10% of a creature's damage gets the full XP; one loot roll per creature, distributed by damage rank (currency split proportionally — Magicule drops until gold exists; items ranked by rarity go to the damage ranks in order); only characters with ≥10% damage may absorb. Creature HP +25% per extra player nearby (capped at 8). A **party system** comes later.
+- *Creatures:* respawn by tier 45 s / 90 s / 180 s; **two hidden leveling spots per creature region** (2–3 creatures respawning 3× faster, unmarked until discovered); creature sprites at ~75% (Elites ~85%), collision unchanged; **creature levels** (naming cost = 35% + 2.5% per monster level, capped at 90%; the goblin ally is level 1).
+- *Weapons/races:* bow fires a flying arrow (~320 px/s, host decides the hit on arrival). Basic strikes: Human 10 dmg free, Slime 12 dmg for 2 Magicules, Demon 14 dmg for 4; weapons keep their own damage for every race (no race multiplier).
+- *Skills:* damage ∝ cost^0.75 relative to the basic strike plus utility effects of all four kinds (slow/root, knockback/stun, area/damage-over-time, self buffs/drain). Magicule regeneration unchanged unless evidence says otherwise.
+- *Camp:* costs unchanged; region deposits refill (one full deposit every 15 min).
+- *After M4:* M4.5c currency and merchants.
+
 **Goal/dependencies:** requires 14–17 and 19–23. Playtest the approved skill/form/settlement loop, tune bounded values from recorded evidence and decide whether M4 is ready for nation-scale work.
 
 **Files/systems:** gameplay definitions/configs and targeted fixes on separate reviewed branches, `docs/playtest/`, tests, roadmap and handoff. Assign each tuning/fix file before concurrent edits; no broad refactor bundled with balance.
