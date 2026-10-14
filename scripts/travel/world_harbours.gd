@@ -161,7 +161,14 @@ func sail(actor: Node2D, here: String, destination: String) -> bool:
         return false
     var voyagers: Array = [actor]
     if owns_ship(actor) and ship_of(actor).at == here:
-        for id in crew_of(actor.character_id):
+        # M4.6: party members count as crew automatically.
+        var party: Node = world.get("party")
+        var aboard: Array = crew_of(actor.character_id)
+        if party != null:
+            for id in party.members(actor.character_id):
+                if id != actor.character_id and not id in aboard:
+                    aboard.append(id)
+        for id in aboard.slice(0, TRAVEL.CREW_MAX - 1):
             var member: Node = world.player_by_id(id)
             if member != null and member.get_node("Health").current > 0 and member.global_position.distance_to(actor.global_position) <= TRAVEL.CREW_RADIUS * 1.5:
                 voyagers.append(member)

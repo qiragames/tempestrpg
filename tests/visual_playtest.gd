@@ -776,6 +776,26 @@ func _run() -> void:
     world.terrain.ensure_props_at(showcase.position)
     await _wait(0.3)
     await _shot("wild_lion", "A wild desert lion: offer it viper scales (F) to tame it as a mount")
+    _log("## 20. Parties (M4.6)")
+    # A friend joins; the party frames show their HP and Magicules, the window lists the party.
+    var mate = load("res://scenes/player/player.tscn").instantiate()
+    mate.character_id = "friend"
+    mate.local_controlled = false
+    world.add_child(mate)
+    mate.choose_race("Demon")
+    showcase.position = Vector2(480, 340)
+    mate.position = Vector2(500, 344)
+    world.terrain.ensure_props_at(showcase.position)
+    world.party.invite(showcase, "friend")
+    world.party.accept(mate)
+    mate.get_node("Health").current = 55
+    await _wait(0.3)
+    _check(world.party.same_party(showcase.character_id, "friend"), "A friend joined the party")
+    await _shot("party_frames", "In a party: your friend's HP and Magicules under your status card, their marker on the minimap")
+    world.get_node("HUD").party_panel.open()
+    await _wait(0.2)
+    await _shot("party_window", "The party window (P): members, invitations, leave and remove")
+    world.get_node("HUD").party_panel.close()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

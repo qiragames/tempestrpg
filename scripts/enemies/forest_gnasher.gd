@@ -280,13 +280,31 @@ func _defeat() -> void:
         var total_share := 0.0
         for entry in ranked:
             total_share += float(entry[1])
+        # M4.6: party members nearby add bonus XP; a party's Zeni is split evenly among its
+        # members near the creature (items still go by damage rank).
+        var party: Node = world.get("party") if world != null else null
+        var party_coins := {}
         for entry in ranked:
             var actor: Node = world.player_by_id(entry[0]) if world != null and world.has_method("player_by_id") else null
             if is_instance_valid(actor):
-                actor.gain_experience(LEVELING.defeat_xp(level, difficulty), "defeat")
-                if actor.has_method("gain_zeni"):
-                    actor.gain_zeni(maxi(1, int(round(coins * float(entry[1]) / total_share))), "defeat")
+                var factor: float = party.xp_factor(actor.character_id, global_position) if party != null else 1.0
+                actor.gain_experience(int(round(LEVELING.defeat_xp(level, difficulty) * factor)), "defeat")
+                var share: int = maxi(1, int(round(coins * float(entry[1]) / total_share)))
+                var group: String = party.party_of(actor.character_id) if party != null else ""
+                if group.is_empty():
+                    if actor.has_method("gain_zeni"):
+                        actor.gain_zeni(share, "defeat")
+                else:
+                    party_coins[group] = int(party_coins.get(group, 0)) + share
+                    party_coins[group + ":who"] = actor.character_id
                 rewarded = true
+        for group in party_coins:
+            if group.ends_with(":who"):
+                continue
+            var near: Array = party.members_near(party_coins[group + ":who"], global_position)
+            var each: int = maxi(1, int(floor(float(party_coins[group]) / maxf(1.0, near.size()))))
+            for member in near:
+                member.gain_zeni(each, "defeat")
         # A creature no character damaged keeps the old last-hit rule.
         var victor: Node = health.last_hit_by
         if not rewarded and is_instance_valid(victor) and victor.is_in_group("player"):

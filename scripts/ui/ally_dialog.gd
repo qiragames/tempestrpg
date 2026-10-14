@@ -38,6 +38,13 @@ func open_nearest() -> void:
         # The host explains any refusal through the System Voice.
         session.request_action("trial", {"operation": "start"})
         return
+    # M4.6: F beside a defeated party member revives them.
+    var party = hud.get_parent().get("party")
+    if party != null:
+        var fallen: String = party.revivable_near(hud.player)
+        if not fallen.is_empty():
+            session.request_action("party", {"operation": "revive", "id": fallen})
+            return
     # F next to an unopened chest opens it (17g).
     var chest: String = hud.get_parent().nearest_chest(hud.player)
     if not chest.is_empty():

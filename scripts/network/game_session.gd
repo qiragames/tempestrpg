@@ -486,6 +486,27 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             "sail":
                 return world.harbours.sail(actor, here, target)
         return false
+    if action == "party":
+        # M4.6: invitations, membership and revives; the host checks the rest.
+        var party_operation: Variant = payload.get("operation")
+        var who: Variant = payload.get("id", "")
+        if not party_operation in ["invite", "accept", "decline", "leave", "kick", "revive"] or not who is String or who.length() > 64 or payload.size() > 2:
+            rejected_requests += 1
+            return false
+        match party_operation:
+            "invite":
+                return world.party.invite(actor, who)
+            "accept":
+                return world.party.accept(actor)
+            "decline":
+                return world.party.decline(actor)
+            "leave":
+                return world.party.leave(actor)
+            "kick":
+                return world.party.kick(actor, who)
+            "revive":
+                return world.party.revive(actor, who)
+        return false
     if action == "fish":
         if payload.size() != 1 or not payload.get("operation") in ["cast", "reel"]:
             rejected_requests += 1

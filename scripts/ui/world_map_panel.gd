@@ -144,7 +144,9 @@ func _draw_map() -> void:
     # Other characters, then you (blinking).
     for child in hud.get_parent().get_children():
         if child is CharacterBody2D and child.has_method("race") and child != hud.player:
-            _canvas.draw_rect(Rect2(to_map(child.global_position).round() - Vector2(1, 1), Vector2(3, 3)), Color.WHITE)
+            var party: Node = hud.get_parent().get("party")
+            var mate: bool = party != null and party.same_party(hud.player.character_id, child.character_id)
+            _canvas.draw_rect(Rect2(to_map(child.global_position).round() - Vector2(1.5, 1.5) if mate else to_map(child.global_position).round() - Vector2(1, 1), Vector2(4, 4) if mate else Vector2(3, 3)), Color("ff8adf") if mate else Color.WHITE)
     var me := to_map(hud.player.global_position).round()
     if fmod(_time, 0.8) < 0.55:
         _canvas.draw_circle(me, 3.5, Color(0.03, 0.04, 0.06))

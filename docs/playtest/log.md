@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.2 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 94.9 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -299,7 +299,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (640x360)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Uncommon Travel Boots
+- [x] The chest gave an Uncommon-or-better item: Rare Scale Mail
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (640x360)
@@ -505,6 +505,16 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 ![A wild desert lion: offer it viper scales (F) to tame it as a mount](87_wild_lion.png)
 *A wild desert lion: offer it viper scales (F) to tame it as a mount* (640x360)
 
+## 20. Parties (M4.6)
+- [x] A friend joined the party
+
+![In a party: your friend's HP and Magicules under your status card, their marker on the minimap](88_party_frames.png)
+*In a party: your friend's HP and Magicules under your status card, their marker on the minimap* (640x360)
+
+
+![The party window (P): members, invitations, leave and remove](89_party_window.png)
+*The party window (P): members, invitations, leave and remove* (640x360)
+
 
 ## System messages seen
 
@@ -564,7 +574,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +1500 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Rare Spirit Amulet.
+- Trial reward: Rare Padded Vest.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +21 XP (defeat).
@@ -581,12 +591,12 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Uncommon Travel Boots.
-- +34 Zeni (chest).
+- Chest opened: Rare Scale Mail.
+- +32 Zeni (chest).
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 
 The bot retreated 1 time(s) to let Magicules recover.
 XP assistance for skill points: 550 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 87 screenshots.**
+**Result: 0 failed checks, 89 screenshots.**

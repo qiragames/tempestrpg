@@ -12,6 +12,9 @@ const RESPAWN_SECONDS := 180.0
 const REGION := preload("res://scripts/world/region_content.gd")
 const RETRY_SECONDS := 5.0
 const CLEAR_RADIUS := 160.0
+## M4.6: leveling-spot creatures only wait until nobody stands right on their spot, so the spot
+## keeps flowing while you fight there.
+const SPOT_CLEAR_RADIUS := 40.0
 const MAX_PENDING := 64
 
 ## [{id, kind, difficulty, home: [x, y], remaining}]
@@ -30,7 +33,12 @@ func scheduled(id: String) -> bool:
 func schedule(enemy: Node2D) -> void:
     if not AUTHORITY.can_mutate(self) or not enemy.drops_rewards or scheduled(enemy.entity_id) or pending.size() >= MAX_PENDING:
         return
-    pending.append({"id": enemy.entity_id, "kind": enemy.kind, "difficulty": int(enemy.difficulty), "home": CODEC.vector(enemy.home), "remaining": REGION.respawn_seconds(enemy.entity_id, int(enemy.difficulty))})
+    var seconds: float = REGION.respawn_seconds(enemy.entity_id, int(enemy.difficulty))
+    # M4.6: a party fighting at a leveling spot makes it respawn faster still.
+    var party: Node = get_parent().get("party")
+    if REGION.is_spot_creature(enemy.entity_id) and party != null:
+        seconds *= party.spot_factor(enemy.global_position)
+    pending.append({"id": enemy.entity_id, "kind": enemy.kind, "difficulty": int(enemy.difficulty), "home": CODEC.vector(enemy.home), "remaining": seconds})
 
 func _physics_process(delta: float) -> void:
     if pending.is_empty() or not AUTHORITY.can_mutate(self):
@@ -39,15 +47,15 @@ func _physics_process(delta: float) -> void:
         entry.remaining = maxf(0.0, entry.remaining - delta)
         if entry.remaining > 0.0:
             continue
-        if _occupied(CODEC.to_vector(entry.home)):
+        if _occupied(CODEC.to_vector(entry.home), SPOT_CLEAR_RADIUS if REGION.is_spot_creature(entry.id) else CLEAR_RADIUS):
             entry.remaining = RETRY_SECONDS
             continue
         pending.erase(entry)
         _respawn(entry)
 
-func _occupied(home: Vector2) -> bool:
+func _occupied(home: Vector2, radius: float = CLEAR_RADIUS) -> bool:
     for actor in get_tree().get_nodes_in_group("player"):
-        if actor.get_node("Health").current > 0 and actor.global_position.distance_to(home) < CLEAR_RADIUS:
+        if actor.get_node("Health").current > 0 and actor.global_position.distance_to(home) < radius:
             return true
     return false
 

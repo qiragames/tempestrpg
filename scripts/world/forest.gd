@@ -20,6 +20,8 @@ var trial: Node2D
 var trade: Node2D
 ## Harbours, tickets, ships and crews (M4.5d).
 var harbours: Node2D
+## Parties (M4.6).
+var party: Node
 var respawner: Node
 ## Host-side randomness for gear drops, chests, trial rewards and the forge (17g).
 var loot_rng := RandomNumberGenerator.new()
@@ -45,6 +47,8 @@ func _ready() -> void:
     harbours = load("res://scripts/travel/world_harbours.gd").new()
     add_child(harbours)
     add_child(load("res://scripts/travel/wild_mounts.gd").new())
+    party = load("res://scripts/party/world_party.gd").new()
+    add_child(party)
     trial = load("res://scripts/trials/proving_trial.gd").new()
     trial.name = "ProvingTrial"
     trial.y_sort_enabled = true

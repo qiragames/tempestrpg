@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 24
+const VERSION := 25
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -22,6 +22,7 @@ const CODEC := preload("res://scripts/persistence/state_codec.gd")
 const TRADE := preload("res://scripts/trade/trade_catalogue.gd")
 const WORLD_TRADE := preload("res://scripts/trade/world_trade.gd")
 const HARBOURS := preload("res://scripts/travel/world_harbours.gd")
+const PARTY := preload("res://scripts/party/world_party.gd")
 const TRAVEL := preload("res://scripts/travel/travel_catalogue.gd")
 const UPGRADES := preload("res://scripts/items/upgrade_catalogue.gd")
 
@@ -322,6 +323,12 @@ static func validate(data: Variant) -> bool:
     # Ship invitations and crews (v24).
     if not HARBOURS.valid_state(data.get("harbours")):
         return false
+    # Parties and party invitations of this world's characters (v25).
+    if not PARTY.valid_state(data.get("party")):
+        return false
+    for party in data.party.parties.values():
+        if party.members.any(func(id): return not data.players.has(id)):
+            return false
     return true
 
 static func migrate(data: Variant) -> Variant:
@@ -664,6 +671,11 @@ static func migrate(data: Variant) -> Variant:
                 state.progression[key] = state.progression.get(key, defaults[key])
         data.camp["tool_yield"] = data.camp.get("tool_yield", {"wood": 0, "stone": 0})
         data["harbours"] = data.get("harbours", HARBOURS.initial_state())
+    # v25 (M4.6): no parties yet.
+    if data.get("version") == 24:
+        data = data.duplicate(true)
+        data.version = 25
+        data["party"] = data.get("party", PARTY.initial_state())
     return data
 
 static func _unique(values: Array) -> int:

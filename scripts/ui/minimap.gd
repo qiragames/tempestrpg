@@ -95,6 +95,15 @@ func _draw_view() -> void:
             _view.draw_line(at.round() + Vector2(-3, -3), at.round() + Vector2(3, 3), Color("f0a34a"), 2.0)
             _view.draw_line(at.round() + Vector2(-3, 3), at.round() + Vector2(3, -3), Color("f0a34a"), 2.0)
         elif node is CharacterBody2D and node.has_method("race") and node != me:
-            _dot(to_minimap(node.global_position, centre), Color.WHITE)
+            # M4.6: party members in their own colour, pinned to the rim when far away.
+            var party: Node = world.get("party")
+            if party != null and party.same_party(me.character_id, node.character_id):
+                var at := to_minimap(node.global_position, centre)
+                if at.distance_to(size / 2) > RADIUS - 4:
+                    at = size / 2 + (at - size / 2).normalized() * (RADIUS - 4)
+                _view.draw_circle(at.round(), 3.0, Color(0.02, 0.03, 0.06, 0.9))
+                _view.draw_circle(at.round(), 2.0, Color("ff8adf"))
+            else:
+                _dot(to_minimap(node.global_position, centre), Color.WHITE)
     _view.draw_circle(size / 2, 2.5, Color(0.02, 0.03, 0.06))
     _view.draw_circle(size / 2, 1.8, UI.CYAN)

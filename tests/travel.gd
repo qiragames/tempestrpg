@@ -222,7 +222,7 @@ func _run() -> void:
     legacy.players.host.health.maximum = 120
     legacy.players.host.health.current = mini(int(legacy.players.host.health.current), 120)
     var migrated: Variant = STORE.migrate(legacy)
-    _check(migrated is Dictionary and migrated.version == 24 and migrated.players.host.progression.ship == {"owned": false, "at": ""} and migrated.players.host.progression.tools.rod == 0 and migrated.camp.tool_yield == {"wood": 0, "stone": 0} and migrated.harbours is Dictionary, "v23 worlds: no ship, pass, tools, mounts or augments yet; empty camp tool yield; harbours")
+    _check(migrated is Dictionary and migrated.version == STORE.VERSION and migrated.players.host.progression.ship == {"owned": false, "at": ""} and migrated.players.host.progression.tools.rod == 0 and migrated.camp.tool_yield == {"wood": 0, "stone": 0} and migrated.harbours is Dictionary, "v23 worlds: no ship, pass, tools, mounts or augments yet; empty camp tool yield; harbours")
     session.stop_session(false)
     world.queue_free()
     await _frames()
