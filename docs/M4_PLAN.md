@@ -235,6 +235,18 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 
 **Design (Claude, 2026-10-14):** nine harbours (one per region plus Harrowmere and a second in Ambervale) with piers, boats, a ferryman and, in harbour towns, a shipwright; ferry tickets per destination (price by distance) and a one-hour pass; the world map's port list drives travel with a sailing animation; ship ownership, docked ship and party invitations are host-authoritative and saved (schema v24). Tool tiers (Basic, Fine, Master) raise gathering yields (accounted in the camp's books) and fishing (bite window, rare fish); fishing is a short timing game. Mounts from the Ninja Adventure animals; riding +60% speed on land, dismount when hit or attacking. Runes as bag goods with stat or small strike effects. Augments as stat upgrades. Balance probe and tests extended.
 
+## M4.6 — Party system (user order: after M4.5d)
+
+**User decisions (2026-10-14, Q&A):**
+- *Size:* up to **4**, invited from a **party window** (any online character); the leader can remove members, anyone can leave.
+- *Rewards:* XP keeps the ≥10% damage rule, plus a **party bonus XP** for members nearby; **Zeni from kills split evenly** among party members nearby; **items still by damage rank**.
+- *Seeing each other:* **party frames** (HP/Magicules under the status card), **party colour on the map and minimap**; **no friendly fire**; party members **automatically count as your ship's crew**.
+- *Extras:* **revive** a defeated party member standing next to them before their respawn; **leveling spots respawn faster while a party fights there**. Party quests later.
+
+## M4.7 — The hidden realm (Dragon Ball themed region, user plan 2026-10-14)
+
+**User decisions (2026-10-14, Q&A):** reached by **talking to a secret NPC in Sakura Vale** (level 15 + a secret phrase), with a way back; **not shown on the normal world map**, and **opening the map there shows only that region**. Content: **transformations** (buff states that look cool, like in the anime), a **tournament arena**, **seven wish orbs**, a **sky lookout tower** to climb, **ki attacks**; new skills taught by **mentors** in themed towns or out in canyons and mountain ranges; foes: **dinosaurs and wild beasts, martial artists, androids and bosses** (a mix); its **own storyline** the user will specify once the region exists. Names and characters are **original but obviously inspired** (own sprites from our packs).
+
 ## Parallel work and approval
 
 The original steps were approved on 2026-10-12. The user's 2026-10-13 direction below supersedes the original assistant scope and ownership proposal: systems first (17, 17b–17g), then asset preparation/presentation (18+). Claude continues in order with 17 unless reassigned; Codex reviews released work. No unclaimed future file ownership is implied. Completed steps and their review history remain intact.
