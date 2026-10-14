@@ -131,7 +131,13 @@ func _run() -> void:
     await _wait(0.15)
     var guards: bool = not actor.get_node("Health").take_damage(999) and not actor.get_node("Magicules").try_spend(10) and not actor.get_node("Inventory").add_specimen(load(CODEC.SPECIMEN))
     session._request_action.rpc_id(1, "discard", {"id": "gnasher_essence", "character_id": "host"})
-    session._move_input.rpc_id(1, Vector2(NAN, 0))
+    # Normal per-frame movement can supersede this unreliable_ordered probe.
+    # Suspend that sender and retry the invalid input across several frames.
+    actor.set_physics_process(false)
+    for probe in range(10):
+        session._move_input.rpc_id(1, Vector2(NAN, 0))
+        await _wait(0.02)
+    actor.set_physics_process(true)
     session.request_action("absorb")
     await _wait(1.6)
     session.request_action("recruit", {"id": "ally_goblin_1"})
