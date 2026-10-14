@@ -116,6 +116,7 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/region_content.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/audio_vfx.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/balance_systems.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/balance_persistence.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
 python3 tests/network_forms.py
@@ -124,7 +125,7 @@ python3 tests/network_worlds.py
 "$GODOT_BIN" --headless --path . --quit-after 120
 ```
 
-The cloud checks validate import, 35 local gameplay/persistence/UI/visual suites (1049 checks with the replica-pose correction) and 266 real multi-process networking checks (1315 total through step 23, independently verified on Linux; Claude reports 1314 Windows checks before this added regression; use `python3` on Linux or `python` on Windows). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
+The cloud checks validate import, 37 local gameplay/persistence/UI/visual suites (1095 checks including state-preservation regressions) and 266 real multi-process networking checks (1361 total through step 24a, independently verified on Linux; Claude reports 1350 Windows checks before the added regressions; use `python3` on Linux or `python` on Windows). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
 
 ## Structure
 

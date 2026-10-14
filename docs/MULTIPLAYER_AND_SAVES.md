@@ -127,3 +127,9 @@ Every world is hosted by the player who loads it, with an `OfflineMultiplayerPee
 ### Updated mimic eligibility (2026-10-13)
 
 The latest user decision replaces Slime-only mimicry: `RaceCatalogue.can_mimic` permits Slime at level 1, Demon at level 5 and Human at level 20. Both runtime transformation and saved-form validation use that gate; analysis prerequisites, resource cost and cooldown remain required. No schema bump.
+
+### Step 24a state-preservation correction (Codex)
+
+Schema v21 accepts optional player `death_left` (0–5 seconds) and enemy `credit` (stable character ID → positive damage) / `group_scaled` fields. Capture and snapshots include them; restored hosts retain damage eligibility and remaining respawn time. Missing legacy death timers default to five seconds for dead characters, zero for living ones. Missing legacy credit defaults empty because historical damage cannot be recovered. Death penalties are not reapplied on restore.
+
+Death-bag transfer is committed only after pile creation succeeds. The world currently permits 64 piles. At that limit, the character keeps its bag and receives a message; existing piles stay untouched. Unlimited persistent piles are not implemented.

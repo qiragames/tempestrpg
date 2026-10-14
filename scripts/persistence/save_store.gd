@@ -61,6 +61,8 @@ static func _plain(value: Variant, depth: int = 0) -> bool:
     return value == null or value is bool or _number(value, -1000000000, 1000000000)
 
 static func validate_player(state: Variant, id: String) -> bool:
+    if state is Dictionary and state.has("death_left") and not _number(state.death_left, 0, 5):
+        return false
     if not state is Dictionary or state.get("id") != id or not _id(id):
         return false
     if not _position(state.get("position")) or not _number(state.get("move_speed"), 1, 1000):
@@ -230,6 +232,18 @@ static func validate(data: Variant) -> bool:
         if not _number(enemy.get("difficulty"), 0, 2, true) or not _number(enemy.get("maximum_hp"), 1, 1000000, true) or not _number(enemy.get("hp"), 0, enemy.maximum_hp, true) or not _number(enemy.get("immunity"), 0, 60) or not _number(enemy.get("state"), 0, 4, true) or not _number(enemy.get("state_time"), 0, 60) or not _id(enemy.get("target"), true):
             return false
         if (enemy.hp == 0) != (enemy.state == 4):
+            return false
+        if enemy.has("group_scaled") and not enemy.group_scaled is bool:
+            return false
+        var credit: Variant = enemy.get("credit", {})
+        if not credit is Dictionary or credit.size() > 256:
+            return false
+        var credited := 0
+        for character in credit:
+            if not _id(character) or not _number(credit[character], 1, enemy.maximum_hp, true):
+                return false
+            credited += int(credit[character])
+        if credited > enemy.maximum_hp:
             return false
     # Pending respawns (v17): known kinds, never for a living creature, one entry per ID.
     if not data.get("respawns") is Array or data.respawns.size() > RESPAWNER.MAX_PENDING:

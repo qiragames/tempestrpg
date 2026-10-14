@@ -32,6 +32,7 @@ static func capture_player(actor: Node2D) -> Dictionary:
     return {
         "id": actor.character_id, "position": vector(actor.position), "facing": vector(actor.facing),
         "move_speed": actor.move_speed,
+        "death_left": actor.death_left,
         "form": {"id": actor.form, "cooldown": actor.form_cooldown},
         "exhaustion": {"active": actor.exhaustion_active, "remaining": actor.exhaustion_left},
         "health": {"maximum": health.maximum, "current": health.current, "immunity": health.immunity_left, "immunity_seconds": health.immunity_seconds, "regen_rate": health.regen_rate, "regen_left": health.regen_left, "regen_carry": health._regen_carry},
@@ -56,6 +57,7 @@ static func apply_player(actor: Node2D, state: Dictionary, world: Node2D, replic
     var health = actor.get_node("Health")
     health.maximum = int(state.health.maximum)
     health.current = int(state.health.current)
+    actor.death_left = float(state.get("death_left", actor.RESPAWN_DELAY if health.current <= 0 else 0.0))
     health.immunity_left = state.health.immunity
     health.immunity_seconds = state.health.immunity_seconds
     health.regen_rate = state.health.regen_rate
@@ -114,7 +116,7 @@ static func capture_entities(world: Node2D) -> Dictionary:
             continue
         if node.is_in_group("enemies"):
             var health = node.get_node("Health")
-            enemies.append({"id": node.entity_id, "kind": node.kind, "position": vector(node.position), "home": vector(node.home), "difficulty": node.difficulty, "hp": health.current, "maximum_hp": health.maximum, "immunity": health.immunity_left, "state": node.state, "state_time": node.state_time, "target": node.target.character_id if is_instance_valid(node.target) else ""})
+            enemies.append({"id": node.entity_id, "kind": node.kind, "position": vector(node.position), "home": vector(node.home), "difficulty": node.difficulty, "hp": health.current, "maximum_hp": health.maximum, "immunity": health.immunity_left, "state": node.state, "state_time": node.state_time, "target": node.target.character_id if is_instance_valid(node.target) else "", "credit": node.credit.duplicate(), "group_scaled": node._group_scaled})
         elif node.is_in_group("gear_pickups"):
             loot.append({"id": node.entity_id, "position": vector(node.position), "item": node.item.duplicate(true), "owner": node.owner_id, "claim_until": node.claim_until})
         elif node.is_in_group("magicule_pickups"):
@@ -165,6 +167,8 @@ static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> vo
         actor.damage = actor.TIER_STATS[actor.difficulty].damage
         actor.get_node("Health").maximum = int(state.maximum_hp)
         actor.get_node("Health").current = int(state.hp)
+        actor.credit = state.get("credit", {}).duplicate()
+        actor._group_scaled = bool(state.get("group_scaled", state.maximum_hp > actor.TIER_STATS[actor.difficulty].health))
         actor.get_node("Health").immunity_left = state.immunity
         actor.state = int(state.state)
         actor.state_time = state.state_time

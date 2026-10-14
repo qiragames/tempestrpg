@@ -67,16 +67,24 @@ func _death_penalty() -> void:
         if lost > 0:
             progression["experience"] = int(progression.experience) - lost
             session.notify_character(character_id, "-%d XP (defeat)." % lost)
-    var materials: Dictionary = $Inventory.take_all()
+    # Do not remove anything until the world has accepted the pile. At the pile
+    # limit the bag stays with its character rather than silently disappearing.
+    var materials: Dictionary = {}
+    for entry in $Inventory.entries():
+        materials[String(entry.id)] = entry.count
     var worn: Array = progression.get("equipment", {}).values()
     var dropped: Array = gear.items.filter(func(item): return not item.id in worn)
-    gear.items = gear.items.filter(func(item): return item.id in worn)
-    for item in dropped:
-        gear.cooldowns.erase(item.id)
     var world: Node = session.world
     if (not materials.is_empty() or not dropped.is_empty()) and is_instance_valid(world) and world.has_method("drop_pile"):
-        world.drop_pile(character_id, materials, dropped, global_position)
-        session.notify_character(character_id, "Your bag fell where you were defeated (marked on the map).")
+        var pile = world.drop_pile(character_id, materials, dropped, global_position)
+        if pile != null:
+            $Inventory.take_all()
+            gear.items = gear.items.filter(func(item): return item.id in worn)
+            for item in dropped:
+                gear.cooldowns.erase(item.id)
+            session.notify_character(character_id, "Your bag fell where you were defeated (marked on the map).")
+        else:
+            session.notify_character(character_id, "The world pile limit was reached. Your bag stays with you.")
     session.queue_save()
 
 func race() -> String:
