@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.1 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.0 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -298,7 +298,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 *A closed chest (gold lock) at a point of interest* (640x360)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Uncommon Travel Boots
+- [x] The chest gave an Uncommon-or-better item: Uncommon Copper Ring
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (640x360)
@@ -378,6 +378,23 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 ![World map (M): Verdant Isle with the clearing, Thornwood, Mirror Lake, Cinder Crater; Harrowmere by bridge; Ambervale and the Emberreach Isles across the sea](64_world_map.png)
 *World map (M): Verdant Isle with the clearing, Thornwood, Mirror Lake, Cinder Crater; Harrowmere by bridge; Ambervale and the Emberreach Isles across the sea* (640x360)
 
+## 16. Sound and effects (step 23)
+- Sounds played during this run: analysis ×3, build ×4, chest ×1, defeat ×10, evolve ×1, exhausted ×1, form ×2, gather ×6, hit ×20, hurt ×13, learned ×3, level_up ×3, magicules ×4, swing ×21, ui_accept ×16, ui_move ×11
+- Effects shown: aura ×3, boost ×4, claw ×15, hit_spark ×34, ring ×7, slash ×21, smoke ×12, sparkle ×5
+- [x] The run produced the "swing" cue
+- [x] The run produced the "hit" cue
+- [x] The run produced the "defeat" cue
+- [x] The run produced the "magicules" cue
+- [x] The run produced the "analysis" cue
+- [x] The run produced the "learned" cue
+- [x] The run produced the "level_up" cue
+- [x] The run produced the "chest" cue
+- [x] The run produced the "evolve" cue
+- [x] The run produced the "build" cue
+
+![Effects: hit flash, sparkle (pickups, chests), level-up glow, ring (skills, buildings)](65_effects.png)
+*Effects: hit flash, sparkle (pickups, chests), level-up glow, ring (skills, buildings)* (640x360)
+
 
 ## System messages seen
 
@@ -431,7 +448,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +60 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Rare Travel Boots.
+- Trial reward: Epic Iron Sword.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +20 XP (defeat).
@@ -447,11 +464,11 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1280, 720). 
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Uncommon Travel Boots.
+- Chest opened: Uncommon Copper Ring.
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 
 The bot retreated 1 time(s) to let Magicules recover.
 XP assistance for skill points: 130 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 64 screenshots.**
+**Result: 0 failed checks, 65 screenshots.**

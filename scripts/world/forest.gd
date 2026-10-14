@@ -69,6 +69,10 @@ func _ready() -> void:
     terrain = load("res://scripts/world/world_terrain.gd").new()
     terrain.y_sort_enabled = true
     add_child(terrain)
+    # Step 23: sound and effect cues from observed state changes (every peer).
+    var presentation: Node = load("res://scripts/audio/presentation.gd").new()
+    presentation.world = self
+    add_child(presentation)
     _decorations = Node2D.new()
     _decorations.name = "Decorations"
     _decorations.y_sort_enabled = true

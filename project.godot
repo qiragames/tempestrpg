@@ -8,6 +8,7 @@ config/features=PackedStringArray("4.6", "GL Compatibility")
 
 [autoload]
 GameSession="*res://scripts/network/game_session.gd"
+Audio="*res://scripts/audio/audio_director.gd"
 
 [display]
 window/size/viewport_width=640

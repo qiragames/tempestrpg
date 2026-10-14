@@ -31,4 +31,15 @@ Pixel scale 1:1 with the 640x360 viewport; nearest filtering (project default). 
 | `fx/slash.png` | 128x32 | Basic strike / sword slash effect | `assets/source/packs/ninja_adventure/FX/Attack/SlashCurved/SpriteSheet.png` |
 | `fx/claw.png` | 128x32 | Bite/claw skills (Rending Bite, Shadow Claw) | `assets/source/packs/ninja_adventure/FX/Attack/Claw/SpriteSheet.png` |
 
+## Effects (step 23, `tools/prepare_audio.py`)
+
+| File | Size | Frames | Source |
+| --- | --- | --- | --- |
+| `fx/hit_spark.png` | 192x32 | 6 frames of 32x32 | `assets/source/packs/ninja_adventure/FX/Magic/Circle/SpriteSheetSpark.png` |
+| `fx/ring.png` | 128x32 | 4 frames of 32x32 | `assets/source/packs/ninja_adventure/FX/Magic/Circle/SpriteSheetWhite.png` |
+| `fx/sparkle.png` | 270x35 | 9 frames of 30x35 | `assets/source/packs/ninja_adventure/FX/Magic/Spark/SpriteSheet.png` |
+| `fx/aura.png` | 125x24 | 5 frames of 25x24 | `assets/source/packs/ninja_adventure/FX/Magic/Aura/SpriteSheet.png` |
+| `fx/boost.png` | 424x35 | 8 frames of 53x35 | `assets/source/packs/ninja_adventure/FX/Magic/Boost/SpriteSheet.png` |
+| `fx/smoke.png` | 192x32 | 6 frames of 32x32 | `assets/source/packs/ninja_adventure/FX/Smoke/Smoke/SpriteSheet.png` |
+
 Licences and credits: see `CREDITS.md` at the repository root and the licence files next to each pack in `assets/source/packs/`.

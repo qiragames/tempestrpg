@@ -139,7 +139,9 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 
 **Done evidence:** visible New/Continue/Join/Resume/Quit loop, keyboard focus, corrupt-save handling, reconnect identity retained, host versus guest exit behavior verified, and no hidden menu grants free HP/resources.
 
-## 23 — Audio and combat/analysis VFX (Claude)
+## 23 — Audio and combat/analysis VFX (Claude) — **Done**
+
+**Status 2026-10-14:** integrated on `claude/roadmap-23-audio-vfx`. No network change: `presentation.gd` derives cues from state it already observes on each peer (HP, `attack_recovery`, level, skills, chests, form, ally race, camp state, pickups near characters), with a baseline on first sight. Music/SFX/UI buses; settings local in `user://settings.cfg`.
 
 **Goal/dependencies:** requires 16, 19 and 21. Add a small coherent set of strikes, pickups, analysis, naming/evolution, shrine and UI cues with independent volume/mute controls.
 

@@ -542,7 +542,7 @@ func _build_pause_panel() -> void:
     )
     _pause_options = Panel.new()
     _pause_options.position = Vector2(170, 62)
-    _pause_options.size = Vector2(300, 214)
+    _pause_options.size = Vector2(300, 228)
     _pause_options.add_theme_stylebox_override("panel", UI.ornate())
     _pause_panel.add_child(_pause_options)
     _pause_options.set_meta("first", SETTINGS.build(_pause_options, _close_options))

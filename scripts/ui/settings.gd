@@ -1,7 +1,8 @@
 extends RefCounted
-## Local display settings (step 22): fullscreen and window scale. Stored per machine in
-## user://settings.cfg, never in world saves, and never sent to the host.
-const DEFAULTS := {"fullscreen": false, "scale": 2}
+## Local settings: display (step 22: fullscreen, window scale) and sound/effects (step 23: music
+## and effects volume 0..1, mute, reduced effects). Stored per machine in user://settings.cfg,
+## never in world saves, and never sent to the host.
+const DEFAULTS := {"fullscreen": false, "scale": 2, "music": 0.7, "sfx": 0.8, "muted": false, "reduced": false}
 const SCALES := [1, 2, 3]
 const UI := preload("res://scripts/ui/ui_style.gd")
 ## Tests point this at a temporary file.
@@ -15,16 +16,28 @@ static func load_settings() -> Dictionary:
         values.fullscreen = fullscreen is bool and fullscreen
         var scale: Variant = file.get_value("display", "scale", DEFAULTS.scale)
         values.scale = int(scale) if (scale is int or scale is float) and int(scale) in SCALES else DEFAULTS.scale
+        for key in ["music", "sfx"]:
+            var volume: Variant = file.get_value("sound", key, DEFAULTS[key])
+            values[key] = clampf(float(volume), 0.0, 1.0) if (volume is int or volume is float) and is_finite(float(volume)) else DEFAULTS[key]
+        for key in ["muted", "reduced"]:
+            var flag: Variant = file.get_value("sound", key, DEFAULTS[key])
+            values[key] = flag is bool and flag
     return values
 
 static func save_settings(values: Dictionary) -> Error:
     var file := ConfigFile.new()
     file.set_value("display", "fullscreen", bool(values.fullscreen))
     file.set_value("display", "scale", int(values.scale))
+    for key in ["music", "sfx", "muted", "reduced"]:
+        file.set_value("sound", key, values.get(key, DEFAULTS[key]))
     return file.save(path)
 
-## Apply to the game window (integer scaling of the 640x360 view).
+## Apply to the game window (integer scaling of the 640x360 view), the audio buses and effects.
 static func apply(values: Dictionary) -> void:
+    preload("res://scripts/visual/effects.gd").reduced = bool(values.get("reduced", false))
+    var tree := Engine.get_main_loop() as SceneTree
+    if tree != null and tree.root.has_node("Audio"):
+        tree.root.get_node("Audio").apply_settings(values)
     if DisplayServer.get_name() == "headless":
         return
     if values.fullscreen:
@@ -87,19 +100,44 @@ static func build(panel: Control, on_back: Callable) -> Control:
             change.call()
         )
     refresh.call()
-    var note := Label.new()
-    note.text = "Saved on this computer only; worlds and friends are not affected."
-    note.position = Vector2(14, 128)
-    note.size = Vector2(260, 30)
-    note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    note.add_theme_font_size_override("font_size", 9)
-    note.add_theme_color_override("font_color", UI.TEXT_DIM)
-    panel.add_child(note)
+    # Sound (step 23): two volume sliders, mute and reduced effects.
+    for entry in [["music", "Music", 126], ["sfx", "Effects", 146]]:
+        var label := Label.new()
+        label.text = entry[1]
+        label.position = Vector2(14, entry[2])
+        label.add_theme_font_size_override("font_size", 10)
+        panel.add_child(label)
+        var slider := HSlider.new()
+        slider.name = entry[0].capitalize() + "Volume"
+        slider.min_value = 0.0
+        slider.max_value = 1.0
+        slider.step = 0.05
+        slider.value = values[entry[0]]
+        slider.position = Vector2(70, entry[2] + 2)
+        slider.size = Vector2(196, 14)
+        slider.value_changed.connect(func(volume: float):
+            values[entry[0]] = volume
+            change.call()
+        )
+        panel.add_child(slider)
+    for entry in [["muted", "Mute", 14], ["reduced", "Reduced effects", 120]]:
+        var check := CheckButton.new()
+        check.name = entry[0].capitalize()
+        check.text = entry[1]
+        check.position = Vector2(entry[2], 166)
+        check.size = Vector2(104 if entry[0] == "muted" else 150, 24)
+        check.add_theme_font_size_override("font_size", 10)
+        check.button_pressed = values[entry[0]]
+        check.toggled.connect(func(on: bool):
+            values[entry[0]] = on
+            change.call()
+        )
+        panel.add_child(check)
     var back := Button.new()
     back.name = "Back"
     back.text = "Back"
-    back.position = Vector2(14, 166)
-    back.size = Vector2(96, 30)
+    back.position = Vector2(14, 194)
+    back.size = Vector2(96, 24)
     back.pressed.connect(on_back)
     panel.add_child(back)
     return fullscreen

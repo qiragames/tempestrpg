@@ -52,8 +52,9 @@ func _run() -> void:
     SETTINGS.path = dir.path_join("settings.cfg")
     # --- Settings file (local only)
     _check(SETTINGS.load_settings() == SETTINGS.DEFAULTS, "Without a settings file the defaults apply (windowed, 1280x720)")
-    SETTINGS.save_settings({"fullscreen": true, "scale": 3})
-    _check(SETTINGS.load_settings() == {"fullscreen": true, "scale": 3}, "Settings are saved and read back")
+    var custom := {"fullscreen": true, "scale": 3, "music": 0.25, "sfx": 0.5, "muted": true, "reduced": true}
+    SETTINGS.save_settings(custom)
+    _check(SETTINGS.load_settings() == custom, "Settings (display and sound) are saved and read back")
     var bad := ConfigFile.new()
     bad.set_value("display", "scale", 7)
     bad.set_value("display", "fullscreen", "yes")

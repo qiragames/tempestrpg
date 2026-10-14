@@ -10,7 +10,7 @@ const UI := preload("res://scripts/ui/ui_style.gd")
 const SETTINGS := preload("res://scripts/ui/settings.gd")
 const MARKER := preload("res://scripts/ui/menu_marker.gd")
 const MAIN := Rect2(40, 92, 200, 206)
-const SUB := Rect2(24, 74, 300, 214)
+const SUB := Rect2(24, 74, 300, 228)
 ## Third-party art credits (CREDITS.md). Kyrise's line is required by CC BY 4.0.
 const CREDITS := [
     ["TempestRPG", "A private game by qiragames for friends. Built with Godot Engine 4.6 (MIT)."],
@@ -42,6 +42,8 @@ var _current: String = ""
 func _ready() -> void:
     UI.install()
     SETTINGS.apply(SETTINGS.load_settings())
+    if has_node("/root/Audio"):
+        get_node("/root/Audio").music("title")
     set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     add_child(load("res://scripts/menu/title_backdrop.gd").new())
     _build_logo()
