@@ -23,6 +23,10 @@ const GROUP_RADIUS := 300.0
 ## Sprites are drawn smaller than the art (it is ~26 px tall next to 16 px characters).
 const SPRITE_SCALE := 0.75
 const ELITE_SPRITE_SCALE := 0.85
+const TRADE := preload("res://scripts/trade/trade_catalogue.gd")
+const FOUR_ELITE_SCALE := 1.15
+## Last movement or attack direction (presentation).
+var _facing := Vector2.DOWN
 ## Skill effects on this creature (24b, host): seconds left and strength. Not saved (they last a
 ## few seconds); `shown_status` mirrors the strongest one for presentation on every peer.
 var slow_left := 0.0
@@ -113,15 +117,22 @@ func _scale_for_group() -> void:
         health.current = health.maximum
         health.changed.emit(health.current, health.maximum)
 
-## 24b: each level above its tier's base level adds 30% HP and 8% damage.
+## 24b: each level above its tier's base level adds 30% HP and 8% damage; M4.5c: beyond
+## TAPER_LEVELS levels above it the growth halves, so the ferry lands' level 15-20 Elites stay
+## beatable for a geared character (balance probe).
 const LEVEL_HEALTH := 0.30
 const LEVEL_DAMAGE := 0.08
+const TAPER_LEVELS := 8
+
+static func _growth(levels_above: int, per_level: float) -> float:
+    var early := mini(levels_above, TAPER_LEVELS)
+    return 1.0 + per_level * early + per_level * 0.5 * maxi(0, levels_above - TAPER_LEVELS)
 
 static func scaled_health(tier: int, creature_level: int) -> int:
-    return int(round(TIER_STATS[tier].health * (1.0 + LEVEL_HEALTH * maxi(0, creature_level - REGION.TIER_LEVELS[tier]))))
+    return int(round(TIER_STATS[tier].health * _growth(maxi(0, creature_level - REGION.TIER_LEVELS[tier]), LEVEL_HEALTH)))
 
 static func scaled_damage(tier: int, creature_level: int) -> int:
-    return int(round(TIER_STATS[tier].damage * (1.0 + LEVEL_DAMAGE * maxi(0, creature_level - REGION.TIER_LEVELS[tier]))))
+    return int(round(TIER_STATS[tier].damage * _growth(maxi(0, creature_level - REGION.TIER_LEVELS[tier]), LEVEL_DAMAGE)))
 
 ## Apply a tier's (and level's) stats at full health (fresh creatures; restores set health from the save).
 func set_difficulty(value: int) -> void:
@@ -264,15 +275,24 @@ func _defeat() -> void:
             if not item.is_empty():
                 world.drop_gear.call_deferred(item, position + Vector2(10, 6), "", ranked[0][0] if not ranked.is_empty() else "")
         var rewarded := false
+        # Zeni (M4.5c) is split by damage share like the Magicules; XP is full for everyone.
+        var coins: int = TRADE.zeni_for(level, difficulty)
+        var total_share := 0.0
+        for entry in ranked:
+            total_share += float(entry[1])
         for entry in ranked:
             var actor: Node = world.player_by_id(entry[0]) if world != null and world.has_method("player_by_id") else null
             if is_instance_valid(actor):
                 actor.gain_experience(LEVELING.defeat_xp(level, difficulty), "defeat")
+                if actor.has_method("gain_zeni"):
+                    actor.gain_zeni(maxi(1, int(round(coins * float(entry[1]) / total_share))), "defeat")
                 rewarded = true
         # A creature no character damaged keeps the old last-hit rule.
         var victor: Node = health.last_hit_by
         if not rewarded and is_instance_valid(victor) and victor.is_in_group("player"):
             victor.gain_experience(LEVELING.defeat_xp(level, difficulty), "defeat")
+            if victor.has_method("gain_zeni"):
+                victor.gain_zeni(coins, "defeat")
     # Retain the defeated creature for the next absorption milestone.
     queue_redraw()
 
@@ -314,22 +334,32 @@ func _process(_delta: float) -> void:
     if not is_instance_valid(body_sprite):
         return
     var moved: bool = _last_position != Vector2.INF and position.distance_to(_last_position) > 0.05
+    var four := not SPRITES.is_side(kind) and SPRITES.has_set(kind)
     if moved:
-        body_sprite.flip_h = position.x < _last_position.x
+        _facing = position - _last_position
     elif is_instance_valid(target):
-        body_sprite.flip_h = target.position.x < position.x
+        _facing = target.position - position
+    if not four:
+        body_sprite.flip_h = _facing.x < 0.0
     _last_position = position
-    var drawn: float = ELITE_SPRITE_SCALE if difficulty == Difficulty.ELITE else SPRITE_SCALE
+    # The 16 px region creatures (M4.5c) are drawn at full size; the larger goblin-style sheets at 75%.
+    var drawn: float = (FOUR_ELITE_SCALE if difficulty == Difficulty.ELITE else 1.0) if four else (ELITE_SPRITE_SCALE if difficulty == Difficulty.ELITE else SPRITE_SCALE)
     body_sprite.scale = Vector2.ONE * drawn
     # Keep the feet where they were at full size.
     body_sprite.position.y = SPRITES.FEET_Y * (1.0 - drawn)
     if state == State.DEFEATED:
-        body_sprite.modulate = Color(0.5, 1.0, 1.0) if being_analyzed else Color(0.85, 0.85, 0.85)
-        SPRITES.play(body_sprite, "death")
+        body_sprite.modulate = Color(0.5, 1.0, 1.0) if being_analyzed else Color(0.55, 0.55, 0.55)
+        SPRITES.play(body_sprite, "dead" if four else "death")
+        if four:
+            body_sprite.rotation = PI / 2.0
         return
+    body_sprite.rotation = 0.0
     # The wind-up flashes red so players can read the coming bite; skill effects tint (24b).
     body_sprite.modulate = Color(1.0, 0.45, 0.4) if state == State.WINDUP else (STATUS_TINT[shown_status] if STATUS_TINT.has(shown_status) else TIER_TINT[difficulty])
-    SPRITES.play(body_sprite, "run" if moved or state == State.CHASE else "idle")
+    if four:
+        SPRITES.play(body_sprite, "%s_%s" % ["walk" if moved or state == State.CHASE else "idle", SPRITES.direction_name(_facing)])
+    else:
+        SPRITES.play(body_sprite, "run" if moved or state == State.CHASE else "idle")
 
 func _draw() -> void:
     if is_instance_valid(body_sprite):

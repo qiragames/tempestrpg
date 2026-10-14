@@ -42,4 +42,19 @@ Pixel scale 1:1 with the 640x360 viewport; nearest filtering (project default). 
 | `fx/boost.png` | 424x35 | 8 frames of 53x35 | `assets/source/packs/ninja_adventure/FX/Magic/Boost/SpriteSheet.png` |
 | `fx/smoke.png` | 192x32 | 6 frames of 32x32 | `assets/source/packs/ninja_adventure/FX/Smoke/Smoke/SpriteSheet.png` |
 
+## Region creatures and shopkeepers (M4.5c, `tools/prepare_creatures.py`)
+
+Copies of Ninja Adventure sheets (CC0): 64x64, four columns (down, up, left, right) by four walk frames of 16x16, drawn with SpriteLibrary's four-direction sets; shopkeepers also keep the 38x38 portrait (`*_face.png`) for the shop window. Preview: `docs/asset_previews/region_creatures.png`.
+
+| Folder | Source (Actor/…) | Used for |
+| --- | --- | --- |
+| `frost_bear`, `snow_wisp` | Monster/Bear, Monster/Spirit | Frostpeak creatures |
+| `dune_viper`, `sand_scuttler` | Monster/Snake, Monster/SpiderYellow | Sunscorch Desert creatures |
+| `bog_kappa`, `mirecap` | Monster/KappaGreen, Monster/Mushroom | Mirewood Marsh creatures |
+| `bamboo_sprite`, `paper_lantern` | Monster/Bamboo, Monster/LanternRed | Sakura Vale creatures |
+| `amber_owl`, `burrow_mole` | Monster/Owl, Monster/Mole | Ambervale creatures |
+| `ember_flame`, `salamander` | Monster/Flam, Monster/Reptile2 | Emberreach creatures |
+| `merchant_verdant`, `merchant_harrow`, `merchant_frost`, `merchant_desert`, `merchant_sakura`, `merchant_amber`, `merchant_marsh`, `merchant_ember` | Character/Villager, Noble, Eskimo, Sultan, Monk, Hunter, Shaman, OldMan | Town merchants |
+| `camp_trader`, `camp_smith`, `traveller`, `ferryman` | Character/Woman, FighterWhite, MaskRacoon, OldMan2 | Hired camp staff, the travelling merchant, the ferry piers |
+
 Licences and credits: see `CREDITS.md` at the repository root and the licence files next to each pack in `assets/source/packs/`.

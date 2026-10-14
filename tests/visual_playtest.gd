@@ -680,6 +680,61 @@ func _run() -> void:
     await _shot("skill_effects", "Skill effects on creatures: stunned (yellow), rooted (green), slowed (blue), burning/bleeding (violet)")
     for creature in tinted:
         creature.queue_free()
+    _log("## 18. The bigger world, towns and trade (M4.5c)")
+    # A tour of the grown world: every stop streams its props in around the character.
+    var tour_map := preload("res://scripts/world/world_map.gd")
+    var hud_tour = world.get_node("HUD")
+    for enemy in get_nodes_in_group("enemies"):
+        enemy.set_physics_process(false)
+    var stops := [
+        ["rimeholm", Vector2(195, -66), "Rimeholm, Frostpeak's town of igloos and lodges, on the snow"],
+        ["frost_mountain", Vector2(190, -108), "Frostpeak's mountain: plateau rims are ledges with rock walls below (verticality)"],
+        ["frost_creatures", Vector2(100, -54), "Frost Bears at a hidden leveling spot (Bear Hollow)"],
+        ["dunemarch", Vector2(-120, 124), "Dunemarch in the Sunscorch Desert: domed houses, palms and a bazaar"],
+        ["brookhaven", Vector2(110, 154), "Brookhaven, Verdant Isle's town, with its merchant on the plaza"],
+    ]
+    for stop in stops:
+        showcase.position = tour_map.to_world(stop[1])
+        world.terrain.ensure_props_at(showcase.position)
+        await _wait(0.35)
+        _check(hud_tour.get_node("Title").text == tour_map.place_name(showcase.position).to_upper(), "The HUD names %s" % tour_map.place_name(showcase.position))
+        await _shot(stop[0], stop[2])
+    # Shop: Zeni in the purse, F beside the Brookhaven merchant opens its stock.
+    showcase.progression["zeni"] = 600
+    showcase.position = world.trade.merchant_position("merchant_brookhaven") + Vector2(-16, 0)
+    await _wait(0.3)
+    hud_tour.trade_panel.open("merchant_brookhaven")
+    await _wait(0.2)
+    _check(hud_tour.trade_panel.visible and hud_tour.trade_panel._rows.size() > 3, "F beside a merchant opens the shop with its stock")
+    await _shot("shop_buy", "The Brookhaven Trader's shop: gear, draughts and tonics, materials (prices in Zeni)")
+    var purse_before: int = showcase.zeni()
+    world.trade.buy(showcase, "merchant_brookhaven", "healing_draught")
+    hud_tour.trade_panel._switch(true)
+    await _wait(0.2)
+    _check(showcase.zeni() == purse_before - 25 and showcase.get_node("Inventory").count_of("healing_draught") == 1, "Bought a Healing Draught for 25 Zeni")
+    await _shot("shop_sell", "Selling: the merchant pays 30% of the price for goods and unequipped gear")
+    hud_tour.trade_panel.close()
+    # Ferry: from Sunfall Pier across the sea to Amberhold.
+    showcase.position = tour_map.dock_position("dock_sunfall")
+    world.terrain.ensure_props_at(showcase.position)
+    await _wait(0.3)
+    hud_tour.trade_panel.open_ferry("dock_sunfall")
+    await _wait(0.2)
+    await _shot("ferry", "Sunfall Pier: the ferryman sails to Amberhold across the sea for 30 Zeni")
+    hud_tour.trade_panel.close()
+    world.trade.sail(showcase, "dock_sunfall")
+    await _wait(0.4)
+    _check(tour_map.region_at(showcase.position) == tour_map.Region.AMBERVALE, "The ferry crosses to Ambervale (a region you cannot walk to)")
+    await _shot("amberhold_pier", "Arrived at Amberhold Pier in Ambervale, the autumn continent")
+    for other in [["hanamura", Vector2(545, 44), "Hanamura in Sakura Vale (ferry): cherry blossoms, bamboo and pagoda-style houses"], ["volcano", Vector2(568, 366), "The Emberreach volcano (ferry): its slopes rise in two levels around a lava crater"], ["bogsend", Vector2(-170, 374), "Bogsend in Mirewood Marsh (ferry): mud, pools and stilt huts"]]:
+        showcase.position = tour_map.to_world(other[1])
+        world.terrain.ensure_props_at(showcase.position)
+        await _wait(0.35)
+        await _shot(other[0], other[2])
+    hud_tour.world_map.open()
+    await _wait(0.3)
+    await _shot("world_map_full", "The world map: the home continent, the ferry lands, every town (gold) and the ferry piers")
+    hud_tour.world_map.close()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

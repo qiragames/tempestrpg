@@ -21,7 +21,7 @@ var exhaustion_active: bool = false
 var exhaustion_left: float = 0.0
 var remote_direction := Vector2.ZERO
 var last_input_msec: int = 0
-var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "race": "Slime", "quests": {}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": []}
+var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "race": "Slime", "quests": {}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": [], "zeni": 0}
 ## Current mimic form and the time until it can change again (host-owned, saved).
 ## Gear (17e): owned items and active cooldowns; equipped item IDs live in progression.equipment.
 var gear: Dictionary = {"items": [], "cooldowns": {}}
@@ -30,6 +30,12 @@ var gear: Dictionary = {"items": [], "cooldowns": {}}
 ## level) and drops the bag (materials and unequipped gear) as a pile. Host only, not saved.
 const RESPAWN_DELAY := 5.0
 const DEATH_XP_SHARE := 0.1
+const TRADE := preload("res://scripts/trade/trade_catalogue.gd")
+## Consumables (M4.5c): shared cooldown and the effects still running (seconds left, per second).
+var consumable_cooldown: float = 0.0
+var _heal_left := 0.0
+var _heal_carry := 0.0
+var _tonic_left := 0.0
 var death_left: float = 0.0
 var form: String = FORMS.BASE
 var form_cooldown: float = 0.0
@@ -74,10 +80,13 @@ func _death_penalty() -> void:
         materials[String(entry.id)] = entry.count
     var worn: Array = progression.get("equipment", {}).values()
     var dropped: Array = gear.items.filter(func(item): return not item.id in worn)
+    # M4.5c: a tenth of the purse falls with the bag.
+    var coins: int = int(floor(zeni() * TRADE.DEATH_SHARE))
     var world: Node = session.world
-    if (not materials.is_empty() or not dropped.is_empty()) and is_instance_valid(world) and world.has_method("drop_pile"):
-        var pile = world.drop_pile(character_id, materials, dropped, global_position)
+    if (not materials.is_empty() or not dropped.is_empty() or coins > 0) and is_instance_valid(world) and world.has_method("drop_pile"):
+        var pile = world.drop_pile(character_id, materials, dropped, global_position, "", -1.0, coins)
         if pile != null:
+            progression["zeni"] = zeni() - coins
             $Inventory.take_all()
             gear.items = gear.items.filter(func(item): return item.id in worn)
             for item in dropped:
@@ -86,6 +95,79 @@ func _death_penalty() -> void:
         else:
             session.notify_character(character_id, "The world pile limit was reached. Your bag stays with you.")
     session.queue_save()
+
+func zeni() -> int:
+    return int(progression.get("zeni", 0))
+
+## Host: add Zeni (defeats, chests, sales, piles).
+func gain_zeni(amount: int, reason: String) -> void:
+    if amount <= 0 or not AUTHORITY.can_mutate(self):
+        return
+    progression["zeni"] = mini(TRADE.MAX_ZENI, zeni() + amount)
+    if reason in ["defeat", "chest", "pile"]:
+        session.notify_character(character_id, "+%d Zeni (%s)." % [amount, reason])
+
+## Host: pay Zeni; false (nothing spent) if the purse is too light.
+func spend_zeni(amount: int) -> bool:
+    if amount < 0 or zeni() < amount or not AUTHORITY.can_mutate(self):
+        return false
+    progression["zeni"] = zeni() - amount
+    return true
+
+## Host: drop an owned, unequipped item (selling).
+func remove_item(id: String) -> bool:
+    if not AUTHORITY.can_mutate(self) or id in progression.get("equipment", {}).values():
+        return false
+    for index in range(gear.items.size()):
+        if gear.items[index].id == id:
+            gear.items.remove_at(index)
+            gear.cooldowns.erase(id)
+            return true
+    return false
+
+## Host: use a bag good — drink a draught/tonic or read a scroll (M4.5c).
+func use_good(id: String) -> bool:
+    if not AUTHORITY.can_mutate(self) or $Health.current <= 0 or $Inventory.count_of(id) <= 0:
+        return false
+    if TRADE.CONSUMABLES.has(id):
+        if consumable_cooldown > 0.0:
+            session.notify_character(character_id, "Wait %.0f s before the next draught or tonic." % ceilf(consumable_cooldown))
+            return false
+        $Inventory.discard(StringName(id), 1)
+        consumable_cooldown = TRADE.CONSUMABLE_COOLDOWN
+        if id == "healing_draught":
+            _heal_left = TRADE.CONSUMABLE_SECONDS
+        else:
+            _tonic_left = TRADE.CONSUMABLE_SECONDS
+        session.notify_character(character_id, "%s: +40 over 5 s." % TRADE.CONSUMABLES[id][0])
+        return true
+    var skill := TRADE.scroll_skill(id)
+    if skill.is_empty():
+        return false
+    var book = $SkillBook
+    if book.knows(StringName(skill)):
+        session.notify_character(character_id, "You already know that skill.")
+        return false
+    $Inventory.discard(StringName(id), 1)
+    book.learn_from_scroll(skill)
+    session.notify_character(character_id, "Learned %s from the scroll. Activate it in the skill tree (K)." % TRADE.good_info(id)[0].trim_prefix("Scroll: "))
+    session.queue_save()
+    return true
+
+func _tick_consumables(delta: float) -> void:
+    consumable_cooldown = maxf(0.0, consumable_cooldown - delta)
+    if _heal_left > 0.0:
+        var step := minf(delta, _heal_left)
+        _heal_left -= step
+        _heal_carry += 40.0 / TRADE.CONSUMABLE_SECONDS * step
+        var whole := int(floor(_heal_carry))
+        if whole > 0:
+            _heal_carry -= whole
+            $Health.heal(whole)
+    if _tonic_left > 0.0:
+        var step := minf(delta, _tonic_left)
+        _tonic_left -= step
+        $Magicules.restore(40.0 / TRADE.CONSUMABLE_SECONDS * step)
 
 func race() -> String:
     return progression.get("race", RACES.DEFAULT)
@@ -454,6 +536,8 @@ func _process(delta: float) -> void:
         if death_left <= 0.0:
             session.respawn_character(self)
     form_cooldown = maxf(0.0, form_cooldown - delta)
+    if $Health.current > 0:
+        _tick_consumables(delta)
     for id in gear.cooldowns.keys():
         gear.cooldowns[id] = maxf(0.0, gear.cooldowns[id] - delta)
         if gear.cooldowns[id] <= 0.0:
@@ -481,6 +565,10 @@ func _unhandled_input(event: InputEvent) -> void:
         else:
             try_transform(target)
         return
+    for potion in [["use_draught", "healing_draught"], ["use_tonic", "magicule_tonic"]]:
+        if event.is_action_pressed(potion[0]) and not event.is_echo():
+            session.request_action("use_item", {"id": potion[1]})
+            return
     if event.is_action_pressed("gear_active") and not event.is_echo():
         if session.active:
             session.request_action("gear", {"operation": "use"})

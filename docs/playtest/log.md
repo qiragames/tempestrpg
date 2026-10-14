@@ -299,7 +299,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (640x360)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Rare Field Scythe
+- [x] The chest gave an Uncommon-or-better item: Uncommon Ash Spear
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (640x360)
@@ -369,7 +369,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 ![Sunfall Beach: the south coast; Ambervale lies across the strait](62_sunfall_beach.png)
 *Sunfall Beach: the south coast; Ambervale lies across the strait* (640x360)
 
-- [x] All 13 region creatures are in the world
+- [x] All 37 region creatures are in the world
 
 ![Thornwood's Gnashers (one Elite) near a wood deposit and the Thornwood chest](63_thornwood_creatures.png)
 *Thornwood's Gnashers (one Elite) near a wood deposit and the Thornwood chest* (640x360)
@@ -419,10 +419,72 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 ![Skill effects on creatures: stunned (yellow), rooted (green), slowed (blue), burning/bleeding (violet)](69_skill_effects.png)
 *Skill effects on creatures: stunned (yellow), rooted (green), slowed (blue), burning/bleeding (violet)* (640x360)
 
+## 18. The bigger world, towns and trade (M4.5c)
+- [x] The HUD names Rimeholm
+
+![Rimeholm, Frostpeak's town of igloos and lodges, on the snow](70_rimeholm.png)
+*Rimeholm, Frostpeak's town of igloos and lodges, on the snow* (640x360)
+
+- [x] The HUD names Frostpeak
+
+![Frostpeak's mountain: plateau rims are ledges with rock walls below (verticality)](71_frost_mountain.png)
+*Frostpeak's mountain: plateau rims are ledges with rock walls below (verticality)* (640x360)
+
+- [x] The HUD names Frostpeak
+
+![Frost Bears at a hidden leveling spot (Bear Hollow)](72_frost_creatures.png)
+*Frost Bears at a hidden leveling spot (Bear Hollow)* (640x360)
+
+- [x] The HUD names Dunemarch
+
+![Dunemarch in the Sunscorch Desert: domed houses, palms and a bazaar](73_dunemarch.png)
+*Dunemarch in the Sunscorch Desert: domed houses, palms and a bazaar* (640x360)
+
+- [x] The HUD names Brookhaven
+
+![Brookhaven, Verdant Isle's town, with its merchant on the plaza](74_brookhaven.png)
+*Brookhaven, Verdant Isle's town, with its merchant on the plaza* (640x360)
+
+- [x] F beside a merchant opens the shop with its stock
+
+![The Brookhaven Trader's shop: gear, draughts and tonics, materials (prices in Zeni)](75_shop_buy.png)
+*The Brookhaven Trader's shop: gear, draughts and tonics, materials (prices in Zeni)* (640x360)
+
+- [x] Bought a Healing Draught for 25 Zeni
+
+![Selling: the merchant pays 30% of the price for goods and unequipped gear](76_shop_sell.png)
+*Selling: the merchant pays 30% of the price for goods and unequipped gear* (640x360)
+
+
+![Sunfall Pier: the ferryman sails to Amberhold across the sea for 30 Zeni](77_ferry.png)
+*Sunfall Pier: the ferryman sails to Amberhold across the sea for 30 Zeni* (640x360)
+
+- [x] The ferry crosses to Ambervale (a region you cannot walk to)
+
+![Arrived at Amberhold Pier in Ambervale, the autumn continent](78_amberhold_pier.png)
+*Arrived at Amberhold Pier in Ambervale, the autumn continent* (640x360)
+
+
+![Hanamura in Sakura Vale (ferry): cherry blossoms, bamboo and pagoda-style houses](79_hanamura.png)
+*Hanamura in Sakura Vale (ferry): cherry blossoms, bamboo and pagoda-style houses* (640x360)
+
+
+![The Emberreach volcano (ferry): its slopes rise in two levels around a lava crater](80_volcano.png)
+*The Emberreach volcano (ferry): its slopes rise in two levels around a lava crater* (640x360)
+
+
+![Bogsend in Mirewood Marsh (ferry): mud, pools and stilt huts](81_bogsend.png)
+*Bogsend in Mirewood Marsh (ferry): mud, pools and stilt huts* (640x360)
+
+
+![The world map: the home continent, the ferry lands, every town (gold) and the ferry piers](82_world_map_full.png)
+*The world map: the home continent, the ferry lands, every town (gold) and the ferry piers* (640x360)
+
 
 ## System messages seen
 
 - +21 XP (defeat).
+- +9 Zeni (defeat).
 - Threat neutralized. Specimen retained.
 - Recovered 6.0 Magicules.
 - Analyzing Forest Gnasher. Remain nearby.
@@ -442,6 +504,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Aster: build assigned.
 - Ally completed the Goblin Hut.
 - +21 XP (defeat).
+- +9 Zeni (defeat).
 - Threat neutralized. Specimen retained.
 - Recovered 12.0 Magicules.
 - Analyzing Forest Gnasher. Remain nearby.
@@ -457,6 +520,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Storehouse built. Shared materials consumed.
 - Essence Shrine built. Shared materials consumed.
 - +21 XP (defeat).
+- +9 Zeni (defeat).
 - Threat neutralized. Specimen retained.
 - Recovered 12.0 Magicules.
 - Analyzing Thornback Gnasher. Remain nearby.
@@ -475,10 +539,11 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +1500 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Rare Padded Vest.
+- Trial reward: Epic Cloth Hood.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +21 XP (defeat).
+- +9 Zeni (defeat).
 - Threat neutralized. Specimen retained.
 - Recovered 16.0 Magicules.
 - +546 XP (showcase assistance). Level 4 reached: +1 skill point.
@@ -491,11 +556,12 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Rare Field Scythe.
+- Chest opened: Uncommon Ash Spear.
+- +42 Zeni (chest).
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 
 The bot retreated 1 time(s) to let Magicules recover.
 XP assistance for skill points: 550 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 69 screenshots.**
+**Result: 0 failed checks, 82 screenshots.**

@@ -117,7 +117,7 @@
       "licence": "CC0 1.0 (LICENSE.txt)",
       "status": "available",
       "sha256_zip": "95a06f4fdcfd1882f061a45ff313b7c905dbe2de1e8512b281d7937df62a7b15",
-      "notes": "Main style: 16x16 characters, monsters, tilesets, items, UI, FX, audio. Full pack committed (user decision 2026-10-13)."
+      "notes": "Main style: 16x16 characters, monsters, tilesets, items, UI, FX, audio. Full pack committed (user decision 2026-10-13). M4.5c integrates 12 monsters (region creatures), 12 characters (shopkeepers, ferryman) and the relief/desert/house/nature tiles for the grown world."
     },
     {
       "id": "pixel_crawler",

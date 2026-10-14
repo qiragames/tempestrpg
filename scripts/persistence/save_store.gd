@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 22
+const VERSION := 23
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -19,6 +19,8 @@ const SOURCES := preload("res://scripts/items/gear_sources.gd")
 const ALLY := preload("res://scripts/allies/goblin_ally.gd")
 const MAX_BYTES := 4 * 1024 * 1024
 const CODEC := preload("res://scripts/persistence/state_codec.gd")
+const TRADE := preload("res://scripts/trade/trade_catalogue.gd")
+const WORLD_TRADE := preload("res://scripts/trade/world_trade.gd")
 
 static func _number(value: Variant, low: float, high: float, whole: bool = false) -> bool:
     if typeof(value) not in [TYPE_INT, TYPE_FLOAT]:
@@ -111,7 +113,7 @@ static func validate_player(state: Variant, id: String) -> bool:
         return false
     var total: int = 0
     for item in bag.counts:
-        if not SKILLS.MATERIALS.has(item) or not _number(bag.counts[item], 1, bag.capacity, true):
+        if not TRADE.bag_item(String(item)) or not _number(bag.counts[item], 1, bag.capacity, true):
             return false
         total += int(bag.counts[item])
     if total > bag.capacity or not _number(state.get("attack_recovery"), 0, 60):
@@ -134,6 +136,9 @@ static func validate_player(state: Variant, id: String) -> bool:
     if form.id != FORMS.BASE and not RACES.can_mimic(progression.race, int(progression.level)):
         return false
     if not progression.get("quests") is Dictionary or not progression.get("equipment") is Dictionary:
+        return false
+    # Zeni (v23): a whole number in the purse.
+    if not _number(progression.get("zeni"), 0, TRADE.MAX_ZENI, true):
         return false
     # Gear (v18): valid items, equipment slots pointing at owned items that fit, sane cooldowns.
     if not GEAR.valid_gear(state.get("gear"), progression.equipment):
@@ -287,6 +292,9 @@ static func validate(data: Variant) -> bool:
                 return false
             item_ids[item.id] = true
         ids[pile.id] = true
+    # Merchants' stock and the travelling merchant's schedule (v23).
+    if not WORLD_TRADE.valid_state(data.get("trade")):
+        return false
     return true
 
 static func migrate(data: Variant) -> Variant:
@@ -563,7 +571,7 @@ static func migrate(data: Variant) -> Variant:
         if not data.get("players") is Dictionary or not data.get("enemies") is Array:
             return null
         data = data.duplicate(true)
-        data.version = VERSION
+        data.version = 22
         for state in data.players.values():
             if not state is Dictionary or not state.get("progression") is Dictionary:
                 return null
@@ -596,6 +604,25 @@ static func migrate(data: Variant) -> Variant:
                     if not _number(enemy.credit[character], 1, old_max, true):
                         return null
                     enemy.credit[character] = int(floor(float(enemy.credit[character]) * factor))
+    # v23 (M4.5c): an empty purse and no read scrolls for every character, the camp's stall,
+    # smithy and staff, the merchants' state, and the new regions' creatures.
+    if data.get("version") == 22:
+        if not data.get("players") is Dictionary or not data.get("camp") is Dictionary or not data.get("enemies") is Array:
+            return null
+        data = data.duplicate(true)
+        data.version = 23
+        for state in data.players.values():
+            if not state is Dictionary or not state.get("progression") is Dictionary or not state.get("skill_evidence") is Dictionary:
+                return null
+            state.progression["zeni"] = state.progression.get("zeni", 0)
+            state.skill_evidence["scrolls"] = state.skill_evidence.get("scrolls", [])
+        data.camp["stall"] = data.camp.get("stall", false)
+        data.camp["smithy"] = data.camp.get("smithy", false)
+        data.camp["staff"] = data.camp.get("staff", {"trader": false, "smith": false})
+        data["trade"] = data.get("trade", WORLD_TRADE.initial_state())
+        for entry in REGION.all_creatures():
+            if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == entry[0]):
+                data.enemies.append(REGION.fresh_enemy(entry))
     return data
 
 ## Entries introduced by older migrations must start on the old HP scale;

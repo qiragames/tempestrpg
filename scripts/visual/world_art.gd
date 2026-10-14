@@ -10,6 +10,7 @@ const HOUSE := preload("res://assets/game/world/house.png")
 const CAMP := preload("res://assets/game/world/camp.png")
 const ANVIL := preload("res://assets/game/world/station_anvil.png")
 const BONFIRE := preload("res://assets/game/world/station_bonfire.png")
+const DESERT := preload("res://assets/game/world/desert.png")
 const CHEST := preload("res://assets/game/ui/icons/chest_closed.png")
 
 ## Ground: plain grass and four tuft variants (one row of the light-grass floor set).
@@ -27,6 +28,8 @@ const PROPS := {
     "storehouse": [HOUSE, Rect2(0, 120, 48, 40)],
     "shrine": [HOUSE, Rect2(48, 240, 32, 32)],
     "forge": [ANVIL, Rect2(0, 34, 60, 44)],
+    "stall": [DESERT, Rect2(32, 160, 32, 32)],
+    "smithy": [HOUSE, Rect2(416, 0, 48, 48)],
     "trial_stone": [HOUSE, Rect2(0, 240, 16, 32)],
     "campfire": [BONFIRE, Rect2(0, 16, 32, 32)],
     "camp_post": [CAMP, Rect2(96, 80, 16, 32)],

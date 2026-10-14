@@ -49,15 +49,19 @@ func _character(id: String, at: Vector2) -> CharacterBody2D:
 func _reachable(start: Vector2i) -> PackedByteArray:
     var seen := PackedByteArray()
     seen.resize(MAP.COLS * MAP.ROWS)
+    # On foot from the start and from every ferry pier (M4.5c: the ferry lands).
     var queue: Array = [start]
-    seen[MAP.tile_index(start.x, start.y)] = 1
+    for ferry in MAP.FERRIES:
+        queue.append(Vector2i(ferry[2]))
+    for tile in queue:
+        seen[MAP.tile_index(tile.x, tile.y)] = 1
     var head := 0
     while head < queue.size():
         var tile: Vector2i = queue[head]
         head += 1
         for step in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
             var next: Vector2i = tile + step
-            if next.x < 0 or next.y < 0 or next.x >= MAP.COLS or next.y >= MAP.ROWS:
+            if not MAP.in_grid(next):
                 continue
             var index := MAP.tile_index(next.x, next.y)
             if seen[index] == 0 and not MAP.solid(next.x, next.y):
@@ -69,7 +73,7 @@ func _run() -> void:
     session = root.get_node("GameSession")
     # --- Leveling spots: placement and respawn speed
     var reach := _reachable(MAP.to_tile(LAYOUT.SPAWN))
-    var spots_ok := REGION.SPOTS.size() == 8
+    var spots_ok := REGION.SPOTS.size() == 20
     for entry in REGION.spot_creatures():
         var tile := Vector2i(entry[2])
         spots_ok = spots_ok and not MAP.solid(tile.x, tile.y) and reach[MAP.tile_index(tile.x, tile.y)] == 1 and MAP.region_at(REGION.at(entry[2])) != MAP.Region.CLEARING
@@ -78,7 +82,7 @@ func _run() -> void:
         var area: String = spot[0].get_slice("_", 1)
         per_region[area] = int(per_region.get(area, 0)) + 1
     spots_ok = spots_ok and MAP.region_at(REGION.at(REGION.SPOTS[2][2])) == MAP.Region.THORNWOOD and MAP.region_at(REGION.at(REGION.SPOTS[6][2])) == MAP.Region.CINDER_CRATER
-    _check(spots_ok and per_region.size() == 4 and per_region.values().all(func(count): return count == 2), "Eight hidden leveling spots, two per creature region (meadows, Thornwood, lakeshore, crater), on reachable land")
+    _check(spots_ok and per_region.size() == 10 and per_region.values().all(func(count): return count == 2), "Twenty hidden leveling spots, two per creature region (with M4.5c's six new regions), on reachable land")
     _check(REGION.respawn_seconds("gnasher_1", 0) == 45.0 and REGION.respawn_seconds("x", 1) == 90.0 and REGION.respawn_seconds("x", 2) == 180.0 and REGION.respawn_seconds("spot_crater_a_1", 2) == 60.0, "Respawn by tier 45/90/180 s; leveling-spot creatures three times faster")
     # --- Creature levels and naming cost
     var ally_script = load("res://scripts/allies/goblin_ally.gd")

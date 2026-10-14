@@ -1,0 +1,12 @@
+[gd_resource type="Resource" load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/absorption/specimen_definition.gd" id="1"]
+[ext_resource type="Resource" path="res://data/skills/gale_wing.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"amber_owl"
+species = "Amber Owl"
+skill = ExtResource("2")
+material_id = &"owl_feather"
+material_name = "Owl Feather"
+material_description = "A golden feather from an analyzed Amber Owl."

@@ -33,6 +33,11 @@ var _items: ItemList
 var _details: Label
 var _capacity: Label
 var _discard: Button
+## Use a consumable or read a scroll from the bag (M4.5c).
+var _use: Button
+## Shop and ferry window (M4.5c), see trade_panel.gd.
+var trade_panel: Control
+var _zeni: Label
 var _close: Button
 var _log: RichTextLabel
 var _events: Array[String] = []
@@ -77,6 +82,8 @@ func _ready() -> void:
     add_child(gear_panel)
     world_map = load("res://scripts/ui/world_map_panel.gd").new(self)
     add_child(world_map)
+    trade_panel = load("res://scripts/ui/trade_panel.gd").new(self)
+    add_child(trade_panel)
     _hook_pause_returns()
     get_parent().system_message.connect(fusion.show_message)
     _ally_dialog = load("res://scripts/ui/ally_dialog.gd").new()
@@ -85,7 +92,7 @@ func _ready() -> void:
     add_child(_camp_dialog)
 
 func menu_open() -> bool:
-    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible)
+    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible)
 
 func bind_player(actor: Node2D) -> void:
     if player == actor:
@@ -163,6 +170,9 @@ func _build_status() -> void:
         _outline(label)
     _level = _label("", Vector2(56, 53), Vector2(168, 14), self, 9)
     _level.add_theme_color_override("font_color", UI.GOLD_LIGHT)
+    _zeni = _label("", Vector2(8, 86), Vector2(220, 12), self, 9)
+    _zeni.add_theme_color_override("font_color", UI.GOLD_LIGHT)
+    _outline(_zeni)
     $StrikeCost.position = Vector2(8, 72)
     $StrikeCost.add_theme_font_size_override("font_size", 9)
     _outline($StrikeCost)
@@ -318,11 +328,14 @@ func _process(_delta: float) -> void:
         _refresh_pause()
     _recovery.visible = player.is_exhausted()
     _level.text = level_text(player.progression)
+    var potion_wait: float = player.consumable_cooldown if "consumable_cooldown" in player else 0.0
+    _zeni.text = "%d Zeni%s" % [player.zeni(), " · potions in %.0f s" % ceilf(potion_wait) if potion_wait > 0.0 else ""]
     # Region name of where this character stands (M4.5a).
-    var region: int = WORLD_MAP.region_at(player.global_position)
-    if $Title.get_meta("region", -1) != region:
-        $Title.set_meta("region", region)
-        $Title.text = WORLD_MAP.REGION_NAMES[region].to_upper()
+    # The town or village you are in, else the region (M4.5c).
+    var place: String = WORLD_MAP.place_name(player.global_position)
+    if $Title.get_meta("place", "") != place:
+        $Title.set_meta("place", place)
+        $Title.text = place.to_upper()
     _refresh_status()
     _refresh_respawn(_delta)
     var trial: Dictionary = get_parent().trial.state if get_parent().get("trial") != null else {}
@@ -384,7 +397,12 @@ func _build_inventory() -> void:
     _items.item_selected.connect(_select_item)
     _modal.add_child(_items)
     _details = _label("", o + Vector2(228, 58), Vector2(192, 115), _modal)
-    _discard = _button("Discard 1", o + Vector2(228, 186), Vector2(118, 30), _modal)
+    _discard = _button("Discard 1", o + Vector2(228, 186), Vector2(96, 30), _modal)
+    _use = _button("Use", o + Vector2(330, 186), Vector2(96, 30), _modal)
+    _use.pressed.connect(func():
+        session.request_action("use_item", {"id": String(_selection)})
+        get_tree().create_timer(0.15, true).timeout.connect(_refresh_inventory)
+    )
     _discard.pressed.connect(func():
         if session.active:
             session.request_action("discard", {"id": String(_selection)})
@@ -414,6 +432,7 @@ func _refresh_inventory() -> void:
         _selection = &""
         _details.text = "No materials stored.\n\nAbsorb and analyze a defeated creature to retain its essence."
         _discard.disabled = true
+        _use.disabled = true
     else:
         _items.select(selected)
         _select_item(selected)
@@ -423,6 +442,8 @@ func _select_item(index: int) -> void:
     _selection = entry.id
     _details.text = "%s\n%s · ×%d\n\n%s" % [entry.name, entry.category, entry.count, entry.description]
     _discard.disabled = false
+    _use.disabled = not preload("res://scripts/trade/trade_catalogue.gd").is_good(String(entry.id))
+    _use.text = "Read" if String(entry.id).begins_with("scroll_") else "Use"
 
 func open_inventory() -> void:
     if menu_open():

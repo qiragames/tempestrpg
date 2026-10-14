@@ -26,15 +26,19 @@ func _frames(count: int = 3) -> void:
 func _reachable(start: Vector2i) -> PackedByteArray:
     var seen := PackedByteArray()
     seen.resize(MAP.COLS * MAP.ROWS)
+    # On foot from the start and from every ferry pier (M4.5c: the ferry lands).
     var queue: Array = [start]
-    seen[MAP.tile_index(start.x, start.y)] = 1
+    for ferry in MAP.FERRIES:
+        queue.append(Vector2i(ferry[2]))
+    for tile in queue:
+        seen[MAP.tile_index(tile.x, tile.y)] = 1
     var head := 0
     while head < queue.size():
         var tile: Vector2i = queue[head]
         head += 1
         for step in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
             var next: Vector2i = tile + step
-            if next.x < 0 or next.y < 0 or next.x >= MAP.COLS or next.y >= MAP.ROWS:
+            if not MAP.in_grid(next):
                 continue
             var index := MAP.tile_index(next.x, next.y)
             if seen[index] == 0 and not MAP.solid(next.x, next.y):
@@ -50,7 +54,14 @@ func _document(world: Node2D, actor: Node2D) -> Dictionary:
 func _run() -> void:
     # --- Placement
     var reach := _reachable(MAP.to_tile(LAYOUT.SPAWN))
-    var expected_region := {"thornwood": MAP.Region.THORNWOOD, "crater": MAP.Region.CINDER_CRATER, "lakeshore": -1, "meadow": MAP.Region.VERDANT, "beach": MAP.Region.VERDANT, "keep": MAP.Region.MIRROR_LAKE, "harrowmere": MAP.Region.HARROWMERE}
+    var expected_region := {"thornwood": MAP.Region.THORNWOOD, "crater": MAP.Region.CINDER_CRATER, "lakeshore": -1, "meadow": MAP.Region.VERDANT, "beach": MAP.Region.VERDANT, "keep": MAP.Region.MIRROR_LAKE, "harrowmere": MAP.Region.HARROWMERE,
+        # M4.5c regions: creatures by kind, chests by name.
+        "frost": MAP.Region.FROSTPEAK, "snow": MAP.Region.FROSTPEAK, "glacier": MAP.Region.FROSTPEAK,
+        "dune": MAP.Region.SUNSCORCH, "sand": MAP.Region.SUNSCORCH, "dunes": MAP.Region.SUNSCORCH,
+        "amber": MAP.Region.AMBERVALE, "burrow": MAP.Region.AMBERVALE,
+        "bog": MAP.Region.MIREWOOD, "mirecap": MAP.Region.MIREWOOD, "marsh": MAP.Region.MIREWOOD,
+        "bamboo": MAP.Region.SAKURA_VALE, "paper": MAP.Region.SAKURA_VALE, "shrine": MAP.Region.SAKURA_VALE,
+        "ember": MAP.Region.EMBERREACH, "salamander": MAP.Region.EMBERREACH, "volcano": MAP.Region.EMBERREACH}
     var placed_ok := true
     var spots: Array = []
     for entry in REGION.CREATURES:

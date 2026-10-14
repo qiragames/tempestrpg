@@ -1,0 +1,12 @@
+[gd_resource type="Resource" load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/absorption/specimen_definition.gd" id="1"]
+[ext_resource type="Resource" path="res://data/skills/bamboo_thrust.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"bamboo_sprite"
+species = "Bamboo Sprite"
+skill = ExtResource("2")
+material_id = &"bamboo_fiber"
+material_name = "Bamboo Fiber"
+material_description = "Springy fibre from an analyzed Bamboo Sprite."

@@ -19,6 +19,14 @@ func record_analysis(specimen_id: StringName) -> Array:
         evidence.analyzed.append(String(specimen_id))
     return _grant_unlocked()
 
+## Host-side: a read skill scroll (M4.5c) teaches its skill.
+func learn_from_scroll(skill_id: String) -> Array:
+    if not AUTHORITY.can_mutate(self) or not CATALOGUE.scrollable(skill_id):
+        return []
+    if not skill_id in evidence.scrolls:
+        evidence.scrolls.append(skill_id)
+    return _grant_unlocked()
+
 ## Host-side: record a personally completed trial and grant whatever it unlocks.
 func record_trial(trial_id: String) -> Array:
     if not AUTHORITY.can_mutate(self) or not CATALOGUE.TRIALS.has(trial_id):

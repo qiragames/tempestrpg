@@ -1,0 +1,12 @@
+[gd_resource type="Resource" load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/absorption/specimen_definition.gd" id="1"]
+[ext_resource type="Resource" path="res://data/skills/ember_burst.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"ember_flame"
+species = "Ember Flame"
+skill = ExtResource("2")
+material_id = &"ember_core"
+material_name = "Ember Core"
+material_description = "A still-warm core from an analyzed Ember Flame."

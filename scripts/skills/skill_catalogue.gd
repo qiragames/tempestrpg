@@ -7,6 +7,9 @@ extends RefCounted
 ##   Extra    {"requires": [Common...], "analysis": specimen} know every Common, then analyze
 ##   Unique   {"requires": [Extra], "trial": trial}          know the Extra, complete the trial
 ##   Ultimate {"requires": [Unique], "ascension": milestone}  know + master the Unique, ascend
+##   Unique   {"scroll": true}                               read its (very rare) scroll (M4.5c)
+## Reading a skill scroll (M4.5c) is evidence too ("scrolls"): it teaches any Common skill without
+## analysis, and the scroll-only Unique skills exist nowhere else.
 ## No trial or ascension can be earned yet, so Unique/Ultimate stay locked until later steps add them.
 ##
 ## Fusion (step 17d): Extra skills are never granted automatically. An Extra rule is a fusion
@@ -14,17 +17,39 @@ extends RefCounted
 ## once its `analysis` evidence exists. A fused skill can always be split back into the two.
 
 const TIERS := ["Common", "Extra", "Unique", "Ultimate"]
-const EVIDENCE_KINDS := ["analyzed", "trials", "mastery", "ascensions"]
+const EVIDENCE_KINDS := ["analyzed", "trials", "mastery", "ascensions", "scrolls"]
 const EFFECTS := ["strike", "pierce", "focus"]
-const SPECIMENS := {"forest_gnasher": "res://data/specimens/forest_gnasher.tres", "thornback_gnasher": "res://data/specimens/thornback_gnasher.tres"}
+const SPECIMENS := {"forest_gnasher": "res://data/specimens/forest_gnasher.tres", "thornback_gnasher": "res://data/specimens/thornback_gnasher.tres",
+    "frost_bear": "res://data/specimens/frost_bear.tres", "snow_wisp": "res://data/specimens/snow_wisp.tres", "dune_viper": "res://data/specimens/dune_viper.tres", "sand_scuttler": "res://data/specimens/sand_scuttler.tres", "bog_kappa": "res://data/specimens/bog_kappa.tres", "mirecap": "res://data/specimens/mirecap.tres", "bamboo_sprite": "res://data/specimens/bamboo_sprite.tres", "paper_lantern": "res://data/specimens/paper_lantern.tres", "amber_owl": "res://data/specimens/amber_owl.tres", "burrow_mole": "res://data/specimens/burrow_mole.tres", "ember_flame": "res://data/specimens/ember_flame.tres", "salamander": "res://data/specimens/salamander.tres"}
 ## Dimensional-storage material retained by each specimen.
-const MATERIALS := {"gnasher_essence": "forest_gnasher", "thornback_quill": "thornback_gnasher"}
-const SKILLS := {"rending_bite": "res://data/skills/rending_bite.tres", "thorn_lash": "res://data/skills/thorn_lash.tres", "piercing_fang": "res://data/skills/piercing_fang.tres", "predator_focus": "res://data/skills/predator_focus.tres"}
+const MATERIALS := {"gnasher_essence": "forest_gnasher", "thornback_quill": "thornback_gnasher",
+    "frost_pelt": "frost_bear", "wisp_mote": "snow_wisp", "viper_scale": "dune_viper", "scuttler_shell": "sand_scuttler", "kappa_shell": "bog_kappa", "mirecap_spore": "mirecap", "bamboo_fiber": "bamboo_sprite", "lantern_paper": "paper_lantern", "owl_feather": "amber_owl", "mole_claw": "burrow_mole", "ember_core": "ember_flame", "salamander_scale": "salamander"}
+const SKILLS := {"rending_bite": "res://data/skills/rending_bite.tres", "thorn_lash": "res://data/skills/thorn_lash.tres", "piercing_fang": "res://data/skills/piercing_fang.tres", "predator_focus": "res://data/skills/predator_focus.tres",
+    "frost_maul": "res://data/skills/frost_maul.tres", "chill_touch": "res://data/skills/chill_touch.tres", "venom_fang": "res://data/skills/venom_fang.tres", "sand_burst": "res://data/skills/sand_burst.tres", "mire_grasp": "res://data/skills/mire_grasp.tres", "spore_cloud": "res://data/skills/spore_cloud.tres", "bamboo_thrust": "res://data/skills/bamboo_thrust.tres", "lantern_flare": "res://data/skills/lantern_flare.tres", "gale_wing": "res://data/skills/gale_wing.tres", "burrow_strike": "res://data/skills/burrow_strike.tres", "ember_burst": "res://data/skills/ember_burst.tres", "magma_bite": "res://data/skills/magma_bite.tres",
+    "tempest_edge": "res://data/skills/tempest_edge.tres", "glacial_nova": "res://data/skills/glacial_nova.tres", "meteor_fall": "res://data/skills/meteor_fall.tres", "phantom_step": "res://data/skills/phantom_step.tres"}
 const RULES := {
     "rending_bite": {"tier": "Common", "analysis": "forest_gnasher"},
     "thorn_lash": {"tier": "Common", "analysis": "thornback_gnasher"},
     "piercing_fang": {"tier": "Extra", "requires": ["rending_bite", "thorn_lash"], "analysis": "thornback_gnasher"},
     "predator_focus": {"tier": "Unique", "requires": ["piercing_fang"], "trial": "proving_trial"},
+    # M4.5c region creatures: each teaches its Common skill when analyzed.
+    "frost_maul": {"tier": "Common", "analysis": "frost_bear"},
+    "chill_touch": {"tier": "Common", "analysis": "snow_wisp"},
+    "venom_fang": {"tier": "Common", "analysis": "dune_viper"},
+    "sand_burst": {"tier": "Common", "analysis": "sand_scuttler"},
+    "mire_grasp": {"tier": "Common", "analysis": "bog_kappa"},
+    "spore_cloud": {"tier": "Common", "analysis": "mirecap"},
+    "bamboo_thrust": {"tier": "Common", "analysis": "bamboo_sprite"},
+    "lantern_flare": {"tier": "Common", "analysis": "paper_lantern"},
+    "gale_wing": {"tier": "Common", "analysis": "amber_owl"},
+    "burrow_strike": {"tier": "Common", "analysis": "burrow_mole"},
+    "ember_burst": {"tier": "Common", "analysis": "ember_flame"},
+    "magma_bite": {"tier": "Common", "analysis": "salamander"},
+    # M4.5c scroll-only skills (very rare scrolls from the travelling merchant).
+    "tempest_edge": {"tier": "Unique", "scroll": true},
+    "glacial_nova": {"tier": "Unique", "scroll": true},
+    "meteor_fall": {"tier": "Unique", "scroll": true},
+    "phantom_step": {"tier": "Unique", "scroll": true},
 }
 ## Trials and ascension milestones that can actually be completed. No ascension exists before M6,
 ## so Ultimate skills stay locked.
@@ -69,12 +94,17 @@ static func closure(known: Array, evidence: Dictionary, rules: Dictionary = RULE
     return have
 
 static func empty_evidence() -> Dictionary:
-    return {"analyzed": [], "trials": [], "mastery": [], "ascensions": []}
+    return {"analyzed": [], "trials": [], "mastery": [], "ascensions": [], "scrolls": []}
+
+## Skills a scroll can teach: every Common skill and the scroll-only ones.
+static func scrollable(id: String, rules: Dictionary = RULES) -> bool:
+    return rules.has(id) and (rules[id].tier == "Common" or rules[id].has("scroll"))
 
 ## Every problem in a rule set; an empty result means the catalogue is consistent.
 static func catalogue_errors(rules: Dictionary = RULES, specimens: Dictionary = SPECIMENS, trials: Dictionary = TRIALS, ascensions: Dictionary = ASCENSIONS) -> Array:
     var errors: Array = []
     var expected_keys := {"Common": ["analysis", "tier"], "Extra": ["analysis", "requires", "tier"], "Unique": ["requires", "tier", "trial"], "Ultimate": ["ascension", "requires", "tier"]}
+    var scroll_keys := ["scroll", "tier"]
     for id in rules:
         var rule: Dictionary = rules[id]
         var tier: Variant = rule.get("tier")
@@ -83,7 +113,7 @@ static func catalogue_errors(rules: Dictionary = RULES, specimens: Dictionary = 
             continue
         var keys: Array = rule.keys()
         keys.sort()
-        if keys != expected_keys[tier]:
+        if keys != expected_keys[tier] and not (tier == "Unique" and keys == scroll_keys and rule.scroll == true):
             errors.append("%s: %s rule needs exactly %s" % [id, tier, expected_keys[tier]])
             continue
         if rule.has("analysis") and not specimens.has(rule.analysis):
@@ -126,6 +156,8 @@ static func resource_errors() -> Array:
 static func requirements(id: String, known: Array, evidence: Dictionary, rules: Dictionary = RULES) -> Array:
     var rule: Dictionary = rules[id]
     var result: Array = []
+    if rule.has("scroll"):
+        return [{"kind": "scroll", "id": id, "met": id in evidence.get("scrolls", [])}]
     for prerequisite in rule.get("requires", []):
         result.append({"kind": "skill", "id": prerequisite, "met": prerequisite in known})
     if rule.has("analysis"):
@@ -139,6 +171,9 @@ static func requirements(id: String, known: Array, evidence: Dictionary, rules: 
     return result
 
 static func requirements_met(id: String, known: Array, evidence: Dictionary, rules: Dictionary = RULES) -> bool:
+    # A read scroll teaches a Common skill without its analysis.
+    if rules[id].tier == "Common" and id in evidence.get("scrolls", []):
+        return true
     for requirement in requirements(id, known, evidence, rules):
         if not requirement.met:
             return false
@@ -178,7 +213,7 @@ static func justified(known: Array, evidence: Dictionary, rules: Dictionary = RU
 static func evidence_valid(evidence: Variant, known: Array = []) -> bool:
     if not evidence is Dictionary or evidence.size() != EVIDENCE_KINDS.size():
         return false
-    var sources := {"analyzed": SPECIMENS, "trials": TRIALS, "ascensions": ASCENSIONS}
+    var sources := {"analyzed": SPECIMENS, "trials": TRIALS, "ascensions": ASCENSIONS, "scrolls": {}}
     for kind in EVIDENCE_KINDS:
         var entries: Variant = evidence.get(kind)
         if not entries is Array or entries.size() > 64:
@@ -191,6 +226,9 @@ static func evidence_valid(evidence: Variant, known: Array = []) -> bool:
             if kind == "mastery":
                 # Mastery is recorded only for a known Unique skill.
                 if not RULES.has(entry) or RULES[entry].tier != "Unique" or not entry in known:
+                    return false
+            elif kind == "scrolls":
+                if not scrollable(entry):
                     return false
             elif not sources[kind].has(entry):
                 return false

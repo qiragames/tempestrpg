@@ -19,7 +19,7 @@ func _run() -> void:
     current_scene = world
     var player = world.get_local_player()
     player.position = Vector2(300, 340)
-    player.progression = {"level": 4, "experience": 3000, "skill_points": 4, "race": "Slime", "quests": {"intro": {"stage": 2}}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": []}
+    player.progression = {"level": 4, "experience": 3000, "skill_points": 4, "race": "Slime", "quests": {"intro": {"stage": 2}}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": [], "zeni": 0}
     player.get_node("Magicules").try_spend(30)
     player.get_node("Health").take_damage(23)
     player.get_node("SkillBook").record_analysis(&"forest_gnasher")

@@ -29,7 +29,7 @@ const CLASSIC := {
 ## Chests (17g) are drawn after everything else, so adding them did not move older layouts.
 const CHEST_IDS := ["chest_1", "chest_2", "chest_3"]
 ## Every chest a character can have opened: the seeded three plus the fixed region chests (M4.5b).
-const ALL_CHEST_IDS := ["chest_1", "chest_2", "chest_3", "chest_thornwood", "chest_keep", "chest_crater", "chest_harrowmere", "chest_beach"]
+const ALL_CHEST_IDS := ["chest_1", "chest_2", "chest_3", "chest_thornwood", "chest_keep", "chest_crater", "chest_harrowmere", "chest_beach", "chest_glacier", "chest_dunes", "chest_marsh", "chest_shrine", "chest_amber", "chest_volcano"]
 ## Candidate spots for points of interest. Each keeps the trial arena and its spawns inside the map.
 const STONE_SPOTS: Array[Vector2] = [Vector2(480, 100), Vector2(170, 120), Vector2(800, 520), Vector2(150, 520)]
 const ALLY_SPOTS: Array[Vector2] = [Vector2(220, 360), Vector2(260, 420), Vector2(250, 250), Vector2(440, 430)]
@@ -112,10 +112,14 @@ static func generate(seed: int) -> Dictionary:
         if point != Vector2.INF:
             trees.append(point)
             obstacles.append(point)
-    # Later buildings (the 17g Forge) are kept clear afterwards, without changing any random draw.
-    var forge: Rect2 = Rect2(CAMP.STRUCTURES.forge_1.site - CAMP.STRUCTURES.forge_1.size / 2, CAMP.STRUCTURES.forge_1.size).grow(10)
-    rocks = rocks.filter(func(rock): return not rock.intersects(forge))
-    trees = trees.filter(func(tree): return not Rect2(tree + Vector2(-6, 4), Vector2(12, 12)).intersects(forge) and not forge.has_point(tree))
+    # Later buildings (the 17g Forge, the M4.5c Market Stall and Smithy) are kept clear afterwards,
+    # without changing any random draw.
+    for id in CAMP.STRUCTURES:
+        if id in LAYOUT_STRUCTURES:
+            continue
+        var site: Rect2 = Rect2(CAMP.STRUCTURES[id].site - CAMP.STRUCTURES[id].size / 2, CAMP.STRUCTURES[id].size).grow(10)
+        rocks = rocks.filter(func(rock): return not rock.intersects(site))
+        trees = trees.filter(func(tree): return not Rect2(tree + Vector2(-6, 4), Vector2(12, 12)).intersects(site) and not site.has_point(tree))
     layout.rocks = rocks
     layout.trees = trees
     # Chests: away from the camp, the trial stone, every other spot and every obstacle; spread out.

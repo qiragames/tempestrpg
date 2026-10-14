@@ -1,0 +1,12 @@
+[gd_resource type="Resource" load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/absorption/specimen_definition.gd" id="1"]
+[ext_resource type="Resource" path="res://data/skills/spore_cloud.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"mirecap"
+species = "Mirecap"
+skill = ExtResource("2")
+material_id = &"mirecap_spore"
+material_name = "Mirecap Spore"
+material_description = "A glowing spore pod from an analyzed Mirecap."

@@ -30,3 +30,14 @@ Pixel scale 1:1 with the 640x360 viewport; nearest filtering (project default). 
 Corner sets used by `scripts/world/world_terrain.gd` (16 combinations, shared layout: pond 3x3 at columns 0-2, pond-with-island 4x4 at 4-7, diagonals at column 9, plain land at (0, 5)): `water.png` rows 0-5 (sand shore), rows 6-11 (grass shore, lakes), `lava.png`, `terrain_floor.png` rows 7-12 (dirt paths). Rounded biome overlays: `terrain_field.png` 3x3 patches (grass, forest, autumn).
 
 Licences and credits: see `CREDITS.md` at the repository root and the licence files next to each pack in `assets/source/packs/`.
+
+## Bigger world, verticality and towns (M4.5c, `tools/prepare_world.py`, `tools/build_world_cache.gd`)
+
+| File | Size | Source | Used for |
+| --- | --- | --- | --- |
+| `terrain_field.png` rows 15-23 | 80x144 added | Derived: forest patch → murky mud; snow patch → desert sand and volcanic ash (same 3x3 layout) | Mirewood mud, plateau rims on sand and ash |
+| `paths.png` | 160x672 | Derived: `terrain_floor.png` dirt corner set (rows 7-12) seven times, the grass fringe recoloured for sand, snow, blossom, mud, ash and autumn | Roads on every ground |
+| `relief_detail.png` | 192x192 | Ninja Adventure `TilesetReliefDetail.png` (copy) | Stairs where roads climb plateaus |
+| `world_cache.bin` | ~1.8 MB | Built by `tools/build_world_cache.gd` from the world scripts (zstd, keyed by a hash of the sources) | Precomputed map, collisions, tile layers, prop plan, world-map picture |
+
+Used without preparation: `relief.png` (rock walls below plateaus, grey and brown), `nature.png` (snowy pines and trees, cherry blossoms, bamboo, snowy boulders), `house.png` (igloos, lodge, hall, shops, torii, tents and huts), `desert.png` (domed houses, flat-roofed house, palms, well, stall), `boat.png` (ferries).

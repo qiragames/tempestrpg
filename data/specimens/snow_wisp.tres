@@ -1,0 +1,12 @@
+[gd_resource type="Resource" load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/absorption/specimen_definition.gd" id="1"]
+[ext_resource type="Resource" path="res://data/skills/chill_touch.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"snow_wisp"
+species = "Snow Wisp"
+skill = ExtResource("2")
+material_id = &"wisp_mote"
+material_name = "Wisp Mote"
+material_description = "A drifting mote of cold light from an analyzed Snow Wisp."

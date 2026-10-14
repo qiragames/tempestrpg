@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/skills/skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"spore_cloud"
+display_name = "Spore Cloud"
+tier = "Common"
+description = "A cloud of spores that sickens everything around."
+damage = 46
+magicule_cost = 12.0
+cooldown = 0.9
+effect = &"strike"

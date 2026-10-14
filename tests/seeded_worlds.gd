@@ -109,7 +109,11 @@ func _run() -> void:
                 problems.near.append(seed)
             if deposit.outlying and deposit.position.distance_to(CAMP.SITE) < 220:
                 problems.near.append(seed)
-        # Every structure must stay affordable from deposits alone (essence comes from offerings).
+        # Every structure must stay affordable from deposits alone (essence comes from offerings);
+        # the fixed region deposits (M4.5b) are in every world and refill, so they count too.
+        for id in CAMP.DEPOSITS:
+            if not id in CAMP.SEEDED_DEPOSITS:
+                totals[layout.deposits[id].resource] += layout.deposits[id].amount
         var needed := {"wood": 0, "stone": 0}
         for id in CAMP.STRUCTURES:
             for resource in needed:

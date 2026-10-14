@@ -16,6 +16,8 @@ const POND := LAYOUT.POND
 
 var camp: Node2D
 var trial: Node2D
+## Merchants, ferries and the travelling merchant (M4.5c).
+var trade: Node2D
 var respawner: Node
 ## Host-side randomness for gear drops, chests, trial rewards and the forge (17g).
 var loot_rng := RandomNumberGenerator.new()
@@ -36,6 +38,8 @@ func _ready() -> void:
     camp.name = "FirstCamp"
     camp.y_sort_enabled = true
     add_child(camp)
+    trade = load("res://scripts/trade/world_trade.gd").new()
+    add_child(trade)
     trial = load("res://scripts/trials/proving_trial.gd").new()
     trial.name = "ProvingTrial"
     trial.y_sort_enabled = true
@@ -114,8 +118,8 @@ func apply_layout(seed: int, fresh: bool) -> void:
 
 ## Host: put an item on the ground as loot (a creature drop).
 ## Host: a defeated character's bag as a pile at `at` (24a).
-func drop_pile(owner_id: String, materials: Dictionary, items: Array, at: Vector2, id: String = "", claim_until: float = -1.0) -> Node2D:
-    if materials.is_empty() and items.is_empty():
+func drop_pile(owner_id: String, materials: Dictionary, items: Array, at: Vector2, id: String = "", claim_until: float = -1.0, zeni: int = 0) -> Node2D:
+    if materials.is_empty() and items.is_empty() and zeni <= 0:
         return null
     var script := preload("res://scripts/pickups/item_pile.gd")
     if get_tree().get_nodes_in_group("item_piles").size() >= script.MAX_PILES:
@@ -126,6 +130,7 @@ func drop_pile(owner_id: String, materials: Dictionary, items: Array, at: Vector
     pile.claim_until = claim_until if claim_until >= 0.0 else preload("res://scripts/pickups/claim.gd").until(self)
     pile.materials = materials.duplicate()
     pile.items = items.duplicate(true)
+    pile.zeni = zeni
     pile.position = at
     add_child(pile)
     return pile
@@ -163,6 +168,8 @@ func open_chest(actor: Node2D, id: String) -> bool:
     actor.add_item(item)
     actor.progression["chests"] = actor.progression.get("chests", []) + [id]
     session.notify_character(actor.character_id, "Chest opened: %s." % actor.GEAR.display_name(item))
+    # M4.5c: chests hold Zeni too.
+    actor.gain_zeni(preload("res://scripts/trade/trade_catalogue.gd").chest_zeni(REGION.is_rich_chest(id), loot_rng), "chest")
     session.queue_save()
     return true
 

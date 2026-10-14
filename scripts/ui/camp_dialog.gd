@@ -8,51 +8,59 @@ var _work_status: Label
 var _work_buttons: Dictionary = {}
 var _build_buttons: Dictionary = {}
 var _craft_buttons: Dictionary = {}
+var _hire_buttons: Dictionary = {}
 var _paused_before: bool = false
 @onready var hud = get_parent()
 @onready var session: Node = get_node("/root/GameSession")
 
 func _ready() -> void:
-    position = Vector2(116, 18)
-    size = Vector2(408, 324)
+    position = Vector2(116, 8)
+    size = Vector2(408, 346)
     add_theme_stylebox_override("panel", hud._panel_style())
     hud.UI.heading(hud._label("THE FIRST GOBLIN CAMP", Vector2(12, 8), Vector2(384, 22), self, 15))
     _stock = hud._label("", Vector2(12, 32), Vector2(384, 18), self, 11)
-    _hint = hud._label("", Vector2(12, 54), Vector2(384, 72), self, 10)
-    _found = hud._button("Found camp", Vector2(12, 132), Vector2(124, 26), self)
+    _hint = hud._label("", Vector2(12, 50), Vector2(384, 70), self, 9)
+    _found = hud._button("Found camp", Vector2(12, 124), Vector2(124, 26), self)
     _found.pressed.connect(func(): _request("found", "camp_1"))
-    _gather = hud._button("Gather nearby", Vector2(142, 132), Vector2(124, 26), self)
+    _gather = hud._button("Gather nearby", Vector2(142, 124), Vector2(124, 26), self)
     _gather.pressed.connect(func():
         var id: String = hud.get_parent().camp.nearest_deposit(hud.player)
         if not id.is_empty():
             _request("gather", id)
     )
-    _offer = hud._button("Offer essence", Vector2(272, 132), Vector2(124, 26), self)
+    _offer = hud._button("Offer essence", Vector2(272, 124), Vector2(124, 26), self)
     _offer.pressed.connect(func(): _request("offer", "gnasher_essence"))
     var camp_script = load("res://scripts/settlement/first_camp.gd")
     var index := 0
     for id in camp_script.STRUCTURES:
-        var button: Button = hud._button("", Vector2(12 + index * 98, 164), Vector2(94, 34), self)
+        var button: Button = hud._button("", Vector2(12 + (index % 3) * 130, 154 + int(index / 3) * 34), Vector2(124, 30), self)
         button.add_theme_font_size_override("font_size", 9)
         button.pressed.connect(_request.bind("build", id))
         _build_buttons[id] = button
         index += 1
+    var hire_index := 0
+    for role in camp_script.STAFF:
+        var hire: Button = hud._button("", Vector2(12 + hire_index * 130, 222), Vector2(124, 26), self)
+        hire.add_theme_font_size_override("font_size", 9)
+        hire.pressed.connect(_request.bind("hire", role))
+        _hire_buttons[role] = hire
+        hire_index += 1
     for role_index in range(3):
         var role: String = ["gather", "build", "follow"][role_index]
-        var button: Button = hud._button(["Ally: Gather", "Ally: Build", "Ally: Follow"][role_index], Vector2(12 + role_index * 130, 204), Vector2(124, 26), self)
+        var button: Button = hud._button(["Ally: Gather", "Ally: Build", "Ally: Follow"][role_index], Vector2(12 + role_index * 130, 254), Vector2(124, 26), self)
         button.pressed.connect(_assign.bind(role))
         _work_buttons[role] = button
-    _work_status = hud._label("", Vector2(12, 236), Vector2(384, 36), self, 10)
+    _work_status = hud._label("", Vector2(12, 282), Vector2(384, 28), self, 9)
     var sources = load("res://scripts/items/gear_sources.gd")
     var recipe_index := 0
     for recipe in sources.RECIPES:
-        var craft: Button = hud._button("Forge " + sources.RECIPES[recipe].name.to_lower(), Vector2(12 + recipe_index * 92, 286), Vector2(88, 26), self)
+        var craft: Button = hud._button("Forge " + sources.RECIPES[recipe].name.to_lower(), Vector2(12 + recipe_index * 92, 312), Vector2(88, 26), self)
         craft.add_theme_font_size_override("font_size", 9)
         craft.pressed.connect(_request.bind("craft", recipe))
         craft.tooltip_text = sources.recipe_text(recipe)
         _craft_buttons[recipe] = craft
         recipe_index += 1
-    var close: Button = hud._button("Close", Vector2(294, 286), Vector2(102, 26), self)
+    var close: Button = hud._button("Close", Vector2(294, 312), Vector2(102, 26), self)
     close.pressed.connect(close_dialog)
     hide()
 
@@ -129,6 +137,11 @@ func _refresh() -> void:
         _hint.text += "\nForge (south of the flag): armor = 2 Gnasher Essence, weapon = 2 Thornback Quill,\naccessory = 1 of each. Stand within 50px."
     for role in _work_buttons:
         _work_buttons[role].disabled = ally == null or not ally.can_assign_work(hud.player, role)
+    for role in _hire_buttons:
+        var staff: Array = camp.STAFF[role]
+        var hired: bool = camp.state.get("staff", {}).get(role, false)
+        _hire_buttons[role].text = ("%s hired" % staff[2].capitalize()) if hired else ("Hire %s · %d Zeni" % [staff[2], staff[1]])
+        _hire_buttons[role].disabled = hired or not camp.state.get(camp.STRUCTURES[staff[0]].key, false) or hud.player.zeni() < staff[1] or hud.player.global_position.distance_to(camp.STRUCTURES[staff[0]].site) > camp.HIRE_REACH
 
 func _unhandled_input(event: InputEvent) -> void:
     if event.is_action_pressed("camp") and not event.is_echo():

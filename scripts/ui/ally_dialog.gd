@@ -43,6 +43,17 @@ func open_nearest() -> void:
     if not chest.is_empty():
         session.request_action("chest", {"id": chest})
         return
+    # M4.5c: F next to a merchant opens its shop; on a pier, the ferry.
+    var trade = hud.get_parent().get("trade")
+    if trade != null:
+        var merchant: String = trade.nearest_merchant(hud.player)
+        if not merchant.is_empty():
+            hud.trade_panel.open(merchant)
+            return
+        var dock: String = trade.nearest_dock(hud.player)
+        if not dock.is_empty():
+            hud.trade_panel.open_ferry(dock)
+            return
     var closest: Node2D
     var distance: float = 40.1
     for candidate in get_tree().get_nodes_in_group("allies"):

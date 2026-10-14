@@ -4,20 +4,33 @@ A Godot **4.6.3** / GDScript prototype for a top-down pixel-art Isekai RPG.
 
 ## Screenshots
 
-Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 69 captures are in `docs/playtest/` with `docs/playtest/log.md`.
+Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 82 captures are in `docs/playtest/` with `docs/playtest/log.md`.
 
 <table>
-<tr><td align="center"><img src="docs/playtest/69_skill_effects.png" width="400" alt="Skill effects: stunned, rooted, slowed, bleeding"><br><sub>Skill effects: stunned, rooted, slowed, bleeding</sub></td><td align="center"><img src="docs/playtest/61_cinder_crater.png" width="400" alt="Cinder Crater"><br><sub>Cinder Crater</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/67_world_map_markers.png" width="400" alt="World map: your pile and discovered leveling spots"><br><sub>World map: your pile and discovered leveling spots</sub></td><td align="center"><img src="docs/playtest/66_leveling_spot.png" width="400" alt="A hidden leveling spot, creature levels"><br><sub>A hidden leveling spot, creature levels</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/63_thornwood_creatures.png" width="400" alt="Thornwood with the round minimap"><br><sub>Thornwood with the round minimap</sub></td><td align="center"><img src="docs/playtest/65_pile_minimap.png" width="400" alt="Your dropped bag marked on the minimap"><br><sub>Your dropped bag marked on the minimap</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/60_harrowmere.png" width="400" alt="Harrowmere, the town island"><br><sub>Harrowmere, the town island</sub></td><td align="center"><img src="docs/playtest/58_mirror_lake.png" width="400" alt="Mirror Lake and the keep ruins"><br><sub>Mirror Lake and the keep ruins</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/01_title_menu.png" width="400" alt="Title screen"><br><sub>Title screen</sub></td><td align="center"><img src="docs/playtest/52_pause_open.png" width="400" alt="Pause overlay"><br><sub>Pause overlay</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/43_equipment.png" width="400" alt="Equipment window with an item card"><br><sub>Equipment window with an item card</sub></td><td align="center"><img src="docs/playtest/55_races.png" width="400" alt="Slime, Human and Demon"><br><sub>Slime, Human and Demon</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/82_world_map_full.png" width="400" alt="The world: home continent, ferry lands, 8 towns and 16 villages"><br><sub>The world: home continent, ferry lands, 8 towns and 16 villages</sub></td><td align="center"><img src="docs/playtest/75_shop_buy.png" width="400" alt="A town merchant's shop (Zeni)"><br><sub>A town merchant's shop (Zeni)</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/70_rimeholm.png" width="400" alt="Rimeholm, Frostpeak's town"><br><sub>Rimeholm, Frostpeak's town</sub></td><td align="center"><img src="docs/playtest/71_frost_mountain.png" width="400" alt="Frostpeak's mountain: ledges and rock walls"><br><sub>Frostpeak's mountain: ledges and rock walls</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/79_hanamura.png" width="400" alt="Hanamura in Sakura Vale (by ferry)"><br><sub>Hanamura in Sakura Vale (by ferry)</sub></td><td align="center"><img src="docs/playtest/80_volcano.png" width="400" alt="The Emberreach volcano's slopes"><br><sub>The Emberreach volcano's slopes</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/73_dunemarch.png" width="400" alt="Dunemarch in the Sunscorch Desert"><br><sub>Dunemarch in the Sunscorch Desert</sub></td><td align="center"><img src="docs/playtest/72_frost_creatures.png" width="400" alt="Frost Bears at a hidden leveling spot"><br><sub>Frost Bears at a hidden leveling spot</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/77_ferry.png" width="400" alt="A ferry pier: sail across the sea"><br><sub>A ferry pier: sail across the sea</sub></td><td align="center"><img src="docs/playtest/69_skill_effects.png" width="400" alt="Skill effects: stunned, rooted, slowed, bleeding"><br><sub>Skill effects: stunned, rooted, slowed, bleeding</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/01_title_menu.png" width="400" alt="Title screen"><br><sub>Title screen</sub></td><td align="center"><img src="docs/playtest/55_races.png" width="400" alt="Slime, Human and Demon"><br><sub>Slime, Human and Demon</sub></td></tr>
 </table>
 
 ## The world
 
 The First Clearing is the start of an archipelago of about 10 × 11 screens (M4.5a): **Verdant Isle** with Thornwood (dense forest), Mirror Lake (a bridge to the ruined keep on its islet), Cinder Crater (ash, boulders, a lava pool) and its beaches; **Harrowmere**, the walled-town island across a long bridge; **Ambervale**, the autumn continent, and the volcanic **Emberreach Isles** across the sea (reachable once ferries and ships exist). The clearing's roads continue as paths, the HUD names the region you are in, and **M** (or the pause menu) opens the world map with your position. Coasts, lakes and lava block movement; bridges carry you across. The regions have their own content (M4.5b): 13 creatures that respawn (easy Gnashers in the meadows and on the beach, Gnashers and a Thornback in Thornwood and by Mirror Lake, Elites in Cinder Crater; Harrowmere is peaceful), six richer deposits (Thornwood wood, crater and lakeshore stone, meadow wood) that explorers gather into the camp's stock, and five chests — the keep's and the crater's give Rare or Epic gear. Tests: `tests/world_map.gd` (23), `tests/region_content.gd` (21).
+
+## A bigger world, towns and trade (M4.5c)
+
+- **About 9x the world** (19,200 x 12,288 px). The **home continent** you walk is Verdant Isle grown together with **Frostpeak** (snow, igloos, a two-level mountain) in the north and the **Sunscorch Desert** (sand, palms, domed houses, mesas) in the west, plus Harrowmere over its bridge. Across the sea, reached **by ferry**: the southern continent of **Ambervale** (autumn) and **Mirewood Marsh** (mud, pools, dead trees), the island of **Sakura Vale** (cherry blossom, bamboo, pagoda-style houses, a hilltop shrine) and the **Emberreach Isles** with their volcano. Every region has a **town** (8) and **villages** (16) with buildings in its own style; the HUD names the place you are in, and the world map shows towns, villages and piers.
+- **Verticality:** plateaus, mesas, the mountain and the volcano rise above the land. Their rims are ledges you cannot climb and their south faces rock walls; roads climb them over stairs.
+- **New creatures:** two kinds per new region (Frost Bear, Snow Wisp, Dune Viper, Sand Scuttler, Bog Kappa, Mirecap, Bamboo Sprite, Paper Lantern, Amber Owl, Burrow Mole, Ember Flame, Salamander), each teaching its own skill when analyzed (Frost Maul, Chill Touch, Venom Fang, Sand Burst, Mire Grasp, Spore Cloud, Bamboo Thrust, Lantern Flare, Gale Wing, Burrow Strike, Ember Burst, Magma Bite) and leaving its own material. The home continent's are levels 8-13, the ferry lands' 12-20; two hidden leveling spots per region.
+- **Zeni:** creatures drop it (split by damage share), chests hold it, merchants pay for what you sell (30% of the price). A defeat drops 10% of your Zeni into your pile.
+- **Merchants:** one in every town (gear by the region's level, draughts and tonics, materials, now and then a skill scroll); restock every 15 minutes. Build a **Market Stall** and a **Smithy** at your camp and hire a trader (150 Zeni) and a gear smith (250 Zeni). A **travelling merchant** turns up now and then at a roadside somewhere in the world, unannounced and unmarked, with better wares.
+- **Goods:** Healing Draught (Q) and Magicule Tonic (Z): +40 over 5 s, one per 20 s. **Scrolls** (read them from the bag) teach a creature's skill without analysis; four very rare ones teach skills found nowhere else (Tempest Edge, Glacial Nova, Meteor Fall, Phantom Step). Learned skills still need a point to activate.
+- **Ferries:** stand on a pier and press F: 30 Zeni to sail to the pier across the sea.
+- Saves: schema **v23** gives older characters an empty purse and older worlds the new merchants, camp staff and creatures.
+
+Tests: `tests/trade.gd` (49), `tests/region_creatures.gd` (11), plus the grown world in `tests/world_map.gd` (26) and the balance probe's new bands.
 
 ## Playing together, defeat and the minimap (step 24a)
 
@@ -129,6 +142,8 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/balance_persistence.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/skill_numbers.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/balance_probe.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/trade.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/region_creatures.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/balance_edges.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
@@ -138,7 +153,7 @@ python3 tests/network_worlds.py
 "$GODOT_BIN" --headless --path . --quit-after 120
 ```
 
-The checks validate import, 40 local gameplay/persistence/UI/visual suites (1128 checks including the corrected bot probe and edge regressions) and 266 real multi-process networking checks (1394 total independently verified on Linux; Claude reports 1388 on Windows before these regressions; use `python3` on Linux or `python` on Windows). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
+The checks validate import, 42 local gameplay/persistence/UI/visual suites (1190 checks including the bot balance probe) and 266 real multi-process networking checks (1456 total through M4.5c on Windows; use `python3` on Linux or `python` on Windows). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
 
 ## Structure
 

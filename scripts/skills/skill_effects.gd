@@ -21,6 +21,24 @@ const EFFECTS := {
     "lunge": {"dash": 48.0, "knockback": 20.0},
     "piercing_fang": {"stun": 0.5, "dot": [4.0, 3.0]},
     "dark_lance": {"slow": [0.4, 2.5]},
+    # M4.5c region creatures' skills.
+    "frost_maul": {"stun": 0.5, "slow": [0.6, 2.0]},
+    "chill_touch": {"slow": [0.4, 3.0]},
+    "venom_fang": {"dot": [6.0, 3.0]},
+    "sand_burst": {"area": 30.0, "slow": [0.6, 1.5]},
+    "mire_grasp": {"root": 2.0},
+    "spore_cloud": {"area": 28.0, "dot": [4.0, 3.0]},
+    "bamboo_thrust": {"knockback": 30.0},
+    "lantern_flare": {"area": 26.0, "dot": [5.0, 2.0]},
+    "gale_wing": {"dash": 32.0, "knockback": 40.0},
+    "burrow_strike": {"dash": 40.0, "stun": 0.4},
+    "ember_burst": {"area": 32.0, "dot": [6.0, 3.0]},
+    "magma_bite": {"dot": [8.0, 3.0], "drain": 0.2},
+    # M4.5c scroll-only skills.
+    "tempest_edge": {"area": 34.0, "knockback": 40.0},
+    "glacial_nova": {"area": 40.0, "root": 1.0, "slow": [0.4, 3.0]},
+    "meteor_fall": {"area": 36.0, "stun": 0.8, "dot": [8.0, 3.0]},
+    "phantom_step": {"dash": 64.0, "stun": 0.6, "drain": 0.2},
 }
 ## Short words for tooltips and the skill tree.
 const SUMMARY := {

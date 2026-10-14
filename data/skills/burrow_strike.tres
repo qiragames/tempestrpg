@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/skills/skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"burrow_strike"
+display_name = "Burrow Strike"
+tier = "Common"
+description = "Tunnel forward and strike from below, stunning the target."
+damage = 52
+magicule_cost = 14.0
+cooldown = 1.0
+effect = &"strike"

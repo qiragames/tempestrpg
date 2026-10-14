@@ -7,6 +7,7 @@ extends Area2D
 const AUTHORITY := preload("res://scripts/network/authority.gd")
 const CLAIM := preload("res://scripts/pickups/claim.gd")
 const GEAR := preload("res://scripts/items/gear_catalogue.gd")
+const TRADE := preload("res://scripts/trade/trade_catalogue.gd")
 const CATALOGUE := preload("res://scripts/skills/skill_catalogue.gd")
 const MAX_PILES := 64
 const REACH := 24.0
@@ -17,6 +18,8 @@ var claim_until: float = 0.0
 ## Material id → count, and gear item dictionaries.
 var materials: Dictionary = {}
 var items: Array = []
+## Zeni dropped with the bag (M4.5c: a defeat drops 10% of the purse).
+var zeni: int = 0
 
 func _init() -> void:
     collision_layer = 0
@@ -36,7 +39,7 @@ func _ready() -> void:
         queue_free()
 
 func is_empty() -> bool:
-    return materials.is_empty() and items.is_empty()
+    return materials.is_empty() and items.is_empty() and zeni <= 0
 
 func _physics_process(_delta: float) -> void:
     if not AUTHORITY.can_mutate(self):
@@ -67,6 +70,10 @@ func _give(body: Node) -> bool:
         if body.add_item(item):
             items.erase(item)
             taken += 1
+    if zeni > 0 and body.has_method("gain_zeni"):
+        body.gain_zeni(zeni, "pile")
+        zeni = 0
+        taken += 1
     var session := get_node("/root/GameSession")
     if taken > 0:
         session.notify_character(body.character_id, "Recovered %d thing%s from %s." % [taken, "" if taken == 1 else "s", "your pile" if body.character_id == owner_id else "a pile"])
@@ -86,18 +93,22 @@ func _draw() -> void:
 
 ## Saved / replicated form.
 func capture() -> Dictionary:
-    return {"id": entity_id, "position": [position.x, position.y], "owner": owner_id, "claim_until": claim_until, "materials": materials.duplicate(), "items": items.duplicate(true)}
+    return {"id": entity_id, "position": [position.x, position.y], "owner": owner_id, "claim_until": claim_until, "materials": materials.duplicate(), "items": items.duplicate(true), "zeni": zeni}
 
 static func valid(entry: Variant) -> bool:
-    if not entry is Dictionary or entry.size() != 6 or not entry.get("id") is String or not String(entry.id).begins_with("pile_") or String(entry.id).length() > 64:
+    # "zeni" is optional (piles saved before M4.5c have none).
+    if not entry is Dictionary or entry.size() != (7 if entry.has("zeni") else 6) or not entry.get("id") is String or not String(entry.id).begins_with("pile_") or String(entry.id).length() > 64:
         return false
     if not entry.get("owner") is String or not (entry.get("claim_until") is float or entry.get("claim_until") is int) or not is_finite(float(entry.claim_until)) or float(entry.claim_until) < 0.0:
         return false
-    if not entry.get("materials") is Dictionary or not entry.get("items") is Array or entry.items.size() > GEAR.MAX_ITEMS or (entry.materials.is_empty() and entry.items.is_empty()):
+    var coins: Variant = entry.get("zeni", 0)
+    if not (coins is int or coins is float) or coins != floor(coins) or coins < 0 or coins > TRADE.MAX_ZENI:
+        return false
+    if not entry.get("materials") is Dictionary or not entry.get("items") is Array or entry.items.size() > GEAR.MAX_ITEMS or (entry.materials.is_empty() and entry.items.is_empty() and coins <= 0):
         return false
     for id in entry.materials:
         var count: Variant = entry.materials[id]
-        if not CATALOGUE.MATERIALS.has(String(id)) or not (count is int or count is float) or count != floor(count) or count < 1 or count > 1000:
+        if not TRADE.bag_item(String(id)) or not (count is int or count is float) or count != floor(count) or count < 1 or count > 1000:
             return false
     for item in entry.items:
         if not GEAR.valid_item(item):

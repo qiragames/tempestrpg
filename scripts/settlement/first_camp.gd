@@ -36,7 +36,13 @@ const STRUCTURES := {
     "shrine_1": {"key": "shrine", "name": "Essence Shrine", "site": Vector2(300, 292), "size": Vector2(18, 18), "cost": {"stone": 8, "essence": 2}, "requires": "hut_1"},
     # 17g: south of the camp, outside the seeded deposit ring and inside the tree-free radius.
     "forge_1": {"key": "forge", "name": "Forge", "site": Vector2(350, 455), "size": Vector2(28, 20), "cost": {"stone": 4, "essence": 3}, "requires": "hut_1"},
+    # M4.5c: places for staff hired with Zeni (a general trader, a gear smith).
+    "stall_1": {"key": "stall", "name": "Market Stall", "site": Vector2(398, 452), "size": Vector2(28, 16), "cost": {"wood": 8, "stone": 4}, "requires": "hut_1"},
+    "smithy_1": {"key": "smithy", "name": "Smithy", "site": Vector2(302, 452), "size": Vector2(36, 20), "cost": {"stone": 8, "wood": 4}, "requires": "forge_1"},
 }
+## Staff hired once with Zeni (M4.5c): role → [structure, cost, name].
+const STAFF := {"trader": ["stall_1", 150, "general trader"], "smith": ["smithy_1", 250, "gear smith"]}
+const HIRE_REACH := 60.0
 const FORGE_REACH := 50.0
 const SOURCES := preload("res://scripts/items/gear_sources.gd")
 const RESOURCES := ["wood", "stone", "essence"]
@@ -58,13 +64,13 @@ static func initial_state(table: Dictionary = DEPOSITS) -> Dictionary:
     var deposits: Dictionary = {}
     for id in table:
         deposits[id] = table[id].amount
-    return {"id": "camp_1", "founded": false, "founder": "", "wood": 0, "stone": 0, "essence": 0, "essence_offered": 0, "hut": false, "storehouse": false, "shrine": false, "forge": false, "deposits": deposits, "refills": {}, "refill_left": {}}
+    return {"id": "camp_1", "founded": false, "founder": "", "wood": 0, "stone": 0, "essence": 0, "essence_offered": 0, "hut": false, "storehouse": false, "shrine": false, "forge": false, "stall": false, "smithy": false, "staff": {"trader": false, "smith": false}, "deposits": deposits, "refills": {}, "refill_left": {}}
 
 static func _whole(value: Variant, high: float = 1000000) -> bool:
     return (value is float or value is int) and value >= 0 and value <= high and value == floor(value)
 
 static func valid_state(value: Variant, players: Dictionary, table: Dictionary = DEPOSITS) -> bool:
-    if not value is Dictionary or value.size() != 14 or value.get("id") != "camp_1" or not value.get("founded") is bool or not value.get("founder") is String:
+    if not value is Dictionary or value.size() != 17 or value.get("id") != "camp_1" or not value.get("founded") is bool or not value.get("founder") is String:
         return false
     for id in STRUCTURES:
         if not value.get(STRUCTURES[id].key) is bool:
@@ -74,6 +80,13 @@ static func valid_state(value: Variant, players: Dictionary, table: Dictionary =
             return false
     elif not value.founder.is_empty() or value.hut or value.storehouse or value.shrine or value.forge:
         return false
+    # Staff (M4.5c): hired only where their structure stands.
+    var staff: Variant = value.get("staff")
+    if not staff is Dictionary or staff.size() != STAFF.size():
+        return false
+    for role in STAFF:
+        if not staff.get(role) is bool or (staff[role] and not value[STRUCTURES[STAFF[role][0]].key]):
+            return false
     for id in STRUCTURES:
         var requires: String = STRUCTURES[id].requires
         if value[STRUCTURES[id].key] and not requires.is_empty() and not value[STRUCTURES[requires].key]:
@@ -265,6 +278,15 @@ func transact(actor: Node2D, operation: String, id: String) -> bool:
             var item: Dictionary = SOURCES.roll_forge(id, get_parent().loot_rng)
             actor.add_item(item)
             message = "Forged: %s." % actor.GEAR.display_name(item)
+        "hire":
+            # Pay Zeni once; the trader or smith then keeps shop at its structure (WorldTrade).
+            if not STAFF.has(id) or not state[STRUCTURES[STAFF[id][0]].key] or state.staff[id] or not can_reach(actor, STRUCTURES[STAFF[id][0]].site, HIRE_REACH):
+                return false
+            if not actor.spend_zeni(STAFF[id][1]):
+                get_node("/root/GameSession").notify_character(actor.character_id, "Hiring the %s costs %d Zeni." % [STAFF[id][2], STAFF[id][1]])
+                return false
+            state.staff[id] = true
+            message = "You hired a %s for %d Zeni. Talk to them with F." % [STAFF[id][2], STAFF[id][1]]
         "offer":
             # Discard and credit together on the host so an essence is never lost or counted twice.
             if id != OFFER_ITEM or not can_offer(actor) or not actor.get_node("Inventory").discard(StringName(OFFER_ITEM)):

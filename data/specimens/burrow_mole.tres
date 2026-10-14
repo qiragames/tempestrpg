@@ -1,0 +1,12 @@
+[gd_resource type="Resource" load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/absorption/specimen_definition.gd" id="1"]
+[ext_resource type="Resource" path="res://data/skills/burrow_strike.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"burrow_mole"
+species = "Burrow Mole"
+skill = ExtResource("2")
+material_id = &"mole_claw"
+material_name = "Mole Claw"
+material_description = "A broad digging claw from an analyzed Burrow Mole."

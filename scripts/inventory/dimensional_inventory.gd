@@ -32,15 +32,21 @@ func add_material(id: String, count: int) -> int:
     if not AUTHORITY.can_mutate(self) or count <= 0:
         return 0
     var catalogue := preload("res://scripts/skills/skill_catalogue.gd")
-    if not catalogue.MATERIALS.has(id):
+    var trade := preload("res://scripts/trade/trade_catalogue.gd")
+    if not catalogue.MATERIALS.has(id) and not trade.is_good(id):
         return 0
     var added: int = mini(count, capacity - total_units())
     if added <= 0:
         return 0
     var key := StringName(id)
     if not _entries.has(key):
-        var specimen: Resource = load(catalogue.SPECIMENS[catalogue.MATERIALS[id]])
-        _entries[key] = {"id": key, "name": specimen.material_name, "description": specimen.material_description, "category": "Materials", "count": 0}
+        if trade.is_good(id):
+            # Consumables and scrolls (M4.5c).
+            var info: Array = trade.good_info(id)
+            _entries[key] = {"id": key, "name": info[0], "description": info[2], "category": info[1], "count": 0}
+        else:
+            var specimen: Resource = load(catalogue.SPECIMENS[catalogue.MATERIALS[id]])
+            _entries[key] = {"id": key, "name": specimen.material_name, "description": specimen.material_description, "category": "Materials", "count": 0}
     _entries[key].count += added
     changed.emit()
     return added
@@ -55,6 +61,9 @@ func take_all() -> Dictionary:
     _entries.clear()
     changed.emit()
     return counts
+
+func count_of(id: String) -> int:
+    return int(_entries.get(StringName(id), {}).get("count", 0))
 
 func entries() -> Array:
     # UI callers receive a copy so they cannot silently mutate inventory state.

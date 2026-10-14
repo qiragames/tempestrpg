@@ -453,6 +453,25 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             rejected_requests += 1
             return false
         return actor.buy_node(payload.id) if payload.operation == "buy" else actor.activate_skill(payload.id)
+    if action == "trade":
+        # M4.5c: clients name a merchant and an entry or an item; the host checks the rest.
+        var operation: Variant = payload.get("operation")
+        if operation == "buy" and payload.size() == 3 and payload.get("merchant") is String and payload.merchant.length() <= 32 and payload.get("id") is String and payload.id.length() <= 64:
+            return world.trade.buy(actor, payload.merchant, payload.id)
+        if operation == "sell" and payload.size() == 4 and payload.get("merchant") is String and payload.merchant.length() <= 32 and payload.get("kind") in ["gear", "bag"] and payload.get("id") is String and payload.id.length() <= 64:
+            return world.trade.sell(actor, payload.merchant, payload.kind, payload.id)
+        rejected_requests += 1
+        return false
+    if action == "ferry":
+        if payload.size() != 1 or not payload.get("dock") is String or payload.dock.length() > 32:
+            rejected_requests += 1
+            return false
+        return world.trade.sail(actor, payload.dock)
+    if action == "use_item":
+        if payload.size() != 1 or not payload.get("id") is String or payload.id.length() > 64:
+            rejected_requests += 1
+            return false
+        return actor.use_good(payload.id)
     if action == "chest":
         if payload.size() != 1 or not payload.get("id") is String or payload.id.length() > 16:
             rejected_requests += 1

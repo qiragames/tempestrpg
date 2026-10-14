@@ -1,0 +1,12 @@
+[gd_resource type="Resource" load_steps=3 format=3]
+[ext_resource type="Script" path="res://scripts/absorption/specimen_definition.gd" id="1"]
+[ext_resource type="Resource" path="res://data/skills/venom_fang.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"dune_viper"
+species = "Dune Viper"
+skill = ExtResource("2")
+material_id = &"viper_scale"
+material_name = "Viper Scale"
+material_description = "A sun-baked scale from an analyzed Dune Viper."

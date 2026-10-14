@@ -6,7 +6,8 @@ const SKILLS := CATALOGUE.SKILLS
 const TREE := preload("res://scripts/skills/skill_tree.gd")
 const SPECIMEN := "res://data/specimens/forest_gnasher.tres"
 ## Saved enemy kind -> scene. Stable IDs only; never a client-supplied path.
-const ENEMY_SCENES := {"gnasher": "res://scenes/enemies/forest_gnasher.tscn", "thornback": "res://scenes/enemies/thornback_gnasher.tscn"}
+const ENEMY_SCENES := {"gnasher": "res://scenes/enemies/forest_gnasher.tscn", "thornback": "res://scenes/enemies/thornback_gnasher.tscn",
+    "frost_bear": "res://scenes/enemies/frost_bear.tscn", "snow_wisp": "res://scenes/enemies/snow_wisp.tscn", "dune_viper": "res://scenes/enemies/dune_viper.tscn", "sand_scuttler": "res://scenes/enemies/sand_scuttler.tscn", "bog_kappa": "res://scenes/enemies/bog_kappa.tscn", "mirecap": "res://scenes/enemies/mirecap.tscn", "bamboo_sprite": "res://scenes/enemies/bamboo_sprite.tscn", "paper_lantern": "res://scenes/enemies/paper_lantern.tscn", "amber_owl": "res://scenes/enemies/amber_owl.tscn", "burrow_mole": "res://scenes/enemies/burrow_mole.tscn", "ember_flame": "res://scenes/enemies/ember_flame.tscn", "salamander": "res://scenes/enemies/salamander.tscn"}
 
 static func vector(value: Vector2) -> Array:
     return [value.x, value.y]
@@ -125,11 +126,13 @@ static func capture_entities(world: Node2D) -> Dictionary:
             piles.append(node.capture())
         elif node.is_in_group("allies"):
             allies.append({"id": node.entity_id, "position": vector(node.position), "owner": node.owner_id, "name": node.display_name, "race": node.race, "maximum_hp": node.maximum_hp, "power": node.power, "speed": node.follow_speed, "work": {"role": node.work_role, "target": node.work_target, "remaining": node.work_left}})
-    return {"enemies": enemies, "pickups": pickups, "allies": allies, "camp": world.camp.state.duplicate(true), "trial": world.trial.state.duplicate(true), "respawns": world.respawner.capture(), "loot": loot, "piles": piles}
+    return {"enemies": enemies, "pickups": pickups, "allies": allies, "camp": world.camp.state.duplicate(true), "trial": world.trial.state.duplicate(true), "respawns": world.respawner.capture(), "loot": loot, "piles": piles, "trade": world.trade.capture()}
 
 static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> void:
     world.camp.restore(data.camp)
     world.trial.restore(data.get("trial"))
+    if data.get("trade") is Dictionary:
+        world.trade.restore(data.trade)
     world.respawner.restore(data.get("respawns", []))
     var wanted: Dictionary = {}
     for state in data.get("allies", []):
@@ -212,7 +215,7 @@ static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> vo
         wanted[state.id] = true
         var pile = world.entity_by_id(state.id)
         if pile == null:
-            pile = world.drop_pile(state.owner, state.materials, state.items, to_vector(state.position), state.id, float(state.claim_until))
+            pile = world.drop_pile(state.owner, state.materials, state.items, to_vector(state.position), state.id, float(state.claim_until), int(state.get("zeni", 0)))
         if pile != null:
             pile.materials = state.materials.duplicate()
             pile.items = state.items.duplicate(true)

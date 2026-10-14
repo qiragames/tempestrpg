@@ -65,7 +65,7 @@ func _draw_view() -> void:
     if not is_instance_valid(me):
         return
     var centre: Vector2 = me.global_position
-    var tile: Vector2 = (centre - MAP.ORIGIN) / MAP.TILE
+    var tile: Vector2 = (centre - MAP.ORIGIN) / MAP.TILE - Vector2(MAP.MIN)
     var span: float = size.x / ZOOM
     _view.draw_texture_rect_region(texture(), Rect2(Vector2.ZERO, size), Rect2(tile - Vector2(span, span) / 2.0, Vector2(span, span)))
     var world: Node = hud.get_parent()

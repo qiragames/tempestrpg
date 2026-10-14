@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/skills/skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"ember_burst"
+display_name = "Ember Burst"
+tier = "Common"
+description = "An explosion of embers that sets everything around alight."
+damage = 57
+magicule_cost = 16.0
+cooldown = 1.1
+effect = &"strike"

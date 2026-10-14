@@ -17,6 +17,13 @@ const LEVELS := {
     "lakeshore_gnasher_1": 5, "lakeshore_thornback_1": 5,
     "crater_thornback_1": 11, "crater_thornback_2": 11, "crater_gnasher_1": 12,
     "beach_gnasher_1": 2,
+    # M4.5c: the home continent's new regions, then the ferry lands (harder).
+    "frost_bear_1": 10, "frost_bear_2": 13, "snow_wisp_1": 9, "snow_wisp_2": 11,
+    "dune_viper_1": 8, "dune_viper_2": 10, "sand_scuttler_1": 9, "sand_scuttler_2": 12,
+    "amber_owl_1": 12, "amber_owl_2": 13, "burrow_mole_1": 12, "burrow_mole_2": 15,
+    "bog_kappa_1": 15, "bog_kappa_2": 17, "mirecap_1": 15, "mirecap_2": 16,
+    "bamboo_sprite_1": 14, "bamboo_sprite_2": 16, "paper_lantern_1": 14, "paper_lantern_2": 15,
+    "ember_flame_1": 17, "ember_flame_2": 19, "salamander_1": 18, "salamander_2": 20,
 }
 
 static func level_of(id: String, difficulty: int) -> int:
@@ -42,6 +49,19 @@ const CREATURES := [
     ["crater_thornback_2", "thornback", Vector2(262, 162), 2],
     ["crater_gnasher_1", "gnasher", Vector2(256, 186), 2],
     ["beach_gnasher_1", "gnasher", Vector2(174, 186), 0],
+    # M4.5c region creatures (their own kinds).
+    ["frost_bear_1", "frost_bear", Vector2(130, -100), 1], ["frost_bear_2", "frost_bear", Vector2(262, -92), 2],
+    ["snow_wisp_1", "snow_wisp", Vector2(80, -64), 1], ["snow_wisp_2", "snow_wisp", Vector2(310, -78), 1],
+    ["dune_viper_1", "dune_viper", Vector2(-60, 92), 1], ["dune_viper_2", "dune_viper", Vector2(-230, 120), 1],
+    ["sand_scuttler_1", "sand_scuttler", Vector2(-150, 160), 1], ["sand_scuttler_2", "sand_scuttler", Vector2(-100, 44), 2],
+    ["amber_owl_1", "amber_owl", Vector2(100, 300), 1], ["amber_owl_2", "amber_owl", Vector2(250, 372), 1],
+    ["burrow_mole_1", "burrow_mole", Vector2(130, 345), 1], ["burrow_mole_2", "burrow_mole", Vector2(380, 352), 2],
+    ["bog_kappa_1", "bog_kappa", Vector2(-222, 382), 1], ["bog_kappa_2", "bog_kappa", Vector2(-120, 362), 2],
+    ["mirecap_1", "mirecap", Vector2(-196, 408), 1], ["mirecap_2", "mirecap", Vector2(-262, 352), 1],
+    ["bamboo_sprite_1", "bamboo_sprite", Vector2(500, 20), 1], ["bamboo_sprite_2", "bamboo_sprite", Vector2(604, 64), 2],
+    ["paper_lantern_1", "paper_lantern", Vector2(520, 100), 1], ["paper_lantern_2", "paper_lantern", Vector2(650, 14), 1],
+    ["ember_flame_1", "ember_flame", Vector2(520, 330), 1], ["ember_flame_2", "ember_flame", Vector2(645, 328), 2],
+    ["salamander_1", "salamander", Vector2(580, 280), 1], ["salamander_2", "salamander", Vector2(660, 404), 2],
 ]
 ## Hidden leveling spots (24a, user decision: two per creature region, unmarked until a character
 ## discovers them): [id, kind, centre tile, difficulty, level, creatures]. Their creatures respawn
@@ -55,11 +75,26 @@ const SPOTS := [
     ["spot_lake_b", "thornback", Vector2(276, 62), 1, 6, 2],
     ["spot_crater_a", "thornback", Vector2(238, 152), 2, 12, 2],
     ["spot_crater_b", "gnasher", Vector2(274, 178), 2, 13, 3],
+    ["spot_frost_a", "frost_bear", Vector2(100, -58), 1, 11, 3],
+    ["spot_frost_b", "snow_wisp", Vector2(280, -60), 1, 12, 2],
+    ["spot_desert_a", "dune_viper", Vector2(-240, 170), 1, 10, 3],
+    ["spot_desert_b", "sand_scuttler", Vector2(-40, 140), 1, 11, 2],
+    ["spot_amber_a", "amber_owl", Vector2(40, 330), 1, 13, 3],
+    ["spot_amber_b", "burrow_mole", Vector2(330, 380), 1, 14, 2],
+    ["spot_mire_a", "mirecap", Vector2(-250, 440), 1, 16, 3],
+    ["spot_mire_b", "bog_kappa", Vector2(-90, 400), 2, 17, 2],
+    ["spot_sakura_a", "bamboo_sprite", Vector2(470, 60), 1, 15, 3],
+    ["spot_sakura_b", "paper_lantern", Vector2(650, -20), 1, 16, 2],
+    ["spot_ember_a", "ember_flame", Vector2(500, 360), 1, 18, 3],
+    ["spot_ember_b", "salamander", Vector2(600, 300), 2, 19, 2],
 ]
 const SPOT_NAMES := {
     "spot_meadow_a": "Gnasher Hollow", "spot_meadow_b": "Eastern Thicket", "spot_thornwood_a": "Fang Grove",
     "spot_thornwood_b": "Quill Den", "spot_lake_a": "Reed Shallows", "spot_lake_b": "Keepward Rocks",
     "spot_crater_a": "Ember Rim", "spot_crater_b": "Ashen Pit",
+    "spot_frost_a": "Bear Hollow", "spot_frost_b": "Whisper Drifts", "spot_desert_a": "Viper Dunes", "spot_desert_b": "Scuttle Flats",
+    "spot_amber_a": "Owlwood", "spot_amber_b": "Molehill Fields", "spot_mire_a": "Spore Bog", "spot_mire_b": "Kappa Pools",
+    "spot_sakura_a": "Bamboo Maze", "spot_sakura_b": "Lantern Glade", "spot_ember_a": "Cinder Flats", "spot_ember_b": "Salamander Den",
 }
 ## Discovered within this many pixels of a spot's centre.
 const DISCOVER_RADIUS := 96.0
@@ -101,6 +136,12 @@ const CHESTS := [
     ["chest_crater", Vector2(256, 172), true],
     ["chest_harrowmere", Vector2(346, 97), false],
     ["chest_beach", Vector2(192, 188), false],
+    ["chest_glacier", Vector2(60, -150), false],
+    ["chest_dunes", Vector2(-280, 140), false],
+    ["chest_marsh", Vector2(-282, 420), true],
+    ["chest_shrine", Vector2(606, -50), true],
+    ["chest_amber", Vector2(300, 392), false],
+    ["chest_volcano", Vector2(580, 374), true],
 ]
 
 static func at(tile: Vector2) -> Vector2:
