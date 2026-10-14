@@ -112,3 +112,6 @@ InitTestScene*.unity*
 
 # Python tooling caches
 __pycache__/
+
+# Local scratch scripts (never committed)
+tests/_*
