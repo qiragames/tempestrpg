@@ -139,7 +139,7 @@ func _backdrop(rect: Rect2, kind: String = "frame") -> Panel:
     var back := Panel.new()
     back.position = rect.position
     back.size = rect.size
-    back.add_theme_stylebox_override("panel", UI.ornate("hud") if kind == "frame" else UI.ornate("assistant") if kind == "assistant" else UI.box(kind))
+    back.add_theme_stylebox_override("panel", UI.hud_box(kind) if kind in ["frame", "assistant"] else UI.box(kind))
     back.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(back)
     move_child(back, 0)
@@ -219,12 +219,14 @@ func _build_status() -> void:
     $SystemVoice.add_theme_color_override("font_color", UI.CYAN)
     _outline($SystemVoice)
     # Analysis: the cyan box on the right.
-    _backdrop(Rect2(446, 118, 190, 82), "assistant")
-    $Analysis.position = Vector2(452, 122)
-    $Analysis.size = Vector2(178, 60)
-    $Analysis.add_theme_font_size_override("font_size", 10)
+    # (User feedback: smaller.)
+    _backdrop(Rect2(486, 118, 150, 66), "assistant")
+    $Analysis.position = Vector2(491, 120)
+    $Analysis.size = Vector2(140, 50)
+    $Analysis.add_theme_font_size_override("font_size", 8)
     UI.style_bar($AnalysisProgress, UI.CYAN)
-    $AnalysisProgress.position = Vector2(452, 186)
+    $AnalysisProgress.position = Vector2(491, 174)
+    $AnalysisProgress.size = Vector2(140, $AnalysisProgress.size.y)
     # Minimap under the region name, top right (24a).
     minimap = load("res://scripts/ui/minimap.gd").new(self)
     minimap.position = Vector2(552, 28)
@@ -308,6 +310,8 @@ func _build_hotbar() -> void:
         button.focus_mode = Control.FOCUS_NONE
         button.clip_text = true
         button.pressed.connect(_activate_slot.bind(index))
+        for state in ["normal", "hover", "pressed", "disabled"]:
+            button.add_theme_stylebox_override(state, UI.round_slot({"normal": "slot", "hover": "slot_hover", "pressed": "slot_pressed", "disabled": "slot_disabled"}[state]))
         _slots.append(button)
         # Key badge above the slot, like the reference.
         var badge := Label.new()

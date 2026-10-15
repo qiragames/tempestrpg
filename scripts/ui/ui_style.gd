@@ -102,6 +102,27 @@ static func fill(color: Color) -> StyleBoxFlat:
     style.border_width_top = 1
     return style
 
+## HUD blocks (user feedback: keep the dark background, round the corners): a softly rounded
+## dark box with a thin trim (gold, or cyan for the analysis box).
+static func hud_box(kind: String = "frame") -> StyleBoxFlat:
+    var style := StyleBoxFlat.new()
+    style.bg_color = Color(0.06, 0.07, 0.10, 0.86) if kind != "assistant" else Color(0.04, 0.10, 0.12, 0.88)
+    style.border_color = Color(GOLD_DARK, 0.9) if kind != "assistant" else Color(CYAN, 0.8)
+    style.set_border_width_all(1)
+    style.set_corner_radius_all(7)
+    style.corner_detail = 6
+    style.shadow_color = Color(0, 0, 0, 0.35)
+    style.shadow_size = 3
+    style.set_content_margin_all(6)
+    return style
+
+## Rounded hotbar cells in the same spirit.
+static func round_slot(kind: String) -> StyleBoxFlat:
+    var style := box(kind)
+    style.set_corner_radius_all(5)
+    style.corner_detail = 5
+    return style
+
 ## The shared Theme (built once).
 static func theme() -> Theme:
     if _theme != null:

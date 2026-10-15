@@ -62,7 +62,7 @@ func _run() -> void:
     # --- Layout: no overlaps at 640x360 (at full HUD size; smaller sizes shrink toward the corners)
     hud.apply_hud_settings({"hud": 1.0, "controls": true})
     await _frames(1)
-    var rects: Dictionary = {"status": Rect2(4, 4, 226, 66), "analysis": Rect2(446, 40, 190, 82), "hotbar": Rect2(176, 288, 304, 52), "log": Rect2(4, 266, 166, 72), "controls": Rect2(0, 338, 640, 22)}
+    var rects: Dictionary = {"status": Rect2(4, 4, 226, 66), "analysis": Rect2(486, 40, 150, 82), "hotbar": Rect2(176, 288, 304, 52), "log": Rect2(4, 266, 166, 72), "controls": Rect2(0, 338, 640, 22)}
     var screen := Rect2(0, 0, 640, 360)
     var layout_ok := true
     for a in rects:
