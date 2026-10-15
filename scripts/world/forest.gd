@@ -34,6 +34,8 @@ var nodes: Node
 var boss_fx: Node2D
 ## M7c: dungeon cave mouths and ways out.
 var dungeon_gates: Node2D
+## Day, night and weather on screen.
+var sky: Node2D
 ## Host-side randomness for gear drops, chests, trial rewards and the forge (17g).
 var loot_rng := RandomNumberGenerator.new()
 var chest_layer: Node2D
@@ -110,11 +112,9 @@ func _ready() -> void:
     # M7c: cave mouths, the ways out, and the Underdeep's darkness.
     dungeon_gates = load("res://scripts/dungeons/dungeon_gates.gd").new()
     add_child(dungeon_gates)
-    var dark := CanvasModulate.new()
-    dark.name = "CaveDark"
-    dark.color = Color(0.62, 0.6, 0.72)
-    dark.visible = false
-    add_child(dark)
+    # Day, night and weather (and the darkness underground).
+    sky = load("res://scripts/world/sky.gd").new(self)
+    add_child(sky)
     _add_obstacle(POND)
     # The clearing no longer ends at its edges: the archipelago surrounds it (world edges are
     # ocean and are closed by the terrain).

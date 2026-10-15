@@ -357,6 +357,24 @@ func _activate_slot(index: int) -> void:
         else:
             player.get_node("MeleeAttack").attack_skill(player.facing, skill.id)
 
+## Day, night and weather: the clock and the weather under the minimap.
+func _refresh_clock() -> void:
+    if not is_instance_valid(minimap):
+        return
+    if not minimap.has_node("Clock"):
+        var clock := _label("", Vector2(-30, 84), Vector2(140, 12), minimap, 8)
+        clock.name = "Clock"
+        clock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        clock.add_theme_color_override("font_color", UI.GOLD_LIGHT)
+        clock.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.05))
+        clock.add_theme_constant_override("outline_size", 3)
+    var day_night := preload("res://scripts/world/day_night.gd")
+    var time: float = float(get_parent().progression.get("world_time", 0.0))
+    var sky: Node = get_parent().get("sky")
+    var weather: String = sky.weather_id if sky != null else "clear"
+    var symbol: String = "☾" if day_night.is_night(time) and weather == "clear" else String(day_night.WEATHER[weather][2])
+    minimap.get_node("Clock").text = "%s  %s %s" % [day_night.clock_text(time), symbol, day_night.WEATHER[weather][0]]
+
 ## M7a: the raid boss bar (top centre) while this character is in a living boss's arena.
 func _refresh_boss_bar() -> void:
     if not has_node("BossBar"):
@@ -474,10 +492,7 @@ func _process(_delta: float) -> void:
         get_node("SiegeBanner").text = siege_node.banner()
     _refresh_node_prompt()
     _refresh_boss_bar()
-    # M7c: underground it is darker.
-    var cave_dark: Node = get_parent().get_node_or_null("CaveDark")
-    if cave_dark != null:
-        cave_dark.visible = not WORLD_MAP.dungeon_at(player.global_position).is_empty()
+    _refresh_clock()
     _refresh_reel(_delta)
     var place: String = WORLD_MAP.place_name(player.global_position)
     # M5a: inside your settlement, its name (or tier).

@@ -722,8 +722,20 @@ func _animate_gather() -> void:
     _last_phase = phase
     queue_redraw()
 
+## Weather (sandstorms slow walking a little).
+func _weather_speed() -> float:
+    var world: Node = get_parent()
+    if world == null or not world.get("progression") is Dictionary:
+        return 1.0
+    var day_night := preload("res://scripts/world/day_night.gd")
+    var map := preload("res://scripts/world/world_map.gd")
+    if not map.dungeon_at(global_position).is_empty():
+        return 1.0
+    return day_night.speed_factor(day_night.weather(map.region_name(global_position), float(world.progression.get("world_time", 0.0))))
+
 func current_speed() -> float:
     var boost: float = DEV.SPEED_FACTOR if DEV.speed and DEV.applies(self) else 1.0
+    boost *= _weather_speed()
     return maxf(10.0, move_speed + gear_bonus("speed")) * FORMS.FORMS[form].speed * mount_speed() * aura_speed() * boost
 
 ## ---- Gear (17e) ----
@@ -1028,7 +1040,10 @@ func cast_line() -> bool:
     reel = {}
     # Fishing 20 (Patient): bites come 25% sooner.
     var patience: float = 0.75 if PRO.level_of(progression, "fishing") >= 20 else 1.0
-    fishing_bite_in = randf_range(TRAVEL.BITE_DELAY[0], TRAVEL.BITE_DELAY[1]) * patience
+    # Rain and storms make fish bite sooner.
+    var day_night := preload("res://scripts/world/day_night.gd")
+    var wet: float = day_night.bite_factor(day_night.weather(map.region_name(global_position), float(get_parent().progression.get("world_time", 0.0))))
+    fishing_bite_in = randf_range(TRAVEL.BITE_DELAY[0], TRAVEL.BITE_DELAY[1]) * patience * wet
     session.notify_character(character_id, "You cast your line… wait for a bite.")
     return true
 

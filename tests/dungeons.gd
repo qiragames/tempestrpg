@@ -86,7 +86,7 @@ func _run() -> void:
     _check(session.apply_action(actor, "dungeon", {"operation": "enter", "id": "thornwood_hollow"}) and MAP.dungeon_at(actor.global_position) == "thornwood_hollow" and MAP.place_name(actor.global_position) == "Thornwood Hollow", "Going in puts you in the entry room")
     var hud: CanvasLayer = world.get_node("HUD")
     await _frames(2)
-    _check(world.get_node("CaveDark").visible, "It is darker underground")
+    _check(world.sky.ambient.color.is_equal_approx(world.sky.CAVE_TINT), "It is darker underground")
     hud.world_map.open()
     await _frames(2)
     _check(hud.world_map._zone_rect() == DUNGEONS.view("thornwood_hollow") and not hud.world_map._shown(Vector2(190, 116)), "Inside, the map shows only the dungeon")
@@ -95,7 +95,7 @@ func _run() -> void:
     await _frames(2)
     _check(gates.nearest(actor) == ["leave", "thornwood_hollow"] and session.apply_action(actor, "dungeon", {"operation": "leave", "id": "thornwood_hollow"}) and MAP.dungeon_at(actor.global_position).is_empty() and MAP.region_name(actor.global_position) == "Thornwood", "The way out takes you back to the cave mouth")
     await _frames(2)
-    _check(not world.get_node("CaveDark").visible, "Daylight again")
+    _check(not world.sky.ambient.color.is_equal_approx(world.sky.CAVE_TINT), "Daylight again")
     # The chest in the boss chamber is rich.
     _check(REGION.is_rich_chest(DUNGEONS.chest_id("jade_grotto")) and world.layout.chests.any(func(chest): return chest.id == DUNGEONS.chest_id("jade_grotto")), "Every boss chamber holds a rich chest")
     # Hidden elites: discovery and a guaranteed Rare+ drop.

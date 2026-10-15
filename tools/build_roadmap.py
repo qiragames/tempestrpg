@@ -80,6 +80,7 @@ why = [
     "Give every character long-term goals outside combat: gathering, fishing and crafting with region-gated resources.",
     "Give regions climactic group fights and smaller hidden bosses worth exploring for.",
     "Extend a proven economy and combat loop into squad warfare and endgame progression.",
+    "Give the world a story, quests, time and weather so every region has a reason to be explored.",
 ]
 for index, (mid, title, status_text, body) in enumerate(milestones):
     if mid == "M0":
@@ -98,7 +99,7 @@ if expansion:
                       what=body.strip(), why="Expand the proven gear and exploration systems into original regions and travel.",
                       evidence="User decision 2026-10-14: the world map comes right after step 22 (before 23/24). Ferries and own ships need currency/quests first.",
                       x=300, y=max(node["y"] for node in nodes)+115, phase="M4.5"))
-if len(nodes) != 26 + len(m4_rows) + int(expansion is not None):
+if len(nodes) != 27 + len(m4_rows) + int(expansion is not None):
     raise ValueError("Milestone structure changed: review the graph mapping.")
 updated = re.search(r"Last updated: (.*)", source).group(1)
 template = (ROOT / "tools/roadmap.template.html").read_text(encoding="utf-8")

@@ -208,6 +208,30 @@ func _tick_status(delta: float) -> void:
         slow_factor = 1.0
     _update_shown_status()
 
+## Day and night, weather (host): night bites harder; fog, mist and sandstorms hide characters.
+const DAY_NIGHT := preload("res://scripts/world/day_night.gd")
+
+func _world_time() -> float:
+    var world: Node = get_parent()
+    return float(world.progression.get("world_time", 0.0)) if world != null and world.get("progression") is Dictionary else 0.0
+
+## The home's region name ("" underground), looked up once.
+var _home_region := "?"
+
+func _region() -> String:
+    if _home_region == "?":
+        var map := preload("res://scripts/world/world_map.gd")
+        _home_region = map.region_name(home) if map.dungeon_at(home).is_empty() else ""
+    return _home_region
+
+func night() -> bool:
+    return not _region().is_empty() and DAY_NIGHT.is_night(_world_time())
+
+func _detection() -> float:
+    if _region().is_empty():
+        return detection_radius
+    return detection_radius * DAY_NIGHT.detection_factor(DAY_NIGHT.weather(_region(), _world_time()))
+
 func _speed() -> float:
     return speed * (slow_factor if slow_left > 0.0 else 1.0)
 
@@ -231,7 +255,7 @@ func _physics_process(delta: float) -> void:
         return
     var distance := global_position.distance_to(target.global_position)
     var target_alive: bool = target.get_node("Health").current > 0
-    var nearby: bool = distance <= detection_radius and target.global_position.distance_to(home) <= leash_radius
+    var nearby: bool = distance <= _detection() and target.global_position.distance_to(home) <= leash_radius
     match state:
         State.IDLE:
             if nearby and target_alive:
@@ -251,7 +275,7 @@ func _physics_process(delta: float) -> void:
             if state_time <= 0.0:
                 var ray := PhysicsRayQueryParameters2D.create(global_position, target.global_position, 1)
                 if target_alive and distance <= attack_range and get_world_2d().direct_space_state.intersect_ray(ray).is_empty():
-                    target.get_node("Health").take_damage(damage, self)
+                    target.get_node("Health").take_damage(int(round(damage * (DAY_NIGHT.NIGHT_DAMAGE if night() else 1.0))), self)
                 state = State.RECOVER
                 state_time = 0.9
         State.RECOVER:
@@ -297,7 +321,7 @@ func _defeat() -> void:
             var actor: Node = world.player_by_id(entry[0]) if world != null and world.has_method("player_by_id") else null
             if is_instance_valid(actor):
                 var factor: float = party.xp_factor(actor.character_id, global_position) if party != null else 1.0
-                actor.gain_experience(int(round(LEVELING.defeat_xp(level, difficulty) * factor)), "defeat")
+                actor.gain_experience(int(round(LEVELING.defeat_xp(level, difficulty) * factor * (DAY_NIGHT.NIGHT_XP if night() else 1.0))), "defeat")
                 var share: int = maxi(1, int(round(coins * float(entry[1]) / total_share)))
                 var group: String = party.party_of(actor.character_id) if party != null else ""
                 if group.is_empty():

@@ -1142,6 +1142,26 @@ func _run() -> void:
     await _shot("dungeon_boss", "The deepest chamber: Frostfang, the Ice Cyclops, guards a rich chest")
     showcase.global_position = dungeon_gates.exit_position("frostfang_cavern") + Vector2(0, 8)
     _check(session.apply_action(showcase, "dungeon", {"operation": "leave", "id": "frostfang_cavern"}), "Climbed back out")
+    _log("## 31. Day, night and weather")
+    var day_night := preload("res://scripts/world/day_night.gd")
+    var saved_time: float = world.progression.world_time
+    showcase.global_position = tour_map.to_world(Vector2(110, 150))
+    world.terrain.ensure_props_at(showcase.global_position)
+    world.progression.world_time = fposmod(23.0 - day_night.START_HOUR, 24.0) / 24.0 * day_night.DAY_SECONDS
+    await _wait(0.5)
+    await _shot("night", "Night in Brookhaven: the world darkens, the plaza and your character glow softly; the clock and weather sit under the minimap")
+    var period := day_night.DAY_SECONDS / 24.0 * day_night.WEATHER_HOURS
+    for weather_shot in [["rain", "Thornwood", Vector2(104, 90), "Rain over Thornwood (fish bite sooner)"], ["gloom_mist", "Gloomveil", Vector2(1020, 300), "Gloom mist drifting over Gloomveil (creatures notice you later)"]]:
+        for step in range(400):
+            var time: float = step * period + 5.0
+            if day_night.weather(weather_shot[1], time) == weather_shot[0] and not day_night.is_night(time):
+                world.progression.world_time = time
+                break
+        showcase.global_position = tour_map.to_world(weather_shot[2])
+        world.terrain.ensure_props_at(showcase.global_position)
+        await _wait(0.6)
+        await _shot("weather_" + weather_shot[0], weather_shot[3])
+    world.progression.world_time = saved_time
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)
