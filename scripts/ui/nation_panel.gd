@@ -88,6 +88,12 @@ func _init(owner_hud: CanvasLayer) -> void:
     _rank.pressed.connect(func(): _send("rank", "next"))
     # Buildings.
     UI.heading(hud._label("BUILD", FRAME.position + Vector2(16, 130), Vector2(200, 16), window, 11))
+    var people: Button = hud._button("Citizens & trade…", FRAME.position + Vector2(FRAME.size.x - 180, 126), Vector2(164, 20), window)
+    people.add_theme_font_size_override("font_size", 9)
+    people.pressed.connect(func():
+        close_panel()
+        hud.citizens_panel.open()
+    )
     var index := 0
     for kind in NATION.BUILDINGS:
         var button: Button = hud._button("", FRAME.position + Vector2(16 + (index % 3) * 158, 150 + int(index / 3) * 40), Vector2(152, 36), window)

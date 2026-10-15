@@ -962,6 +962,34 @@ func _run() -> void:
     await _wait(0.3)
     await _shot("population", "The nation window: population and homes, the food store and what it eats a day, the next newcomer")
     hud_nation.nation_panel.close_panel()
+    _log("## 24. Citizen roles, trade and caravans (M5c)")
+    for kind in ["workshop", "market", "watchtower"]:
+        var done := false
+        for ring in range(5, 14):
+            if done:
+                break
+            for dy in range(-ring, ring + 1):
+                if done:
+                    break
+                for dx in range(-ring, ring + 1):
+                    if maxi(absi(dx), absi(dy)) == ring and nation_camp.place(null, kind, centre + Vector2i(dx, dy)):
+                        done = true
+                        break
+    var roles: Array = ["worker", "farmer", "crafter", "merchant", "guard", "crafter"]
+    var assigned := 0
+    for index in range(mini(roles.size(), nation_camp.population())):
+        assigned += 1 if nation_camp.assign_job(nation_camp.state.nation.citizens[index].id, roles[index]) else 0
+    _check(assigned >= 4, "Citizens took jobs (%d)" % assigned)
+    for _i in range(4):
+        nation_camp._tick_nation(nation_data.WORK_SECONDS)
+    showcase.position = nation_camp.SITE + Vector2(0, 30)
+    var trade_town: String = nation_data.caravan_towns()[0][0]
+    if int(nation_camp.state.nation.goods) > 0:
+        nation_camp.send_caravan(trade_town, mini(3, int(nation_camp.state.nation.goods)))
+    hud_nation.citizens_panel.open()
+    await _wait(0.4)
+    await _shot("citizens_trade", "Citizens & trade: jobs by workplace (workers, farmers, crafters, merchants, guards), the treasury, trade goods and a caravan on the road")
+    hud_nation.citizens_panel.close_panel()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

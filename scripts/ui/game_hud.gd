@@ -45,6 +45,8 @@ var party_panel: Control
 var dialog_panel: Control
 ## Nation window and build mode (M5a), see nation_panel.gd.
 var nation_panel: Control
+## Citizens and trade window (M5c), see citizens_panel.gd.
+var citizens_panel: Control
 var _zeni: Label
 var _close: Button
 var _log: RichTextLabel
@@ -100,6 +102,8 @@ func _ready() -> void:
     add_child(dialog_panel)
     nation_panel = load("res://scripts/ui/nation_panel.gd").new(self)
     add_child(nation_panel)
+    citizens_panel = load("res://scripts/ui/citizens_panel.gd").new(self)
+    add_child(citizens_panel)
     _hook_pause_returns()
     get_parent().system_message.connect(fusion.show_message)
     _ally_dialog = load("res://scripts/ui/ally_dialog.gd").new()
@@ -108,7 +112,7 @@ func _ready() -> void:
     add_child(_camp_dialog)
 
 func menu_open() -> bool:
-    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible) or (is_instance_valid(harbour_panel) and harbour_panel.visible) or (is_instance_valid(party_panel) and party_panel.is_open()) or (is_instance_valid(dialog_panel) and dialog_panel.is_open()) or (is_instance_valid(nation_panel) and nation_panel.is_open())
+    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible) or (is_instance_valid(harbour_panel) and harbour_panel.visible) or (is_instance_valid(party_panel) and party_panel.is_open()) or (is_instance_valid(dialog_panel) and dialog_panel.is_open()) or (is_instance_valid(nation_panel) and nation_panel.is_open()) or (is_instance_valid(citizens_panel) and citizens_panel.is_open())
 
 func bind_player(actor: Node2D) -> void:
     if player == actor:

@@ -14,9 +14,9 @@ processes = []
 checks = 0
 
 def settled(camp):
-    """The camp without the nation's running clocks (M5b: the day and the next newcomer keep ticking on the host)."""
+    """The camp without the nation's running clocks (M5b-c: the day, the next newcomer and the work minute keep ticking on the host)."""
     camp = json.loads(json.dumps(camp))
-    for key in ("day", "arrival"):
+    for key in ("day", "arrival", "work"):
         camp.get("nation", {}).pop(key, None)
     return camp
 

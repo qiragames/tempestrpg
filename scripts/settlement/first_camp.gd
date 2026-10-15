@@ -141,6 +141,7 @@ static func valid_state(value: Variant, players: Dictionary, table: Dictionary =
             if value[STRUCTURES[id].key]:
                 income -= STRUCTURES[id].cost.get(resource, 0)
         income -= int(value.nation.spent[resource])
+        income += int(value.nation.produced.get(resource, 0))
         # Prevent edited/corrupt saves from duplicating finite resources.
         if stock != income or stock < 0:
             return false
@@ -288,6 +289,9 @@ func demolish(id: String) -> bool:
                     if not home.is_empty():
                         citizen.home = home
                         state.nation.citizens.append(citizen)
+                    elif citizen.id == state.nation.caravan.merchant:
+                        _cancel_caravan()
+            _trim_jobs()
             _sync_placed()
             queue_redraw()
             return true
@@ -348,7 +352,7 @@ func _tick_nation(delta: float) -> void:
         if not home.is_empty() and food() >= (population() + 1) * NATION.FOOD_PER_DAY and population() < NATION.MAX_CITIZENS:
             var number: int = int(nation.next_citizen)
             var name: String = NATION.NAMES[(number * 7 + hash(String(nation.name))) % NATION.NAMES.size()]
-            nation.citizens.append({"id": "c_%d" % number, "name": name, "home": home, "look": number % NATION.LOOKS})
+            nation.citizens.append({"id": "c_%d" % number, "name": name, "home": home, "look": number % NATION.LOOKS, "job": ""})
             nation.next_citizen = number + 1
             _announce("%s moved into your %s." % [name, NATION.tier_name(tier()).to_lower()])
             get_node("/root/GameSession").queue_save()
@@ -363,7 +367,13 @@ func _tick_nation(delta: float) -> void:
         if eaten < need:
             nation.hunger = int(nation.hunger) + 1
             if int(nation.hunger) >= NATION.HUNGRY_DAYS and population() > 0:
-                var gone: Dictionary = nation.citizens.pop_back()
+                var leaver: int = nation.citizens.size() - 1
+                if nation.citizens[leaver].id == nation.caravan.merchant and leaver > 0:
+                    leaver -= 1
+                var gone: Dictionary = nation.citizens[leaver]
+                nation.citizens.remove_at(leaver)
+                if gone.id == nation.caravan.merchant:
+                    _cancel_caravan()
                 nation.hunger = NATION.HUNGRY_DAYS - 1
                 _announce("%s left: there was not enough food." % gone.name)
             else:
@@ -371,6 +381,152 @@ func _tick_nation(delta: float) -> void:
         else:
             nation.hunger = 0
         get_node("/root/GameSession").queue_save()
+    # M5c: a caravan on the road; the citizens' work every minute.
+    if not String(nation.caravan.to).is_empty():
+        nation.caravan.left = maxf(0.0, float(nation.caravan.left) - delta)
+        if nation.caravan.left <= 0.0:
+            var terms: Array = NATION.caravan_terms(nation.caravan.to, SITE)
+            var value: int = mini(int(nation.caravan.goods) * int(terms[1]), NATION.MAX_ZENI - int(nation.treasury))
+            nation.treasury = int(nation.treasury) + value
+            nation.earned = int(nation.earned) + value
+            _announce("The caravan is back from %s with %d Zeni for the treasury." % [MAP.town(nation.caravan.to)[1], value])
+            nation.caravan = {"to": "", "goods": 0, "left": 0.0, "merchant": ""}
+            get_node("/root/GameSession").queue_save()
+    nation.work = float(nation.work) + delta
+    if nation.work >= NATION.WORK_SECONDS:
+        while nation.work >= NATION.WORK_SECONDS:
+            nation.work = float(nation.work) - NATION.WORK_SECONDS
+            _work()
+        get_node("/root/GameSession").queue_save()
+
+## One minute of everyone's work (host).
+func _work() -> void:
+    var nation: Dictionary = state.nation
+    var index := 0
+    for citizen in nation.citizens:
+        match String(citizen.job):
+            "worker":
+                var resource: String = "wood" if index % 2 == 0 else "stone"
+                state[resource] = int(state[resource]) + 1
+                nation.produced[resource] = int(nation.produced[resource]) + 1
+                index += 1
+            "crafter":
+                if int(state.wood) >= 1 and int(state.stone) >= 1 and int(nation.goods) < NATION.MAX_GOODS:
+                    for resource in ["wood", "stone"]:
+                        state[resource] = int(state[resource]) - 1
+                        nation.spent[resource] = int(nation.spent[resource]) + 1
+                    nation.goods = int(nation.goods) + 1
+                    nation.crafted = int(nation.crafted) + 1
+            "merchant":
+                if citizen.id != nation.caravan.merchant and int(nation.goods) > 0 and int(nation.treasury) + NATION.GOOD_PRICE <= NATION.MAX_ZENI:
+                    nation.goods = int(nation.goods) - 1
+                    nation.sold = int(nation.sold) + 1
+                    nation.treasury = int(nation.treasury) + NATION.GOOD_PRICE
+                    nation.earned = int(nation.earned) + NATION.GOOD_PRICE
+    # Farmers tend three fields each, in building order: harvest ripe crops, plant bare soil.
+    var tended: int = NATION.job_count(nation, "farmer") * int(NATION.JOBS.farmer[2])
+    for entry in nation.buildings:
+        if tended <= 0:
+            break
+        if entry.kind != "field":
+            continue
+        tended -= 1
+        if field_growth(entry.id) >= 1.0:
+            harvest_field(null, entry.id)
+        if not nation.fields.has(entry.id):
+            plant(null, entry.id, NATION.FARMER_CROP)
+
+## Guards shoot the nearest creature inside the settlement (host).
+var _guard_clock := 0.0
+var _shots: Array = []
+
+func _guard(delta: float) -> void:
+    _guard_clock += delta
+    if _guard_clock < NATION.GUARD_SECONDS:
+        return
+    _guard_clock = 0.0
+    var guards: int = NATION.job_count(state.nation, "guard")
+    if guards == 0:
+        return
+    var towers: Array = state.nation.buildings.filter(func(entry): return entry.kind == "watchtower").map(func(entry): return NATION.foot(Vector2i(entry.tile[0], entry.tile[1])) - Vector2(0, 40))
+    var targets: Array = get_tree().get_nodes_in_group("enemies").filter(func(node): return not node.is_queued_for_deletion() and node.get_node("Health").current > 0 and node.global_position.distance_to(SITE) <= NATION.radius(tier()))
+    for shot in range(guards):
+        if targets.is_empty() or towers.is_empty():
+            return
+        var tower: Vector2 = towers[shot % towers.size()]
+        targets.sort_custom(func(a, b): return a.global_position.distance_to(tower) < b.global_position.distance_to(tower))
+        var target: Node2D = targets[0]
+        if target.global_position.distance_to(tower) > NATION.GUARD_RANGE + NATION.radius(tier()):
+            continue
+        target.get_node("Health").take_damage(NATION.GUARD_DAMAGE, null, true)
+        _shots.append([tower, target.global_position, 0.25])
+        if target.get_node("Health").current <= 0:
+            targets.erase(target)
+    queue_redraw()
+
+## Host: set a citizen's job (the workplace must have room).
+func assign_job(citizen_id: String, job: String) -> bool:
+    if not AUTHORITY.can_mutate(self) or not NATION.JOBS.has(job):
+        return false
+    for citizen in state.nation.citizens:
+        if citizen.id == citizen_id:
+            if citizen.job == job or citizen.id == state.nation.caravan.merchant:
+                return false
+            if NATION.job_count(state.nation, job) >= NATION.job_places(state.nation, job):
+                return false
+            citizen.job = job
+            return true
+    return false
+
+## Host: send a caravan with goods to a town (an idle merchant leads it).
+func send_caravan(town_id: String, goods: int) -> bool:
+    var nation: Dictionary = state.nation
+    if not AUTHORITY.can_mutate(self) or not String(nation.caravan.to).is_empty() or goods <= 0 or goods > NATION.CARAVAN_GOODS or goods > int(nation.goods):
+        return false
+    if not NATION.caravan_towns().any(func(entry): return entry[0] == town_id):
+        return false
+    var leaders: Array = nation.citizens.filter(func(citizen): return citizen.job == "merchant")
+    if leaders.is_empty():
+        return false
+    nation.goods = int(nation.goods) - goods
+    nation.shipped = int(nation.shipped) + goods
+    nation.caravan = {"to": town_id, "goods": goods, "left": NATION.caravan_terms(town_id, SITE)[0], "merchant": leaders[0].id}
+    return true
+
+## A caravan that cannot go on (its merchant left): the goods come back.
+func _cancel_caravan() -> void:
+    var nation: Dictionary = state.nation
+    nation.goods = int(nation.goods) + int(nation.caravan.goods)
+    nation.shipped = int(nation.shipped) - int(nation.caravan.goods)
+    nation.caravan = {"to": "", "goods": 0, "left": 0.0, "merchant": ""}
+
+## Host: take Zeni from the treasury.
+func withdraw(actor: Node2D, amount: int) -> bool:
+    if not AUTHORITY.can_mutate(self) or amount <= 0 or amount > int(state.nation.treasury) or not can_reach(actor, SITE, 55):
+        return false
+    state.nation.treasury = int(state.nation.treasury) - amount
+    state.nation.withdrawn = int(state.nation.withdrawn) + amount
+    actor.gain_zeni(amount, "treasury")
+    return true
+
+## Jobs beyond the remaining workplaces go idle (after a demolition).
+func _trim_jobs() -> void:
+    var nation: Dictionary = state.nation
+    for job in NATION.JOBS:
+        var extra: int = NATION.job_count(nation, job) - NATION.job_places(nation, job)
+        for index in range(nation.citizens.size() - 1, -1, -1):
+            if extra <= 0:
+                break
+            var citizen: Dictionary = nation.citizens[index]
+            if citizen.job == job and citizen.id != nation.caravan.merchant:
+                citizen.job = ""
+                extra -= 1
+        if extra > 0 and job == "merchant":
+            _cancel_caravan()
+            for citizen in nation.citizens:
+                if extra > 0 and citizen.job == "merchant":
+                    citizen.job = ""
+                    extra -= 1
 
 func _announce(message: String) -> void:
     var session := get_node("/root/GameSession")
@@ -487,6 +643,11 @@ func _redraw_fields() -> void:
 
 ## Citizens wander near their homes (every peer; positions are not replicated).
 func _process(delta: float) -> void:
+    if not _shots.is_empty():
+        for shot in _shots:
+            shot[2] -= delta
+        _shots = _shots.filter(func(shot): return shot[2] > 0.0)
+        queue_redraw()
     _field_redraw -= delta
     if _field_redraw <= 0.0:
         _field_redraw = 1.0
@@ -737,6 +898,22 @@ func transact(actor: Node2D, operation: String, id: String) -> bool:
             if pick.size() != 2 or not plant(actor, pick[0], pick[1]):
                 return false
             message = "%s planted. Come back when they are ripe." % NATION.CROPS[pick[1]][0]
+        "job":
+            # M5c: "citizen_id:job".
+            var pick := id.split(":")
+            if pick.size() != 2 or not assign_job(pick[0], pick[1]):
+                return false
+            message = "New job: %s." % NATION.JOBS[pick[1]][0].to_lower()
+        "caravan":
+            var trip := id.split(":")
+            if trip.size() != 2 or not trip[1].is_valid_int() or not can_reach(actor, SITE, 55) or not send_caravan(trip[0], int(trip[1])):
+                return false
+            message = "A caravan sets out for %s with %s goods." % [MAP.town(trip[0])[1], trip[1]]
+        "treasury":
+            var amount: int = int(state.nation.treasury) if id == "all" else (int(id) if id.is_valid_int() else 0)
+            if not withdraw(actor, amount):
+                return false
+            message = "Took %d Zeni from the treasury." % amount
         "harvest":
             var gained := harvest_field(actor, id)
             if gained <= 0:
@@ -820,6 +997,8 @@ func _physics_process(delta: float) -> void:
         return
     _refill(delta)
     _tick_nation(delta)
+    if state.founded:
+        _guard(delta)
     if not state.shrine:
         return
     # Resting at the shrine doubles recovery once the character's normal regeneration delay has passed.
@@ -838,6 +1017,8 @@ func _draw() -> void:
             _center.texture = ART.atlas(center)
             _center.offset = Vector2(0, -ART.PROPS[center][1].size.y / 2.0)
     draw_arc(SITE, 21, 0, TAU, 20, Color("e1bf79") if state.founded else Color("a1a99b"), 2)
+    for shot in _shots:
+        draw_line(shot[0], shot[1], Color(1.0, 0.9, 0.5, 0.9), 1.5)
     for node in _placed.values():
         if is_instance_valid(node) and node.has_node("Flag"):
             node.get_node("Flag").queue_redraw()

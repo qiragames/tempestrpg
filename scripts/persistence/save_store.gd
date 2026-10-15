@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 28
+const VERSION := 29
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -718,6 +718,19 @@ static func migrate(data: Variant) -> Variant:
         for key in fresh:
             if not data.camp.nation.has(key):
                 data.camp.nation[key] = fresh[key]
+    # v29 (M5c): citizens without jobs; no goods, treasury or caravan yet.
+    if data.get("version") == 28:
+        if not data.get("camp") is Dictionary or not data.camp.get("nation") is Dictionary or not data.camp.nation.get("citizens") is Array:
+            return null
+        data = data.duplicate(true)
+        data.version = 29
+        var blank: Dictionary = preload("res://scripts/nation/nation_catalogue.gd").initial_state()
+        for key in blank:
+            if not data.camp.nation.has(key):
+                data.camp.nation[key] = blank[key]
+        for citizen in data.camp.nation.citizens:
+            if citizen is Dictionary and not citizen.has("job"):
+                citizen["job"] = ""
     return data
 
 static func _unique(values: Array) -> int:

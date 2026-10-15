@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.0 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.1 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -228,7 +228,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 11a. Creature respawning
 - [x] The first Gnasher is waiting to respawn (or is already back)
-- gnasher_1 had already respawned during the run
+- gnasher_1 was still waiting; the wait is shortened
 - [x] The Forest Gnasher respawned at its home
 - [x] Walked back along the road to the respawned Gnasher
 
@@ -299,7 +299,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (640x360)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Rare Scale Mail
+- [x] The chest gave an Uncommon-or-better item: Rare Padded Vest
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (640x360)
@@ -395,8 +395,8 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *World map: your pile (gold X) and discovered leveling spots (violet)* (640x360)
 
 ## 16. Sound and effects (step 23)
-- Sounds played during this run: analysis ×3, build ×3, chest ×1, defeat ×8, evolve ×1, form ×2, gather ×6, hit ×14, hurt ×8, learned ×2, level_up ×3, magicules ×4, swing ×17, ui_accept ×16, ui_move ×12
-- Effects shown: aura ×3, boost ×4, claw ×11, hit_spark ×26, ring ×7, slash ×18, smoke ×12, sparkle ×5
+- Sounds played during this run: analysis ×3, build ×3, chest ×1, defeat ×8, evolve ×1, form ×2, gather ×6, hit ×14, hurt ×7, learned ×2, level_up ×3, magicules ×4, swing ×16, ui_accept ×16, ui_move ×12
+- Effects shown: aura ×3, boost ×4, claw ×10, hit_spark ×25, ring ×7, slash ×17, smoke ×12, sparkle ×5
 - [x] The run produced the "swing" cue
 - [x] The run produced the "hit" cue
 - [x] The run produced the "defeat" cue
@@ -588,6 +588,12 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 ![The nation window: population and homes, the food store and what it eats a day, the next newcomer](103_population.png)
 *The nation window: population and homes, the food store and what it eats a day, the next newcomer* (640x360)
 
+## 24. Citizen roles, trade and caravans (M5c)
+- [x] Citizens took jobs (6)
+
+![Citizens & trade: jobs by workplace (workers, farmers, crafters, merchants, guards), the treasury, trade goods and a caravan on the road](104_citizens_trade.png)
+*Citizens & trade: jobs by workplace (workers, farmers, crafters, merchants, guards), the treasury, trade goods and a caravan on the road* (640x360)
+
 
 ## System messages seen
 
@@ -647,7 +653,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +1500 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Rare Spirit Amulet.
+- Trial reward: Epic Field Scythe.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +21 XP (defeat).
@@ -664,12 +670,12 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Rare Scale Mail.
-- +22 Zeni (chest).
+- Chest opened: Rare Padded Vest.
+- +29 Zeni (chest).
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 
-The bot retreated 1 time(s) to let Magicules recover.
+The bot retreated 0 time(s) to let Magicules recover.
 XP assistance for skill points: 550 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 103 screenshots.**
+**Result: 0 failed checks, 104 screenshots.**

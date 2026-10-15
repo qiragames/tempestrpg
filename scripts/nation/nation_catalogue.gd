@@ -25,6 +25,8 @@ const BUILDINGS := {
     "town_hall": ["Town Hall", "hall", Vector2(56, 24), {"wood": 40, "stone": 30, "essence": 2}, 1, true, "The seat of your nation; needed to become a town."],
     "lodge": ["Lodge", "lodge", Vector2(56, 22), {"wood": 30, "stone": 16}, 2, false, "A great timber hall (homes for six)."],
     "field": ["Field", "", Vector2(32, 32), {"wood": 4}, 0, false, "Farmland: plant and harvest crops for food (F)."],
+    "workshop": ["Workshop", "shop_green", Vector2(40, 20), {"wood": 20, "stone": 10}, 1, false, "Two crafters turn wood and stone into trade goods."],
+    "market": ["Market", "shop", Vector2(40, 20), {"wood": 20, "stone": 15}, 1, false, "Two merchants sell trade goods and lead caravans."],
 }
 ## Buildings you can walk over (no collision).
 const WALKABLE := ["field"]
@@ -52,6 +54,51 @@ const CROPS := {
 const FIELD_REACH := 30.0
 const NAMES := ["Rigur", "Gobta", "Ranga", "Kaijin", "Rigurd", "Haruna", "Goblo", "Mira", "Tobi", "Noko", "Pell", "Wren", "Bram", "Sela", "Doro", "Kit", "Moss", "Fenn", "Lira", "Tamm", "Ivo", "Runa", "Ostra", "Pim"]
 const LOOKS := 6
+
+## --- M5c: jobs, goods, the treasury and caravans
+## Jobs: id -> [name, workplace kind ("" = none), places per workplace, what they do].
+const JOBS := {
+    "": ["Idle", "", 0, "Lives here and does nothing in particular."],
+    "worker": ["Worker", "", 0, "Brings 1 wood or stone to the camp stock every minute."],
+    "farmer": ["Farmer", "field", 3, "Tends up to three fields: plants carrots and harvests what is ripe."],
+    "crafter": ["Crafter", "workshop", 2, "Makes 1 trade good from 1 wood + 1 stone every minute."],
+    "merchant": ["Merchant", "market", 2, "Sells 1 trade good for 30 Zeni a minute, or leads a caravan."],
+    "guard": ["Guard", "watchtower", 3, "Shoots creatures inside your settlement."],
+}
+const WORK_SECONDS := 60.0
+const GOOD_PRICE := 30
+const FARMER_CROP := "carrot"
+const GUARD_DAMAGE := 6
+const GUARD_SECONDS := 1.2
+const GUARD_RANGE := 160.0
+## Caravans: up to CARAVAN_GOODS goods to a town; time and price grow with the distance.
+const CARAVAN_GOODS := 10
+const MAX_GOODS := 100000
+const MAX_ZENI := 10000000
+
+## Caravan destinations: the archipelago's towns (not the hidden realm).
+static func caravan_towns() -> Array:
+    return MAP.TOWNS.filter(func(entry): return entry[4] == "town" and not MAP.in_realm(MAP.to_world(entry[3])))
+
+static func caravan_distance(town_id: String, site: Vector2) -> float:
+    var town: Array = MAP.town(town_id)
+    return 0.0 if town.is_empty() else site.distance_to(MAP.to_world(town[3])) / MAP.TILE
+
+## [travel seconds there and back, Zeni per good].
+static func caravan_terms(town_id: String, site: Vector2) -> Array:
+    var tiles := caravan_distance(town_id, site)
+    return [clampf(120.0 + tiles * 0.6, 120.0, 600.0), 40 + int(tiles / 10.0)]
+
+## How many citizens a job can hold (workplaces × places; workers and idlers unlimited).
+static func job_places(nation: Dictionary, job: String) -> int:
+    if not JOBS.has(job):
+        return 0
+    if String(JOBS[job][1]).is_empty():
+        return MAX_CITIZENS
+    return count(nation, JOBS[job][1]) * int(JOBS[job][2])
+
+static func job_count(nation: Dictionary, job: String) -> int:
+    return nation.citizens.filter(func(citizen): return citizen.get("job", "") == job).size()
 const RESOURCES := ["wood", "stone", "essence"]
 const MAX_BUILDINGS := 60
 const NAME_LENGTH := 24
@@ -64,7 +111,9 @@ const DEPOSIT_CLEARANCE := 20.0
 
 static func initial_state() -> Dictionary:
     return {"name": "", "color": 0, "emblem": 0, "tier": 0, "buildings": [], "next": 1, "spent": {"wood": 0, "stone": 0, "essence": 0},
-        "citizens": [], "next_citizen": 1, "fields": {}, "food": 0, "grown": 0, "eaten": 0, "day": 0.0, "arrival": 0.0, "hunger": 0}
+        "citizens": [], "next_citizen": 1, "fields": {}, "food": 0, "grown": 0, "eaten": 0, "day": 0.0, "arrival": 0.0, "hunger": 0,
+        "work": 0.0, "produced": {"wood": 0, "stone": 0}, "goods": 0, "crafted": 0, "sold": 0, "shipped": 0,
+        "treasury": 0, "earned": 0, "withdrawn": 0, "caravan": {"to": "", "goods": 0, "left": 0.0, "merchant": ""}}
 
 ## Homes per building ID (and the camp hut's), for the camp state `camp`.
 static func homes(nation: Dictionary, camp: Dictionary) -> Dictionary:
@@ -152,7 +201,7 @@ static func _whole(value: Variant, high: float = 1000000) -> bool:
 ## Saved nation state: name, banner, tier, buildings on distinct tiles of known kinds that the
 ## tier allows, and the total spent (at least what stands plus the tiers reached).
 static func valid(nation: Variant, founded: bool, camp: Dictionary = {}) -> bool:
-    if not nation is Dictionary or nation.size() != 16 or not nation.get("name") is String or nation.name.length() > NAME_LENGTH:
+    if not nation is Dictionary or nation.size() != 26 or not nation.get("name") is String or nation.name.length() > NAME_LENGTH:
         return false
     if not _whole(nation.get("color"), COLORS.size() - 1) or not _whole(nation.get("emblem"), EMBLEMS.size() - 1) or not _whole(nation.get("tier"), TIERS.size() - 1):
         return false
@@ -209,13 +258,16 @@ static func valid_people(nation: Dictionary, founded: bool, camp: Dictionary) ->
     var used := {}
     var ids := {}
     for citizen in citizens:
-        if not citizen is Dictionary or citizen.size() != 4 or not citizen.get("id") is String or not citizen.get("name") is String or citizen.name.length() > NAME_LENGTH or not citizen.get("home") is String or not _whole(citizen.get("look"), LOOKS - 1):
+        if not citizen is Dictionary or citizen.size() != 5 or not citizen.get("job") is String or not JOBS.has(citizen.job) or not citizen.get("id") is String or not citizen.get("name") is String or citizen.name.length() > NAME_LENGTH or not citizen.get("home") is String or not _whole(citizen.get("look"), LOOKS - 1):
             return false
         if not citizen.id.begins_with("c_") or not citizen.id.trim_prefix("c_").is_valid_int() or int(citizen.id.trim_prefix("c_")) >= int(nation.next_citizen) or ids.has(citizen.id):
             return false
         ids[citizen.id] = true
         used[citizen.home] = int(used.get(citizen.home, 0)) + 1
         if not available.has(citizen.home) or used[citizen.home] > int(available[citizen.home]):
+            return false
+    for job in JOBS:
+        if job_count(nation, job) > job_places(nation, job):
             return false
     var fields: Variant = nation.get("fields")
     if not fields is Dictionary or fields.size() > MAX_BUILDINGS:
@@ -226,4 +278,33 @@ static func valid_people(nation: Dictionary, founded: bool, camp: Dictionary) ->
             return false
         if not (plot.get("age") is float or plot.get("age") is int) or plot.age < 0 or plot.age > CROPS[plot.crop][1]:
             return false
-    return true
+    return valid_trade(nation)
+
+## M5c: workers' produce, the goods books (goods = crafted - sold - shipped), the treasury books
+## (treasury = earned - withdrawn) and the caravan (led by one of the merchants).
+static func valid_trade(nation: Dictionary) -> bool:
+    var work: Variant = nation.get("work")
+    if not (work is float or work is int) or work < 0 or work > WORK_SECONDS:
+        return false
+    var produced: Variant = nation.get("produced")
+    if not produced is Dictionary or produced.size() != 2 or not _whole(produced.get("wood"), 100000000) or not _whole(produced.get("stone"), 100000000):
+        return false
+    for key in ["goods", "crafted", "sold", "shipped"]:
+        if not _whole(nation.get(key), 100000000):
+            return false
+    if int(nation.goods) != int(nation.crafted) - int(nation.sold) - int(nation.shipped) or int(nation.goods) > MAX_GOODS:
+        return false
+    for key in ["treasury", "earned", "withdrawn"]:
+        if not _whole(nation.get(key), 1000000000):
+            return false
+    if int(nation.treasury) != int(nation.earned) - int(nation.withdrawn) or int(nation.treasury) > MAX_ZENI:
+        return false
+    var caravan: Variant = nation.get("caravan")
+    if not caravan is Dictionary or caravan.size() != 4 or not caravan.get("to") is String or not caravan.get("merchant") is String or not _whole(caravan.get("goods"), CARAVAN_GOODS):
+        return false
+    if not (caravan.get("left") is float or caravan.get("left") is int) or caravan.left < 0 or caravan.left > 600.0:
+        return false
+    if caravan.to.is_empty():
+        return caravan.goods == 0 and caravan.left == 0 and caravan.merchant.is_empty()
+    var leader: Array = nation.citizens.filter(func(citizen): return citizen.id == caravan.merchant)
+    return caravan_towns().any(func(entry): return entry[0] == caravan.to) and caravan.goods > 0 and leader.size() == 1 and leader[0].job == "merchant" and int(caravan.goods) <= int(nation.shipped)
