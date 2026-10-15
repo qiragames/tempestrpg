@@ -74,6 +74,9 @@ func take_damage(amount: int, source: Node = null, over_time: bool = false) -> b
         return false
     if amount <= 0 or current <= 0 or (immunity_left > 0.0 and not over_time):
         return false
+    var dev := preload("res://scripts/dev/dev_tools.gd")
+    if dev.god and dev.applies(get_parent()):
+        return false
     last_hit_by = source
     var hit: int = maxi(1, amount - armor)
     # Item expansion: a Phoenix piece turns one lethal hit into a close call.

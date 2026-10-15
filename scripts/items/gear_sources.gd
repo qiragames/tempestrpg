@@ -52,6 +52,10 @@ static func _item(rng: RandomNumberGenerator, weights: Array, level: int, slots:
 
 ## The gear a creature of this tier (and level) drops, or {} (no drop).
 static func roll_drop(difficulty: int, rng: RandomNumberGenerator, level: int = 1) -> Dictionary:
+    var dev := preload("res://scripts/dev/dev_tools.gd")
+    if dev.loot and dev.available():
+        # The owner's mod menu (dev build): every creature drops, mostly Epic and better.
+        return _item(rng, dev.LOOT_RARITY, maxi(level, 6))
     if rng.randf() >= DROP_CHANCE[difficulty]:
         return {}
     return _item(rng, DROP_RARITY[difficulty], level)

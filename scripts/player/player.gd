@@ -14,6 +14,8 @@ const MIMIC_TINT := Color(0.62, 1.0, 1.0)
 @export var move_speed: float = 95.0
 var facing := Vector2.DOWN
 var character_id: String = "host"
+## The owner's mod menu boosts (dev build only, see scripts/dev/dev_tools.gd).
+const DEV := preload("res://scripts/dev/dev_tools.gd")
 var local_controlled: bool = true
 var network_controlled: bool = false
 var input_blocked: bool = false
@@ -121,6 +123,8 @@ func zeni() -> int:
 func gain_zeni(amount: int, reason: String) -> void:
     if amount <= 0 or not AUTHORITY.can_mutate(self):
         return
+    if DEV.zeni and DEV.applies(self):
+        amount *= DEV.ZENI_FACTOR
     progression["zeni"] = mini(TRADE.MAX_ZENI, zeni() + amount)
     if reason in ["defeat", "chest", "pile"]:
         session.notify_character(character_id, "+%d Zeni (%s)." % [amount, reason])
@@ -401,6 +405,8 @@ func _apply_stat(stat: String, amount: float) -> void:
 func gain_experience(amount: int, reason: String) -> void:
     if amount <= 0 or not AUTHORITY.can_mutate(self):
         return
+    if DEV.xp and DEV.applies(self):
+        amount *= DEV.XP_FACTOR
     var gained: int = LEVELING.grant(self, amount)
     if is_instance_valid(session.world):
         var text := "+%d XP (%s)." % [amount, reason]
@@ -496,7 +502,8 @@ func _animate_gather() -> void:
     queue_redraw()
 
 func current_speed() -> float:
-    return maxf(10.0, move_speed + gear_bonus("speed")) * FORMS.FORMS[form].speed * mount_speed() * aura_speed()
+    var boost: float = DEV.SPEED_FACTOR if DEV.speed and DEV.applies(self) else 1.0
+    return maxf(10.0, move_speed + gear_bonus("speed")) * FORMS.FORMS[form].speed * mount_speed() * aura_speed() * boost
 
 ## ---- Gear (17e) ----
 func item_by_id(id: String) -> Dictionary:
