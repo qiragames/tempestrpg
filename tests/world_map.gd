@@ -52,7 +52,7 @@ func _run() -> void:
     _check(same, "The world map is identical every time it is built (same on host and friends)")
     _check(preload("res://scripts/world/world_cache.gd").current(), "The precomputed world cache matches the current sources (rebuild: tools/build_world_cache.gd)")
     _check(MAP.bounds().encloses(Rect2(0, 0, 960, 640)) and MAP.to_world(Vector2(MAP.CLEARING.position)) == Vector2.ZERO, "The First Clearing keeps its exact coordinates inside the archipelago")
-    _check(MAP.bounds().size == Vector2(19200, 12288), "The world is 19200 x 12288 pixels (about 9x the old archipelago)")
+    _check(MAP.bounds().size == Vector2(35200, 12288), "The world is 35200 x 12288 pixels: the archipelago (19200 wide) plus the Ki Realm continent")
     var clearing_ok := true
     for y in range(MAP.CLEARING.position.y, MAP.CLEARING.end.y):
         for x in range(MAP.CLEARING.position.x, MAP.CLEARING.end.x):
@@ -92,7 +92,7 @@ func _run() -> void:
         every_town = every_town and sailing[MAP.tile_index(at.x, at.y)] == 1
         if sailing[MAP.tile_index(at.x, at.y)] == 0:
             push_error("Not reachable by ferry: " + town[0])
-    _check(every_town and MAP.TOWNS.size() == 27 and MAP.TOWNS.filter(func(town): return town[4] == "town").size() == 9, "With the ferries (and the hermit) every one of the 9 towns and 18 villages can be reached")
+    _check(every_town and MAP.TOWNS.size() == 32 and MAP.TOWNS.filter(func(town): return town[4] == "town").size() == 9, "With the ferries (and the hermit) every one of the 9 towns and 23 villages can be reached")
     var bridge_ok := true
     for rect in MAP.BRIDGES:
         for y in range(rect.position.y, rect.end.y):
@@ -114,7 +114,7 @@ func _run() -> void:
         covered = covered and inside == MAP.solid(sample.x, sample.y)
     _check(covered and rects.size() < 8000, "Water, lava and cliff collisions are merged rectangles exactly over the solid tiles (%d)" % rects.size())
     # --- Saves accept the whole world; older positions stay valid
-    _check(STORE._position([-8000.0, -5000.0]) and STORE._position([100.0, 100.0]) and not STORE._position([-9500.0, 0.0]) and not STORE._position([0.0, 7000.0]), "Saved positions: anywhere in the world, nothing outside it")
+    _check(STORE._position([-8000.0, -5000.0]) and STORE._position([100.0, 100.0]) and not STORE._position([-26000.0, 0.0]) and not STORE._position([0.0, 7000.0]), "Saved positions: anywhere in the world, nothing outside it")
     # --- Scene: terrain, props, camera, HUD region, world map window
     var started := Time.get_ticks_msec()
     var world: Node2D = load("res://scenes/world/forest.tscn").instantiate()
@@ -145,9 +145,9 @@ func _run() -> void:
     _check(hud.get_node("Title").text == "HARROWMERE", "The HUD names the region you are in")
     hud.world_map.open()
     await _frames(2)
-    _check(hud.world_map.visible and paused and hud.menu_open() and hud.world_map.world_texture().get_size() == Vector2(MAP.COLS, MAP.ROWS), "M opens the world map (one pixel per tile) and pauses solo play")
-    var realm_at := Vector2i(preload("res://scripts/realm/realm_catalogue.gd").ARRIVAL_TILE) - MAP.MIN
-    _check(hud.world_map.world_texture().get_image().get_pixelv(realm_at) == hud.world_map.COLORS.ocean and hud.world_map.image().get_pixelv(realm_at) != hud.world_map.COLORS.ocean and hud.world_map._title.text.ends_with("ARCHIPELAGO"), "The normal map hides the Ki Realm under open sea")
+    _check(hud.world_map.visible and paused and hud.menu_open() and hud.world_map.world_texture().get_size() == Vector2(MAP.WORLD_VIEW.size), "M opens the world map (one pixel per tile of the archipelago) and pauses solo play")
+    var realm_at := Vector2i(preload("res://scripts/realm/realm_catalogue.gd").ARRIVAL_TILE)
+    _check(not MAP.WORLD_VIEW.has_point(realm_at) and hud.world_map.image().get_pixelv(realm_at - MAP.MIN) != hud.world_map.COLORS.ocean and hud.world_map._title.text.ends_with("ARCHIPELAGO"), "The normal map does not show the Ki Realm (it lies beyond the archipelago's sea)")
     _check(hud.world_map.image().get_pixelv(Vector2i(5, 5)) == hud.world_map.COLORS.ocean, "The map shows the sea and land in their colours")
     # Detail and zoom (user feedback): props marked on the picture, the mouse wheel zooms in.
     var detail: Image = hud.world_map.detail_image()

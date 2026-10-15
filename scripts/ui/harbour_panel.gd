@@ -44,7 +44,7 @@ func _init(owner_hud: CanvasLayer) -> void:
     _buttons["close"] = close
     _canvas = Control.new()
     _canvas.position = FRAME.position + MAP_AT
-    _canvas.size = Vector2(MAP.COLS, MAP.ROWS) * SCALE
+    _canvas.size = Vector2(MAP.WORLD_VIEW.size) * SCALE
     _canvas.mouse_filter = Control.MOUSE_FILTER_PASS
     _canvas.draw.connect(_draw_map)
     add_child(_canvas)
@@ -75,7 +75,7 @@ func _init(owner_hud: CanvasLayer) -> void:
     hide()
 
 func _to_map(tile: Vector2) -> Vector2:
-    return (tile - Vector2(MAP.MIN)) * SCALE
+    return (tile - Vector2(MAP.WORLD_VIEW.position)) * SCALE
 
 func harbours() -> Node:
     return hud.get_parent().harbours

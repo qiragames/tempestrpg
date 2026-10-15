@@ -187,6 +187,18 @@ func _run() -> void:
     legacy.players.host.progression.skill_points = int(legacy.players.host.progression.skill_points) - REALM.WISH_POINTS
     var migrated: Variant = STORE.migrate(legacy)
     _check(migrated is Dictionary and migrated.version == STORE.VERSION and migrated.players.host.progression.auras == [] and migrated.realm == KI_REALM.initial_state() and STORE.validate(migrated), "v25 worlds: no transformations yet, the orbs at their first spots")
+    # --- The bigger realm (v31): old worlds' realm creatures and characters move over.
+    var old_world: Dictionary = document.duplicate(true)
+    old_world.version = 30
+    old_world.enemies = old_world.enemies.filter(func(enemy): return enemy.id != "ki_bear_1")
+    for enemy in old_world.enemies:
+        if enemy.id == "raptor_1":
+            enemy.position = [-2560.0 + (-330) * 16.0, -1536.0 + (-160) * 16.0]
+            enemy.home = enemy.position.duplicate()
+    old_world.players.host.position = [-2560.0 + (-262) * 16.0, -1536.0 + (-165) * 16.0]
+    var moved: Variant = STORE.migrate(old_world)
+    var raptor: Dictionary = moved.enemies.filter(func(enemy): return enemy.id == "raptor_1")[0] if moved is Dictionary else {}
+    _check(moved is Dictionary and moved.version == STORE.VERSION and MAP.in_realm(Vector2(raptor.home[0], raptor.home[1])) and Vector2(raptor.home[0], raptor.home[1]).distance_to(MAP.to_world(Vector2(-1150, -30))) < 20.0 and moved.enemies.any(func(enemy): return enemy.id == "ki_bear_1") and Vector2(moved.players.host.position[0], moved.players.host.position[1]).distance_to(MAP.to_world(REALM.ARRIVAL_TILE)) < 1.0 and STORE.validate(moved), "v30 worlds: realm creatures move to the bigger realm, new ones arrive, characters there move to Dome City")
     session.stop_session(false)
     world.queue_free()
     await _frames()

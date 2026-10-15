@@ -27,6 +27,10 @@ const LEVELS := {
     # M4.7 the Ki Realm.
     "raptor_1": 17, "raptor_2": 17, "tyrant_rex_1": 19, "gi_fighter_1": 17, "monkey_brawler_1": 18,
     "android_scout_1": 18, "android_tank_1": 20, "bio_android_1": 21, "demon_king_1": 22,
+    # The bigger realm (user request).
+    "raptor_3": 18, "raptor_4": 18, "tyrant_rex_2": 20, "gi_fighter_2": 18, "monkey_brawler_2": 19,
+    "android_scout_2": 19, "android_tank_2": 21, "ki_bear_1": 19, "ki_bear_2": 20, "ki_wisp_1": 19,
+    "ki_viper_1": 18, "ki_salamander_1": 20, "demon_king_2": 22,
 }
 
 static func level_of(id: String, difficulty: int) -> int:
@@ -67,10 +71,15 @@ const CREATURES := [
     ["salamander_1", "salamander", Vector2(580, 280), 1], ["salamander_2", "salamander", Vector2(660, 404), 2],
     # M4.7 the Ki Realm: dinosaurs in Raptor Gulch, fighters in Wasteland Canyon, androids at the
     # Works, the Demon King at the canyon's far end.
-    ["raptor_1", "raptor", Vector2(-330, -160), 1], ["raptor_2", "raptor", Vector2(-312, -142), 1], ["tyrant_rex_1", "tyrant_rex", Vector2(-326, -154), 2],
-    ["gi_fighter_1", "gi_fighter", Vector2(-222, -156), 1], ["monkey_brawler_1", "monkey_brawler", Vector2(-214, -140), 1],
-    ["android_scout_1", "android_scout", Vector2(-224, -198), 1], ["android_tank_1", "android_tank", Vector2(-218, -200), 2], ["bio_android_1", "bio_android", Vector2(-230, -210), 2],
-    ["demon_king_1", "demon_king", Vector2(-204, -160), 2],
+    ["raptor_1", "raptor", Vector2(-1150, -30), 1], ["raptor_2", "raptor", Vector2(-1090, -80), 1], ["tyrant_rex_1", "tyrant_rex", Vector2(-1200, 20), 2],
+    ["raptor_3", "raptor", Vector2(-1060, -40), 1], ["raptor_4", "raptor", Vector2(-1120, -110), 1], ["tyrant_rex_2", "tyrant_rex", Vector2(-1170, 10), 2],
+    ["gi_fighter_1", "gi_fighter", Vector2(-700, 180), 1], ["monkey_brawler_1", "monkey_brawler", Vector2(-650, 160), 1],
+    ["gi_fighter_2", "gi_fighter", Vector2(-760, 150), 1], ["monkey_brawler_2", "monkey_brawler", Vector2(-640, 210), 1],
+    ["android_scout_1", "android_scout", Vector2(-640, -70), 1], ["android_tank_1", "android_tank", Vector2(-590, -30), 2], ["bio_android_1", "bio_android", Vector2(-630, -10), 2],
+    ["android_scout_2", "android_scout", Vector2(-680, -20), 1], ["android_tank_2", "android_tank", Vector2(-700, -60), 2],
+    ["demon_king_1", "demon_king", Vector2(-790, 235), 2], ["demon_king_2", "demon_king", Vector2(-1250, 300), 2],
+    ["ki_bear_1", "frost_bear", Vector2(-1080, -170), 1], ["ki_bear_2", "frost_bear", Vector2(-920, -200), 2], ["ki_wisp_1", "snow_wisp", Vector2(-980, -150), 1],
+    ["ki_viper_1", "dune_viper", Vector2(-1160, 280), 1], ["ki_salamander_1", "salamander", Vector2(-600, 230), 1],
 ]
 ## Hidden leveling spots (24a, user decision: two per creature region, unmarked until a character
 ## discovers them): [id, kind, centre tile, difficulty, level, creatures]. Their creatures respawn
@@ -96,8 +105,10 @@ const SPOTS := [
     ["spot_sakura_b", "paper_lantern", Vector2(650, -20), 1, 16, 2],
     ["spot_ember_a", "ember_flame", Vector2(500, 360), 1, 18, 3],
     ["spot_ember_b", "salamander", Vector2(600, 300), 2, 19, 2],
-    ["spot_ki_a", "raptor", Vector2(-318, -164), 1, 18, 3],
-    ["spot_ki_b", "android_scout", Vector2(-238, -192), 1, 20, 2],
+    ["spot_ki_a", "raptor", Vector2(-1120, -50), 1, 18, 3],
+    ["spot_ki_b", "android_scout", Vector2(-610, -60), 1, 20, 2],
+    ["spot_ki_c", "frost_bear", Vector2(-960, -185), 1, 21, 2],
+    ["spot_ki_d", "gi_fighter", Vector2(-730, 200), 1, 22, 3],
 ]
 const SPOT_NAMES := {
     "spot_meadow_a": "Gnasher Hollow", "spot_meadow_b": "Eastern Thicket", "spot_thornwood_a": "Fang Grove",
@@ -106,7 +117,7 @@ const SPOT_NAMES := {
     "spot_frost_a": "Bear Hollow", "spot_frost_b": "Whisper Drifts", "spot_desert_a": "Viper Dunes", "spot_desert_b": "Scuttle Flats",
     "spot_amber_a": "Owlwood", "spot_amber_b": "Molehill Fields", "spot_mire_a": "Spore Bog", "spot_mire_b": "Kappa Pools",
     "spot_sakura_a": "Bamboo Maze", "spot_sakura_b": "Lantern Glade", "spot_ember_a": "Cinder Flats", "spot_ember_b": "Salamander Den",
-    "spot_ki_a": "Raptor Nest", "spot_ki_b": "Scrap Yard",
+    "spot_ki_a": "Raptor Nest", "spot_ki_b": "Scrap Yard", "spot_ki_c": "Glacier Den", "spot_ki_d": "Fighters' Pit",
 }
 ## Discovered within this many pixels of a spot's centre.
 const DISCOVER_RADIUS := 96.0

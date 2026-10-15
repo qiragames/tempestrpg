@@ -57,12 +57,14 @@ func _run() -> void:
         if not entry[1] in KINDS:
             continue
         var region: int = MAP.region_at(REGION.at(entry[2]))
+        if region == MAP.Region.KI_REALM:
+            continue
         var level: int = REGION.level_of(entry[0], entry[3])
         if region in MAP.BY_FERRY:
             ferry_min = mini(ferry_min, level)
         else:
             home_max = maxi(home_max, level)
-    _check(home_max <= 13 and ferry_min >= 12 and REGION.SPOTS.size() == 22, "Home-continent creatures reach level 13; ferry lands start at 12 (up to 20); two leveling spots per region")
+    _check(home_max <= 13 and ferry_min >= 12 and REGION.SPOTS.size() == 24, "Home-continent creatures reach level 13; ferry lands start at 12 (up to 20); two leveling spots per region")
     # --- In a world: spawned, animated, analyzable
     var world: Node2D = load("res://scenes/world/forest.tscn").instantiate()
     root.add_child(world)

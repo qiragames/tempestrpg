@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 30
+const VERSION := 31
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -740,6 +740,37 @@ static func migrate(data: Variant) -> Variant:
         data = data.duplicate(true)
         data.version = 30
         data["siege"] = data.get("siege", SIEGE.initial_state())
+    # v31 (user request: a much bigger Ki Realm): realm creatures move to their new homes, the
+    # new ones arrive, and characters standing in the old small realm move to Dome City.
+    if data.get("version") == 30:
+        if not data.get("enemies") is Array or not data.get("players") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = 31
+        var map := preload("res://scripts/world/world_map.gd")
+        var realm_catalogue := preload("res://scripts/realm/realm_catalogue.gd")
+        var old_realm := Rect2i(-398, -254, 246, 166)
+        for entry in REGION.all_creatures():
+            var home: Vector2 = REGION.at(entry[2])
+            if not map.REALM_RECT.has_point(map.to_tile(home)):
+                continue
+            var found := false
+            for enemy in data.enemies:
+                if enemy is Dictionary and enemy.get("id") == entry[0]:
+                    enemy.position = [home.x, home.y]
+                    enemy.home = [home.x, home.y]
+                    found = true
+            if not found:
+                data.enemies.append(REGION.fresh_enemy(entry).merged({"credit": {}, "group_scaled": false, "status": ""}))
+            for pending in data.get("respawns", []):
+                if pending is Dictionary and pending.get("id") == entry[0]:
+                    pending.home = [home.x, home.y]
+        var arrival: Vector2 = map.to_world(realm_catalogue.ARRIVAL_TILE)
+        for state in data.players.values():
+            if state is Dictionary and state.get("position") is Array and state.position.size() == 2:
+                var tile := map.to_tile(Vector2(float(state.position[0]), float(state.position[1])))
+                if old_realm.has_point(tile):
+                    state.position = [arrival.x, arrival.y]
     return data
 
 static func _unique(values: Array) -> int:

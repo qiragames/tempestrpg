@@ -66,7 +66,7 @@ func _run() -> void:
         "ember": MAP.Region.EMBERREACH, "salamander": MAP.Region.EMBERREACH, "volcano": MAP.Region.EMBERREACH,
         # M4.7 the Ki Realm.
         "raptor": MAP.Region.KI_REALM, "tyrant": MAP.Region.KI_REALM, "gi": MAP.Region.KI_REALM, "monkey": MAP.Region.KI_REALM,
-        "android": MAP.Region.KI_REALM, "bio": MAP.Region.KI_REALM, "demon": MAP.Region.KI_REALM}
+        "android": MAP.Region.KI_REALM, "bio": MAP.Region.KI_REALM, "demon": MAP.Region.KI_REALM, "ki": MAP.Region.KI_REALM}
     var placed_ok := true
     var spots: Array = []
     for entry in REGION.CREATURES:

@@ -7,8 +7,8 @@ const MAP := preload("res://scripts/world/world_map.gd")
 ## --- Getting there
 ## The secret hermit hides in Sakura Vale (unmarked); the guide in Dome City sends you back.
 const HERMIT_TILE := Vector2(640, -88)
-const ARRIVAL_TILE := Vector2(-262, -165)
-const GUIDE_TILE := Vector2(-258, -167)
+const ARRIVAL_TILE := Vector2(-894, 66)
+const GUIDE_TILE := Vector2(-890, 64)
 const REQUIRED_LEVEL := 15
 ## The hermit's question and the answers he offers (only one is right).
 const HERMIT_QUESTION := "The petals fall like stars tonight... Tell me, traveller: what do you seek?"
@@ -23,11 +23,11 @@ const NPC_REACH := 34.0
 
 ## --- Mentors: [id, name, sprite, tile, kind ("skill" / "aura"), what, level, price, words]
 const MENTORS := [
-    ["turtle_sage", "Turtle Sage", "turtle_sage", Vector2(-371, -142), "skill", "turtle_wave", 16, 2000, "Gather your ki in your palms... and release it all at once!"],
-    ["spire_sage", "Spire Sage", "spire_sage", Vector2(-292, -206), "skill", "ki_blast", 15, 800, "You climbed my spire. Now learn to throw your ki like a stone."],
-    ["guardian", "The Guardian", "guardian", Vector2(-286, -214), "skill", "spirit_orb", 18, 4000, "Borrow a little energy from every living thing, and shape it into one orb."],
-    ["canyon_hermit", "Canyon Hermit", "canyon_hermit", Vector2(-208, -158), "skill", "ki_disc", 17, 1500, "Flatten your ki into a disc. It cuts through anything."],
-    ["mountain_master", "Mountain Master", "mountain_master", Vector2(-204, -168), "aura", "kaio_surge", 17, 3000, "Double your power for a moment — just do not overdo it."],
+    ["turtle_sage", "Turtle Sage", "turtle_sage", Vector2(-1350, 252), "skill", "turtle_wave", 16, 2000, "Gather your ki in your palms... and release it all at once!"],
+    ["spire_sage", "Spire Sage", "spire_sage", Vector2(-760, -104), "skill", "ki_blast", 15, 800, "You climbed my spire. Now learn to throw your ki like a stone."],
+    ["guardian", "The Guardian", "guardian", Vector2(-764, -152), "skill", "spirit_orb", 18, 4000, "Borrow a little energy from every living thing, and shape it into one orb."],
+    ["canyon_hermit", "Canyon Hermit", "canyon_hermit", Vector2(-740, 210), "skill", "ki_disc", 17, 1500, "Flatten your ki into a disc. It cuts through anything."],
+    ["mountain_master", "Mountain Master", "mountain_master", Vector2(-1012, -176), "aura", "kaio_surge", 17, 3000, "Double your power for a moment — just do not overdo it."],
 ]
 
 ## --- Transformations (buff states): [name, damage factor, speed factor, Magicules per second,
@@ -43,13 +43,13 @@ const AURA_ORDER := ["kaio_surge", "golden_aura", "golden_aura_2"]
 ## --- The seven wish orbs: hidden spots (seven are used each time they scatter), the altar on
 ## the Guardian's Lookout, the wishes, and how long they rest after a wish.
 const ORB_SPOTS := [
-    Vector2(-336, -190), Vector2(-318, -140), Vector2(-246, -214), Vector2(-206, -186), Vector2(-200, -176),
-    Vector2(-250, -132), Vector2(-300, -100), Vector2(-374, -139), Vector2(-268, -128), Vector2(-334, -164),
-    Vector2(-232, -170), Vector2(-260, -200),
+    Vector2(-1120, -60), Vector2(-1100, 40), Vector2(-960, -200), Vector2(-860, -190), Vector2(-640, -90),
+    Vector2(-560, 40), Vector2(-690, 215), Vector2(-575, 232), Vector2(-870, 366), Vector2(-1356, 254),
+    Vector2(-1180, 290), Vector2(-960, 180),
 ]
 const ORB_COUNT := 7
 const ORB_REACH := 26.0
-const ALTAR_TILE := Vector2(-283, -212)
+const ALTAR_TILE := Vector2(-756, -150)
 const WISHES := ["item", "zeni", "points", "aura"]
 const WISH_ZENI := 20000
 const WISH_POINTS := 3
@@ -70,7 +70,7 @@ const ENTRY_FEE := 500
 const TOURNAMENT_LEVEL := 16
 const PRIZE := 5000
 const RING_RADIUS := 7.0
-const ANNOUNCER_TILE := Vector2(-292, -99)
+const ANNOUNCER_TILE := Vector2(-872, 365)
 
 ## --- Foes that live there (they cannot be analyzed): kind → name.
 const FOES := {

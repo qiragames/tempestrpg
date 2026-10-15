@@ -13,8 +13,8 @@ extends RefCounted
 ## seconds, so it ships precomputed in WorldCache (rebuilt with tools/build_world_cache.gd).
 const TILE := 16
 ## First tile of the grid (in the tile frame used since M4.5a) and the grid size.
-const MIN := Vector2i(-400, -256)
-const COLS := 1200
+const MIN := Vector2i(-1400, -256)
+const COLS := 2200
 const ROWS := 768
 ## World position of tile (0, 0) (unchanged since M4.5a).
 const ORIGIN := Vector2(-2560, -1536)
@@ -43,7 +43,10 @@ const REGION_NAMES := {
 }
 ## The Ki Realm (M4.7): a hidden island group far out at sea, reached only through the secret
 ## hermit in Sakura Vale. It never shows on the normal maps; inside it, the maps show only it.
-const REALM_RECT := Rect2i(-398, -254, 246, 166)
+## (User request: almost as big as the archipelago.) The realm is a continent west of the
+## archipelago's sea, beyond WORLD_VIEW (what the normal maps show).
+const REALM_RECT := Rect2i(-1400, -256, 920, 768)
+const WORLD_VIEW := Rect2i(-400, -256, 1200, 768)
 
 static func in_realm(world: Vector2) -> bool:
     return REALM_RECT.has_point(to_tile(world))
@@ -101,18 +104,25 @@ const LAND := [
     [Vector2(720, 470), Vector2(12, 9), Region.EMBERREACH],
     [Vector2(30, 470), Vector2(18, 10), Region.AMBERVALE],
     # The Ki Realm (M4.7): the main island, Hermit Atoll and the World Martial Grounds.
-    [Vector2(-272, -176), Vector2(80, 52), Region.KI_REALM],
-    [Vector2(-374, -141), Vector2(9, 6), Region.KI_REALM],
-    [Vector2(-300, -103), Vector2(17, 9), Region.KI_REALM],
+    [Vector2(-900, 80), Vector2(330, 230), Region.KI_REALM],
+    [Vector2(-960, -150), Vector2(220, 90), Region.KI_REALM],
+    [Vector2(-620, 40), Vector2(120, 140), Region.KI_REALM],
+    [Vector2(-1150, 250), Vector2(160, 110), Region.KI_REALM],
+    # Hermit Atoll, the World Martial Grounds and the Emerald Isles (bridges below).
+    [Vector2(-1355, 250), Vector2(14, 10), Region.KI_REALM],
+    [Vector2(-880, 362), Vector2(36, 20), Region.KI_REALM],
+    [Vector2(-580, 225), Vector2(38, 24), Region.KI_REALM],
 ]
 ## Sub-regions on land: [centre, radii, region, ground].
 const AREAS := [
     [Vector2(104, 84), Vector2(42, 38), Region.THORNWOOD, Ground.FOREST],
     [Vector2(256, 166), Vector2(30, 26), Region.CINDER_CRATER, Ground.ASH],
     # Ki Realm: Raptor Gulch (forest), Wasteland Canyon (sand), Android Works (ash).
-    [Vector2(-322, -152), Vector2(26, 20), Region.KI_REALM, Ground.FOREST],
-    [Vector2(-212, -150), Vector2(30, 24), Region.KI_REALM, Ground.SAND],
-    [Vector2(-218, -204), Vector2(22, 16), Region.KI_REALM, Ground.ASH],
+    [Vector2(-1130, -20), Vector2(130, 100), Region.KI_REALM, Ground.FOREST],
+    [Vector2(-990, -175), Vector2(150, 62), Region.KI_REALM, Ground.SNOW],
+    [Vector2(-620, -40), Vector2(90, 70), Region.KI_REALM, Ground.ASH],
+    [Vector2(-720, 165), Vector2(140, 85), Region.KI_REALM, Ground.SAND],
+    [Vector2(-1190, 290), Vector2(100, 55), Region.KI_REALM, Ground.SAND],
 ]
 const LAKE := [Vector2(246, 72), Vector2(24, 15)]
 const LAKE_ISLET := [Vector2(246, 70), Vector2(6, 4)]
@@ -173,12 +183,15 @@ const PATHS := [
     [Vector2(545, 40), Vector2(575, 4), Vector2(600, -40)],
     # Ki Realm roads: Dome City to the Spire's top, the canyon, the gulch, the works, the atoll
     # and the martial grounds.
-    [Vector2(-268, -170), Vector2(-280, -192), Vector2(-286, -212)],
-    [Vector2(-268, -170), Vector2(-240, -160), Vector2(-212, -150)],
-    [Vector2(-268, -170), Vector2(-300, -160), Vector2(-322, -150)],
-    [Vector2(-240, -160), Vector2(-226, -190), Vector2(-218, -204)],
-    [Vector2(-300, -160), Vector2(-340, -141), Vector2(-372, -141)],
-    [Vector2(-268, -170), Vector2(-290, -140), Vector2(-299.5, -103)],
+    [Vector2(-900, 60), Vector2(-980, 62), Vector2(-1060, 60)],
+    [Vector2(-900, 60), Vector2(-850, -20), Vector2(-790, -80), Vector2(-760, -110), Vector2(-760, -150)],
+    [Vector2(-850, -20), Vector2(-930, -110), Vector2(-1000, -180)],
+    [Vector2(-1000, -180), Vector2(-1030, -196), Vector2(-1050, -205)],
+    [Vector2(-850, -20), Vector2(-720, -50), Vector2(-600, -60)],
+    [Vector2(-900, 60), Vector2(-820, 110), Vector2(-760, 120), Vector2(-700, 160)],
+    [Vector2(-760, 120), Vector2(-660, 140), Vector2(-600, 165), Vector2(-580, 225)],
+    [Vector2(-900, 60), Vector2(-893, 180), Vector2(-880, 300), Vector2(-880, 362)],
+    [Vector2(-1060, 60), Vector2(-1120, 160), Vector2(-1200, 230), Vector2(-1290, 250), Vector2(-1355, 250)],
 ]
 const PATH_HALF_WIDTH := 1.6
 ## Bridges (tile rects, walkable over water).
@@ -186,7 +199,7 @@ const BRIDGES := [
     Rect2i(282, 90, 40, 3), Rect2i(245, 74, 3, 14),
     Rect2i(-84, 318, 36, 3),
     # Ki Realm: to Hermit Atoll and to the World Martial Grounds.
-    Rect2i(-366, -142, 42, 3), Rect2i(-301, -126, 3, 18),
+    Rect2i(-1342, 249, 50, 3), Rect2i(-881, 300, 3, 48), Rect2i(-581, 165, 3, 44),
 ]
 ## Harbours (M4.5c piers, M4.5d proper harbours in every region): [id, name, dock tile (on the
 ## shore), pier direction, has a shipwright]. Each has a pier, a ferryman selling tickets and
@@ -216,8 +229,8 @@ const HIGHLANDS := [
     [Vector2(100, 372), Vector2(40, 18), 1], [Vector2(262, 290), Vector2(40, 16), 1],
     [Vector2(592, 352), Vector2(40, 28), 1], [Vector2(594, 352), Vector2(20, 13), 2],
     # Ki Realm: Sage Spire (two levels, the Guardian's Lookout on top) and the canyon's mesas.
-    [Vector2(-286, -208), Vector2(15, 11), 1], [Vector2(-286, -212), Vector2(7, 5), 2],
-    [Vector2(-198, -142), Vector2(9, 6), 1], [Vector2(-226, -136), Vector2(6, 5), 1],
+    [Vector2(-760, -140), Vector2(40, 28), 1], [Vector2(-760, -146), Vector2(18, 12), 2],
+    [Vector2(-660, 190), Vector2(16, 10), 1], [Vector2(-780, 205), Vector2(12, 8), 1], [Vector2(-1050, -205), Vector2(46, 18), 1],
 ]
 const MAX_LEVEL := 2
 
@@ -250,9 +263,14 @@ const TOWNS := [
     ["bamboo_hollow", "Bamboo Hollow", Region.SAKURA_VALE, Vector2(480, -30), "village", "sakura"],
     ["koi_pond", "Koi Pond", Region.SAKURA_VALE, Vector2(600, 110), "village", "sakura"],
     # The Ki Realm (M4.7).
-    ["dome_city", "Dome City", Region.KI_REALM, Vector2(-268, -170), "town", "dome"],
-    ["hermit_atoll", "Hermit Atoll", Region.KI_REALM, Vector2(-374, -141), "village", "atoll"],
-    ["martial_grounds", "World Martial Grounds", Region.KI_REALM, Vector2(-300, -102), "village", "arena"],
+    ["dome_city", "Dome City", Region.KI_REALM, Vector2(-900, 60), "town", "dome"],
+    ["hermit_atoll", "Hermit Atoll", Region.KI_REALM, Vector2(-1355, 250), "village", "atoll"],
+    ["martial_grounds", "World Martial Grounds", Region.KI_REALM, Vector2(-880, 362), "village", "arena"],
+    ["pepper_village", "Pepper Village", Region.KI_REALM, Vector2(-1060, 60), "village", "verdant"],
+    ["frostbite_hamlet", "Frostbite Hamlet", Region.KI_REALM, Vector2(-1000, -180), "village", "frost"],
+    ["iron_bastion", "Iron Bastion", Region.KI_REALM, Vector2(-600, -60), "village", "dome"],
+    ["mesa_outpost", "Mesa Outpost", Region.KI_REALM, Vector2(-700, 160), "village", "desert"],
+    ["elders_village", "Elder's Village", Region.KI_REALM, Vector2(-580, 225), "village", "dome"],
 ]
 ## Plaza radius (tiles) and the radius within which the HUD names the place.
 const PLAZA := {"town": 4.5, "village": 2.5}

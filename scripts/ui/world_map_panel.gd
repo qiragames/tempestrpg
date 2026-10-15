@@ -26,8 +26,9 @@ const LABELS := {
 }
 ## Inside the Ki Realm (M4.7) only the realm is shown, with its own places named.
 const REALM_LABELS := [
-    ["Raptor Gulch", Vector2(-322, -160)], ["Wasteland Canyon", Vector2(-212, -160)], ["Android Works", Vector2(-218, -214)],
-    ["Sage Spire", Vector2(-286, -226)], ["Hermit Atoll", Vector2(-374, -152)],
+    ["Raptor Gulch", Vector2(-1140, -40)], ["Wasteland Canyon", Vector2(-720, 140)], ["Android Works", Vector2(-620, -90)],
+    ["Sage Spire", Vector2(-760, -185)], ["Glacier Ridge", Vector2(-1000, -230)], ["Turtle Coast", Vector2(-1190, 330)],
+    ["Emerald Isles", Vector2(-580, 260)],
 ]
 static var _world_texture: ImageTexture
 static var _realm_texture: ImageTexture
@@ -35,7 +36,7 @@ static var _realm_texture: ImageTexture
 var hud: CanvasLayer
 var _title: Label
 ## The shown part of the grid (tiles) and its scale and offset on the canvas.
-var _view := Rect2(Vector2(MAP.MIN), Vector2(MAP.COLS, MAP.ROWS))
+var _view := Rect2(MAP.WORLD_VIEW)
 var _scale := SCALE
 var _offset := Vector2.ZERO
 var _close: Button
@@ -143,9 +144,8 @@ static func sheet(path: String) -> Texture2D:
 ## The world's map without the hidden Ki Realm (painted over as open sea).
 static func world_texture() -> ImageTexture:
     if _world_texture == null or _detail == null:
-        var picture := detail_image().duplicate()
-        var rect := MAP.REALM_RECT
-        picture.fill_rect(Rect2i(rect.position - MAP.MIN, rect.size), COLORS.ocean)
+        var view := MAP.WORLD_VIEW
+        var picture := detail_image().get_region(Rect2i(view.position - MAP.MIN, view.size))
         _world_texture = ImageTexture.create_from_image(picture)
     return _world_texture
 
@@ -177,7 +177,7 @@ func _init(owner_hud: CanvasLayer) -> void:
     _close.pressed.connect(close)
     _canvas = Control.new()
     _canvas.position = IMAGE_AT
-    _canvas.size = Vector2(MAP.COLS, MAP.ROWS) * SCALE
+    _canvas.size = Vector2(MAP.WORLD_VIEW.size) * SCALE
     _canvas.mouse_filter = Control.MOUSE_FILTER_STOP
     _canvas.clip_contents = true
     _canvas.draw.connect(_draw_map)
@@ -208,7 +208,7 @@ var _dragging := false
 
 func _choose_view() -> void:
     var realm := _in_realm()
-    _view = Rect2(MAP.REALM_RECT) if realm else Rect2(Vector2(MAP.MIN), Vector2(MAP.COLS, MAP.ROWS))
+    _view = Rect2(MAP.REALM_RECT) if realm else Rect2(MAP.WORLD_VIEW)
     _fit = minf(_canvas.size.x / _view.size.x, _canvas.size.y / _view.size.y)
     zoom = 1.0
     _centre = _view.get_center()
