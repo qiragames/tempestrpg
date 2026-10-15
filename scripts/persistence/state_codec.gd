@@ -9,6 +9,14 @@ const SPECIMEN := "res://data/specimens/forest_gnasher.tres"
 const ENEMY_SCENES := {"gnasher": "res://scenes/enemies/forest_gnasher.tscn", "thornback": "res://scenes/enemies/thornback_gnasher.tscn",
     "frost_bear": "res://scenes/enemies/frost_bear.tscn", "snow_wisp": "res://scenes/enemies/snow_wisp.tscn", "dune_viper": "res://scenes/enemies/dune_viper.tscn", "sand_scuttler": "res://scenes/enemies/sand_scuttler.tscn", "bog_kappa": "res://scenes/enemies/bog_kappa.tscn", "mirecap": "res://scenes/enemies/mirecap.tscn", "bamboo_sprite": "res://scenes/enemies/bamboo_sprite.tscn", "paper_lantern": "res://scenes/enemies/paper_lantern.tscn", "amber_owl": "res://scenes/enemies/amber_owl.tscn", "burrow_mole": "res://scenes/enemies/burrow_mole.tscn", "ember_flame": "res://scenes/enemies/ember_flame.tscn", "salamander": "res://scenes/enemies/salamander.tscn",
     "raptor": "res://scenes/enemies/raptor.tscn", "tyrant_rex": "res://scenes/enemies/tyrant_rex.tscn", "gi_fighter": "res://scenes/enemies/gi_fighter.tscn", "monkey_brawler": "res://scenes/enemies/monkey_brawler.tscn", "android_scout": "res://scenes/enemies/android_scout.tscn", "bio_android": "res://scenes/enemies/bio_android.tscn", "android_tank": "res://scenes/enemies/android_tank.tscn", "demon_king": "res://scenes/enemies/demon_king.tscn"}
+## M7a: raid bosses use one scene; their kind is their boss ID.
+static func enemy_scene(kind: String) -> String:
+    if preload("res://scripts/bosses/boss_catalogue.gd").is_boss(kind):
+        return "res://scenes/enemies/raid_boss.tscn"
+    return ENEMY_SCENES[kind]
+
+static func known_kind(kind: Variant) -> bool:
+    return kind is String and (ENEMY_SCENES.has(kind) or preload("res://scripts/bosses/boss_catalogue.gd").is_boss(kind))
 
 static func vector(value: Vector2) -> Array:
     return [value.x, value.y]
@@ -173,7 +181,7 @@ static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> vo
         wanted[state.id] = true
         var actor = world.entity_by_id(state.id)
         if actor == null:
-            actor = load(ENEMY_SCENES[state.kind]).instantiate()
+            actor = load(enemy_scene(state.kind)).instantiate()
             actor.entity_id = state.id
             actor.difficulty = int(state.difficulty)
             world.add_child(actor)
@@ -181,11 +189,10 @@ static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> vo
         actor.position = to_vector(state.position)
         actor.home = to_vector(state.home)
         actor.difficulty = int(state.difficulty)
-        actor.speed = actor.TIER_STATS[actor.difficulty].speed
         actor.level = actor.REGION.level_of(actor.entity_id, actor.difficulty)
-        actor.damage = actor.scaled_damage(actor.difficulty, actor.level)
         actor.get_node("Health").maximum = int(state.maximum_hp)
         actor.get_node("Health").current = int(state.hp)
+        actor.restore_stats()
         actor.credit = state.get("credit", {}).duplicate()
         actor.shown_status = String(state.get("status", ""))
         actor._group_scaled = bool(state.get("group_scaled", state.maximum_hp > actor.scaled_health(actor.difficulty, actor.level)))

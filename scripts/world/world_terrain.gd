@@ -591,6 +591,10 @@ func _near_landmark(tile: Vector2i, spots: Array) -> bool:
     for town in MAP.TOWNS:
         if Vector2(tile).distance_to(town[3]) < (16.0 if town[4] == "town" else 10.0):
             return true
+    # M7a: raid boss arenas are open ground.
+    for arena in preload("res://scripts/bosses/boss_catalogue.gd").arena_tiles():
+        if Vector2(tile).distance_to(arena[0]) < float(arena[1]) + 1.0:
+            return true
     # Region content (M4.5b): creatures, deposits and chests stand in the open.
     for spot in spots:
         if Vector2(tile).distance_to(spot) < 3.0:

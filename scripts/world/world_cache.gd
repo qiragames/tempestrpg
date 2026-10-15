@@ -11,6 +11,7 @@ const SOURCES := [
     "res://scripts/world/world_terrain.gd",
     "res://scripts/world/world_layout.gd",
     "res://scripts/world/region_content.gd",
+    "res://scripts/bosses/boss_catalogue.gd",
 ]
 
 static var _parts: Dictionary = {}

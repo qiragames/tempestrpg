@@ -9,7 +9,8 @@ func _initialize() -> void:
     for argument in OS.get_cmdline_user_args():
         var pair := argument.trim_prefix("--").split("=", true, 1)
         options[pair[0]] = pair[1] if pair.size() == 2 else ""
-    deadline = Time.get_ticks_msec() + 25000
+    # 40 s: a restarted host waits for its worker and two builders joining (each loads the world).
+    deadline = Time.get_ticks_msec() + 40000
     call_deferred("_run")
 func _report(data: Dictionary) -> void:
     var file := FileAccess.open(options.report, FileAccess.WRITE)

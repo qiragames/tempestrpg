@@ -357,6 +357,43 @@ func _activate_slot(index: int) -> void:
         else:
             player.get_node("MeleeAttack").attack_skill(player.facing, skill.id)
 
+## M7a: the raid boss bar (top centre) while this character is in a living boss's arena.
+func _refresh_boss_bar() -> void:
+    if not has_node("BossBar"):
+        var holder := Control.new()
+        holder.name = "BossBar"
+        holder.position = Vector2(170, 58)
+        holder.size = Vector2(300, 30)
+        holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        add_child(holder)
+        var title := _label("", Vector2.ZERO, Vector2(300, 14), holder, 10)
+        title.name = "Title"
+        title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        title.add_theme_color_override("font_color", Color("ffcf7a"))
+        title.add_theme_color_override("font_outline_color", Color(0.05, 0.02, 0.02))
+        title.add_theme_constant_override("outline_size", 4)
+        var bar := ProgressBar.new()
+        bar.name = "Bar"
+        bar.position = Vector2(0, 16)
+        bar.size = Vector2(300, 8)
+        bar.show_percentage = false
+        UI.style_bar(bar, Color("e05a4a"))
+        holder.add_child(bar)
+    var holder: Control = get_node("BossBar")
+    var shown: Node2D = null
+    var bosses := preload("res://scripts/bosses/boss_catalogue.gd")
+    for boss in get_tree().get_nodes_in_group("raid_bosses"):
+        if boss.state != boss.State.DEFEATED and bosses.is_boss(boss.entity_id) and player.global_position.distance_to(bosses.centre(boss.entity_id)) <= bosses.radius(boss.entity_id) + bosses.LEASH_MARGIN:
+            shown = boss
+    holder.visible = shown != null and not menu_open()
+    if shown == null:
+        return
+    var health: Node = shown.get_node("Health")
+    var phase: int = bosses.phase_for(float(health.current) / float(maxi(1, health.maximum)))
+    holder.get_node("Title").text = "Lv %d %s · phase %d" % [shown.level, bosses.display_name(shown.entity_id), phase + 1]
+    holder.get_node("Bar").max_value = health.maximum
+    holder.get_node("Bar").value = health.current
+
 ## M6b: the reel-in bar while a fish is hooked: the green zone is the chance per press.
 func _refresh_reel(delta: float) -> void:
     if not has_node("ReelBar"):
@@ -436,6 +473,7 @@ func _process(_delta: float) -> void:
             siege_label.add_theme_constant_override("outline_size", 4)
         get_node("SiegeBanner").text = siege_node.banner()
     _refresh_node_prompt()
+    _refresh_boss_bar()
     _refresh_reel(_delta)
     var place: String = WORLD_MAP.place_name(player.global_position)
     # M5a: inside your settlement, its name (or tier).

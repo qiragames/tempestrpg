@@ -1101,6 +1101,23 @@ func _run() -> void:
     await _wait(0.2)
     await _shot("alchemy", "Alchemy: brew herbs, fish and creature materials into draughts, tonics, elixirs and the Senzu Bean")
     hud_nation.professions_panel.close_panel()
+    _log("## 28. Raid bosses and level ranges (M7a)")
+    var raid := preload("res://scripts/bosses/boss_catalogue.gd")
+    var gnashmaw: Node2D = world.entity_by_id("boss_gnashmaw")
+    _check(gnashmaw != null, "Gnashmaw waits in Thornwood")
+    if gnashmaw != null:
+        showcase.global_position = raid.centre("boss_gnashmaw") + Vector2(-50, 20)
+        world.terrain.ensure_props_at(showcase.global_position)
+        await _wait(0.6)
+        gnashmaw._start_attack("slam")
+        await _wait(0.5)
+        await _shot("raid_boss", "A raid boss: Gnashmaw in her Thornwood arena (dashed ring) winds up a slam — the red zone shows where it lands; the boss bar shows her phase")
+        world.boss_fx.zones = []
+        gnashmaw._reset()
+    hud_nation.world_map.open()
+    await _wait(0.3)
+    await _shot("map_levels", "The world map shows each region's level range (user request)")
+    hud_nation.world_map.close()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

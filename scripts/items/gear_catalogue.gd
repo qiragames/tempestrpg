@@ -38,6 +38,8 @@ static func _all_bases() -> Dictionary:
     for id in CLASSIC:
         all[id] = CLASSIC[id].merged({"level": 1, "min_rarity": 0, "element": ""})
     all.merge(GENERATED.BASES)
+    # M7a: raid bosses' own uniques (only bosses drop them).
+    all.merge(preload("res://scripts/bosses/boss_items.gd").BASES)
     return all
 
 ## The icon of an item (generated bases: a cell of their group's atlas; classic: per rarity).

@@ -34,6 +34,8 @@ const LEVELS := {
 }
 
 static func level_of(id: String, difficulty: int) -> int:
+    if preload("res://scripts/bosses/boss_catalogue.gd").is_boss(id):
+        return preload("res://scripts/bosses/boss_catalogue.gd").level(id)
     if LEVELS.has(id):
         return LEVELS[id]
     for spot in SPOTS:
@@ -142,6 +144,8 @@ static func is_spot_creature(id: String) -> bool:
     return id.begins_with("spot_")
 
 static func respawn_seconds(id: String, difficulty: int) -> float:
+    if preload("res://scripts/bosses/boss_catalogue.gd").is_boss(id):
+        return preload("res://scripts/bosses/boss_catalogue.gd").RESPAWN
     var base: float = RESPAWN_SECONDS[clampi(difficulty, 0, 2)]
     return base / SPOT_SPEEDUP if is_spot_creature(id) else base
 
@@ -166,6 +170,28 @@ const CHESTS := [
     ["chest_amber", Vector2(300, 392), false],
     ["chest_volcano", Vector2(580, 374), true],
 ]
+
+## M7 (user request): the level range of a region's creatures, [lowest, highest] ([] when it
+## has none) — shown on the world map. Computed once from the creatures' homes.
+static var _ranges: Dictionary = {}
+
+static func level_range(region_name: String) -> Array:
+    if _ranges.is_empty():
+        for entry in all_creatures():
+            var name: String = MAP.region_name(at(entry[2]))
+            var creature_level: int = level_of(entry[0], entry[3])
+            var range: Array = _ranges.get(name, [creature_level, creature_level])
+            _ranges[name] = [mini(range[0], creature_level), maxi(range[1], creature_level)]
+        # The clearing's own three creatures (levels by tier).
+        var clearing: Array = _ranges.get("The First Clearing", [TIER_LEVELS[0], TIER_LEVELS[2]])
+        _ranges["The First Clearing"] = [mini(clearing[0], TIER_LEVELS[0]), maxi(clearing[1], TIER_LEVELS[2])]
+    return _ranges.get(region_name, [])
+
+static func range_text(region_name: String) -> String:
+    var range := level_range(region_name)
+    if range.is_empty():
+        return ""
+    return "Lv %d" % range[0] if range[0] == range[1] else "Lv %d–%d" % [range[0], range[1]]
 
 static func at(tile: Vector2) -> Vector2:
     return MAP.to_world(tile) + Vector2(MAP.TILE / 2.0, MAP.TILE / 2.0)

@@ -8,7 +8,7 @@ const AUTHORITY := preload("res://scripts/network/authority.gd")
 const CODEC := preload("res://scripts/persistence/state_codec.gd")
 ## Longest respawn (Elite); each creature's time comes from RegionContent.respawn_seconds (24a:
 ## by tier 45 / 90 / 180 s, three times faster at hidden leveling spots).
-const RESPAWN_SECONDS := 180.0
+const RESPAWN_SECONDS := 1800.0
 const REGION := preload("res://scripts/world/region_content.gd")
 const RETRY_SECONDS := 5.0
 const CLEAR_RADIUS := 160.0
@@ -73,7 +73,7 @@ func _respawn(entry: Dictionary) -> void:
             return
         world.remove_child(old)
         old.queue_free()
-    var creature: Node2D = load(CODEC.ENEMY_SCENES[entry.kind]).instantiate()
+    var creature: Node2D = load(CODEC.enemy_scene(entry.kind)).instantiate()
     creature.entity_id = entry.id
     creature.difficulty = entry.difficulty
     creature.position = CODEC.to_vector(entry.home)

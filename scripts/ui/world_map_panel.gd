@@ -286,6 +286,9 @@ func _draw_map() -> void:
             var at: Vector2 = tile_to_map(entry[1]) - Vector2(size.x / 2.0, 0)
             _canvas.draw_string_outline(font, at.round(), entry[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 9, 3, Color(0.03, 0.04, 0.06))
             _canvas.draw_string(font, at.round(), entry[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.TEXT)
+        var realm_levels: String = "The Ki Realm · " + preload("res://scripts/world/region_content.gd").range_text("The Ki Realm")
+        _canvas.draw_string_outline(font, Vector2(8, 14), realm_levels, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, 3, Color(0.03, 0.04, 0.06))
+        _canvas.draw_string(font, Vector2(8, 14), realm_levels, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("ffcf7a"))
     for region in ([] if realm else LABELS.keys()):
         var name: String = MAP.REGION_NAMES[region]
         var size := font.get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, 9)
@@ -293,6 +296,13 @@ func _draw_map() -> void:
         var reachable: bool = region in MAP.REACHABLE or region == MAP.Region.SEA
         _canvas.draw_string_outline(font, at.round(), name, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, 3, Color(0.03, 0.04, 0.06))
         _canvas.draw_string(font, at.round(), name, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.TEXT if reachable else Color(UI.TEXT, 0.55))
+        # M7 (user request): what level the region is for.
+        var levels: String = preload("res://scripts/world/region_content.gd").range_text(name)
+        if not levels.is_empty():
+            var level_size := font.get_string_size(levels, HORIZONTAL_ALIGNMENT_LEFT, -1, 8)
+            var below: Vector2 = tile_to_map(LABELS[region]) + Vector2(-level_size.x / 2.0, 10)
+            _canvas.draw_string_outline(font, below.round(), levels, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.03, 0.04, 0.06))
+            _canvas.draw_string(font, below.round(), levels, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("ffcf7a"))
     # Towns (larger, named) and villages; ferry piers.
     for town in MAP.TOWNS:
         if not _shown(town[3]):

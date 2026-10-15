@@ -58,7 +58,7 @@ func _run() -> void:
     legacy.players.host.progression.experience = 9500
     legacy.players.host.progression.skill_points = 20
     upgraded = STORE.migrate(legacy)
-    _check(upgraded.players.host.progression.level == 20 and upgraded.players.host.progression.experience == preload("res://scripts/progression/leveling.gd").max_experience() and upgraded.players.host.progression.skill_points == 20, "Capped legacy characters retain level and points at the new XP cap")
+    _check(upgraded.players.host.progression.level == 20 and upgraded.players.host.progression.experience == preload("res://scripts/progression/leveling.gd").xp_for_level(20) and upgraded.players.host.progression.skill_points == 20, "Capped legacy characters retain level and points at the old cap (20) on the new curve")
     world.queue_free()
     await process_frame
     print("Balance edge checks: %d passed, %d failed" % [checks - failures, failures])

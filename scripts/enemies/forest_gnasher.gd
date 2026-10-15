@@ -74,7 +74,7 @@ func _ready() -> void:
         entity_id = "enemy_" + Crypto.new().generate_random_bytes(16).hex_encode()
     set_difficulty(difficulty)
     home = global_position
-    body_sprite = SPRITES.make(kind if SPRITES.has_set(kind) else "gnasher")
+    body_sprite = SPRITES.make(sprite_kind() if SPRITES.has_set(sprite_kind()) else "gnasher")
     add_child(body_sprite)
     health.changed.connect(func(_current: int, _maximum: int): queue_redraw())
     health.defeated.connect(_defeat)
@@ -133,6 +133,15 @@ static func scaled_health(tier: int, creature_level: int) -> int:
 
 static func scaled_damage(tier: int, creature_level: int) -> int:
     return int(round(TIER_STATS[tier].damage * _growth(maxi(0, creature_level - REGION.TIER_LEVELS[tier]), LEVEL_DAMAGE)))
+
+## The sprite set this creature is drawn with (raid bosses draw another kind's sprite).
+func sprite_kind() -> String:
+    return kind
+
+## Speed and damage for the current tier and level (restores keep the saved health).
+func restore_stats() -> void:
+    speed = TIER_STATS[difficulty].speed
+    damage = scaled_damage(difficulty, level)
 
 ## Apply a tier's (and level's) stats at full health (fresh creatures; restores set health from the save).
 func set_difficulty(value: int) -> void:
@@ -352,7 +361,7 @@ func _process(_delta: float) -> void:
     if not is_instance_valid(body_sprite):
         return
     var moved: bool = _last_position != Vector2.INF and position.distance_to(_last_position) > 0.05
-    var four := not SPRITES.is_side(kind) and SPRITES.has_set(kind)
+    var four := not SPRITES.is_side(sprite_kind()) and SPRITES.has_set(sprite_kind())
     if moved:
         _facing = position - _last_position
     elif is_instance_valid(target):

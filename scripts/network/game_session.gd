@@ -1000,7 +1000,7 @@ var _peer_parts: Dictionary = {}
 var _snapshot_parts: Dictionary = {}
 var _snapshot_enemies: Dictionary = {}
 ## Always sent whole (small, or changing every tick).
-const ALWAYS_SENT := ["players", "version", "world_id", "progression", "gathering", "reeling", "elixirs"]
+const ALWAYS_SENT := ["players", "version", "world_id", "progression", "gathering", "reeling", "elixirs", "boss_fx"]
 
 func _delta_for(peer: int, data: Dictionary, hashes: Dictionary, enemy_hashes: Array) -> Dictionary:
     var sent: Dictionary = _peer_parts.get(peer, {})
@@ -1100,6 +1100,9 @@ func _broadcast() -> void:
         if drinker != null and not drinker.elixirs.is_empty():
             drinking[id] = drinker.elixirs.duplicate(true)
     data["elixirs"] = drinking
+    # M7a: raid boss telegraphs (not saved).
+    if world.get("boss_fx") != null:
+        data["boss_fx"] = world.boss_fx.state()
     # M6a: used-up trees and rocks (not saved).
     if world.get("nodes") != null:
         data["nodes"] = world.nodes.state()
@@ -1170,6 +1173,8 @@ func _snapshot(packet: Dictionary, revision: int) -> void:
             actor.queue_free()
     if world.get("nodes") != null:
         world.nodes.apply(data.get("nodes", {}))
+    if world.get("boss_fx") != null:
+        world.boss_fx.apply(data.get("boss_fx", []))
     var local = world.player_by_id(local_character_id)
     if local:
         world.bind_local_player(local)

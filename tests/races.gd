@@ -145,7 +145,7 @@ func _run() -> void:
     actor.gain_experience(999999, "test")
     actor.form_cooldown = 0.0
     _ready_to_act(actor)
-    _check(actor.progression.level == 20 and actor.try_transform("gnasher"), "At the level-20 endgame a Human can mimic too")
+    _check(actor.progression.level >= 20 and actor.try_transform("gnasher"), "At the level-20 endgame a Human can mimic too")
     actor.choose_race("Demon")
     # Clients cannot pick races.
     var session: Node = root.get_node("GameSession")

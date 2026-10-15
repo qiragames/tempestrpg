@@ -104,14 +104,14 @@ func _run() -> void:
     var xp: int = int(actor.progression.professions.woodcutting)
     _check(session.save_world() == OK, "World saved")
     var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(dir.path_join("pro.json")))
-    _check(int(raw.version) == 32 and int(raw.players.host.progression.professions.woodcutting) == xp and int(raw.players.host.inventory.capacity) == 100, "Saves keep profession XP and the 100-unit bag")
+    _check(int(raw.version) == STORE.VERSION and int(raw.players.host.progression.professions.woodcutting) == xp and int(raw.players.host.inventory.capacity) == 100, "Saves keep profession XP and the 100-unit bag")
     var old: Dictionary = raw.duplicate(true)
     old.version = 31
     for state_entry in old.players.values():
         state_entry.progression.erase("professions")
         state_entry.inventory.capacity = 20
     var migrated: Variant = STORE.migrate(old)
-    _check(migrated is Dictionary and int(migrated.version) == 32 and migrated.players.host.progression.professions.size() == 5 and int(migrated.players.host.inventory.capacity) == 100, "v31 saves get professions and bigger bags")
+    _check(migrated is Dictionary and int(migrated.version) == STORE.VERSION and migrated.players.host.progression.professions.size() == 5 and int(migrated.players.host.inventory.capacity) == 100, "v31 saves get professions and bigger bags")
     # The window (L): levels, chances per wood and ore.
     var hud: CanvasLayer = null
     for child in world.get_children():

@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 32
+const VERSION := 33
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -276,7 +276,7 @@ static func validate(data: Variant) -> bool:
             names[ally.name.to_lower()] = true
         ids[ally.id] = true
     for enemy in data.enemies:
-        if not enemy is Dictionary or not _id(enemy.get("id")) or ids.has(enemy.id) or not CODEC.ENEMY_SCENES.has(enemy.get("kind")) or not _position(enemy.get("position")) or not _position(enemy.get("home")):
+        if not enemy is Dictionary or not _id(enemy.get("id")) or ids.has(enemy.id) or not CODEC.known_kind(enemy.get("kind")) or not _position(enemy.get("position")) or not _position(enemy.get("home")):
             return false
         ids[enemy.id] = true
         if not _number(enemy.get("difficulty"), 0, 2, true) or not _number(enemy.get("maximum_hp"), 1, 1000000, true) or not _number(enemy.get("hp"), 0, enemy.maximum_hp, true) or not _number(enemy.get("immunity"), 0, 60) or not _number(enemy.get("state"), 0, 4, true) or not _number(enemy.get("state_time"), 0, 60) or not _id(enemy.get("target"), true):
@@ -302,7 +302,7 @@ static func validate(data: Variant) -> bool:
         return false
     var respawning: Dictionary = {}
     for entry in data.respawns:
-        if not entry is Dictionary or entry.size() != 5 or not _id(entry.get("id")) or respawning.has(entry.id) or not CODEC.ENEMY_SCENES.has(entry.get("kind")) or not _number(entry.get("difficulty"), 0, 2, true) or not _position(entry.get("home")) or not _number(entry.get("remaining"), 0, RESPAWNER.RESPAWN_SECONDS):
+        if not entry is Dictionary or entry.size() != 5 or not _id(entry.get("id")) or respawning.has(entry.id) or not CODEC.known_kind(entry.get("kind")) or not _number(entry.get("difficulty"), 0, 2, true) or not _position(entry.get("home")) or not _number(entry.get("remaining"), 0, RESPAWNER.RESPAWN_SECONDS):
             return false
         if data.enemies.any(func(enemy): return enemy.id == entry.id and enemy.hp > 0):
             return false
@@ -503,10 +503,10 @@ static func migrate(data: Variant) -> Variant:
             var progression: Dictionary = state.progression
             if not _number(progression.get("level"), 1, 1000, true) or not _number(progression.get("experience"), 0, 1000000000, true):
                 return null
-            var level: int = mini(int(progression.level), LEVELING.LEVEL_CAP)
+            var level: int = mini(int(progression.level), LEVELING.OLD_LEVEL_CAP)
             # Bracket keys: dot assignment would add a StringName key, which saves reject.
             # The step-17 curve this version was written for (v22 converts to the 24b curve).
-            progression["experience"] = clampi(int(progression.experience), LEVELING.old_xp_for_level(level), LEVELING.old_xp_for_level(LEVELING.LEVEL_CAP))
+            progression["experience"] = clampi(int(progression.experience), LEVELING.old_xp_for_level(level), LEVELING.old_xp_for_level(LEVELING.OLD_LEVEL_CAP))
             progression["level"] = LEVELING.old_level_for(progression.experience)
             progression["skill_points"] = progression.level - 1
     # v15 adds the skill tree (17c). Every level now grants a point (level 1 included), so each
@@ -636,11 +636,11 @@ static func migrate(data: Variant) -> Variant:
             if not state is Dictionary or not state.get("progression") is Dictionary:
                 return null
             var progression: Dictionary = state.progression
-            if not _number(progression.get("level"), 1, LEVELING.LEVEL_CAP, true) or not _number(progression.get("experience"), 0, 1000000000, true):
+            if not _number(progression.get("level"), 1, LEVELING.OLD_LEVEL_CAP, true) or not _number(progression.get("experience"), 0, 1000000000, true):
                 return null
             var level: int = int(progression.level)
-            if level >= LEVELING.LEVEL_CAP:
-                progression["experience"] = LEVELING.max_experience()
+            if level >= LEVELING.OLD_LEVEL_CAP:
+                progression["experience"] = LEVELING.xp_for_level(LEVELING.OLD_LEVEL_CAP)
                 continue
             var old_floor: int = LEVELING.old_xp_for_level(level)
             var old_span: int = LEVELING.old_xp_for_level(level + 1) - old_floor
@@ -796,7 +796,25 @@ static func migrate(data: Variant) -> Variant:
                 state.progression["fish_log"] = {}
             if state.get("inventory") is Dictionary and (state.inventory.get("capacity") is int or state.inventory.get("capacity") is float):
                 state.inventory["capacity"] = maxi(100, int(state.inventory.capacity))
+    # v33 (M7a): the raid bosses arrive at their arenas.
+    if data.get("version") == 32:
+        if not data.get("enemies") is Array:
+            return null
+        data = data.duplicate(true)
+        data.version = 33
+        var bosses := preload("res://scripts/bosses/boss_catalogue.gd")
+        for id in bosses.RAID:
+            if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == id):
+                data.enemies.append(fresh_boss(id))
     return data
+
+## Saved enemy entry for a raid boss at full health in its arena (v33 and new worlds).
+static func fresh_boss(id: String) -> Dictionary:
+    var bosses := preload("res://scripts/bosses/boss_catalogue.gd")
+    var gnasher := preload("res://scripts/enemies/forest_gnasher.gd")
+    var spot: Vector2 = bosses.centre(id)
+    var health: int = int(round(gnasher.scaled_health(2, bosses.level(id)) * bosses.HEALTH_FACTOR))
+    return {"id": id, "kind": id, "position": [spot.x, spot.y], "home": [spot.x, spot.y], "difficulty": 2, "hp": health, "maximum_hp": health, "immunity": 0.0, "state": 0, "state_time": 0.0, "target": "", "credit": {}, "group_scaled": false, "status": ""}
 
 static func _unique(values: Array) -> int:
     var seen := {}

@@ -39,7 +39,7 @@ const LEVEL_FLOOR := 8
 static func _base(rng: RandomNumberGenerator, slots: Array = [], rarity: int = 0, level: int = 1) -> String:
     var fits := func(id: String, low: int) -> bool:
         var spec: Dictionary = GEAR.BASES[id]
-        return (slots.is_empty() or spec.slot in slots) and int(spec.get("min_rarity", 0)) <= rarity and int(spec.get("level", 1)) <= level + LEVEL_REACH and int(spec.get("level", 1)) >= low
+        return not spec.get("boss", false) and (slots.is_empty() or spec.slot in slots) and int(spec.get("min_rarity", 0)) <= rarity and int(spec.get("level", 1)) <= level + LEVEL_REACH and int(spec.get("level", 1)) >= low
     var pool: Array = GEAR.BASES.keys().filter(fits.bind(level - LEVEL_FLOOR))
     if pool.is_empty():
         pool = GEAR.BASES.keys().filter(fits.bind(0))

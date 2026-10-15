@@ -50,6 +50,6 @@ Per kill: the measured fight with the band's skill, 8 s finding the next creatur
 | Lakeshore and Thornwood (L4-9) | 31612 | 1.6 h (356 kills/h, 20232 XP/h) | 1.6 h (343 kills/h, 19511 XP/h) | 1.6 h (348 kills/h, 19788 XP/h) |
 | Cinder Crater, Frostpeak and the desert (L9-14) | 97756 | 3.2 h (330 kills/h, 30978 XP/h) | 3.3 h (317 kills/h, 29763 XP/h) | 3.3 h (315 kills/h, 29579 XP/h) |
 | The ferry lands (L14-20) | 249101 | 6.7 h (318 kills/h, 36990 XP/h) | 6.9 h (311 kills/h, 36188 XP/h) | 6.8 h (315 kills/h, 36621 XP/h) |
-| **Level 1 to 20** | 380636 | **11.6 h** | **12.0 h** | **11.9 h** |
+| **Level 1 to 20** | 3228131 | **11.6 h** | **12.0 h** | **11.9 h** |
 
 Milestones (average of the races): level 2 after 5 Easy creatures; level 5 after 20 min, level 10 after 2.2 h, level 15 after 5.9 h, level 20 after 11.8 h.

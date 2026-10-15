@@ -113,11 +113,11 @@ Requested by the user after 17e; exact order and scope to be confirmed with the 
 - Next by user order: **M7** bosses and raids.
 - Exit goal: every profession has a 1–50 progression with region-gated resources worth gathering and selling.
 
-### M7 — Bosses and raids · Planned (user request 2026-10-15), requires M6
+### M7 — Bosses, raids and a bigger world · In progress (M7a done 2026-10-15), requires M6
 
-- A huge regional boss in every major region, built for groups of two to five (a max-level player can solo a starter boss); at least one, better two, in the Ki Realm.
-- Smaller bosses in caves, on plateaus and in forests.
-- A higher character level cap.
+- User decisions (Q&A 2026-10-15, plan in `docs/M4_PLAN.md` M7): level cap 50; raid bosses fought in arenas with 2–3 phases and telegraphed attacks, HP growing with the characters present; hidden elite bosses **and** enterable dungeon caves; personal loot for every helper, one or two uniques per boss, big XP and Zeni. Later the same day: a **much bigger map** with new continents and islands for the levels between the archipelago and the Ki Realm (which becomes later-game content), and level ranges on the world map.
+- **M7a — level cap 50, raid bosses, level ranges: Done (Claude, 2026-10-15).** Levels 1–20 keep their curve; each level beyond costs the level-20 step + 5% per level; creatures above level 20 give +10% XP per level. Twelve raid bosses (Old Grumblehorn 8 … Majin Overlord 50) in open arenas; slam, charge, rain and ring attacks shown as red zones on every peer; phases at 66% / 33%; reset when everyone leaves; 30-minute respawn; 22 boss uniques; the world map shows each region's level range; schema v33.
+- Next: **M7b** the bigger world (new continents and islands for about levels 20–40 with towns, harbours, creatures, leveling spots and raid bosses; gear for item levels 21–50; the Ki Realm re-levelled to about 40–50); **M7c** hidden elite bosses and dungeon caves.
 
 ### M8 — Armies and endgame · Planned, requires M5
 
@@ -205,6 +205,7 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-15: Claude Code completed M7a (level cap 50, raid bosses, map level ranges) on `claude/m7-bosses` after the user's Q&A. New `scripts/bosses/{boss_catalogue,boss_items,boss_fx}.gd`, `scripts/enemies/raid_boss.gd`, `scenes/enemies/raid_boss.tscn`, `tests/raid_bosses.gd` (27); schema v33 adds the bosses to older worlds; the world cache was rebuilt (arenas are open ground). Found while building: twelve more creatures make each world load ~0.5 s longer, which pushed the settlement test's restarted host past its 25 s limit (now 40 s). 1500+ local + 280 network checks pass; visual playtest 0 failed (116 captures). Next: M7b.
 - 2026-10-15: Claude Code completed M6c (Smithing and Alchemy), completing M6, on `claude/professions`. New `scripts/professions/crafting_catalogue.gd`, `tests/crafting.gd` (29); herbs join `ProfessionCatalogue`; `craft` intent; elixirs replicated (`elixirs`, not saved). Next: M7 bosses.
 - 2026-10-15: Claude Code completed M6b (fishing) on `claude/professions`. New `scripts/professions/fish_catalogue.gd`, `scripts/ui/reel_bar.gd`, `tests/fishing.gd` (21), `tests/snapshot_delta.gd` (12); the fish log joins schema v32 (not yet released). Found while building: the settlement network test began failing about half the time; the cause was snapshot size (every creature and every merchant's stock, ~77 KB, 20 times a second per guest) leaving no headroom. Snapshots are now deltas per guest (parts only when changed, creatures only when their entry changed, a resync when a base is missing): 5.5 KB on a quiet tick; settlement passes again consistently.
 - 2026-10-15: Claude Code completed M6a (professions core, Woodcutting and Mining) on `claude/professions` after the user's Q&A. New `scripts/professions/{profession_catalogue,resource_nodes}.gd`, `scripts/ui/professions_panel.gd`, `tests/professions.gd` (27); the owner's private mod menu (F10, draft release v0.8.0-dev) came first on `claude/items-expansion` (`tests/dev_tools.gd`, 19). Grass and forest now also have boulders (copper and tin for new miners); schema v32 (profession XP, 100-unit bags). Found while building: ore veins drew behind the rock sprite at the same foot (now half a pixel in front). 1493 local checks pass on Windows. Next: M6b fishing.
