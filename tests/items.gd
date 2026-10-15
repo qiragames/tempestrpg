@@ -183,5 +183,28 @@ func _run() -> void:
     _check(not STORE.validate(forged), "Forged stats are rejected")
     world.queue_free()
     await _frames()
+    # User request: above level 20, new gear for every type every two to three levels.
+    var by_type := {}
+    for id in GEAR.BASES:
+        var spec: Dictionary = GEAR.BASES[id]
+        if spec.has("unique") or spec.get("boss", false):
+            continue
+        var type: String = spec.get("weapon", spec.slot)
+        if not by_type.has(type):
+            by_type[type] = {}
+        by_type[type][int(spec.get("level", 1))] = true
+    var gaps: Array = []
+    for type in by_type:
+        for level in range(21, 51):
+            var near := false
+            for tier_level in by_type[type]:
+                near = near or absi(int(tier_level) - level) <= 2
+            if not near:
+                gaps.append("%s %d" % [type, level])
+    _check(by_type.size() == 10 and gaps.is_empty(), "Every weapon, armour and accessory type has gear within two levels of every level 21-50 %s" % [gaps])
+    var tier_names := {}
+    for id in preload("res://scripts/items/high_items.gd").BASES:
+        tier_names[GEAR.BASES[id].name] = true
+    _check(tier_names.size() == preload("res://scripts/items/high_items.gd").BASES.size() and GEAR.BASES.has("t24_sword_100") == preload("res://scripts/items/item_bases.gd").BASES.has("sword_100"), "Every tier piece has its own name; the older tiers keep their IDs")
     print("Item checks: %d passed, %d failed" % [checks - failures, failures])
     quit(1 if failures else 0)

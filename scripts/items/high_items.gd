@@ -1,12 +1,14 @@
 extends RefCounted
 ## Gear for levels 21-50 (M7b: the level cap rose to 50, but the item expansion stops at 20). Every
-## level 16-20 base (not uniques or set pieces) gets five stronger tiers that keep its art, type,
+## level 16-20 base (not uniques or set pieces) gets ten stronger tiers (every three levels) that keep its art, type,
 ## element and rarity floor; their stats follow the generator's level scaling (+4.5% per level)
 ## from the source's level to the tier's. Creatures, chests and forging pick them by level like
 ## any base. No preloads besides the generated bases (GearCatalogue preloads this file).
 const SOURCE := preload("res://scripts/items/item_bases.gd")
 ## [item level, name prefix]
-const TIERS := [[24, "Steppeforged"], [30, "Gloomwrought"], [36, "Jadecarved"], [42, "Starforged"], [48, "Ascendant"]]
+## User request: new gear every two to three levels above 20 (the 24/30/36/42/48 tiers keep their
+## IDs, so saved items stay valid).
+const TIERS := [[21, "Stormtouched"], [24, "Steppeforged"], [27, "Windwrought"], [30, "Gloomwrought"], [33, "Duskforged"], [36, "Jadecarved"], [39, "Cloudforged"], [42, "Starforged"], [45, "Celestial"], [48, "Ascendant"]]
 const FROM_LEVEL := 16
 
 static var BASES: Dictionary = _build()

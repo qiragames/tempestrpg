@@ -287,6 +287,8 @@ Personal trial/mastery evidence belongs to the character. A shared camp level al
 
 **Terrain relief (2026-10-15, Claude, user request: "a bit up, a bit down", not a visible wave): done** on `claude/terrain-relief`. `WorldTerrain._add_relief`: FastNoiseLite (seed 5150, 0.12 per quarter-tile pixel, two octaves) as a filtered texture and the map's ocean flags as an L8 land mask feed `relief.gdshader` on a ColorRect over the whole map, in a holder placed between the cliff and feature layers (so water, lava and path tiles and all props draw over it). Two thresholds make three levels; smoothsteps make the slopes; `level_light` 3.5% per level and `slope_light` 10% by the slope's north/south facing (`dFdy`). Presentation only; nothing saved or replicated.
 
+**Gear tiers every three levels (2026-10-15, Claude, user request):** `HighItems` makes ten tiers (21–48, every three levels) of every non-unique, non-set level 16–20 base; the tiers of M7b (24/30/36/42/48) keep their IDs and stats, so saved items stay valid. Every gear type now has pieces within two levels of every level 21–50 (test). Limits: tier pieces reuse their source's art (the name prefix tells the tier).
+
 ## Parallel work and approval
 
 The original steps were approved on 2026-10-12. The user's 2026-10-13 direction below supersedes the original assistant scope and ownership proposal: systems first (17, 17b–17g), then asset preparation/presentation (18+). Claude continues in order with 17 unless reassigned; Codex reviews released work. No unclaimed future file ownership is implied. Completed steps and their review history remain intact.
