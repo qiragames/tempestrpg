@@ -909,6 +909,11 @@ func transact(actor: Node2D, operation: String, id: String) -> bool:
             if trip.size() != 2 or not trip[1].is_valid_int() or not can_reach(actor, SITE, 55) or not send_caravan(trip[0], int(trip[1])):
                 return false
             message = "A caravan sets out for %s with %s goods." % [MAP.town(trip[0])[1], trip[1]]
+        "siege":
+            var siege: Node = get_parent().get("siege")
+            if id != "now" or siege == null or not siege.call_now(actor):
+                return false
+            return true
         "treasury":
             var amount: int = int(state.nation.treasury) if id == "all" else (int(id) if id.is_valid_int() else 0)
             if not withdraw(actor, amount):

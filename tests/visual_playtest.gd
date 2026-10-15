@@ -990,6 +990,38 @@ func _run() -> void:
     await _wait(0.4)
     await _shot("citizens_trade", "Citizens & trade: jobs by workplace (workers, farmers, crafters, merchants, guards), the treasury, trade goods and a caravan on the road")
     hud_nation.citizens_panel.close_panel()
+    _log("## 25. Rival nations and the siege (M5d)")
+    var rival_entry: Array = preload("res://scripts/nation/rival_nations.gd").RIVALS[5]
+    showcase.position = preload("res://scripts/nation/rival_nations.gd").leader_position(rival_entry) + Vector2(0, 16)
+    world.terrain.ensure_props_at(showcase.position)
+    await _wait(0.4)
+    hud_nation._ally_dialog.open_nearest()
+    await _wait(0.3)
+    _check(hud_nation.dialog_panel.is_open(), "Talking to a rival nation's leader")
+    await _shot("rival_leader", "A rival nation: the Sakura Shogunate's leader in Hanamura beside its banner (neither friend nor foe for now)")
+    hud_nation.dialog_panel.close()
+    hud_nation.world_map.open()
+    await _wait(0.3)
+    await _shot("world_map_nations", "The world map with the rival nations' banners at their capitals and your own nation at the camp")
+    hud_nation.world_map.close()
+    # The siege: call the horde, then the first wave marches on the flag.
+    showcase.position = nation_camp.SITE + Vector2(0, 30)
+    world.terrain.ensure_props_at(showcase.position)
+    await _wait(0.3)
+    var siege_node = world.siege
+    _check(siege_node.call_now(showcase), "Faced the horde")
+    siege_node._physics_process(siege_node.WARNING_SECONDS)
+    var marchers: Array = siege_node.creatures()
+    for index in range(marchers.size()):
+        marchers[index].global_position = nation_camp.SITE + Vector2(-90 + index * 40, -70 + (index % 2) * 14)
+        marchers[index].set_physics_process(false)
+    showcase.position = nation_camp.SITE + Vector2(0, -20)
+    world.terrain.ensure_props_at(showcase.position)
+    await _wait(1.0)
+    await _shot("siege", "The siege: a monster horde marches on the flag from one side (wave 1 of 3); guards shoot from the watchtower")
+    for marcher in siege_node.creatures():
+        marcher.get_node("Health").take_damage(99999, showcase)
+    siege_node._finish(true)
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

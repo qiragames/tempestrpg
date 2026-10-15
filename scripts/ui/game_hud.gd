@@ -359,6 +359,17 @@ func _process(_delta: float) -> void:
     _zeni.text = "%d Zeni%s" % [player.zeni(), extras]
     # Region name of where this character stands (M4.5a).
     # The town or village you are in, else the region (M4.5c).
+    # M5d: the siege banner.
+    var siege_node: Node = get_parent().get("siege")
+    if siege_node != null:
+        if not has_node("SiegeBanner"):
+            var siege_label := _label("", Vector2(150, 40), Vector2(340, 16), self, 11)
+            siege_label.name = "SiegeBanner"
+            siege_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+            siege_label.add_theme_color_override("font_color", Color("ff9a7a"))
+            siege_label.add_theme_color_override("font_outline_color", Color(0.05, 0.02, 0.02))
+            siege_label.add_theme_constant_override("outline_size", 4)
+        get_node("SiegeBanner").text = siege_node.banner()
     var place: String = WORLD_MAP.place_name(player.global_position)
     # M5a: inside your settlement, its name (or tier).
     var camp: Node2D = get_parent().get("camp")

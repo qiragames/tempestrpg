@@ -4,16 +4,16 @@ A Godot **4.6.3** / GDScript prototype for a top-down pixel-art Isekai RPG.
 
 ## Screenshots
 
-Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 104 captures are in `docs/playtest/` with `docs/playtest/log.md`.
+Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 107 captures are in `docs/playtest/` with `docs/playtest/log.md`.
 
 <table>
+<tr><td align="center"><img src="docs/playtest/107_siege.png" width="400" alt="The siege: a monster horde marches on your village"><br><sub>The siege: a monster horde marches on your village</sub></td><td align="center"><img src="docs/playtest/106_world_map_nations.png" width="400" alt="Rival nations on the world map"><br><sub>Rival nations on the world map</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/104_citizens_trade.png" width="400" alt="Citizens & trade: jobs, treasury, caravans"><br><sub>Citizens & trade: jobs, treasury, caravans</sub></td><td align="center"><img src="docs/playtest/102_citizens_fields.png" width="400" alt="Citizens and fields in your village"><br><sub>Citizens and fields in your village</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/99_nation_window.png" width="400" alt="The nation window (N): name, banner, tier, buildings"><br><sub>The nation window (N): name, banner, tier, buildings</sub></td><td align="center"><img src="docs/playtest/100_build_mode.png" width="400" alt="Build mode: place buildings freely in your ring"><br><sub>Build mode: place buildings freely in your ring</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/90_realm_hermit.png" width="400" alt="The secret hermit in Sakura Vale"><br><sub>The secret hermit in Sakura Vale</sub></td><td align="center"><img src="docs/playtest/91_dome_city.png" width="400" alt="Dome City in the hidden Ki Realm"><br><sub>Dome City in the hidden Ki Realm</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/94_kaio_surge.png" width="400" alt="Kaio Surge transformation (X)"><br><sub>Kaio Surge transformation (X)</sub></td><td align="center"><img src="docs/playtest/95_turtle_wave.png" width="400" alt="Turtle Wave: a long ki beam"><br><sub>Turtle Wave: a long ki beam</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/98_tournament.png" width="400" alt="The World Martial Grounds tournament"><br><sub>The World Martial Grounds tournament</sub></td><td align="center"><img src="docs/playtest/97_realm_map.png" width="400" alt="Inside the realm the map shows only the realm"><br><sub>Inside the realm the map shows only the realm</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/88_party_frames.png" width="400" alt="In a party: frames and minimap marker"><br><sub>In a party: frames and minimap marker</sub></td><td align="center"><img src="docs/playtest/89_party_window.png" width="400" alt="The party window (P)"><br><sub>The party window (P)</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/77_harbour_map.png" width="400" alt="Harbours: travel by map"><br><sub>Harbours: travel by map</sub></td><td align="center"><img src="docs/playtest/84_own_ship.png" width="400" alt="Your own ship docked at Cinderport"><br><sub>Your own ship docked at Cinderport</sub></td></tr>
 </table>
 
 ## The world
@@ -29,10 +29,11 @@ The First Clearing is the start of an archipelago of about 10 × 11 screens (M4.
 - **Food (M5b):** place **fields** (4 wood, you can walk on them) and press **F** on one to plant **wheat** (2 min, 4 food), **carrots** (4 min, 9) or **pumpkins** (8 min, 20); F again when ripe harvests into the nation's food store. Every 5 minutes each citizen eats 1 food; after two hungry days a citizen leaves (and another each hungry day after). The nation window shows population, homes, food and the next newcomer.
 - **Jobs (M5c):** open **Citizens & trade** from the nation window and give each citizen a job. **Workers** bring 1 wood or stone a minute; **farmers** tend three fields each (harvest what is ripe, plant carrots); **crafters** (2 per Workshop) make a trade good from 1 wood + 1 stone a minute; **merchants** (2 per Market) sell a good for 30 Zeni a minute into the **treasury**; **guards** (3 per Watchtower) shoot creatures inside your ring. Losing a workplace sends its citizens back to idle.
 - **Caravans and the treasury (M5c):** at the camp flag, send a caravan with up to ten goods to a town (2–10 minutes there and back, 40 Zeni and more per good the further it goes); its merchant leads it. Anyone can take Zeni from the treasury at the flag.
-- The first siege follows in M5d.
-- Saves: schema **v29**.
+- **Rival nations (M5d):** seven nations hold the archipelago's towns — the Verdant League (Brookhaven), Frost Clans (Rimeholm), Dune Sultanate (Dunemarch), Amber Crown (Amberhold), Mire Tribes (Bogsend), Sakura Shogunate (Hanamura) and Ember Dominion (Cinderport). Their banners fly in their capitals and on the world map, and you can talk to their leaders (F). For now they are neither friend nor foe; diplomacy comes later.
+- **The siege (M5d):** once your settlement is a village with three citizens, a monster horde gathers every 30 minutes (the first after 15), or when you press **Face the horde** in the nation window at the flag. After a one-minute warning, three waves march on your flag from one side (the HUD shows the wave and breaches). Guards and characters fight them (normal XP and loot; they never respawn). Eight creatures reaching the flag lose the siege — half the food and half the treasury are plundered; beating every wave pays Zeni into the treasury. A reload calls a running siege off.
+- Saves: schema **v30**.
 
-Tests: `tests/nation.gd` (34), `tests/citizens.gd` (24), `tests/jobs.gd` (26).
+Tests: `tests/nation.gd` (34), `tests/citizens.gd` (24), `tests/jobs.gd` (26), `tests/siege.gd` (20).
 
 ## The Ki Realm (M4.7)
 
@@ -204,6 +205,7 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/nation.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/citizens.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/jobs.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/siege.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/balance_edges.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
@@ -213,7 +215,7 @@ python3 tests/network_worlds.py
 "$GODOT_BIN" --headless --path . --quit-after 120
 ```
 
-The checks validate import, 48 local gameplay/persistence/UI/visual suites (1380 checks including the bot balance probe) and 266 real multi-process networking checks (1646 total through M5c on Windows; use `python3` on Linux or `python` on Windows). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
+The checks validate import, 49 local gameplay/persistence/UI/visual suites (1400 checks including the bot balance probe) and 266 real multi-process networking checks (1666 total through M5d on Windows; use `python3` on Linux or `python` on Windows). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
 
 ## Structure
 

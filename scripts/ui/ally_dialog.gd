@@ -98,6 +98,14 @@ func open_nearest() -> void:
         if not field.is_empty():
             _talk_field(camp_node, field)
             return
+    # M5d: a rival nation's leader.
+    var rivals = hud.get_parent().get("rivals")
+    if rivals != null:
+        var leader: String = rivals.nearest_leader(hud.player)
+        if not leader.is_empty():
+            var entry: Array = rivals.rival(leader)
+            hud.dialog_panel.open("%s of the %s" % [entry[7], entry[1]], "\"%s\"\n(The %s, %s, rule from %s. They are neither friend nor foe — for now.)" % [entry[8], entry[1], entry[2], preload("res://scripts/world/world_map.gd").town(entry[3])[1]], [["Farewell.", func(): pass]])
+            return
     # M4.7: the Ki Realm's people, the wish altar and the orbs.
     var realm = hud.get_parent().get("realm")
     if realm != null:

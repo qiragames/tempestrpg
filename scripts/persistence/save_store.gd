@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 29
+const VERSION := 30
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -24,6 +24,7 @@ const WORLD_TRADE := preload("res://scripts/trade/world_trade.gd")
 const HARBOURS := preload("res://scripts/travel/world_harbours.gd")
 const PARTY := preload("res://scripts/party/world_party.gd")
 const KI_REALM := preload("res://scripts/realm/ki_realm.gd")
+const SIEGE := preload("res://scripts/nation/siege.gd")
 const REALM := preload("res://scripts/realm/realm_catalogue.gd")
 const TRAVEL := preload("res://scripts/travel/travel_catalogue.gd")
 const UPGRADES := preload("res://scripts/items/upgrade_catalogue.gd")
@@ -340,6 +341,9 @@ static func validate(data: Variant) -> bool:
             return false
     # The wish orbs and the tournament (v26).
     if not KI_REALM.valid_state(data.get("realm")):
+        return false
+    # The monster horde's siege (v30).
+    if not SIEGE.valid_state(data.get("siege")):
         return false
     return true
 
@@ -731,6 +735,11 @@ static func migrate(data: Variant) -> Variant:
         for citizen in data.camp.nation.citizens:
             if citizen is Dictionary and not citizen.has("job"):
                 citizen["job"] = ""
+    # v30 (M5d): no siege yet.
+    if data.get("version") == 29:
+        data = data.duplicate(true)
+        data.version = 30
+        data["siege"] = data.get("siege", SIEGE.initial_state())
     return data
 
 static func _unique(values: Array) -> int:

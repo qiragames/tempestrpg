@@ -24,6 +24,9 @@ var harbours: Node2D
 var party: Node
 ## The Ki Realm: its people, wish orbs and tournament (M4.7).
 var realm: Node2D
+## M5d: the rival nations (presentation) and the monster horde's siege.
+var rivals: Node2D
+var siege: Node
 var respawner: Node
 ## Host-side randomness for gear drops, chests, trial rewards and the forge (17g).
 var loot_rng := RandomNumberGenerator.new()
@@ -53,6 +56,10 @@ func _ready() -> void:
     add_child(party)
     realm = load("res://scripts/realm/ki_realm.gd").new()
     add_child(realm)
+    rivals = load("res://scripts/nation/rival_nations.gd").new()
+    add_child(rivals)
+    siege = load("res://scripts/nation/siege.gd").new()
+    add_child(siege)
     trial = load("res://scripts/trials/proving_trial.gd").new()
     trial.name = "ProvingTrial"
     trial.y_sort_enabled = true

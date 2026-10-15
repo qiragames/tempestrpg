@@ -14,6 +14,7 @@ var hud: CanvasLayer
 var _title: Label
 var _tier: Label
 var _rank: Button
+var _horde: Button
 var _name: LineEdit
 var _rename: Button
 var _colors: Array = []
@@ -86,6 +87,10 @@ func _init(owner_hud: CanvasLayer) -> void:
     _tier = hud._label("", FRAME.position + Vector2(16, 84), Vector2(FRAME.size.x - 130, 46), window, 9)
     _rank = hud._button("Rank up", FRAME.position + Vector2(FRAME.size.x - 108, 90), Vector2(96, 26), window)
     _rank.pressed.connect(func(): _send("rank", "next"))
+    _horde = hud._button("Face the horde", FRAME.position + Vector2(FRAME.size.x - 108, 60), Vector2(96, 22), window)
+    _horde.add_theme_font_size_override("font_size", 8)
+    _horde.tooltip_text = "Call the monster horde now (a village with 3 citizens; at the flag)."
+    _horde.pressed.connect(func(): _send("siege", "now"))
     # Buildings.
     UI.heading(hud._label("BUILD", FRAME.position + Vector2(16, 130), Vector2(200, 16), window, 11))
     var people: Button = hud._button("Citizens & trade…", FRAME.position + Vector2(FRAME.size.x - 180, 126), Vector2(164, 20), window)
@@ -170,6 +175,8 @@ func _refresh() -> void:
         nation.citizens.size(), NATION.housing(nation, camp().state), int(nation.food), nation.citizens.size() * NATION.FOOD_PER_DAY, hungry, int(ceil(NATION.ARRIVAL_SECONDS - float(nation.arrival))),
         ("Next: %s (%s) — ready! Rank up at the camp flag." % [NATION.TIERS[next][0], NATION.cost_text(NATION.TIERS[next][2])]) if problem.is_empty() else problem]
     _rank.disabled = not problem.is_empty() or not camp().can_reach(hud.player, camp().SITE, 55)
+    var siege: Node = hud.get_parent().get("siege")
+    _horde.disabled = siege == null or siege.active() or not siege.eligible() or not camp().can_reach(hud.player, camp().SITE, 55)
     for kind in _build_buttons:
         var spec: Array = NATION.BUILDINGS[kind]
         var locked: bool = int(spec[4]) > int(nation.tier)

@@ -172,6 +172,14 @@ func _draw_map() -> void:
         if big:
             _canvas.draw_string_outline(font, spot + Vector2(4, 9), town[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 7, 3, Color(0.03, 0.04, 0.06))
             _canvas.draw_string(font, spot + Vector2(4, 9), town[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 7, UI.GOLD_LIGHT)
+    # M5d: the rival nations at their capitals.
+    if not realm:
+        for entry in preload("res://scripts/nation/rival_nations.gd").RIVALS:
+            var capital := tile_to_map(MAP.town(entry[3])[3]).round()
+            _canvas.draw_rect(Rect2(capital + Vector2(-8, -12), Vector2(1, 9)), Color("6b4a2b"))
+            _canvas.draw_rect(Rect2(capital + Vector2(-7, -12), Vector2(6, 4)), entry[4])
+            _canvas.draw_string_outline(font, capital + Vector2(-8, -14), entry[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 7, 3, Color(0.03, 0.04, 0.06))
+            _canvas.draw_string(font, capital + Vector2(-8, -14), entry[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 7, entry[4].lightened(0.35))
     # M5a: your nation's name and banner at the camp.
     var camp: Node2D = hud.get_parent().get("camp")
     if camp != null and camp.state.founded and not realm:

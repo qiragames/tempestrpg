@@ -31,7 +31,8 @@ func scheduled(id: String) -> bool:
 
 ## Called when a creature is defeated (host). Trial creatures and duplicates are ignored.
 func schedule(enemy: Node2D) -> void:
-    if not AUTHORITY.can_mutate(self) or not enemy.drops_rewards or scheduled(enemy.entity_id) or pending.size() >= MAX_PENDING:
+    # M5d: the siege's horde never comes back.
+    if not AUTHORITY.can_mutate(self) or not enemy.drops_rewards or String(enemy.entity_id).begins_with("siege_") or scheduled(enemy.entity_id) or pending.size() >= MAX_PENDING:
         return
     var seconds: float = REGION.respawn_seconds(enemy.entity_id, int(enemy.difficulty))
     # M4.6: a party fighting at a leveling spot makes it respawn faster still.
