@@ -68,6 +68,11 @@ const WORLD_SCENE := "res://scenes/world/forest.tscn"
 
 func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
+    # Saves live in the game's own folder (%APPDATA%\TempestRPG); earlier versions' saves are
+    # copied over once on the first start.
+    var copied: int = preload("res://scripts/persistence/save_folder.gd").adopt_previous()
+    if copied > 0:
+        print("Copied %d save files from the previous save folder." % copied)
     multiplayer.peer_connected.connect(_peer_connected)
     multiplayer.peer_disconnected.connect(_peer_disconnected)
     multiplayer.connection_failed.connect(func(): _fail("Connection failed."))

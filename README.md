@@ -38,6 +38,10 @@ Tests: `tests/items.gd` (28).
 
 User request: the HUD was too big and the controls line should close completely. **Esc → Options → HUD size** (65 / 75 / 85 / 100 %, default 75 %) shrinks the always-on parts — status card, minimap, hotbar, messages, analysis box, titles, party frames — toward their own screen corner; windows keep their size. **F1** (or the Options checkbox) hides or shows the controls line, remembered on this computer. The game now draws at the window's resolution (stretch mode `canvas_items`, still the 640×360 layout with integer scaling), so smaller text stays sharp; playtest captures are saved at 960×540.
 
+## Where saves are kept
+
+Each player's worlds, character profiles, the server key and settings live in the game's own folder, **`%APPDATA%\TempestRPG`** (never next to the game, so a shared download carries nobody's saves). Versions before this kept them in Godot's shared folder (`%APPDATA%\Godotpp_userdata\TempestRPG`); the first start copies them over once (never overwriting newer files) and leaves the originals as a backup. Tests: `tests/save_folder.gd` (5).
+
 ## Playing with friends: the exe and the server
 
 - **The game as an exe:** `godot --headless --path . --export-release "Windows Desktop" build/windows/TempestRPG.exe` builds `TempestRPG.exe` (everything inside, no installation) plus `TempestRPG.console.exe`; `tools/release/` holds `Start server.bat` and `HOW TO PLAY.txt` to put next to them (`build/` is not committed). Needs the Godot 4.6.3 export templates. Run `tools/build_world_cache.gd` first: exported games trust the packed world cache.
@@ -243,7 +247,7 @@ python3 tests/network_worlds.py
 "$GODOT_BIN" --headless --path . --quit-after 120
 ```
 
-The checks validate import, 50 local gameplay/persistence/UI/visual suites (1429 checks including the bot balance probe) and 280 real multi-process networking checks (1709 total through the item expansion on Windows; use `python3` on Linux or `python` on Windows). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
+The checks validate import, 51 local gameplay/persistence/UI/visual suites (1434 checks including the bot balance probe) and 280 real multi-process networking checks (1714 total through the item expansion and the save folder on Windows; use `python3` on Linux or `python` on Windows). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
 
 ## Structure
 

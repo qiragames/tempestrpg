@@ -23,4 +23,5 @@ friends outside your network: UDP 24560, e.g. FRITZ!Box -> Internet -> Permit Ac
   3. Friends: Join a Friend -> the address the server window shows.
 
 HANDY
+  Your saves are in %APPDATA%\TempestRPG (type it into the Explorer address bar).
   Esc -> Options: HUD size (65-100%), window size, sound.  F1: hide/show the controls line.

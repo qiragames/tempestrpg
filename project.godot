@@ -5,6 +5,8 @@ config_version=5
 config/name="TempestRPG"
 run/main_scene="res://scenes/menu/title_menu.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
+config/use_custom_user_dir=true
+config/custom_user_dir_name="TempestRPG"
 
 [autoload]
 GameSession="*res://scripts/network/game_session.gd"
