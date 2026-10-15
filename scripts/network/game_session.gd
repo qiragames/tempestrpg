@@ -706,6 +706,13 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             rejected_requests += 1
             return false
         return world.camp.transact(actor, payload.operation, payload.id)
+    if action == "craft":
+        # M6c: clients name a recipe; the host checks the station, ingredients and bag.
+        if payload.size() != 1 or not payload.get("id") is String or payload.id.length() > 64:
+            rejected_requests += 1
+            return false
+        # Crafting happens from the professions window (menus block movement, not crafting).
+        return actor.craft(payload.id)
     if action == "node":
         # M6a: clients name a tree or ore rock (its prop plan index); the host checks reach and stock.
         if payload.size() != 1 or not (payload.get("index") is int or payload.get("index") is float) or float(payload.index) != floor(float(payload.index)):
@@ -993,7 +1000,7 @@ var _peer_parts: Dictionary = {}
 var _snapshot_parts: Dictionary = {}
 var _snapshot_enemies: Dictionary = {}
 ## Always sent whole (small, or changing every tick).
-const ALWAYS_SENT := ["players", "version", "world_id", "progression", "gathering", "reeling"]
+const ALWAYS_SENT := ["players", "version", "world_id", "progression", "gathering", "reeling", "elixirs"]
 
 func _delta_for(peer: int, data: Dictionary, hashes: Dictionary, enemy_hashes: Array) -> Dictionary:
     var sent: Dictionary = _peer_parts.get(peer, {})
@@ -1086,6 +1093,13 @@ func _broadcast() -> void:
         if angler != null and not angler.reel.is_empty():
             reeling[id] = angler.reel.duplicate()
     data["reeling"] = reeling
+    # M6c: active elixirs (not saved).
+    var drinking := {}
+    for id in owners.values():
+        var drinker = world.player_by_id(id)
+        if drinker != null and not drinker.elixirs.is_empty():
+            drinking[id] = drinker.elixirs.duplicate(true)
+    data["elixirs"] = drinking
     # M6a: used-up trees and rocks (not saved).
     if world.get("nodes") != null:
         data["nodes"] = world.nodes.state()
@@ -1148,6 +1162,8 @@ func _snapshot(packet: Dictionary, revision: int) -> void:
             actor.gather_id = ""
         var hooked: Variant = data.get("reeling", {}).get(id)
         actor.reel = hooked.duplicate() if hooked is Dictionary else {}
+        var drinking: Variant = data.get("elixirs", {}).get(id)
+        actor.elixirs = drinking.duplicate(true) if drinking is Dictionary else {}
     for actor in world.get_children():
         if actor.is_in_group("player") and not wanted.has(actor.character_id):
             world.remove_child(actor)

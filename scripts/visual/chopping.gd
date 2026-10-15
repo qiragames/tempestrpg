@@ -34,7 +34,7 @@ static func impact(world: Node, at: Vector2, resource: String) -> void:
     var wood := resource == "wood"
     var burst := EFFECTS.spawn(world, "hit_spark", at + Vector2(0, -8))
     if burst != null:
-        burst.modulate = Color("c48a4a") if wood else Color("dfe6ee")
+        burst.modulate = Color("7ed07e") if resource == "herb" else (Color("c48a4a") if wood else Color("dfe6ee"))
         burst.scale = Vector2.ONE * 0.7
     if EFFECTS.reduced:
         return
@@ -51,7 +51,7 @@ static func impact(world: Node, at: Vector2, resource: String) -> void:
     chips.initial_velocity_max = 80.0
     chips.scale_amount_min = 1.0
     chips.scale_amount_max = 2.0
-    chips.color = Color("8a5a2e") if wood else Color("9aa0a8")
+    chips.color = Color("5aa04a") if resource == "herb" else (Color("8a5a2e") if wood else Color("9aa0a8"))
     chips.z_index = 6
     world.add_child(chips)
     chips.emitting = true

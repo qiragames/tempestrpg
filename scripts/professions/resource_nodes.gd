@@ -34,10 +34,12 @@ func info(index: int) -> Dictionary:
         return {}
     var prop: String = plan[index][0]
     var result := {}
-    if prop in PRO.TREE_PROPS or prop in PRO.ROCK_PROPS:
+    if prop in PRO.TREE_PROPS or prop in PRO.ROCK_PROPS or prop in PRO.HERB_PROPS:
         var foot: Vector2 = plan[index][1]
         var resource := PRO.resource_for(prop, MAP.region_name(foot), index)
-        if not resource.is_empty():
+        if prop in PRO.HERB_PROPS and resource.is_empty():
+            result = {}
+        elif not resource.is_empty():
             result = {"prop": prop, "foot": foot, "resource": resource, "profession": PRO.profession_for(resource), "required": PRO.required_level(resource), "units": PRO.units_for(resource, index)}
     _info_cache[index] = result
     return result
@@ -79,20 +81,24 @@ func prompt(actor: Node2D, index: int) -> Array:
         return ["", 0.0]
     var level: int = PRO.level_of(actor.progression, node.profession)
     var chance := success_chance(actor, index)
-    var verb := "Chop" if node.profession == "woodcutting" else "Mine"
-    return ["F: %s %s · %s %d/%d · %d%%" % [verb, PRO.WOODS.get(node.resource, PRO.ORES.get(node.resource, [""]))[0], PRO.PROFESSIONS[node.profession][0], level, node.required, int(round(chance * 100.0))], chance]
+    var verb: String = {"woodcutting": "Chop", "mining": "Mine", "alchemy": "Pick"}[node.profession]
+    return ["F: %s %s · %s %d/%d · %d%%" % [verb, PRO.resource_info(node.resource)[0], PRO.PROFESSIONS[node.profession][0], level, node.required, int(round(chance * 100.0))], chance]
+
+## The tool tier that helps with a node (herbs are picked by hand).
+static func tool_tier(actor: Node2D, profession: String) -> int:
+    if profession == "alchemy":
+        return 0
+    return int(actor.progression.get("tools", {}).get("axe" if profession == "woodcutting" else "pickaxe", 0))
 
 func success_chance(actor: Node2D, index: int) -> float:
     var node := info(index)
     var level: int = PRO.level_of(actor.progression, node.profession)
-    var tool: int = int(actor.progression.get("tools", {}).get("axe" if node.profession == "woodcutting" else "pickaxe", 0))
-    return PRO.chance(level, node.required, 0.03 * tool)
+    return PRO.chance(level, node.required, 0.03 * tool_tier(actor, node.profession))
 
 func swing_seconds(actor: Node2D, index: int) -> float:
     var node := info(index)
     var level: int = PRO.level_of(actor.progression, node.profession)
-    var tool: int = int(actor.progression.get("tools", {}).get("axe" if node.profession == "woodcutting" else "pickaxe", 0))
-    return PRO.work_seconds(PRO.BASE_SWING, level, node.required, tool)
+    return PRO.work_seconds(PRO.BASE_SWING, level, node.required, tool_tier(actor, node.profession))
 
 ## Host: one swing landed. Returns false when the work must stop (node gone, bag full).
 func strike(actor: Node2D, index: int, rng: RandomNumberGenerator) -> bool:
@@ -219,7 +225,10 @@ class Marks extends Node2D:
 
     func _draw() -> void:
         if depleted:
-            if PRO.WOODS.has(resource):
+            if PRO.HERBS.has(resource):
+                draw_line(Vector2(-3, -1), Vector2(-2, -4), Color("5a7a3a"), 1.0)
+                draw_line(Vector2(2, -1), Vector2(3, -4), Color("5a7a3a"), 1.0)
+            elif PRO.WOODS.has(resource):
                 draw_circle(Vector2(0, -3), 5.0, Color("6b4a2b"))
                 draw_circle(Vector2(0, -3), 3.5, PRO.WOODS[resource][3].lerp(Color("c49a6a"), 0.5))
                 draw_arc(Vector2(0, -3), 2.0, 0, TAU, 8, Color("8a6440"), 1.0)
@@ -227,6 +236,12 @@ class Marks extends Node2D:
                 for k in range(5):
                     draw_rect(Rect2(Vector2(-8 + k * 3.5, -3 - (k % 2) * 2), Vector2(3, 2)), Color("8a8f96"))
             return
+        if PRO.HERBS.has(resource):
+            # Little blossoms in the herb's colour on the bush.
+            var tint: Color = PRO.HERBS[resource][3]
+            for spot in [Vector2(-4, -9), Vector2(2, -11), Vector2(4, -6), Vector2(-1, -5)]:
+                draw_rect(Rect2(spot, Vector2(2, 2)), tint)
+                draw_rect(Rect2(spot, Vector2(1, 1)), tint.lightened(0.5))
         if PRO.ORES.has(resource):
             var colour: Color = PRO.ORES[resource][3]
             # A vein across the rock's face: a few nuggets with a dark rim and a highlight.

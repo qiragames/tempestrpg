@@ -5,6 +5,8 @@ extends Control
 const UI := preload("res://scripts/ui/ui_style.gd")
 const PRO := preload("res://scripts/professions/profession_catalogue.gd")
 const FISHES := preload("res://scripts/professions/fish_catalogue.gd")
+const CRAFT := preload("res://scripts/professions/crafting_catalogue.gd")
+const TRADE := preload("res://scripts/trade/trade_catalogue.gd")
 const FRAME := Rect2(40, 10, 560, 338)
 
 var hud: CanvasLayer
@@ -148,13 +150,104 @@ func refresh() -> void:
             fish_line.custom_minimum_size = Vector2(FRAME.size.x - 44, 13)
             fish_line.add_theme_color_override("font_color", FISHES.RARITY_COLOURS[row[3]] if caught > 0 else FISHES.RARITY_COLOURS[row[3]].darkened(0.35))
         return
+    if _selected in ["smithing", "alchemy"]:
+        _craft_rows(_selected, level)
     for row in rows:
         var chance := PRO.chance(level, row[1])
         var line: Label = hud._label("%-22s needs Lv %2d · your chance %d%%%s" % [row[0], row[1], int(round(chance * 100.0)), "   (%s)" % row[2] if row.size() > 2 and not String(row[2]).is_empty() else ""], Vector2.ZERO, Vector2(FRAME.size.x - 44, 13), _list, 8)
         line.custom_minimum_size = Vector2(FRAME.size.x - 44, 13)
         line.add_theme_color_override("font_color", chance_colour(chance))
-    if rows.is_empty():
-        hud._label("Recipes and catches for this profession arrive with the next professions update.", Vector2.ZERO, Vector2(FRAME.size.x - 44, 13), _list, 8).add_theme_color_override("font_color", UI.TEXT_DIM)
+    if rows.is_empty() and not _selected in ["smithing", "alchemy"]:
+        hud._label("Nothing here yet.", Vector2.ZERO, Vector2(FRAME.size.x - 44, 13), _list, 8).add_theme_color_override("font_color", UI.TEXT_DIM)
+
+## Name of an ingredient ("log_*"/"gem_*" are any log or gem).
+static func ingredient_name(id: String) -> String:
+    if id == "log_*":
+        return "any log"
+    if id == "gem_*":
+        return "any gem"
+    if TRADE.is_good(id):
+        return TRADE.good_info(id)[0]
+    return id.replace("_", " ").capitalize()
+
+func _needs_text(needs: Dictionary) -> String:
+    var parts: Array = []
+    for id in needs:
+        parts.append("%d %s (%d)" % [int(needs[id]), ingredient_name(id), hud.player.ingredient_count(id)])
+    return ", ".join(parts)
+
+func _can_make(needs: Dictionary) -> bool:
+    for id in needs:
+        if hud.player.ingredient_count(id) < int(needs[id]):
+            return false
+    return true
+
+func _row(text: String, colour: Color, button_text: String, enabled: bool, action: Callable, picker: OptionButton = null) -> void:
+    var row := HBoxContainer.new()
+    row.custom_minimum_size = Vector2(FRAME.size.x - 44, 16)
+    _list.add_child(row)
+    var label: Label = hud._label(text, Vector2.ZERO, Vector2(10, 13), row, 8)
+    label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    # One line, trimmed with "…" (wrapping would collapse the label inside the row).
+    label.autowrap_mode = TextServer.AUTOWRAP_OFF
+    label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+    label.tooltip_text = text
+    label.mouse_filter = Control.MOUSE_FILTER_PASS
+    label.add_theme_color_override("font_color", colour)
+    if picker != null:
+        row.add_child(picker)
+    var button: Button = hud._button(button_text, Vector2.ZERO, Vector2(58, 15), row)
+    button.custom_minimum_size = Vector2(58, 15)
+    button.add_theme_font_size_override("font_size", 8)
+    button.disabled = not enabled
+    button.pressed.connect(action)
+
+## M6c: Smithing and Alchemy recipes with their chance, ingredients (what you have) and a button.
+func _craft_rows(profession: String, level: int) -> void:
+    var station: String = hud.player.craft_station(profession)
+    var where := {"town": "in a town", "forge": "at the camp's Forge", "shrine": "at the camp's Essence Shrine"}
+    var head: Label = hud._label("Crafting %s · a failed try loses the ingredients" % where[station] if not station.is_empty() else "Go to a town or the camp's %s to craft." % ("Forge" if profession == "smithing" else "Essence Shrine"), Vector2.ZERO, Vector2(FRAME.size.x - 44, 13), _list, 8)
+    head.custom_minimum_size = Vector2(FRAME.size.x - 44, 13)
+    head.add_theme_color_override("font_color", UI.GOLD_LIGHT if not station.is_empty() else Color("ff9a7a"))
+    var recipes: Dictionary = CRAFT.recipes(profession)
+    for id in recipes:
+        if id.begins_with("forge:"):
+            continue
+        var recipe: Array = recipes[id]
+        var chance := PRO.chance(level, recipe[1])
+        _row("%s · Lv %d · %d%% · %s" % [recipe[0], recipe[1], int(round(chance * 100.0)), _needs_text(recipe[2])], chance_colour(chance), "Smelt" if profession == "smithing" else "Brew", not station.is_empty() and _can_make(recipe[2]), _craft.bind(id))
+    if profession != "smithing":
+        return
+    # Forging: one row per bar with a picker for what to make.
+    for bar in CRAFT.BARS:
+        var required: int = int(CRAFT.BARS[bar][1]) + 2
+        var chance := PRO.chance(level, required)
+        var picker := OptionButton.new()
+        picker.add_theme_font_size_override("font_size", 8)
+        picker.custom_minimum_size = Vector2(96, 15)
+        for kind in CRAFT.FORGE:
+            picker.add_item(forge_label(kind))
+            picker.set_item_metadata(picker.item_count - 1, kind)
+        var band: Array = CRAFT.BAR_LEVELS[bar]
+        _row("Forge %s gear (item Lv %d-%d) · Lv %d · %d%% · you have %d" % [CRAFT.BARS[bar][0].trim_suffix(" Bar"), band[0], band[1], required, int(round(chance * 100.0)), hud.player.ingredient_count(bar)], chance_colour(chance), "Forge", not station.is_empty() and hud.player.ingredient_count(bar) > 0, func(): _craft("forge:%s:%s" % [bar, picker.get_item_metadata(picker.selected)]), picker)
+
+## "Sword (3 bars, 1 log)" for the forge picker.
+static func forge_label(kind: String) -> String:
+    var spec: Array = CRAFT.FORGE[kind]
+    var parts: Array = ["%d bar%s" % [spec[1], "" if spec[1] == 1 else "s"]]
+    if spec[2] > 0:
+        parts.append("%d log%s" % [spec[2], "" if spec[2] == 1 else "s"])
+    if spec[3] > 0:
+        parts.append("%d gem" % spec[3])
+    return "%s (%s)" % [spec[0], ", ".join(parts)]
+
+func _craft(id: String) -> void:
+    hud.session.request_action("craft", {"id": id})
+    # Online the host answers with the next snapshot; refresh a moment later.
+    get_tree().create_timer(0.15, true, false, true).timeout.connect(func():
+        if visible:
+            refresh()
+    )
 
 func _unhandled_input(event: InputEvent) -> void:
     if not visible:

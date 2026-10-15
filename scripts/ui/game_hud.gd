@@ -416,6 +416,9 @@ func _process(_delta: float) -> void:
         extras += " · potions in %.0f s" % ceilf(potion_wait)
     if not player.riding().is_empty():
         extras += " · riding (H)"
+    # M6c: active elixirs and their time left.
+    for effect in player.elixirs:
+        extras += " · %s %.0f s" % [{"speed": "Swiftness", "might": "Might", "iron": "Iron Skin"}.get(effect, effect), ceilf(float(player.elixirs[effect][1]))]
     if player.fishing_bite_in != -INF:
         extras += " · REEL IN! (F)" if not player.reel.is_empty() else " · fishing…"
     _zeni.text = "%d Zeni%s" % [player.zeni(), extras]

@@ -12,8 +12,8 @@ const PROFESSIONS := {
     "woodcutting": ["Woodcutting", "Fell trees with an axe for logs. Rarer woods grow in harder regions."],
     "mining": ["Mining", "Break ore rocks with a pickaxe for ores and the odd gem."],
     "fishing": ["Fishing", "Catch fish with a rod at lakes and the sea."],
-    "smithing": ["Smithing", "Smelt ores into bars and forge gear at the camp's smithy."],
-    "alchemy": ["Alchemy", "Brew potions from herbs, fish and creature materials."],
+    "smithing": ["Smithing", "Smelt ores into bars and forge gear (camp Forge or any town)."],
+    "alchemy": ["Alchemy", "Brew potions from herbs, fish and creature materials (camp Shrine or any town)."],
 }
 const ORDER := ["woodcutting", "mining", "fishing", "smithing", "alchemy"]
 
@@ -115,6 +115,17 @@ const ORES := {
     "ore_adamantite": ["Adamantite Ore", 40, 130, Color("4fd08a"), ["boulder"], ["Emberreach Isles", "The Ki Realm"], 6],
     "ore_starmetal": ["Starmetal Ore", 46, 220, Color("d8a0ff"), ["boulder", "boulder_snow"], ["The Ki Realm"], 4],
 }
+## Herbs gathered from bushes (Alchemy, picked by hand): [name, level, price, colour, props, regions, weight]
+const HERBS := {
+    "herb_mint": ["Meadow Mint", 1, 6, Color("7ed07e"), ["bush"], ["The First Clearing", "Verdant Isle", "Thornwood", "Mirror Lake", "Harrowmere"], 10],
+    "herb_sunbloom": ["Sunbloom", 10, 14, Color("ffd04a"), ["bush"], ["Sunscorch Desert"], 10],
+    "herb_ambercap": ["Ambercap", 14, 18, Color("e0803a"), ["bush"], ["Ambervale"], 10],
+    "herb_sakura": ["Sakura Petal", 18, 24, Color("ff9ac0"), ["bush"], ["Sakura Vale"], 10],
+    "herb_bogmoss": ["Bogmoss", 24, 30, Color("6a8a3a"), ["bush"], ["Mirewood Marsh"], 10],
+    "herb_senzu": ["Senzu Sprout", 42, 120, Color("a8ff6a"), ["bush"], ["The Ki Realm"], 10],
+}
+const HERB_PROPS := ["bush"]
+
 ## Gems a mining success can turn up (by the ore's level): [name, price, from ore level]
 const GEMS := {
     "gem_sapphire": ["Sapphire", 120, 1],
@@ -135,7 +146,7 @@ const SWINGS_PER_UNIT := 3
 const BASE_SWING := 0.55
 
 static func is_resource(id: String) -> bool:
-    return WOODS.has(id) or ORES.has(id) or GEMS.has(id) or SAP.has(id)
+    return WOODS.has(id) or ORES.has(id) or GEMS.has(id) or SAP.has(id) or HERBS.has(id)
 
 static func resource_info(id: String) -> Array:
     if WOODS.has(id):
@@ -144,6 +155,8 @@ static func resource_info(id: String) -> Array:
         return [ORES[id][0], "Ores", "Ore to smelt into bars (Mining %d). Merchants buy it." % ORES[id][1]]
     if GEMS.has(id):
         return [GEMS[id][0], "Gems", "A rare gem found while mining. Merchants pay well for it."]
+    if HERBS.has(id):
+        return [HERBS[id][0], "Herbs", "A herb for alchemy (Alchemy %d), picked from bushes." % HERBS[id][1]]
     return [SAP[id][0], "Logs", "Rare sap found in old trees. Merchants pay well for it."]
 
 static func resource_price(id: String) -> int:
@@ -155,14 +168,16 @@ static func resource_price(id: String) -> int:
         return GEMS[id][1]
     if SAP.has(id):
         return SAP[id][1]
+    if HERBS.has(id):
+        return HERBS[id][2]
     return 0
 
 static func all_resources() -> Array:
-    return WOODS.keys() + ORES.keys() + GEMS.keys() + SAP.keys()
+    return WOODS.keys() + ORES.keys() + GEMS.keys() + SAP.keys() + HERBS.keys()
 
 ## Which resource a prop is (deterministic from its plan index): "" when none fits.
 static func resource_for(prop: String, region: String, index: int) -> String:
-    var table: Dictionary = WOODS if prop in TREE_PROPS else (ORES if prop in ROCK_PROPS else {})
+    var table: Dictionary = WOODS if prop in TREE_PROPS else (ORES if prop in ROCK_PROPS else (HERBS if prop in HERB_PROPS else {}))
     var pool: Array = []
     var total := 0
     for id in table:
@@ -178,7 +193,7 @@ static func resource_for(prop: String, region: String, index: int) -> String:
             if prop in table[id][4] and (best.is_empty() or int(table[id][1]) < int(table[best][1])):
                 best = id
         if best.is_empty():
-            best = "log_oak" if table == WOODS else "ore_copper"
+            best = "log_oak" if table == WOODS else ("ore_copper" if table == ORES else "herb_mint")
         return best
     var roll: int = absi(hash(index * 7919 + 17)) % total
     for id in pool:
@@ -188,22 +203,31 @@ static func resource_for(prop: String, region: String, index: int) -> String:
     return pool[-1]
 
 static func profession_for(resource: String) -> String:
-    return "woodcutting" if WOODS.has(resource) else "mining"
+    return "woodcutting" if WOODS.has(resource) else ("alchemy" if HERBS.has(resource) else "mining")
 
 static func required_level(resource: String) -> int:
-    return int(WOODS[resource][1]) if WOODS.has(resource) else int(ORES[resource][1])
+    for table in [WOODS, ORES, HERBS]:
+        if table.has(resource):
+            return int(table[resource][1])
+    return 1
 
 ## Units a node holds when full (milestone 20/30 add one).
 static func units_for(resource: String, index: int) -> int:
+    if HERBS.has(resource):
+        return 2 + absi(hash(index * 31 + 5)) % 2
     return (4 if WOODS.has(resource) else 3) + absi(hash(index * 31 + 5)) % 3
 
 ## Seconds a felled tree or broken rock takes to grow back.
 static func regrow_seconds(resource: String) -> float:
-    return 90.0 + 6.0 * required_level(resource)
+    return (60.0 if HERBS.has(resource) else 90.0) + 6.0 * required_level(resource)
 
-## What Fishing, Smithing and Alchemy work with: [name, required level, where] (filled by M6b/M6c).
-static func entries_for(_profession: String) -> Array:
-    return []
+## Herbs for the Alchemy tab: [name, required level, where].
+static func entries_for(profession: String) -> Array:
+    var rows: Array = []
+    if profession == "alchemy":
+        for id in HERBS:
+            rows.append(["Herb: " + HERBS[id][0], int(HERBS[id][1]), ", ".join(HERBS[id][5])])
+    return rows
 
 ## A gem for an ore success, by ore level (rarer gems from better ores).
 static func gem_for(ore_level: int, roll: int) -> String:

@@ -152,9 +152,59 @@ func remove_item(id: String) -> bool:
     return false
 
 ## Host: use a bag good — drink a draught/tonic or read a scroll (M4.5c).
+## M6c: active elixirs {effect: [amount, seconds left]} (host-owned, replicated, not saved).
+var elixirs: Dictionary = {}
+const CRAFT := preload("res://scripts/professions/crafting_catalogue.gd")
+var _heal_rate := 8.0
+var _tonic_rate := 8.0
+
+## Host: drink a crafted potion or elixir (M6c).
+func _drink(id: String) -> bool:
+    var potion: Array = CRAFT.POTIONS[id]
+    var effect: String = potion[3]
+    if effect in CRAFT.COOLDOWN_EFFECTS and consumable_cooldown > 0.0:
+        session.notify_character(character_id, "Wait %.0f s before the next potion." % ceilf(consumable_cooldown))
+        return false
+    $Inventory.discard(StringName(id), 1)
+    # Alchemy 30 (Potent): potions last 50% longer.
+    var seconds: float = float(potion[5]) * (1.5 if PRO.level_of(progression, "alchemy") >= 30 else 1.0)
+    match effect:
+        "heal":
+            consumable_cooldown = TRADE.CONSUMABLE_COOLDOWN
+            _heal_rate = float(potion[4]) / TRADE.CONSUMABLE_SECONDS
+            _heal_left = TRADE.CONSUMABLE_SECONDS
+        "tonic":
+            consumable_cooldown = TRADE.CONSUMABLE_COOLDOWN
+            _tonic_rate = float(potion[4]) / TRADE.CONSUMABLE_SECONDS
+            _tonic_left = TRADE.CONSUMABLE_SECONDS
+        "full":
+            consumable_cooldown = TRADE.CONSUMABLE_COOLDOWN
+            $Health.heal($Health.maximum)
+            $Magicules.restore($Magicules.maximum)
+        _:
+            elixirs[effect] = [float(potion[4]), seconds]
+            refresh_gear()
+    session.notify_character(character_id, "%s: %s" % [potion[0], potion[7]])
+    return true
+
+## Elixir strength (0 when not active).
+func elixir(effect: String) -> float:
+    return float(elixirs[effect][0]) if elixirs.has(effect) else 0.0
+
+func _tick_elixirs(delta: float) -> void:
+    if elixirs.is_empty():
+        return
+    for effect in elixirs.keys():
+        elixirs[effect][1] = float(elixirs[effect][1]) - delta
+        if elixirs[effect][1] <= 0.0 and AUTHORITY.can_mutate(self):
+            elixirs.erase(effect)
+            refresh_gear()
+
 func use_good(id: String) -> bool:
     if not AUTHORITY.can_mutate(self) or $Health.current <= 0 or $Inventory.count_of(id) <= 0:
         return false
+    if CRAFT.is_potion(id):
+        return _drink(id)
     if TRADE.CONSUMABLES.has(id):
         if consumable_cooldown > 0.0:
             session.notify_character(character_id, "Wait %.0f s before the next draught or tonic." % ceilf(consumable_cooldown))
@@ -162,8 +212,10 @@ func use_good(id: String) -> bool:
         $Inventory.discard(StringName(id), 1)
         consumable_cooldown = TRADE.CONSUMABLE_COOLDOWN
         if id == "healing_draught":
+            _heal_rate = 40.0 / TRADE.CONSUMABLE_SECONDS
             _heal_left = TRADE.CONSUMABLE_SECONDS
         else:
+            _tonic_rate = 40.0 / TRADE.CONSUMABLE_SECONDS
             _tonic_left = TRADE.CONSUMABLE_SECONDS
         session.notify_character(character_id, "%s: +40 over 5 s." % TRADE.CONSUMABLES[id][0])
         return true
@@ -189,7 +241,7 @@ func _tick_consumables(delta: float) -> void:
     if _heal_left > 0.0:
         var step := minf(delta, _heal_left)
         _heal_left -= step
-        _heal_carry += 40.0 / TRADE.CONSUMABLE_SECONDS * step
+        _heal_carry += _heal_rate * step
         var whole := int(floor(_heal_carry))
         if whole > 0:
             _heal_carry -= whole
@@ -197,7 +249,8 @@ func _tick_consumables(delta: float) -> void:
     if _tonic_left > 0.0:
         var step := minf(delta, _tonic_left)
         _tonic_left -= step
-        $Magicules.restore(40.0 / TRADE.CONSUMABLE_SECONDS * step)
+        $Magicules.restore(_tonic_rate * step)
+    _tick_elixirs(delta)
 
 func race() -> String:
     return progression.get("race", RACES.DEFAULT)
@@ -464,12 +517,121 @@ func start_node(index: int) -> bool:
         return false
     var node: Dictionary = nodes.info(index)
     gather_id = "node:%d" % index
-    gather_resource = "wood" if node.profession == "woodcutting" else "stone"
+    gather_resource = {"woodcutting": "wood", "mining": "stone", "alchemy": "herb"}[node.profession]
     gather_at = node.foot + Vector2(0, -6)
     gather_swings = 1
     gather_period = nodes.swing_seconds(self, index)
     gather_clock = gather_period
     facing = (gather_at - global_position).normalized() if gather_at.distance_to(global_position) > 1.0 else facing
+    return true
+
+## M6c: where this character can craft for a profession ("" when nowhere): the camp's Forge
+## (Smithing) or Essence Shrine (Alchemy), or any town.
+func craft_station(profession: String) -> String:
+    var map := preload("res://scripts/world/world_map.gd")
+    if not map.town_at(global_position).is_empty():
+        return "town"
+    var camp: Node = get_parent().get("camp") if get_parent() != null else null
+    if camp == null:
+        return ""
+    var key := "forge" if profession == "smithing" else "shrine"
+    var site: Vector2 = camp.STRUCTURES["%s_1" % key].site
+    if bool(camp.state.get(key, false)) and global_position.distance_to(site) <= 80.0:
+        return key
+    return ""
+
+## How many of an ingredient this character has ("log_*"/"gem_*" count any log or gem).
+func ingredient_count(id: String) -> int:
+    if id == "log_*" or id == "gem_*":
+        var total := 0
+        for other in (PRO.WOODS if id == "log_*" else PRO.GEMS):
+            total += $Inventory.count_of(other)
+        return total
+    return $Inventory.count_of(id)
+
+func _take_ingredient(id: String, count: int) -> void:
+    if id == "log_*" or id == "gem_*":
+        # Cheapest first.
+        var kinds: Array = (PRO.WOODS if id == "log_*" else PRO.GEMS).keys()
+        kinds.sort_custom(func(a, b): return PRO.resource_price(a) < PRO.resource_price(b))
+        for other in kinds:
+            var take: int = mini(count, $Inventory.count_of(other))
+            if take > 0:
+                $Inventory.discard(StringName(other), take)
+                count -= take
+            if count <= 0:
+                return
+        return
+    $Inventory.discard(StringName(id), count)
+
+## Host: try a Smithing or Alchemy recipe (soft gate: the chance is shown in the window).
+func craft(recipe_id: String) -> bool:
+    if not AUTHORITY.can_mutate(self) or $Health.current <= 0:
+        return false
+    var recipe: Array = CRAFT.recipe(recipe_id)
+    if recipe.is_empty():
+        return false
+    var profession: String = recipe[0]
+    if craft_station(profession).is_empty():
+        session.notify_character(character_id, "%s needs %s or a town." % [PRO.PROFESSIONS[profession][0], "the camp's Forge" if profession == "smithing" else "the camp's Essence Shrine"])
+        return false
+    var needs: Dictionary = recipe[3]
+    for id in needs:
+        if ingredient_count(id) < int(needs[id]):
+            session.notify_character(character_id, "Missing ingredients for %s." % recipe[1])
+            return false
+    var forging := recipe_id.begins_with("forge:")
+    if forging and gear.items.size() >= GEAR.MAX_ITEMS:
+        session.notify_character(character_id, "Your gear bag is full.")
+        return false
+    var level: int = PRO.level_of(progression, profession)
+    var required: int = int(recipe[2])
+    var rng: RandomNumberGenerator = get_parent().loot_rng if get_parent() != null and get_parent().get("loot_rng") != null else RandomNumberGenerator.new()
+    # Thrifty (20): one try in five keeps the ingredients.
+    if not (level >= 20 and rng.randf() < 0.2):
+        for id in needs:
+            _take_ingredient(id, int(needs[id]))
+    if rng.randf() >= PRO.chance(level, required):
+        gain_profession_xp(profession, maxi(1, PRO.xp_reward(required) / 5))
+        session.notify_character(character_id, "%s failed — the ingredients are lost." % recipe[1])
+        session.queue_save()
+        return false
+    var made := ""
+    if forging:
+        var parts: PackedStringArray = recipe_id.split(":")
+        var weights: Array = CRAFT.forge_weights(level, required)
+        var total := 0.0
+        for weight in weights:
+            total += weight
+        var roll := rng.randf() * total
+        var rarity := 0
+        for index in range(weights.size()):
+            roll -= weights[index]
+            if roll <= 0.0:
+                rarity = index
+                break
+        var base: String = CRAFT.forge_base(parts[2], parts[1], rarity, rng)
+        if base.is_empty():
+            return false
+        var item: Dictionary = GEAR.roll(base, rarity, rng)
+        add_item(item)
+        made = "%s %s" % [GEAR.RARITIES[rarity], GEAR.display_name(item)]
+        gain_profession_xp(profession, PRO.xp_reward(required) * 3)
+    else:
+        var output: String = recipe_id.split(":")[1]
+        # Double Smelt / Double Brew (40) and the level's double chance.
+        var count := 2 if rng.randf() < PRO.double_chance(level) else 1
+        # Master Alchemist (50): elixirs brew twice.
+        if profession == "alchemy" and level >= 50 and (output.begins_with("elixir_") or output == "senzu_bean"):
+            count = 2
+        var added: int = $Inventory.add_material(output, count)
+        if added <= 0:
+            session.notify_character(character_id, "Your bag is full.")
+            return false
+        made = "%d %s" % [added, TRADE.good_info(output)[0]]
+        gain_profession_xp(profession, PRO.xp_reward(required) * 2)
+    session.notify_character(character_id, "Made %s." % made)
+    session.queue_save()
     return true
 
 ## Host: profession experience (M6a), with a message on each new level.
@@ -612,6 +774,9 @@ func gear_bonus(stat: String) -> float:
             total += 0.5
     # Item expansion: set bonuses (two pieces) and unique abilities' stats.
     total += SETS.bonus(equipped_items(), GEAR.BASES, stat)
+    # M6c: the Iron Skin elixir adds defence.
+    if stat == "defense":
+        total += elixir("iron")
     # Augments count like gear (their maxima are applied when installed).
     return total + augment_bonus(stat)
 
@@ -744,10 +909,12 @@ func aura() -> String:
     return String(progression.get("aura", ""))
 
 func aura_damage() -> float:
-    return float(REALM.AURAS[aura()][1]) if REALM.AURAS.has(aura()) else 1.0
+    var might: float = 1.0 + elixir("might") / 100.0
+    return (float(REALM.AURAS[aura()][1]) if REALM.AURAS.has(aura()) else 1.0) * might
 
 func aura_speed() -> float:
-    return float(REALM.AURAS[aura()][2]) if REALM.AURAS.has(aura()) else 1.0
+    var swift: float = 1.0 + elixir("speed") / 100.0
+    return (float(REALM.AURAS[aura()][2]) if REALM.AURAS.has(aura()) else 1.0) * swift
 
 ## Host: power up with the strongest learned transformation, or power down.
 func toggle_aura() -> bool:
@@ -1162,7 +1329,7 @@ func _draw() -> void:
     _draw_body()
     if fishing_bite_in != -INF and has_node("Health") and $Health.current > 0:
         _draw_line()
-    if not gather_id.is_empty() and has_node("Health") and $Health.current > 0:
+    if not gather_id.is_empty() and has_node("Health") and $Health.current > 0 and gather_resource != "herb":
         CHOP.draw_tool(self, CHOP.tool_for(gather_resource), gather_phase(), facing)
     if has_node("Health") and $Health.current > 0 and not exhaustion_active and form == FORMS.BASE:
         _draw_gear()

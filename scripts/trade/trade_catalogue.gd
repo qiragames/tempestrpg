@@ -12,6 +12,7 @@ const TRAVEL := preload("res://scripts/travel/travel_catalogue.gd")
 const UPGRADES := preload("res://scripts/items/upgrade_catalogue.gd")
 const REALM := preload("res://scripts/realm/realm_catalogue.gd")
 const PRO := preload("res://scripts/professions/profession_catalogue.gd")
+const CRAFT := preload("res://scripts/professions/crafting_catalogue.gd")
 
 const DEATH_SHARE := 0.1
 const SELL_SHARE := 0.3
@@ -82,7 +83,7 @@ static func bag_item(id: String) -> bool:
     return preload("res://scripts/skills/skill_catalogue.gd").MATERIALS.has(id) or is_good(id)
 
 static func is_good(id: String) -> bool:
-    return CONSUMABLES.has(id) or scroll_skill(id) in COMMON_SCROLLS + RARE_SCROLLS or not TRAVEL.ticket_harbour(id).is_empty() or TRAVEL.is_fish(id) or UPGRADES.is_rune(id) or UPGRADES.is_augment(id) or REALM.is_orb(id) or PRO.is_resource(id)
+    return CONSUMABLES.has(id) or scroll_skill(id) in COMMON_SCROLLS + RARE_SCROLLS or not TRAVEL.ticket_harbour(id).is_empty() or TRAVEL.is_fish(id) or UPGRADES.is_rune(id) or UPGRADES.is_augment(id) or REALM.is_orb(id) or PRO.is_resource(id) or CRAFT.is_good(id)
 
 ## [name, category, description] of a good.
 static func good_info(id: String) -> Array:
@@ -99,6 +100,8 @@ static func good_info(id: String) -> Array:
         return [UPGRADES.AUGMENTS[id][0], "Augments", UPGRADES.describe(id)]
     if PRO.is_resource(id):
         return PRO.resource_info(id)
+    if CRAFT.is_good(id):
+        return CRAFT.good_info(id)
     if REALM.is_orb(id):
         var stars := int(id.trim_prefix("wish_orb_"))
         return ["Wish Orb (%d star%s)" % [stars, "" if stars == 1 else "s"], "Wish Orbs", "One of the seven wish orbs of the Ki Realm. Bring all seven to the Guardian's altar."]
@@ -117,6 +120,9 @@ static func price(id: String) -> int:
     # M6a: logs, ores and gems (their catalogue values are what selling should pay).
     if PRO.is_resource(id):
         return int(ceil(PRO.resource_price(id) / SELL_SHARE))
+    # M6c: bars and potions (their catalogue values are what selling should pay).
+    if CRAFT.is_good(id):
+        return int(ceil(CRAFT.price(id) / SELL_SHARE))
     if UPGRADES.is_rune(id):
         return UPGRADES.RUNES[id][3]
     if UPGRADES.is_augment(id):
