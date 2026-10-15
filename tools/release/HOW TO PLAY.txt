@@ -1,0 +1,23 @@
+TempestRPG - playing together
+=============================
+
+Everyone: run TempestRPG.exe (no installation needed). Windows may warn about an unknown
+app the first time: "More info" -> "Run anyway". Allow it through the firewall when asked.
+
+PLAY ALONE OR HOST FROM THE GAME
+  Start TempestRPG.exe, Continue / New Game. Press Esc -> "Open to friends" to let friends in.
+
+RUN A SERVER (the world keeps running even when you are not playing)
+  1. Double-click "Start server.bat" - it hosts your most recently played world.
+  2. Start TempestRPG.exe -> Join a Friend -> address 127.0.0.1  (you play your own character)
+  3. Friends: TempestRPG.exe -> Join a Friend -> the address the server window shows.
+  Stop the server by closing its window.
+
+FRIENDS OUTSIDE YOUR HOME NETWORK
+  The game asks your router to open UDP port 24560 automatically (UPnP). If the window says
+  the router did not answer, either
+   - FRITZ!Box: Internet -> Permit Access -> Port Sharing -> the PC -> "Permit independent
+     port sharing for this device" (UPnP), or add a port sharing: UDP 24560 to this PC; or
+   - other routers: enable UPnP, or forward UDP 24560 to this PC.
+  Then give friends your public address (the server window shows it when UPnP works, or
+  search "what is my IP"). Never give them 127.0.0.1 - that only means "this PC".

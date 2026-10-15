@@ -34,10 +34,23 @@ var listen_port: int = DEFAULT_PORT
 ## Name, seed and dates of the hosted world (saved with it).
 ## Race requested for a new character when joining (ignored for returning characters).
 var join_race: String = "Slime"
+var joining_address := ""
 var world_meta: Dictionary = {}
 ## A world chosen in the title menu, started once the game scene is ready.
 var pending_launch: Dictionary = {}
 const TITLE_SCENE := "res://scenes/menu/title_menu.tscn"
+## --- Server mode (user request): a console server hosts a world without a character of its
+## own; the world's owner joins from the same computer (127.0.0.1) and plays the host character,
+## recognised by a key kept on this computer. Friends join as usual. UPnP asks the router to open
+## the port and finds the public address.
+var server_mode := false
+const OWNER_KEY_PATH := "user://server/owner.key"
+var _owner_key := ""
+var _upnp: UPNP
+var _upnp_thread: Thread
+## The address friends use over the Internet ("" until UPnP found it).
+var public_address := ""
+var upnp_status := ""
 const WORLD_SCENE := "res://scenes/world/forest.tscn"
 
 func _ready() -> void:
@@ -54,6 +67,15 @@ func _launch_arguments() -> void:
     for argument in OS.get_cmdline_user_args():
         var pair := argument.trim_prefix("--").split("=", true, 1)
         options[pair[0]] = pair[1] if pair.size() == 2 else ""
+    if options.has("server"):
+        var path: String = options.get("save", "")
+        if path.is_empty():
+            var worlds: Array = preload("res://scripts/menu/world_registry.gd").list().filter(func(entry): return entry.ok)
+            path = worlds[0].path if not worlds.is_empty() else save_path
+        pending_launch = {"mode": "server", "port": int(options.get("port", DEFAULT_PORT)), "path": path, "upnp": not options.has("no-upnp")}
+        server_mode = true
+        get_tree().change_scene_to_file(WORLD_SCENE)
+        return
     if not options.has("host") and not options.has("join"):
         return
     # Command-line hosting/joining skips the title menu.
@@ -74,6 +96,9 @@ func launch_pending() -> void:
         return
     var launch := pending_launch
     pending_launch = {}
+    if launch.mode == "server":
+        start_server(launch.get("port", DEFAULT_PORT), launch.path, launch.get("upnp", true))
+        return
     if launch.mode == "host":
         start_host(launch.get("port", DEFAULT_PORT), launch.path, launch.get("listen", false), launch.get("meta", {}), launch.get("race", RACES.DEFAULT))
     else:
@@ -170,6 +195,121 @@ func _listen(port: int) -> Error:
     listen_port = port
     return OK
 
+## Host a world as a console server: listen, park the host character until its owner joins,
+## open the router's port (UPnP) and say how to join.
+func start_server(port: int, path: String, upnp: bool = true) -> Error:
+    server_mode = true
+    _owner_key = owner_key(true)
+    var error := start_host(port, path, false)
+    if error != OK:
+        _log("Could not load the world %s." % path)
+        return error
+    # A server takes up no player place: eight characters can join.
+    var peer := ENetMultiplayerPeer.new()
+    error = peer.create_server(port, MAX_PLAYERS)
+    if error != OK:
+        _log("Could not open UDP port %d. Is another game or server using it?" % port)
+        return error
+    multiplayer.multiplayer_peer = peer
+    listening = true
+    listen_port = port
+    owners.erase(1)
+    local_character_id = ""
+    _park_host(true)
+    _log("TempestRPG server · world \"%s\" (%s) · UDP %d" % [world_meta.get("name", "?"), path, port])
+    _log("You (on this PC): start the game, Join a Friend, address 127.0.0.1 — you play your own character.")
+    _log("Friends on your network: %s" % (", ".join(lan_addresses()) if not lan_addresses().is_empty() else "your LAN address"))
+    if upnp:
+        open_router_port(port)
+    save_world()
+    return OK
+
+## This computer's server owner key (created once by the server).
+static func owner_key(create: bool = false) -> String:
+    if FileAccess.file_exists(OWNER_KEY_PATH):
+        var text := FileAccess.get_file_as_string(OWNER_KEY_PATH).strip_edges()
+        if text.length() == 64:
+            return text
+    if not create:
+        return ""
+    DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OWNER_KEY_PATH).get_base_dir())
+    var key := Crypto.new().generate_random_bytes(32).hex_encode()
+    var file := FileAccess.open(OWNER_KEY_PATH, FileAccess.WRITE)
+    if file != null:
+        file.store_string(key)
+        file.close()
+    return key
+
+## The host character waits (hidden, untouchable, not in the world's player list) while its owner
+## is away; it comes back when the owner joins.
+func _park_host(parked: bool) -> void:
+    var actor = world.get_local_player()
+    if parked:
+        actor.remove_from_group("player")
+        actor.visible = false
+        actor.process_mode = Node.PROCESS_MODE_DISABLED
+        actor.set_deferred("collision_layer", 0)
+    else:
+        actor.add_to_group("player")
+        actor.visible = true
+        actor.process_mode = Node.PROCESS_MODE_INHERIT
+        actor.set_deferred("collision_layer", 2)
+
+func _log(message: String) -> void:
+    print("[%s] %s" % [Time.get_time_string_from_system(), message])
+
+## Ask the router to forward the UDP port (UPnP) and find the public address, in the background.
+func open_router_port(port: int) -> void:
+    # Automated test runs (headless, not a server) never touch the router.
+    if _upnp_thread != null or (DisplayServer.get_name() == "headless" and not server_mode):
+        return
+    upnp_status = "Asking your router to open UDP %d…" % port
+    _upnp_thread = Thread.new()
+    _upnp_thread.start(func():
+        var upnp := UPNP.new()
+        var found := upnp.discover(2000, 2, "InternetGatewayDevice")
+        var result := ""
+        var address := ""
+        if found != UPNP.UPNP_RESULT_SUCCESS or upnp.get_gateway() == null or not upnp.get_gateway().is_valid_gateway():
+            result = "Your router did not answer (UPnP off?). Forward UDP %d to this PC by hand for friends outside your network." % port
+        elif upnp.add_port_mapping(port, port, "TempestRPG", "UDP", 0) != UPNP.UPNP_RESULT_SUCCESS:
+            result = "Your router refused to open UDP %d. Forward it to this PC by hand." % port
+        else:
+            address = upnp.query_external_address()
+            if address.is_empty():
+                result = "Port opened, but the router did not tell the public address. Look it up (e.g. \"what is my IP\")."
+            elif _shared_address(address):
+                result = "Port opened, but your router's address %s is shared by your provider (CGNAT): friends outside cannot reach you without a VPN-style tool." % address
+                address = ""
+            else:
+                result = "Port opened. Friends on the Internet join with: %s" % address
+        _upnp_done.call_deferred(upnp, address, result)
+    )
+
+func _upnp_done(upnp: UPNP, address: String, result: String) -> void:
+    if _upnp_thread != null:
+        _upnp_thread.wait_to_finish()
+    _upnp_thread = null
+    _upnp = upnp if not address.is_empty() or result.begins_with("Port opened") else null
+    public_address = address
+    upnp_status = result
+    _log(result)
+    if is_instance_valid(world) and not server_mode:
+        world._announce(result)
+
+static func _shared_address(address: String) -> bool:
+    var parts := address.split(".")
+    if parts.size() != 4:
+        return false
+    var a := int(parts[0])
+    var b := int(parts[1])
+    return a == 10 or (a == 100 and b >= 64 and b <= 127) or (a == 172 and b >= 16 and b <= 31) or (a == 192 and b == 168)
+
+func _close_router_port() -> void:
+    if _upnp != null:
+        _upnp.delete_port_mapping(listen_port, "UDP")
+        _upnp = null
+
 ## Start accepting guests in the running hosted world, without restarting it.
 func open_to_friends(port: int = DEFAULT_PORT) -> Error:
     if not active or replica_world or listening or not multiplayer.is_server():
@@ -183,6 +323,7 @@ func open_to_friends(port: int = DEFAULT_PORT) -> Error:
     listening = true
     listen_port = port
     world._announce("Open to friends on UDP %d. They join with: %s" % [port, ", ".join(lan_addresses()) if not lan_addresses().is_empty() else "your IP address"])
+    open_router_port(port)
     save_world()
     return OK
 
@@ -204,6 +345,7 @@ func join_host(address: String, port: int = DEFAULT_PORT, profile: String = "use
         return error
     identity_path = profile
     join_race = race
+    joining_address = address
     replica_world = true
     multiplayer.multiplayer_peer = peer
     active = true
@@ -238,6 +380,10 @@ func _hello(id: String) -> void:
     if not profile is Dictionary:
         _fail("Character profile is invalid.")
         return
+    # Server mode: joining your own server on this computer plays the world's host character.
+    var key := owner_key()
+    if profile.is_empty() and not key.is_empty() and joining_address in ["127.0.0.1", "localhost", "::1"]:
+        profile = {"character": "host", "credential": key}
     if not profile.get("character", "") is String or not profile.get("credential", "") is String:
         _fail("Character profile fields are invalid.")
         return
@@ -252,6 +398,24 @@ func _join_world(character: String, credential: String, race: String) -> void:
         return
     if owners.size() >= MAX_PLAYERS:
         _deny(peer, "The eight-player session is full.")
+        return
+    # Server mode: the owner's key (this computer) plays the host character; anyone else asking
+    # for it (or a second game on this computer while the owner plays) gets a new character.
+    if character == "host" and (not server_mode or _owner_key.is_empty() or credential != _owner_key or owners.values().has("host")):
+        character = ""
+        credential = ""
+    if character == "host":
+        var owner_actor = world.get_local_player()
+        _park_host(false)
+        owner_actor.local_controlled = false
+        owner_actor.network_controlled = true
+        owners[peer] = "host"
+        _wire_remote(owner_actor)
+        player_joined.emit(owner_actor)
+        _accepted.rpc_id(peer, "host", credential)
+        _log("The owner joined (host character).")
+        save_world()
+        _broadcast()
         return
     if not character.is_empty():
         if character == "host" or not records.has(character) or credential.length() != 64 or records[character].get("token_hash", "") != (world_id + credential).sha256_text() or owners.values().has(character):
@@ -282,6 +446,8 @@ func _join_world(character: String, credential: String, race: String) -> void:
     _wire_remote(actor)
     player_joined.emit(actor)
     _accepted.rpc_id(peer, character, credential)
+    if server_mode:
+        _log("%s joined (%d online)." % [character.left(16), owners.size()])
     save_world()
     _broadcast()
 
@@ -617,6 +783,10 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
 
 func _wire_remote(actor: Node2D) -> void:
     _track_actor(actor)
+    # Server mode: the owner's host character is wired once, however often they rejoin.
+    if actor.has_meta("remote_wired"):
+        return
+    actor.set_meta("remote_wired", true)
     actor.get_node("Absorption").status_changed.connect(func(message: String): notify_character(actor.character_id, message, true))
     actor.get_node("Magicules").spend_rejected.connect(func(_cost: float): notify_character(actor.character_id, "Insufficient Magicules. Action unavailable."))
     actor.get_node("Health").defeated.connect(func(): notify_character(actor.character_id, "Vital signs depleted. Respawning in %d s." % int(actor.RESPAWN_DELAY)))
@@ -743,6 +913,19 @@ func _peer_disconnected(peer: int) -> void:
         return
     var id: String = owners[peer]
     var actor = world.player_by_id(id)
+    if server_mode and id == "host" and actor:
+        if actor.get_node("Absorption").active:
+            actor.get_node("Absorption")._cancel("Analysis interrupted by disconnection.")
+        records["host"] = CODEC.capture_player(actor)
+        _park_host(true)
+        owners.erase(peer)
+        _action_budgets.erase(peer)
+        _log("The owner left; the world keeps running.")
+        save_world()
+        _broadcast()
+        return
+    if server_mode:
+        _log("%s left." % id.left(16))
     if actor:
         if actor.get_node("Absorption").active:
             actor.get_node("Absorption")._cancel("Analysis interrupted by disconnection.")
@@ -775,6 +958,10 @@ func _process(delta: float) -> void:
 func stop_session(save: bool = true) -> void:
     if active and save and multiplayer.is_server():
         save_world()
+    if _upnp_thread != null:
+        _upnp_thread.wait_to_finish()
+        _upnp_thread = null
+    _close_router_port()
     active = false
     listening = false
     world_meta = {}

@@ -44,7 +44,9 @@ static func _load() -> void:
         return
     var stored: Variant = file.get_var()
     file.close()
-    if stored is Dictionary and stored.get("key") == key():
+    # An exported game ships compiled scripts (no sources to hash): it trusts the cache built
+    # with it (the release is exported right after the cache is rebuilt and checked).
+    if stored is Dictionary and (OS.has_feature("template") or stored.get("key") == key()):
         _parts = stored
 
 ## Writes the parts (called by the builder tool).
