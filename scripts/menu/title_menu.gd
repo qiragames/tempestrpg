@@ -182,7 +182,7 @@ func _build_join() -> void:
     _first_focus["join"] = _address_field
 
 func _build_settings() -> void:
-    var panel := _panel("settings")
+    var panel := _panel("settings", Rect2(SUB.position.x, SUB.position.y - 6, SUB.size.x, 280))
     _first_focus["settings"] = SETTINGS.build(panel, func(): _show("main"))
 
 func _build_credits() -> void:

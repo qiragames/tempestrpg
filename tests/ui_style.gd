@@ -59,7 +59,9 @@ func _run() -> void:
     actor.choose_race("Demon")
     await _frames(2)
     _check(hud._portrait_id == "demon" and hud._name.text == "Demon", "Changing race updates the portrait")
-    # --- Layout: no overlaps at 640x360
+    # --- Layout: no overlaps at 640x360 (at full HUD size; smaller sizes shrink toward the corners)
+    hud.apply_hud_settings({"hud": 1.0, "controls": true})
+    await _frames(1)
     var rects: Dictionary = {"status": Rect2(4, 4, 226, 66), "analysis": Rect2(446, 40, 190, 82), "hotbar": Rect2(176, 288, 304, 52), "log": Rect2(4, 266, 166, 72), "controls": Rect2(0, 338, 640, 22)}
     var screen := Rect2(0, 0, 640, 360)
     var layout_ok := true
@@ -71,6 +73,14 @@ func _run() -> void:
     for slot in hud._slots:
         layout_ok = layout_ok and rects.hotbar.encloses(slot.get_rect())
     _check(layout_ok, "HUD blocks fit the 640x360 screen without overlapping")
+    hud.apply_hud_settings({"hud": 0.75, "controls": false})
+    await _frames(1)
+    var small_ok: bool = not hud.get_node("Controls").visible and not hud.get_node("BottomBar").visible
+    for slot in hud._slots:
+        small_ok = small_ok and screen.encloses(slot.get_global_rect()) and slot.get_global_rect().size.x < 70.0
+    small_ok = small_ok and screen.encloses(hud.get_node("Minimap").get_global_rect()) and hud.get_node("Minimap").get_global_rect().end.x > 620.0
+    _check(small_ok, "At 75% the HUD shrinks toward its corners (still on screen) and the controls line can be hidden")
+    hud.apply_hud_settings({"hud": 1.0, "controls": true})
     _check(hud.get_node("Health").get_index() < hud._modal.get_index() and hud.get_node("Magicules").get_index() < hud.gear_panel.get_index(), "Windows cover the whole HUD, including the bar texts")
     # --- Icons
     actor.get_node("Inventory").add_specimen(load("res://data/specimens/forest_gnasher.tres"))

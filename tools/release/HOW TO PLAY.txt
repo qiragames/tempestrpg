@@ -1,23 +1,26 @@
 TempestRPG - playing together
 =============================
 
-Everyone: run TempestRPG.exe (no installation needed). Windows may warn about an unknown
+Everyone: unzip and run TempestRPG.exe (no installation). Windows may warn about an unknown
 app the first time: "More info" -> "Run anyway". Allow it through the firewall when asked.
 
-PLAY ALONE OR HOST FROM THE GAME
-  Start TempestRPG.exe, Continue / New Game. Press Esc -> "Open to friends" to let friends in.
+EASIEST: JOIN CODES (no router settings, nothing to install)
+  Host:   start a world (Continue / New Game) -> Esc -> "Invite with a code" -> "New invite code"
+          -> "Copy code" and send it to ONE friend (Discord, chat...).
+  Friend: TempestRPG.exe -> "Join a Friend" -> paste the code -> "Join".
+          The game shows a REPLY code -> copy it and send it back to the host.
+  Host:   paste the reply code -> "Let them in". Repeat with a new code for each friend.
+  Codes contain your Internet address: share them only with friends. Some strict networks
+  (mobile hotspots, school/company networks) can block join codes.
 
-RUN A SERVER (the world keeps running even when you are not playing)
-  1. Double-click "Start server.bat" - it hosts your most recently played world.
-  2. Start TempestRPG.exe -> Join a Friend -> address 127.0.0.1  (you play your own character)
-  3. Friends: TempestRPG.exe -> Join a Friend -> the address the server window shows.
-  Stop the server by closing its window.
+SAME HOME NETWORK
+  Host: Esc -> "Open to friends". Friends: "Join a Friend" -> the 192.168... address shown.
 
-FRIENDS OUTSIDE YOUR HOME NETWORK
-  The game asks your router to open UDP port 24560 automatically (UPnP). If the window says
-  the router did not answer, either
-   - FRITZ!Box: Internet -> Permit Access -> Port Sharing -> the PC -> "Permit independent
-     port sharing for this device" (UPnP), or add a port sharing: UDP 24560 to this PC; or
-   - other routers: enable UPnP, or forward UDP 24560 to this PC.
-  Then give friends your public address (the server window shows it when UPnP works, or
-  search "what is my IP"). Never give them 127.0.0.1 - that only means "this PC".
+SERVER WINDOW (optional; the world runs while you are not playing; needs port sharing for
+friends outside your network: UDP 24560, e.g. FRITZ!Box -> Internet -> Permit Access)
+  1. Double-click "Start server.bat" (hosts your most recently played world).
+  2. You: TempestRPG.exe -> Join a Friend -> 127.0.0.1  (you play your own character)
+  3. Friends: Join a Friend -> the address the server window shows.
+
+HANDY
+  Esc -> Options: HUD size (65-100%), window size, sound.  F1: hide/show the controls line.

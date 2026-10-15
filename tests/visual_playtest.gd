@@ -46,6 +46,9 @@ func _shot(name: String, caption: String) -> void:
     await process_frame
     await RenderingServer.frame_post_draw
     var image := root.get_texture().get_image()
+    # The game draws at the window's size (sharp text); captures are kept at 960x540.
+    if image.get_width() > 960:
+        image.resize(960, 540, Image.INTERPOLATE_LANCZOS)
     shots += 1
     var file := "%02d_%s.png" % [shots, name]
     image.save_png(ProjectSettings.globalize_path(OUT.path_join(file)))

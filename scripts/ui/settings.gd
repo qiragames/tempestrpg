@@ -2,8 +2,10 @@ extends RefCounted
 ## Local settings: display (step 22: fullscreen, window scale) and sound/effects (step 23: music
 ## and effects volume 0..1, mute, reduced effects). Stored per machine in user://settings.cfg,
 ## never in world saves, and never sent to the host.
-const DEFAULTS := {"fullscreen": false, "scale": 2, "music": 0.7, "sfx": 0.8, "muted": false, "reduced": false}
+const DEFAULTS := {"fullscreen": false, "scale": 2, "music": 0.7, "sfx": 0.8, "muted": false, "reduced": false, "hud": 0.75, "controls": true}
 const SCALES := [1, 2, 3]
+## HUD size (user request: the HUD was too big) and whether the controls line is shown.
+const HUD_SIZES := [0.65, 0.75, 0.85, 1.0]
 const UI := preload("res://scripts/ui/ui_style.gd")
 ## Tests point this at a temporary file.
 static var path: String = "user://settings.cfg"
@@ -22,12 +24,18 @@ static func load_settings() -> Dictionary:
         for key in ["muted", "reduced"]:
             var flag: Variant = file.get_value("sound", key, DEFAULTS[key])
             values[key] = flag is bool and flag
+        var hud: Variant = file.get_value("display", "hud", DEFAULTS.hud)
+        values.hud = float(hud) if (hud is int or hud is float) and HUD_SIZES.has(snappedf(float(hud), 0.01)) else DEFAULTS.hud
+        var controls: Variant = file.get_value("display", "controls", DEFAULTS.controls)
+        values.controls = controls if controls is bool else DEFAULTS.controls
     return values
 
 static func save_settings(values: Dictionary) -> Error:
     var file := ConfigFile.new()
     file.set_value("display", "fullscreen", bool(values.fullscreen))
     file.set_value("display", "scale", int(values.scale))
+    file.set_value("display", "hud", float(values.get("hud", DEFAULTS.hud)))
+    file.set_value("display", "controls", bool(values.get("controls", DEFAULTS.controls)))
     for key in ["music", "sfx", "muted", "reduced"]:
         file.set_value("sound", key, values.get(key, DEFAULTS[key]))
     return file.save(path)
@@ -38,6 +46,8 @@ static func apply(values: Dictionary) -> void:
     var tree := Engine.get_main_loop() as SceneTree
     if tree != null and tree.root.has_node("Audio"):
         tree.root.get_node("Audio").apply_settings(values)
+    if tree != null:
+        tree.call_group("hud_settings", "apply_hud_settings", values)
     if DisplayServer.get_name() == "headless":
         return
     if values.fullscreen:
@@ -133,10 +143,46 @@ static func build(panel: Control, on_back: Callable) -> Control:
             change.call()
         )
         panel.add_child(check)
+    # HUD size and the controls line (user request).
+    var hud_label := Label.new()
+    hud_label.text = "HUD size"
+    hud_label.position = Vector2(14, 196)
+    hud_label.add_theme_font_size_override("font_size", 10)
+    panel.add_child(hud_label)
+    var hud_buttons: Array = []
+    for index in range(HUD_SIZES.size()):
+        var button := Button.new()
+        button.name = "Hud%d" % int(round(HUD_SIZES[index] * 100))
+        button.text = "%d%%" % int(round(HUD_SIZES[index] * 100))
+        button.toggle_mode = true
+        button.button_pressed = is_equal_approx(values.hud, HUD_SIZES[index])
+        button.position = Vector2(76 + index * 54, 192)
+        button.size = Vector2(50, 22)
+        button.add_theme_font_size_override("font_size", 10)
+        panel.add_child(button)
+        hud_buttons.append(button)
+        button.pressed.connect(func():
+            values.hud = HUD_SIZES[index]
+            for other in range(hud_buttons.size()):
+                hud_buttons[other].set_pressed_no_signal(other == index)
+            change.call()
+        )
+    var controls := CheckButton.new()
+    controls.name = "Controls"
+    controls.text = "Show the controls line (F1)"
+    controls.position = Vector2(14, 218)
+    controls.size = Vector2(240, 24)
+    controls.add_theme_font_size_override("font_size", 10)
+    controls.button_pressed = values.controls
+    controls.toggled.connect(func(on: bool):
+        values.controls = on
+        change.call()
+    )
+    panel.add_child(controls)
     var back := Button.new()
     back.name = "Back"
     back.text = "Back"
-    back.position = Vector2(14, 194)
+    back.position = Vector2(14, 246)
     back.size = Vector2(96, 24)
     back.pressed.connect(on_back)
     panel.add_child(back)

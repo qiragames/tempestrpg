@@ -68,6 +68,8 @@ var _ally_dialog: Panel
 
 func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
+    add_to_group("hud_settings")
+    apply_hud_settings.call_deferred(SETTINGS.load_settings())
     get_parent().system_message.connect(record_event)
     UI.install(get_tree())
     _build_status()
@@ -343,6 +345,7 @@ func _activate_slot(index: int) -> void:
             player.get_node("MeleeAttack").attack_skill(player.facing, skill.id)
 
 func _process(_delta: float) -> void:
+    _scale_new_elements()
     if _pause_panel.visible:
         # A friend joined while this host was paused alone: resume the shared world, keep this player stopped.
         if not _pause_blocking and get_tree().paused and session.active and session.owners.size() > 1:
@@ -513,6 +516,10 @@ func close_inventory() -> void:
     get_tree().paused = _paused_before_open
 
 func _unhandled_input(event: InputEvent) -> void:
+    if event.is_action_pressed("toggle_controls") and not event.is_echo():
+        _toggle_controls()
+        get_viewport().set_input_as_handled()
+        return
     if event is InputEventKey and event.pressed and not event.echo:
         if event.keycode == KEY_F9:
             var result: Error = session.save_world()
@@ -596,6 +603,63 @@ const SETTINGS := preload("res://scripts/ui/settings.gd")
 const MARKER := preload("res://scripts/ui/menu_marker.gd")
 const LAYOUT := preload("res://scripts/world/world_layout.gd")
 
+## --- HUD size and the controls line (user request: the HUD was too big; the controls line
+## should close fully). The always-on parts of the HUD (status card, minimap, hotbar, messages,
+## analysis box, title…) shrink toward their own screen corner; windows keep their size.
+var hud_scale := 1.0
+const VIEW := Vector2(640, 360)
+
+func apply_hud_settings(values: Dictionary) -> void:
+    hud_scale = float(values.get("hud", SETTINGS.DEFAULTS.hud))
+    if has_node("Controls"):
+        $Controls.visible = bool(values.get("controls", true))
+        if has_node("BottomBar"):
+            $BottomBar.visible = $Controls.visible
+    for child in get_children():
+        _scale_element(child)
+    # The party frames live inside the party window's layer; they shrink toward the top left.
+    if is_instance_valid(party_panel) and party_panel.get("_frames") != null:
+        var frames: Control = party_panel._frames
+        frames.pivot_offset = -frames.position
+        frames.scale = Vector2(hud_scale, hud_scale)
+
+## Windows (anything covering a large part of the screen) are left alone.
+func _is_window(node: Control) -> bool:
+    return node.size.x * node.size.y >= VIEW.x * VIEW.y * 0.3 or node.get_meta("hud_window", false)
+
+func _scale_element(node: Node) -> void:
+    if not node is Control or _is_window(node):
+        return
+    var control: Control = node
+    # Every piece shrinks toward the same screen point of its area (a corner or the middle of the
+    # top/bottom edge), so pieces of one element (the status card, the hotbar) stay together.
+    var centre := control.position + control.size / 2.0
+    var right_edge: bool = control.position.x + control.size.x > VIEW.x - 40.0
+    var left_edge: bool = control.position.x < 120.0
+    var anchor := Vector2(
+        VIEW.x if right_edge and not left_edge else (0.0 if left_edge else VIEW.x / 2.0),
+        VIEW.y if centre.y > VIEW.y / 2.0 else 0.0)
+    if control.size.x >= VIEW.x * 0.9:
+        anchor.x = 0.0
+    control.pivot_offset = anchor - control.position
+    control.scale = Vector2(hud_scale, hud_scale)
+    control.set_meta("hud_scaled", true)
+
+## Elements made later (e.g. the siege banner) or moved get the same size.
+func _scale_new_elements() -> void:
+    for child in get_children():
+        if child is Control and (not child.has_meta("hud_scaled") or child.get_meta("hud_at", Vector2.INF) != child.position):
+            _scale_element(child)
+            child.set_meta("hud_at", child.position)
+
+func _toggle_controls() -> void:
+    var values := SETTINGS.load_settings()
+    values.controls = not $Controls.visible
+    SETTINGS.save_settings(values)
+    $Controls.visible = values.controls
+    if has_node("BottomBar"):
+        $BottomBar.visible = values.controls
+
 ## Pause overlay after the user's reference (step 22): dimmed world, GAME PAUSED banner, the menu
 ## with the slime marker, a character/world card, Options, and shortcuts into the bag, skill tree
 ## and fusion window (closing those returns here).
@@ -649,7 +713,8 @@ func _build_pause_panel() -> void:
     )
     _pause_options = Panel.new()
     _pause_options.position = Vector2(170, 62)
-    _pause_options.size = Vector2(300, 228)
+    _pause_options.position = Vector2(170, 56)
+    _pause_options.size = Vector2(300, 280)
     _pause_options.add_theme_stylebox_override("panel", UI.ornate())
     _pause_panel.add_child(_pause_options)
     _pause_options.set_meta("first", SETTINGS.build(_pause_options, _close_options))
