@@ -88,6 +88,50 @@ func _run() -> void:
     _check(actor._weapon_icon != null, "It is drawn in the character's hand")
     actor.get_node("MeleeAttack").cooldown_left = 0.0
     _check(actor.get_node("MeleeAttack").attack(Vector2.RIGHT) and is_equal_approx(actor.get_node("MeleeAttack").cooldown_left, GEAR.WEAPONS.dagger.recovery * actor.get_node("MeleeAttack")._race().recovery), "Daggers stab quickly (%.2f s)" % GEAR.WEAPONS.dagger.recovery)
+    # --- Elements (part 2): what a hit does, by element and rarity
+    var ELEMENTS := preload("res://scripts/items/element_catalogue.gd")
+    _check(ELEMENTS.on_hit("fire", 1, 20).is_empty() and ELEMENTS.on_hit("fire", 2, 20).has("dot") and ELEMENTS.on_hit("fire", 5, 20).dot[0] > ELEMENTS.on_hit("fire", 2, 20).dot[0], "Elements act from Rare and grow with rarity")
+    var gnasher = load("res://scenes/enemies/forest_gnasher.tscn").instantiate()
+    gnasher.entity_id = "items_gnasher"
+    world.add_child(gnasher)
+    world.wire_enemy(gnasher)
+    gnasher.set_physics_process(false)
+    var other = load("res://scenes/enemies/forest_gnasher.tscn").instantiate()
+    other.entity_id = "items_gnasher_2"
+    world.add_child(other)
+    world.wire_enemy(other)
+    other.set_physics_process(false)
+    for pick in [["fire", "dot"], ["frost", "slow"], ["storm", "chain"]]:
+        var ids: Array = GEAR.BASES.keys().filter(func(id): return GEAR.BASES[id].get("weapon", "") == "sword" and GEAR.BASES[id].element == pick[0])
+        var blade: Dictionary = GEAR.roll(ids[0], 4, rng)
+        actor.add_item(blade)
+        actor.equip(blade.id, "weapon")
+        gnasher.get_node("Health").maximum = 5000
+        gnasher.get_node("Health").current = 5000
+        gnasher.get_node("Health").immunity_left = 0.0
+        other.get_node("Health").maximum = 5000
+        other.get_node("Health").current = 5000
+        other.get_node("Health").immunity_left = 0.0
+        gnasher.dot_left = 0.0
+        gnasher.slow_left = 0.0
+        actor.global_position = Vector2(300, 520)
+        gnasher.global_position = actor.global_position + Vector2(18, 0)
+        other.global_position = gnasher.global_position + Vector2(20, 0)
+        await _frames(2)
+        actor.get_node("MeleeAttack").cooldown_left = 0.0
+        var other_hp: int = other.get_node("Health").current
+        var swung: bool = actor.get_node("MeleeAttack").attack(Vector2.RIGHT)
+        match pick[1]:
+            "dot":
+                _check(gnasher.dot_left > 0.0, "A fire sword sets creatures burning")
+            "slow":
+                _check(gnasher.slow_left > 0.0, "A frost sword slows them")
+            "chain":
+                _check(other.get_node("Health").current < other_hp, "A storm sword arcs to a second creature")
+    var legendary_fx: bool = is_instance_valid(actor._weapon_fx) and actor._weapon_fx.emitting
+    _check(legendary_fx, "Legendary weapons spark (particles in the element's colour)")
+    gnasher.queue_free()
+    other.queue_free()
     var document: Dictionary = CODEC.capture_entities(world)
     document.merge({"version": STORE.VERSION, "world_id": "items", "players": {"host": CODEC.capture_player(actor)}, "progression": world.progression.duplicate(true)})
     _check(STORE.validate(document.duplicate(true)), "New items save")

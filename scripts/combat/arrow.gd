@@ -31,8 +31,13 @@ func _physics_process(delta: float) -> void:
     if not hit.is_empty():
         global_position = hit.position
         if not cosmetic and hit.collider.has_node("Health") and hit.collider.is_in_group("enemies"):
-            if hit.collider.get_node("Health").take_damage(damage, shooter) and is_instance_valid(shooter) and shooter.has_method("gear_passive") and shooter.gear_passive("lifesteal"):
+            var before: int = hit.collider.get_node("Health").current
+            var landed: bool = hit.collider.get_node("Health").take_damage(damage, shooter)
+            if landed and is_instance_valid(shooter) and shooter.has_method("gear_passive") and shooter.gear_passive("lifesteal"):
                 shooter.get_node("Health").heal(1)
+            # Item expansion: the bow's element acts on the arrow's hit.
+            if landed and is_instance_valid(attack) and attack.has_method("element_hit"):
+                attack.element_hit(hit.collider, before - hit.collider.get_node("Health").current)
         _stop()
         return
     global_position = to

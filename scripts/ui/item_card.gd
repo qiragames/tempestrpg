@@ -124,6 +124,12 @@ func show_item(item_data: Dictionary, where: String = "") -> void:
         var high: String = stat_value(stat, span[1])[0]
         var value := _label("%s  (%s to %s)" % [shown[0], low, high] if span[0] != span[1] else shown[0], 10, GOOD if shown[1] else BAD, grid)
         value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    # Item expansion: the element (what a hit does for weapons; armour shows only its colour).
+    var element: String = String(GEAR.BASES[item.base].get("element", ""))
+    if not element.is_empty():
+        var elements := preload("res://scripts/items/element_catalogue.gd")
+        var text: String = elements.describe(element, int(item.rarity), int(item.stats.get("damage", 0))) if GEAR.BASES[item.base].has("weapon") else "%s attunement" % elements.ELEMENTS[element][0]
+        _label(text, 9, elements.color(element), _box)
     # Passives (Rare and up) and the active (Epic and Legendary).
     if not item.passives.is_empty() or not String(item.active).is_empty():
         _box.add_child(_divider(color))

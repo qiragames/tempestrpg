@@ -966,22 +966,70 @@ func _draw() -> void:
 var _weapon_icon: Texture2D
 var _weapon_icon_key := ""
 
+var _weapon_fx: CPUParticles2D
+
 func _draw_weapon(item: Dictionary) -> void:
     var key := "%s:%d" % [item.base, int(item.rarity)]
     if key != _weapon_icon_key:
         _weapon_icon_key = key
         _weapon_icon = GEAR.icon_texture(item.base, int(item.rarity))
+        _update_weapon_fx(item)
     if _weapon_icon == null:
         return
     var side := 1.0 if facing.x >= -0.1 else -1.0
     var size := Vector2(14, 14)
     var at := Vector2(7.0 * side, 0.0) if absf(facing.x) > 0.3 else Vector2(8.0, 1.0)
+    # Rare and up glow (pulsing); the colour is the element's, else the rarity's.
+    var rarity: int = int(item.rarity)
+    if rarity >= 2:
+        var element: String = String(GEAR.BASES[item.base].get("element", ""))
+        var glow: Color = preload("res://scripts/items/element_catalogue.gd").color(element) if not element.is_empty() else Color(GEAR.RARITY_COLORS[rarity])
+        var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 260.0)
+        draw_circle(at + Vector2(0, -4), 5.0 + rarity * 1.2, Color(glow, 0.08 + 0.05 * rarity + 0.06 * pulse))
+    if is_instance_valid(_weapon_fx):
+        _weapon_fx.position = at + Vector2(0, -4)
     draw_set_transform(at, 0.0, Vector2(side, 1.0))
     draw_texture_rect(_weapon_icon, Rect2(-size / 2.0 - Vector2(0, 4), size), false)
     draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
+## Epic and up: sparks rise from the weapon (more and bigger for Legendary and Mythic).
+func _update_weapon_fx(item: Dictionary) -> void:
+    var rarity: int = int(item.rarity) if not item.is_empty() else 0
+    if rarity < 3 or preload("res://scripts/visual/effects.gd").reduced:
+        if is_instance_valid(_weapon_fx):
+            _weapon_fx.queue_free()
+        _weapon_fx = null
+        return
+    if not is_instance_valid(_weapon_fx):
+        _weapon_fx = CPUParticles2D.new()
+        _weapon_fx.name = "WeaponFx"
+        _weapon_fx.local_coords = false
+        _weapon_fx.direction = Vector2.UP
+        _weapon_fx.spread = 40.0
+        _weapon_fx.gravity = Vector2(0, -18)
+        _weapon_fx.initial_velocity_min = 4.0
+        _weapon_fx.initial_velocity_max = 12.0
+        _weapon_fx.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+        _weapon_fx.emission_sphere_radius = 4.0
+        add_child(_weapon_fx)
+    var element: String = String(GEAR.BASES[item.base].get("element", ""))
+    var colour: Color = preload("res://scripts/items/element_catalogue.gd").color(element) if not element.is_empty() else Color(GEAR.RARITY_COLORS[rarity])
+    _weapon_fx.amount = [0, 0, 0, 6, 12, 22][rarity]
+    _weapon_fx.lifetime = 0.6 + 0.15 * rarity
+    _weapon_fx.scale_amount_min = 0.8
+    _weapon_fx.scale_amount_max = 1.0 + 0.4 * (rarity - 3)
+    var ramp := Gradient.new()
+    ramp.set_color(0, Color(colour.lightened(0.3), 0.9))
+    ramp.set_color(1, Color(colour, 0.0))
+    _weapon_fx.color_ramp = ramp
+    _weapon_fx.emitting = true
+
 ## Distinct, rarity-coloured looks per item base (placeholders until the sprite step).
 func _draw_gear() -> void:
+    # No weapon (or a plain one): no weapon sparks.
+    if is_instance_valid(_weapon_fx) and item_by_id(progression.get("equipment", {}).get("weapon", "")).is_empty():
+        _update_weapon_fx({})
+        _weapon_icon_key = ""
     for slot in GEAR.SLOTS:
         var item: Dictionary = item_by_id(progression.get("equipment", {}).get(slot, ""))
         if item.is_empty():
