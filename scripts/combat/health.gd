@@ -75,8 +75,12 @@ func take_damage(amount: int, source: Node = null, over_time: bool = false) -> b
     if amount <= 0 or current <= 0 or (immunity_left > 0.0 and not over_time):
         return false
     last_hit_by = source
-    var dealt: int = mini(current, maxi(1, amount - armor))
-    current = maxi(0, current - maxi(1, amount - armor))
+    var hit: int = maxi(1, amount - armor)
+    # Item expansion: a Phoenix piece turns one lethal hit into a close call.
+    if hit >= current and current > 1 and get_parent().has_method("lethal_guard") and get_parent().lethal_guard():
+        hit = current - 1
+    var dealt: int = mini(current, hit)
+    current = maxi(0, current - hit)
     if not over_time:
         immunity_left = immunity_seconds
     damaged.emit(dealt, source)

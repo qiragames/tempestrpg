@@ -128,6 +128,49 @@ func _run() -> void:
                 _check(gnasher.slow_left > 0.0, "A frost sword slows them")
             "chain":
                 _check(other.get_node("Health").current < other_hp, "A storm sword arcs to a second creature")
+    # --- Sets and uniques (part 3)
+    var SETS := preload("res://scripts/items/set_catalogue.gd")
+    var set_pieces: Array = GEAR.BASES.keys().filter(func(id): return GEAR.BASES[id].get("set", "") == "emberlord")
+    var uniques: Array = GEAR.BASES.keys().filter(func(id): return GEAR.BASES[id].has("unique"))
+    _check(set_pieces.size() == 5 and GEAR.BASES.keys().filter(func(id): return GEAR.BASES[id].has("set")).size() == 40, "Eight sets of five pieces")
+    _check(uniques.size() >= 20 and uniques.all(func(id): return int(GEAR.BASES[id].min_rarity) >= 4), "%d unique named pieces, only Legendary or Mythic" % uniques.size())
+    var strike_before: float = actor.gear_bonus("strike")
+    var worn_set: Array = []
+    for id in set_pieces:
+        var piece: Dictionary = GEAR.roll(id, 3, rng)
+        actor.add_item(piece)
+        worn_set.append(piece)
+    var slots := {"head": "head", "body": "body", "hands": "hands", "feet": "feet", "accessory": "accessory_1"}
+    for k in range(2):
+        actor.equip(worn_set[k].id, slots[GEAR.BASES[worn_set[k].base].slot])
+    _check(is_equal_approx(actor.gear_bonus("strike") - strike_before, 3.0 + float(worn_set[0].stats.get("strike", 0)) + float(worn_set[1].stats.get("strike", 0))), "Two Emberlord pieces: +3 strike")
+    for k in range(2, 4):
+        actor.equip(worn_set[k].id, slots[GEAR.BASES[worn_set[k].base].slot])
+    _check(is_equal_approx(SETS.damage_factor(actor.equipped_items(), GEAR.BASES), 1.15) and SETS.element_factor(actor.equipped_items(), GEAR.BASES, "fire") == 1.5, "Four pieces: +15% weapon damage, fire weapons act half as strong again")
+    # Phoenix: one lethal hit survived.
+    var phoenix_id: String = uniques.filter(func(id): return GEAR.BASES[id].unique == "phoenix" and GEAR.BASES[id].slot == "body")[0]
+    var phoenix: Dictionary = GEAR.roll(phoenix_id, 5, rng)
+    actor.add_item(phoenix)
+    actor.equip(phoenix.id, "body")
+    actor.get_node("Health").immunity_left = 0.0
+    actor.get_node("Health").take_damage(99999)
+    _check(actor.get_node("Health").current == 1 and actor.phoenix_left > 0.0, "Phoenix Plate: a lethal hit leaves 1 HP")
+    actor.get_node("Health").current = actor.get_node("Health").maximum
+    # Executioner: double damage below 30%.
+    var kingsbane: Dictionary = GEAR.roll(uniques.filter(func(id): return GEAR.BASES[id].unique == "executioner" and GEAR.BASES[id].weapon == "sword")[0], 4, rng)
+    actor.add_item(kingsbane)
+    actor.equip(kingsbane.id, "weapon")
+    var victim = load("res://scenes/enemies/forest_gnasher.tscn").instantiate()
+    victim.entity_id = "items_victim"
+    world.add_child(victim)
+    victim.set_physics_process(false)
+    await _frames(1)
+    victim.get_node("Health").maximum = 1000
+    victim.get_node("Health").current = 200
+    _check(actor.get_node("MeleeAttack").ability_damage(victim, 40) == 80 and actor.get_node("MeleeAttack").ability_damage(victim, 40) == 80, "Kingsbane: double damage to a creature below 30%")
+    victim.get_node("Health").current = 900
+    _check(actor.get_node("MeleeAttack").ability_damage(victim, 40) == 40, "…normal damage above it")
+    victim.queue_free()
     var legendary_fx: bool = is_instance_valid(actor._weapon_fx) and actor._weapon_fx.emitting
     _check(legendary_fx, "Legendary weapons spark (particles in the element's colour)")
     gnasher.queue_free()

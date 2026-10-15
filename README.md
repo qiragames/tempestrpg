@@ -20,6 +20,20 @@ Current state of this branch, captured by the visible playtest (`tests/visual_pl
 
 The First Clearing is the start of an archipelago of about 10 × 11 screens (M4.5a): **Verdant Isle** with Thornwood (dense forest), Mirror Lake (a bridge to the ruined keep on its islet), Cinder Crater (ash, boulders, a lava pool) and its beaches; **Harrowmere**, the walled-town island across a long bridge; **Ambervale**, the autumn continent, and the volcanic **Emberreach Isles** across the sea (reachable once ferries and ships exist). The clearing's roads continue as paths, the HUD names the region you are in, and **M** (or the pause menu) opens the world map with your position. Coasts, lakes and lava block movement; bridges carry you across. The regions have their own content (M4.5b): 13 creatures that respawn (easy Gnashers in the meadows and on the beach, Gnashers and a Thornback in Thornwood and by Mirror Lake, Elites in Cinder Crater; Harrowmere is peaceful), six richer deposits (Thornwood wood, crater and lakeshore stone, meadow wood) that explorers gather into the camp's stock, and five chests — the keep's and the crater's give Rare or Epic gear. Tests: `tests/world_map.gd` (23), `tests/region_content.gd` (21).
 
+## Weapons and armour (item expansion)
+
+User request: hundreds of weapons and armour pieces with their own looks and names. **849 items**: 524 weapons (124 daggers, 120 swords, 104 bows, 96 spears, 80 scythes) and 325 armour and jewellery pieces, in **six rarities** — Common, Uncommon, Rare, Epic, Legendary and the new **Mythic** (×2.7, three passives, three rune sockets).
+
+- **Looks:** icons from three CC0 packs (7Soul1's 496 RPG icons, Idylwild's Arsenal and Armory, babysamurai's Super Epic Weapons) plus scythes drawn from parts; every source icon also comes in material and element colours (`tools/generate_items.py` builds the atlases and `scripts/items/item_bases.gd`). Your weapon is drawn in your hand.
+- **Item levels and rarity:** plain pieces drop from Common, material variants from Uncommon, **elemental** ones from Rare, the glowing epic pieces from Epic. Drops, chests, the trial, the forge and merchants pick pieces near the source's level, so later regions give stronger gear.
+- **Daggers:** a quick short stab (0.3 s).
+- **Elements** (Rare and up, stronger with rarity): fire burns, frost slows, storm arcs to another creature, shadow sometimes hits twice as hard, holy heals you, nature poisons, blood bleeds and heals a little, arcane restores Magicules. Hits burst in the element's colour.
+- **VFX:** Rare+ weapons glow, Epic+ throw sparks — more for Legendary and Mythic.
+- **Sets:** eight five-piece sets (Emberlord's Regalia, Rimewarden's Plate, Stormcaller's Garb, Nightstalker's Shroud, Dawnguard Vestments, Wildheart Raiment, Bloodbound Mail, Starweaver's Robes): two pieces give a themed stat, four give +15% weapon damage and make a weapon of the same element act half as strong again.
+- **Uniques:** 23 named Legendary/Mythic pieces with their own ability — e.g. *Dawnbreaker* (heals you and your party), *Cinderheart* (every fourth hit explodes), *Kingsbane* (double damage to weakened foes), *Skyrender* (lightning leaps to three more creatures), *Soulreaper* (kills heal), *Phoenix Plate* (survive one lethal hit every two minutes).
+
+Tests: `tests/items.gd` (28).
+
 ## HUD size and the controls line
 
 User request: the HUD was too big and the controls line should close completely. **Esc → Options → HUD size** (65 / 75 / 85 / 100 %, default 75 %) shrinks the always-on parts — status card, minimap, hotbar, messages, analysis box, titles, party frames — toward their own screen corner; windows keep their size. **F1** (or the Options checkbox) hides or shows the controls line, remembered on this computer. The game now draws at the window's resolution (stretch mode `canvas_items`, still the 640×360 layout with integer scaling), so smaller text stays sharp; playtest captures are saved at 960×540.
@@ -219,6 +233,7 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/citizens.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/jobs.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/siege.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/items.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/balance_edges.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
@@ -228,7 +243,7 @@ python3 tests/network_worlds.py
 "$GODOT_BIN" --headless --path . --quit-after 120
 ```
 
-The checks validate import, 49 local gameplay/persistence/UI/visual suites (1401 checks including the bot balance probe) and 280 real multi-process networking checks (1681 total through M5d, the server mode, join codes and the HUD size on Windows; use `python3` on Linux or `python` on Windows). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
+The checks validate import, 49 local gameplay/persistence/UI/visual suites (1429 checks including the bot balance probe) and 280 real multi-process networking checks (1709 total through the item expansion on Windows; use `python3` on Linux or `python` on Windows). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
 
 ## Structure
 

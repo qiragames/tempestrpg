@@ -76,6 +76,42 @@ NOUNS = {
     "amulet": ["Amulet", "Pendant", "Talisman", "Locket", "Medallion", "Charm", "Torc", "Sigil"],
 }
 EPIC_THEMES = ["fire", "frost", "nature", "holy", "shadow"]
+# Sets (part 3): one per element, five pieces (head, body, hands, feet, amulet), Epic and up.
+SETS = {
+    "fire": ("emberlord", "Emberlord's"), "frost": ("rimewarden", "Rimewarden's"), "storm": ("stormcaller", "Stormcaller's"),
+    "shadow": ("nightstalker", "Nightstalker's"), "holy": ("dawnguard", "Dawnguard"), "nature": ("wildheart", "Wildheart"),
+    "blood": ("bloodbound", "Bloodbound"), "arcane": ("starweaver", "Starweaver's"),
+}
+SET_SLOTS = [("head", "metal"), ("body", "metal"), ("hands", "metal"), ("feet", "metal"), ("amulet", "amulet")]
+# Uniques (part 3): hand-named Legendary (4) / Mythic (5) pieces with their own ability, drawn from
+# the packs' finest icons in their element's colours with a glowing outline.
+# [name, group, source (pack, file), element, min rarity, ability]
+UNIQUES = [
+    ["Dawnbreaker", "sword", ("7soul", "W_Sword016.png"), "holy", 5, "radiance"],
+    ["Cinderheart", "sword", ("7soul", "W_Sword015.png"), "fire", 4, "inferno"],
+    ["Kingsbane", "sword", ("7soul", "W_Sword019.png"), "shadow", 4, "executioner"],
+    ["Whisperfang", "dagger", ("7soul", "W_Dagger021.png"), "shadow", 4, "executioner"],
+    ["Viperkiss", "dagger", ("7soul", "W_Dagger019.png"), "nature", 4, "overgrowth"],
+    ["Heartpiercer", "dagger", ("7soul", "W_Dagger020.png"), "blood", 5, "bloodthirst"],
+    ["Skyrender", "bow", ("7soul", "W_Bow16.png"), "storm", 5, "thunderlord"],
+    ["Frostwind", "bow", ("7soul", "W_Bow14.png"), "frost", 4, "glacier"],
+    ["Starfall Longbow", "bow", ("7soul", "W_Bow15.png"), "arcane", 4, "starfall"],
+    ["Stormpiercer", "spear", ("7soul", "W_Spear014.png"), "storm", 4, "thunderlord"],
+    ["Sunlance", "spear", ("7soul", "W_Spear013.png"), "holy", 4, "radiance"],
+    ["Glacier's Edge", "spear", ("7soul", "W_Spear012.png"), "frost", 5, "glacier"],
+    ["Soulreaper", "scythe", ("arsenal", "scythe2.png"), "shadow", 5, "eclipse"],
+    ["Harvest Moon", "scythe", ("arsenal", "scythe1.png"), "arcane", 4, "starfall"],
+    ["Thornreaver", "scythe", ("drawn", 7), "nature", 4, "overgrowth"],
+    ["Crown of the Tempest", "head", ("7soul", "C_Elm04.png"), "storm", 4, "windwalker"],
+    ["Phoenix Plate", "body", ("armory", "platemail"), "fire", 5, "phoenix"],
+    ["Wardenshell", "body", ("armory", "breastplate"), "frost", 4, "warden"],
+    ["Berserker's Grips", "hands", ("armory", "gauntlets"), "blood", 4, "berserker"],
+    ["Windrunner Boots", "feet", ("armory", "studded_boots"), "storm", 4, "windwalker"],
+    ["Heart of the Phoenix", "amulet", ("7soul", "Ac_Necklace08.png"), "fire", 5, "phoenix"],
+    ["Band of Fury", "ring", ("armory", "gold_ring"), "blood", 4, "berserker"],
+    ["Seal of the Warden", "ring", ("armory", "silver_ring"), "holy", 4, "warden"],
+]
+UNIQUE_ARCHETYPE = {"head": "metal", "body": "metal", "hands": "metal", "feet": "leather", "ring": "ring", "amulet": "amulet"}
 EPIC_WORDS = {"fire": "Dragonfire", "frost": "Glacial", "nature": "Wildwood", "holy": "Sunforged", "shadow": "Nightshade"}
 
 # --- Stats
@@ -311,6 +347,25 @@ def _clear_background(cell, tolerance=26):
     return cell
 
 
+def glow_outline(image, colour):
+    """A soft two-step glow around the icon (uniques)."""
+    base = image.copy()
+    out = Image.new("RGBA", image.size)
+    src = image.load()
+    dst = out.load()
+    r, g, b = hexcolor(colour)
+    for y in range(image.height):
+        for x in range(image.width):
+            if src[x, y][3] > 0:
+                continue
+            near = [(dx, dy) for dx in range(-2, 3) for dy in range(-2, 3) if 0 <= x + dx < image.width and 0 <= y + dy < image.height and src[x + dx, y + dy][3] > 0]
+            if near:
+                closest = min(abs(dx) + abs(dy) for dx, dy in near)
+                dst[x, y] = (r, g, b, 230 if closest == 1 else 110)
+    out.alpha_composite(base)
+    return out
+
+
 def stats_for(group, archetype, level, element, grade_bonus):
     scale = 1.0 + 0.045 * (level - 1) + grade_bonus
     if group in WEAPON_DAMAGE:
@@ -395,6 +450,27 @@ def main():
     for index, (group, archetype, image, theme) in enumerate(epic_sources()):
         nouns = NOUNS[group]
         add(group, archetype, image, f"{EPIC_WORDS[theme]} {nouns[(index * 7) % len(nouns)]}", theme, 14 + index % 7, 3, 0.25, slot_of[group])
+    # Sets: five Epic pieces per element (the first source icon of each slot in its colours).
+    for element, (set_id, prefix) in SETS.items():
+        for k, (group, archetype) in enumerate(SET_SLOTS):
+            source = next(entry for entry in per_group[group] if entry[1] in (archetype, "amulet"))
+            nouns = NOUNS[group]
+            add(group, archetype, recolour(source[2], element, False), f"{prefix} {nouns[(k + len(element)) % len(nouns)]}", element, 16, 3, 0.3, slot_of[group])
+            bases[-1]["set"] = set_id
+    # Uniques.
+    soul = PACKS / "icons_7soul"
+    arsenal = PACKS / "icons_idylwild_arsenal"
+    armory = PACKS / "icons_idylwild_armory"
+    for name, group, (pack, file), element, min_rarity, ability in UNIQUES:
+        if pack == "drawn":
+            image = scythe(100 + file)
+        else:
+            folder = {"7soul": soul, "arsenal": arsenal, "armory": armory}[pack]
+            image = fit(Image.open(armory_file(folder, file) if pack == "armory" else next(folder.rglob(file))))
+        image = glow_outline(recolour(image, element, group in WEAPON_DAMAGE), ACCENTS[element])
+        archetype = UNIQUE_ARCHETYPE.get(group, "")
+        add(group, archetype, image, name, element, 18 if min_rarity == 4 else 20, min_rarity, 0.45, slot_of[group])
+        bases[-1]["unique"] = ability
     # Atlases and previews.
     PREVIEW.mkdir(parents=True, exist_ok=True)
     for group, images in groups.items():
@@ -415,6 +491,8 @@ def main():
     for entry in bases:
         stats = ", ".join(f'"{k}": [{v[0]}, {v[1]}]' for k, v in entry["stats"].items())
         weapon = f', "weapon": "{entry["weapon"]}"' if "weapon" in entry else ""
+        weapon += f', "set": "{entry["set"]}"' if "set" in entry else ""
+        weapon += f', "unique": "{entry["unique"]}"' if "unique" in entry else ""
         lines.append(f'    "{entry["id"]}": {{"slot": "{entry["slot"]}"{weapon}, "name": "{entry["name"]}", "look": "icon", "element": "{entry["element"]}", '
                      f'"level": {entry["level"]}, "min_rarity": {entry["min_rarity"]}, "icon": "{entry["icon"]}", "cell": {entry["cell"]}, '
                      f'"archetype": "{entry["archetype"]}", "stats": {{{stats}}}}},')

@@ -480,8 +480,24 @@ func gear_bonus(stat: String) -> float:
             total += 5.0
         if stat == "regen" and "wellspring" in item.passives:
             total += 0.5
+    # Item expansion: set bonuses (two pieces) and unique abilities' stats.
+    total += SETS.bonus(equipped_items(), GEAR.BASES, stat)
     # Augments count like gear (their maxima are applied when installed).
     return total + augment_bonus(stat)
+
+## Phoenix (unique ability): once every PHOENIX_COOLDOWN, survive a lethal hit at 1 HP.
+const SETS := preload("res://scripts/items/set_catalogue.gd")
+var phoenix_left := 0.0
+
+func lethal_guard() -> bool:
+    if phoenix_left > 0.0 or not SETS.has_ability(equipped_items(), GEAR.BASES, "phoenix"):
+        return false
+    phoenix_left = SETS.PHOENIX_COOLDOWN
+    session.notify_character(character_id, "Phoenix! You rise from a lethal blow.")
+    var burst := preload("res://scripts/visual/effects.gd").spawn(get_parent(), "ring", global_position)
+    if burst != null:
+        burst.modulate = Color("ff7a2a")
+    return true
 
 ## Saved maxima and regeneration already include equipped gear; this re-derives the live parts.
 func refresh_gear() -> void:
@@ -891,6 +907,7 @@ func _process(delta: float) -> void:
         _tick_consumables(delta)
     _tick_fishing(delta)
     _tick_aura(delta)
+    phoenix_left = maxf(0.0, phoenix_left - delta)
     for id in gear.cooldowns.keys():
         gear.cooldowns[id] = maxf(0.0, gear.cooldowns[id] - delta)
         if gear.cooldowns[id] <= 0.0:

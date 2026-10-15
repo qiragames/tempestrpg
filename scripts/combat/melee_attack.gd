@@ -71,9 +71,13 @@ func element_damage(value: int) -> int:
 ## lightning to one more creature, and a burst in the element's colour.
 func element_hit(target: Node2D, dealt: int, already: Array = []) -> void:
     var element := weapon_element()
-    if String(element[0]).is_empty() or dealt <= 0 or not AUTHORITY.can_mutate(self):
+    if dealt <= 0 or not AUTHORITY.can_mutate(self):
         return
-    var effect: Dictionary = ELEMENTS.on_hit(element[0], element[1], dealt)
+    _unique_hit(target, dealt, already)
+    if String(element[0]).is_empty():
+        return
+    var boost: float = SETS.element_factor(get_parent().equipped_items(), GEAR.BASES, element[0]) if get_parent().has_method("equipped_items") else 1.0
+    var effect: Dictionary = ELEMENTS.on_hit(element[0], element[1], dealt, boost)
     var status := {}
     for key in ["dot", "slow"]:
         if effect.has(key):
@@ -104,6 +108,81 @@ func element_hit(target: Node2D, dealt: int, already: Array = []) -> void:
             burst.modulate = ELEMENTS.color(element[0]).lightened(0.2)
             burst.scale = Vector2.ONE * (0.6 + 0.15 * int(element[1]))
 
+## --- Unique abilities (item expansion part 3)
+const SETS := preload("res://scripts/items/set_catalogue.gd")
+var _unique_hits := 0
+
+func weapon_ability() -> String:
+    var weapon: Dictionary = get_parent().equipped_weapon() if get_parent().has_method("equipped_weapon") else {}
+    return "" if weapon.is_empty() else String(GEAR.BASES[weapon.base].get("unique", ""))
+
+## Executioner doubles the hit on a weakened creature (decided per target before the hit).
+func ability_damage(target: Node2D, value: int) -> int:
+    if weapon_ability() == "executioner" and target.has_node("Health") and target.get_node("Health").current < target.get_node("Health").maximum * 0.3:
+        return value * 2
+    return value
+
+func _creatures_near(at: Vector2, reach: float, skip: Array) -> Array:
+    return get_tree().get_nodes_in_group("enemies").filter(func(node): return not node in skip and not node.is_queued_for_deletion() and node.get_node("Health").current > 0 and node.global_position.distance_to(at) <= reach)
+
+func _unique_hit(target: Node2D, dealt: int, already: Array) -> void:
+    var ability := weapon_ability()
+    if ability.is_empty():
+        return
+    _unique_hits += 1
+    var owner: Node2D = get_parent()
+    var killed: bool = is_instance_valid(target) and target.get_node("Health").current <= 0
+    var at: Vector2 = target.global_position if is_instance_valid(target) else owner.global_position
+    var colour := ELEMENTS.color(weapon_element()[0])
+    match ability:
+        "radiance":
+            var share: int = maxi(1, int(round(dealt * 0.05)))
+            owner.get_node("Health").heal(share)
+            var party: Node = owner.get_parent().get("party")
+            for mate in get_tree().get_nodes_in_group("player"):
+                if mate != owner and party != null and party.same_party(owner.character_id, mate.character_id) and mate.global_position.distance_to(owner.global_position) <= 96.0:
+                    mate.get_node("Health").heal(share)
+        "inferno":
+            if _unique_hits % 4 == 0:
+                for creature in _creatures_near(at, 36.0, [target]):
+                    creature.get_node("Health").take_damage(maxi(1, dealt / 2), owner, true)
+                    creature.apply_status({"dot": [maxf(1.0, dealt * 0.1), 3.0]}, owner)
+                _burst(at, "ring", colour, 1.4)
+        "overgrowth":
+            if _element_rng.randf() < 0.25 and is_instance_valid(target):
+                target.apply_status({"root": 1.0}, owner)
+        "bloodthirst":
+            owner.get_node("Health").heal(maxi(1, int(round(dealt * 0.12))))
+        "thunderlord":
+            var from := at
+            var skip: Array = already.duplicate() + [target]
+            for _jump in range(3):
+                var next: Array = _creatures_near(from, ELEMENTS.CHAIN_REACH, skip)
+                if next.is_empty():
+                    break
+                next.sort_custom(func(a, b): return a.global_position.distance_to(from) < b.global_position.distance_to(from))
+                next[0].get_node("Health").take_damage(maxi(1, dealt / 2), owner, true)
+                _bolt(from, next[0].global_position, colour)
+                skip.append(next[0])
+                from = next[0].global_position
+        "glacier":
+            if _element_rng.randf() < 0.2 and is_instance_valid(target):
+                target.apply_status({"stun": 0.8}, owner)
+        "starfall":
+            if _unique_hits % 5 == 0:
+                for creature in _creatures_near(at, 40.0, []):
+                    creature.get_node("Health").take_damage(dealt, owner, true)
+                _burst(at + Vector2(0, -6), "sparkle", colour, 1.6)
+        "eclipse":
+            if killed:
+                owner.get_node("Health").heal(int(round(owner.get_node("Health").maximum * 0.15)))
+
+func _burst(at: Vector2, id: String, colour: Color, size: float) -> void:
+    var effect := EFFECTS.spawn(get_parent().get_parent(), id, at)
+    if effect != null:
+        effect.modulate = colour
+        effect.scale = Vector2.ONE * size
+
 ## A short lightning line between two creatures (storm).
 func _bolt(from: Vector2, to: Vector2, colour: Color) -> void:
     var world: Node = get_parent().get_parent()
@@ -133,7 +212,8 @@ func attack(facing: Vector2) -> bool:
     if weapon.is_empty():
         return _strike(facing, int(round((int(race.get("strike_damage", damage)) + bonus + race.strike_bonus) * _aura())), strike_cost(), cooldown * race.recovery)
     var kind: String = GEAR.BASES[weapon.base].weapon
-    return _strike(facing, element_damage(int(round((int(weapon.stats.damage) + bonus + race.strike_bonus) * _aura()))), strike_cost(), GEAR.WEAPONS[kind].recovery * race.recovery, StringName(kind))
+    var set_factor: float = SETS.damage_factor(get_parent().equipped_items(), GEAR.BASES) if get_parent().has_method("equipped_items") else 1.0
+    return _strike(facing, element_damage(int(round((int(weapon.stats.damage) + bonus + race.strike_bonus) * _aura() * set_factor))), strike_cost(), GEAR.WEAPONS[kind].recovery * race.recovery, StringName(kind))
 
 func attack_skill(facing: Vector2, skill_id: StringName) -> bool:
     var book = get_parent().get_node("SkillBook")
@@ -252,7 +332,8 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
         var sight := PhysicsRayQueryParameters2D.create(global_position, target.global_position, 1)
         if space.intersect_ray(sight).is_empty() and target.has_node("Health"):
             var before: int = target.get_node("Health").current
-            if target.get_node("Health").take_damage(strike_damage, get_parent()):
+            var hit_damage: int = ability_damage(target, strike_damage) if effect in BASIC_EFFECTS else strike_damage
+            if target.get_node("Health").take_damage(hit_damage, get_parent()):
                 dealt += before - target.get_node("Health").current
                 hits += 1
                 struck.append(target)

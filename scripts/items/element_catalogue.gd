@@ -25,8 +25,8 @@ static func color(element: String) -> Color:
 
 ## What one hit with `damage` does: status effects for the creature ("dot", "slow") plus the
 ## wielder's side ("heal" share, "magicules", "chain" damage, "crit" chance).
-static func on_hit(element: String, rarity: int, damage: int) -> Dictionary:
-    var p := power(rarity)
+static func on_hit(element: String, rarity: int, damage: int, boost: float = 1.0) -> Dictionary:
+    var p := power(rarity) * boost
     if p <= 0.0 or not ELEMENTS.has(element):
         return {}
     match element:

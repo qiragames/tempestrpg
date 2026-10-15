@@ -130,6 +130,14 @@ func show_item(item_data: Dictionary, where: String = "") -> void:
         var elements := preload("res://scripts/items/element_catalogue.gd")
         var text: String = elements.describe(element, int(item.rarity), int(item.stats.get("damage", 0))) if GEAR.BASES[item.base].has("weapon") else "%s attunement" % elements.ELEMENTS[element][0]
         _label(text, 9, elements.color(element), _box)
+    # Sets and unique abilities (item expansion part 3).
+    var sets := preload("res://scripts/items/set_catalogue.gd")
+    var set_id: String = String(GEAR.BASES[item.base].get("set", ""))
+    if not set_id.is_empty():
+        _label(sets.describe_set(set_id), 9, Color("7fe3a0"), _box)
+    var ability: String = String(GEAR.BASES[item.base].get("unique", ""))
+    if not ability.is_empty():
+        _label("Unique — %s: %s" % sets.ABILITIES[ability], 9, Color(GEAR.RARITY_COLORS[int(item.rarity)]).lightened(0.2), _box)
     # Passives (Rare and up) and the active (Epic and Legendary).
     if not item.passives.is_empty() or not String(item.active).is_empty():
         _box.add_child(_divider(color))
