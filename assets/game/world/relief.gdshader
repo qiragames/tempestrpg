@@ -18,7 +18,8 @@ float height_at(vec2 uv) {
 }
 
 void fragment() {
-	float on_land = texture(land, UV).r;
+	// The land mask holds the map's ocean flags (1 = sea): no relief on the sea.
+	float on_land = 1.0 - step(0.002, texture(land, UV).r);
 	float h = height_at(UV);
 	// Light from the north: a slope rising towards the south faces the light.
 	float facing = -dFdy(h) * 8.0;

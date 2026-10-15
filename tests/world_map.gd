@@ -125,6 +125,9 @@ func _run() -> void:
         enemy.set_physics_process(false)
     var terrain: Node2D = world.terrain
     var water_tile: Array = TERRAIN.feature_for(-380, -240)
+    # Gentle relief (user request): a land-only shader layer over the ground, under water and paths.
+    var relief: Node = terrain.get_node_or_null("Relief")
+    _check(relief != null and relief.get_index() < terrain.features.get_index() and relief.get_child(0).material is ShaderMaterial and relief.get_child(0).material.get_shader_parameter("land") != null, "The land gently rises and dips (relief layer under the water and paths)")
     # M7b: open sea is one tiled water background under the map, not a cell per tile.
     var sea: TextureRect = terrain.get_node_or_null("Sea")
     _check(water_tile == [TERRAIN.Source.WATER, Vector2i(1, 1)] and terrain.features.get_cell_source_id(Vector2i(-380, -240) + Vector2i(MAP.ORIGIN / MAP.TILE)) == -1 and sea != null and sea.texture != null and Rect2(sea.position, sea.size) == MAP.bounds(), "Open sea is drawn as water (the tiled sea background)")

@@ -205,6 +205,7 @@ func _ready() -> void:
     bridges = _layer("Bridges", tiles, -1)
     var all: Array = [ground, blend, canopy, heights, cliffs, features, bridges]
     _add_sea()
+    _add_relief()
     if _layer_cache.is_empty() and MAP.use_cache:
         var stored: Variant = CACHE.load_part("layers")
         if stored is Dictionary:
@@ -231,6 +232,44 @@ func _ready() -> void:
     add_child(props)
     _plan_once()
     stream_props()
+
+## Gentle relief (user request): one shader over the land, below the water, lava and path tiles —
+## broad patches a little higher or lower with soft, lit slopes (no collision, no gameplay).
+const RELIEF_SEED := 5150
+const RELIEF_FREQUENCY := 0.03
+
+## Built once per process (worlds are reloaded often): the relief noise at a quarter of the tile
+## resolution (the shader filters it smoothly) and the land mask straight from the ocean flags.
+static var _relief_textures: Array = []
+
+func _add_relief() -> void:
+    if _relief_textures.is_empty():
+        var noise := FastNoiseLite.new()
+        noise.seed = RELIEF_SEED
+        noise.frequency = RELIEF_FREQUENCY * 4.0
+        noise.fractal_octaves = 2
+        var relief_image: Image = noise.get_image((MAP.COLS + 1) / 4, (MAP.ROWS + 1) / 4, false, false, true)
+        var land := Image.create_from_data(MAP.COLS + 1, MAP.ROWS + 1, false, Image.FORMAT_L8, MAP.data().ocean)
+        _relief_textures = [ImageTexture.create_from_image(relief_image), ImageTexture.create_from_image(land)]
+    var material := ShaderMaterial.new()
+    material.shader = load("res://assets/game/world/relief.gdshader")
+    material.set_shader_parameter("relief", _relief_textures[0])
+    material.set_shader_parameter("land", _relief_textures[1])
+    var relief := ColorRect.new()
+    relief.name = "Shade"
+    relief.material = material
+    relief.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var area := MAP.bounds()
+    relief.position = area.position
+    relief.size = area.size + Vector2(TILE, TILE)
+    # The terrain sorts its children by y: a holder at the layers' origin keeps the overlay in
+    # tree order — over the ground layers, under the water, lava and path tiles.
+    var holder := Node2D.new()
+    holder.name = "Relief"
+    holder.z_index = -2
+    holder.add_child(relief)
+    add_child(holder)
+    move_child(holder, features.get_index())
 
 ## The open sea: the plain water tile repeated under the whole map (one node, no cells).
 func _add_sea() -> void:
