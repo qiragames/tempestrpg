@@ -118,7 +118,7 @@ func _act(phase: String) -> void:
         # world now takes longer to build at startup, so it may have wandered after its owner).
         var ally = world.get_node("GoblinAlly")
         var waited := 0.0
-        while ally.global_position.distance_to(world.camp.SITE) > 90.0 and waited < 6.0:
+        while ally.global_position.distance_to(world.camp.SITE) > 90.0 and waited < 15.0:
             await create_timer(0.1).timeout
             waited += 0.1
         guard = not world.get_node("GoblinAlly").assign_work(world.get_local_player(), role)
@@ -129,6 +129,12 @@ func _act(phase: String) -> void:
         session.request_action("camp", {"operation": operation, "id": target})
     var before: float = session.latest_snapshot.progression.world_time
     await create_timer(0.5).timeout
+    # Work assignments: wait (up to 3 s) until the host's answer arrives in a snapshot.
+    if phase.begins_with("work_"):
+        var settle := 0.0
+        while _work_state().role != phase.trim_prefix("work_") and settle < 3.0:
+            await create_timer(0.1).timeout
+            settle += 0.1
     _report({"phase": phase, "camp": world.camp.state, "guard": guard, "menu_local": not paused and session.latest_snapshot.progression.world_time > before, "work": _work_state()})
     hud._camp_dialog.close_dialog()
     busy = false

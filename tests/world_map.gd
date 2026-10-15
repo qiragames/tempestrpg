@@ -52,7 +52,7 @@ func _run() -> void:
     _check(same, "The world map is identical every time it is built (same on host and friends)")
     _check(preload("res://scripts/world/world_cache.gd").current(), "The precomputed world cache matches the current sources (rebuild: tools/build_world_cache.gd)")
     _check(MAP.bounds().encloses(Rect2(0, 0, 960, 640)) and MAP.to_world(Vector2(MAP.CLEARING.position)) == Vector2.ZERO, "The First Clearing keeps its exact coordinates inside the archipelago")
-    _check(MAP.bounds().size == Vector2(35200, 12288), "The world is 35200 x 12288 pixels: the archipelago (19200 wide) plus the Ki Realm continent")
+    _check(MAP.bounds().size == Vector2(46400, 12288), "The world is 46400 x 12288 pixels: the archipelago, the Eastern Reaches and the Ki Realm continent")
     var clearing_ok := true
     for y in range(MAP.CLEARING.position.y, MAP.CLEARING.end.y):
         for x in range(MAP.CLEARING.position.x, MAP.CLEARING.end.x):
@@ -92,7 +92,7 @@ func _run() -> void:
         every_town = every_town and sailing[MAP.tile_index(at.x, at.y)] == 1
         if sailing[MAP.tile_index(at.x, at.y)] == 0:
             push_error("Not reachable by ferry: " + town[0])
-    _check(every_town and MAP.TOWNS.size() == 32 and MAP.TOWNS.filter(func(town): return town[4] == "town").size() == 9, "With the ferries (and the hermit) every one of the 9 towns and 23 villages can be reached")
+    _check(every_town and MAP.TOWNS.size() == 41 and MAP.TOWNS.filter(func(town): return town[4] == "town").size() == 12, "With the ferries (and the hermit) every one of the 12 towns and 29 villages can be reached")
     var bridge_ok := true
     for rect in MAP.BRIDGES:
         for y in range(rect.position.y, rect.end.y):
@@ -112,7 +112,7 @@ func _run() -> void:
         for rect in rects:
             inside = inside or rect.has_point(centre)
         covered = covered and inside == MAP.solid(sample.x, sample.y)
-    _check(covered and rects.size() < 8000, "Water, lava and cliff collisions are merged rectangles exactly over the solid tiles (%d)" % rects.size())
+    _check(covered and rects.size() < 10000, "Water, lava and cliff collisions are merged rectangles exactly over the solid tiles (%d)" % rects.size())
     # --- Saves accept the whole world; older positions stay valid
     _check(STORE._position([-8000.0, -5000.0]) and STORE._position([100.0, 100.0]) and not STORE._position([-26000.0, 0.0]) and not STORE._position([0.0, 7000.0]), "Saved positions: anywhere in the world, nothing outside it")
     # --- Scene: terrain, props, camera, HUD region, world map window
@@ -125,7 +125,9 @@ func _run() -> void:
         enemy.set_physics_process(false)
     var terrain: Node2D = world.terrain
     var water_tile: Array = TERRAIN.feature_for(-380, -240)
-    _check(water_tile == [TERRAIN.Source.WATER, Vector2i(1, 1)] and terrain.features.get_cell_source_id(Vector2i(-380, -240) + Vector2i(MAP.ORIGIN / MAP.TILE)) == TERRAIN.Source.WATER, "Open sea is drawn as water")
+    # M7b: open sea is one tiled water background under the map, not a cell per tile.
+    var sea: TextureRect = terrain.get_node_or_null("Sea")
+    _check(water_tile == [TERRAIN.Source.WATER, Vector2i(1, 1)] and terrain.features.get_cell_source_id(Vector2i(-380, -240) + Vector2i(MAP.ORIGIN / MAP.TILE)) == -1 and sea != null and sea.texture != null and Rect2(sea.position, sea.size) == MAP.bounds(), "Open sea is drawn as water (the tiled sea background)")
     var keep_out := Rect2(MAP.to_world(Vector2(MAP.CLEARING.position - Vector2i(2, 2))), Vector2(MAP.CLEARING.size + Vector2i(4, 4)) * MAP.TILE)
     var props_ok: bool = TERRAIN.planned_props().size() > 4000 and terrain.props.get_child_count() > 20 and terrain.props.get_child_count() < 1500
     for prop in terrain.props.get_children():

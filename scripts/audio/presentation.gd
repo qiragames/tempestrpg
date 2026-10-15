@@ -15,6 +15,8 @@ const REGION_MUSIC := {
     MAP.Region.CLEARING: "clearing", MAP.Region.VERDANT: "verdant", MAP.Region.THORNWOOD: "thornwood",
     MAP.Region.MIRROR_LAKE: "mirror_lake", MAP.Region.CINDER_CRATER: "cinder_crater", MAP.Region.HARROWMERE: "harrowmere",
     MAP.Region.SEA: "sea", MAP.Region.AMBERVALE: "verdant", MAP.Region.EMBERREACH: "cinder_crater",
+    # M7b: the Eastern Reaches (Ninja Adventure tracks "Road", "Dark Forest", "Temple").
+    MAP.Region.STORMREACH: "steppe", MAP.Region.DUSKFEN: "gloomveil", MAP.Region.SKYREACH: "jade",
 }
 ## Things only the local character hears (others see the effect).
 const PICKUP_RADIUS := 40.0

@@ -14,7 +14,8 @@ extends RefCounted
 const TILE := 16
 ## First tile of the grid (in the tile frame used since M4.5a) and the grid size.
 const MIN := Vector2i(-1400, -256)
-const COLS := 2200
+## M7b (user request: a much bigger world): 700 more columns to the east for the Eastern Reaches.
+const COLS := 2900
 const ROWS := 768
 ## World position of tile (0, 0) (unchanged since M4.5a).
 const ORIGIN := Vector2(-2560, -1536)
@@ -23,8 +24,9 @@ const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 const CLEARING := Rect2i(160, 96, 60, 40)
 const NOISE_SEED := 4410
 
-enum Ground {SAND, GRASS, FOREST, AUTUMN, ASH, SNOW, BLOSSOM, MUD}
-enum Region {SEA, CLEARING, THORNWOOD, MIRROR_LAKE, CINDER_CRATER, VERDANT, HARROWMERE, AMBERVALE, EMBERREACH, FROSTPEAK, SUNSCORCH, SAKURA_VALE, MIREWOOD, KI_REALM}
+## M7b (user request: the new lands must look different): purple gloom, golden steppe, jade.
+enum Ground {SAND, GRASS, FOREST, AUTUMN, ASH, SNOW, BLOSSOM, MUD, GLOOM, STEPPE, JADE}
+enum Region {SEA, CLEARING, THORNWOOD, MIRROR_LAKE, CINDER_CRATER, VERDANT, HARROWMERE, AMBERVALE, EMBERREACH, FROSTPEAK, SUNSCORCH, SAKURA_VALE, MIREWOOD, KI_REALM, STORMREACH, DUSKFEN, SKYREACH}
 const REGION_NAMES := {
     Region.SEA: "The Sapphire Sea",
     Region.CLEARING: "The First Clearing",
@@ -40,13 +42,18 @@ const REGION_NAMES := {
     Region.SAKURA_VALE: "Sakura Vale",
     Region.MIREWOOD: "Mirewood Marsh",
     Region.KI_REALM: "The Ki Realm",
+    # M7b: the Eastern Reaches, between the archipelago and the Ki Realm in difficulty.
+    Region.STORMREACH: "Goldwind Steppe",
+    Region.DUSKFEN: "Gloomveil",
+    Region.SKYREACH: "Jade Terraces",
 }
 ## The Ki Realm (M4.7): a hidden island group far out at sea, reached only through the secret
 ## hermit in Sakura Vale. It never shows on the normal maps; inside it, the maps show only it.
 ## (User request: almost as big as the archipelago.) The realm is a continent west of the
 ## archipelago's sea, beyond WORLD_VIEW (what the normal maps show).
 const REALM_RECT := Rect2i(-1400, -256, 920, 768)
-const WORLD_VIEW := Rect2i(-400, -256, 1200, 768)
+## M7b: the normal maps now include the Eastern Reaches.
+const WORLD_VIEW := Rect2i(-400, -256, 1900, 768)
 
 static func in_realm(world: Vector2) -> bool:
     return REALM_RECT.has_point(to_tile(world))
@@ -55,12 +62,13 @@ static func in_realm(world: Vector2) -> bool:
 ## continent (Ambervale and Mirewood Marsh), Sakura Vale and the Emberreach Isles are reached by
 ## ferry from the harbours (HARBOURS).
 const REACHABLE := [Region.CLEARING, Region.THORNWOOD, Region.MIRROR_LAKE, Region.CINDER_CRATER, Region.VERDANT, Region.HARROWMERE, Region.FROSTPEAK, Region.SUNSCORCH]
-const BY_FERRY := [Region.AMBERVALE, Region.MIREWOOD, Region.SAKURA_VALE, Region.EMBERREACH]
+const BY_FERRY := [Region.AMBERVALE, Region.MIREWOOD, Region.SAKURA_VALE, Region.EMBERREACH, Region.STORMREACH, Region.DUSKFEN, Region.SKYREACH]
 ## Ground of each region's open land.
 const REGION_GROUND := {
     Region.VERDANT: Ground.GRASS, Region.HARROWMERE: Ground.GRASS, Region.AMBERVALE: Ground.AUTUMN, Region.EMBERREACH: Ground.ASH,
     Region.FROSTPEAK: Ground.SNOW, Region.SUNSCORCH: Ground.SAND, Region.SAKURA_VALE: Ground.BLOSSOM, Region.MIREWOOD: Ground.MUD,
     Region.KI_REALM: Ground.GRASS,
+    Region.STORMREACH: Ground.STEPPE, Region.DUSKFEN: Ground.GLOOM, Region.SKYREACH: Ground.JADE,
 }
 
 ## Land masses: [centre (tiles), radii (tiles), region]. A vertex is land when its distance to a
@@ -103,6 +111,18 @@ const LAND := [
     [Vector2(450, -190), Vector2(13, 8), Region.FROSTPEAK],
     [Vector2(720, 470), Vector2(12, 9), Region.EMBERREACH],
     [Vector2(30, 470), Vector2(18, 10), Region.AMBERVALE],
+    # M7b, the Eastern Reaches: Stormreach (levels 22-27), Duskfen (28-33), Skyreach Peaks (34-40).
+    [Vector2(1000, -90), Vector2(150, 105), Region.STORMREACH],
+    [Vector2(900, -165), Vector2(70, 45), Region.STORMREACH],
+    [Vector2(1105, 5), Vector2(75, 55), Region.STORMREACH],
+    [Vector2(1020, 300), Vector2(160, 105), Region.DUSKFEN],
+    [Vector2(900, 360), Vector2(60, 45), Region.DUSKFEN],
+    [Vector2(1140, 385), Vector2(70, 50), Region.DUSKFEN],
+    [Vector2(1340, 90), Vector2(115, 185), Region.SKYREACH],
+    [Vector2(1300, -125), Vector2(70, 60), Region.SKYREACH],
+    [Vector2(1385, 305), Vector2(60, 60), Region.SKYREACH],
+    [Vector2(880, 120), Vector2(16, 11), Region.STORMREACH],
+    [Vector2(1200, 180), Vector2(14, 10), Region.DUSKFEN],
     # The Ki Realm (M4.7): the main island, Hermit Atoll and the World Martial Grounds.
     [Vector2(-900, 80), Vector2(330, 230), Region.KI_REALM],
     [Vector2(-960, -150), Vector2(220, 90), Region.KI_REALM],
@@ -123,6 +143,8 @@ const AREAS := [
     [Vector2(-620, -40), Vector2(90, 70), Region.KI_REALM, Ground.ASH],
     [Vector2(-720, 165), Vector2(140, 85), Region.KI_REALM, Ground.SAND],
     [Vector2(-1190, 290), Vector2(100, 55), Region.KI_REALM, Ground.SAND],
+    # M7b: the steppe's dune belt.
+    [Vector2(1110, 0), Vector2(55, 35), Region.STORMREACH, Ground.SAND],
 ]
 const LAKE := [Vector2(246, 72), Vector2(24, 15)]
 const LAKE_ISLET := [Vector2(246, 70), Vector2(6, 4)]
@@ -133,6 +155,7 @@ const LAKES := [
     [Vector2(-220, 350), Vector2(10, 6)], [Vector2(-120, 412), Vector2(8, 5)], [Vector2(-205, 432), Vector2(9, 5)], [Vector2(-262, 398), Vector2(6, 4)],
     [Vector2(60, 352), Vector2(14, 8)],
     [Vector2(605, -18), Vector2(10, 6)],
+    [Vector2(960, -40), Vector2(14, 8)], [Vector2(960, 260), Vector2(12, 8)], [Vector2(1310, 20), Vector2(10, 7)],
 ]
 const LAVA_POOLS := [
     [Vector2(356, 181), Vector2(6, 4)], [Vector2(379, 204), Vector2(3, 2)], [Vector2(256, 166), Vector2(5, 4)],
@@ -192,6 +215,16 @@ const PATHS := [
     [Vector2(-760, 120), Vector2(-660, 140), Vector2(-600, 165), Vector2(-580, 225)],
     [Vector2(-900, 60), Vector2(-893, 180), Vector2(-880, 300), Vector2(-880, 362)],
     [Vector2(-1060, 60), Vector2(-1120, 160), Vector2(-1200, 230), Vector2(-1290, 250), Vector2(-1355, 250)],
+    # M7b: the Eastern Reaches' roads.
+    [Vector2(1000, -80), Vector2(960, -110), Vector2(920, -150)],
+    [Vector2(1000, -80), Vector2(1050, -40), Vector2(1100, 0)],
+    [Vector2(1020, 300), Vector2(970, 330), Vector2(920, 350)],
+    [Vector2(1020, 300), Vector2(1080, 340), Vector2(1130, 370)],
+    [Vector2(1300, -80), Vector2(1280, 0), Vector2(1270, 60)],
+    [Vector2(1270, 60), Vector2(1330, 180), Vector2(1390, 280)],
+    [Vector2(1000, -80), Vector2(1008, -30), Vector2(1012, 7)],
+    [Vector2(1020, 300), Vector2(1012, 350), Vector2(1007, 394)],
+    [Vector2(1300, -80), Vector2(1282, -65)],
 ]
 const PATH_HALF_WIDTH := 1.6
 ## Bridges (tile rects, walkable over water).
@@ -214,6 +247,10 @@ const HARBOURS := [
     ["bogsend", "Bogsend Harbour", Vector2(-150, 292), Vector2i.UP, false],
     ["hanamura", "Hanamura Harbour", Vector2(416, 70), Vector2i.LEFT, false],
     ["cinderport", "Cinderport Harbour", Vector2(456, 304), Vector2i.LEFT, true],
+    # M7b: the Eastern Reaches (docks found on open shore with clear water ahead).
+    ["galehaven", "Galehaven Harbour", Vector2(1012, 7), Vector2i.DOWN, false],
+    ["gloomhollow", "Gloomhollow Harbour", Vector2(1007, 394), Vector2i.DOWN, false],
+    ["highwind", "Jadehaven Harbour", Vector2(1282, -65), Vector2i.LEFT, false],
 ]
 const PIER_LENGTH := 6
 const BEACH := 2
@@ -231,6 +268,9 @@ const HIGHLANDS := [
     # Ki Realm: Sage Spire (two levels, the Guardian's Lookout on top) and the canyon's mesas.
     [Vector2(-760, -140), Vector2(40, 28), 1], [Vector2(-760, -146), Vector2(18, 12), 2],
     [Vector2(-660, 190), Vector2(16, 10), 1], [Vector2(-780, 205), Vector2(12, 8), 1], [Vector2(-1050, -205), Vector2(46, 18), 1],
+    # M7b: Skyreach's two-level summit and Stormreach's cliffs.
+    [Vector2(1390, 80), Vector2(40, 50), 1], [Vector2(1395, 75), Vector2(18, 24), 2],
+    [Vector2(880, -200), Vector2(30, 16), 1],
 ]
 const MAX_LEVEL := 2
 
@@ -271,6 +311,16 @@ const TOWNS := [
     ["iron_bastion", "Iron Bastion", Region.KI_REALM, Vector2(-600, -60), "village", "dome"],
     ["mesa_outpost", "Mesa Outpost", Region.KI_REALM, Vector2(-700, 160), "village", "desert"],
     ["elders_village", "Elder's Village", Region.KI_REALM, Vector2(-580, 225), "village", "dome"],
+    # M7b: the Eastern Reaches.
+    ["galehaven", "Galehaven", Region.STORMREACH, Vector2(1000, -80), "town", "steppe"],
+    ["thunderstead", "Thunderstead", Region.STORMREACH, Vector2(920, -150), "village", "steppe"],
+    ["cliffwatch", "Cliffwatch", Region.STORMREACH, Vector2(1100, 0), "village", "steppe"],
+    ["gloomhollow", "Gloomhollow", Region.DUSKFEN, Vector2(1020, 300), "town", "gloom"],
+    ["mossmere", "Mossmere", Region.DUSKFEN, Vector2(920, 350), "village", "gloom"],
+    ["witchwood", "Witchwood", Region.DUSKFEN, Vector2(1130, 370), "village", "gloom"],
+    ["highwind", "Jadehaven", Region.SKYREACH, Vector2(1300, -80), "town", "jade"],
+    ["eagles_rest", "Rice Hollow", Region.SKYREACH, Vector2(1270, 60), "village", "jade"],
+    ["crystalfall", "Cloudstep", Region.SKYREACH, Vector2(1390, 280), "village", "jade"],
 ]
 ## Plaza radius (tiles) and the radius within which the HUD names the place.
 const PLAZA := {"town": 4.5, "village": 2.5}

@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 33
+const VERSION := 34
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -806,6 +806,32 @@ static func migrate(data: Variant) -> Variant:
         for id in bosses.RAID:
             if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == id):
                 data.enemies.append(fresh_boss(id))
+    # v34 (M7b): the Eastern Reaches' creatures and bosses arrive; the Ki Realm's creatures (and
+    # its bosses) move up to their new levels (living ones at full health for it).
+    if data.get("version") == 33:
+        if not data.get("enemies") is Array:
+            return null
+        data = data.duplicate(true)
+        data.version = 34
+        var map := preload("res://scripts/world/world_map.gd")
+        var gnasher := preload("res://scripts/enemies/forest_gnasher.gd")
+        var bosses := preload("res://scripts/bosses/boss_catalogue.gd")
+        for entry in REGION.all_creatures():
+            if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == entry[0]):
+                data.enemies.append(REGION.fresh_enemy(entry).merged({"credit": {}, "group_scaled": false, "status": ""}))
+        for id in bosses.RAID:
+            if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == id):
+                data.enemies.append(fresh_boss(id))
+        for enemy in data.enemies:
+            if not enemy is Dictionary or not enemy.get("home") is Array or enemy.home.size() != 2 or int(enemy.get("hp", 0)) <= 0:
+                continue
+            if not map.in_realm(Vector2(float(enemy.home[0]), float(enemy.home[1]))):
+                continue
+            var full: int = int(fresh_boss(enemy.id).maximum_hp) if bosses.is_boss(enemy.id) else gnasher.scaled_health(int(enemy.get("difficulty", 1)), REGION.level_of(enemy.id, int(enemy.get("difficulty", 1))))
+            enemy["maximum_hp"] = full
+            enemy["hp"] = full
+            enemy["credit"] = {}
+            enemy["group_scaled"] = false
     return data
 
 ## Saved enemy entry for a raid boss at full health in its arena (v33 and new worlds).

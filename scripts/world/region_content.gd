@@ -25,12 +25,14 @@ const LEVELS := {
     "bamboo_sprite_1": 14, "bamboo_sprite_2": 16, "paper_lantern_1": 14, "paper_lantern_2": 15,
     "ember_flame_1": 17, "ember_flame_2": 19, "salamander_1": 18, "salamander_2": 20,
     # M4.7 the Ki Realm.
-    "raptor_1": 17, "raptor_2": 17, "tyrant_rex_1": 19, "gi_fighter_1": 17, "monkey_brawler_1": 18,
-    "android_scout_1": 18, "android_tank_1": 20, "bio_android_1": 21, "demon_king_1": 22,
+    "raptor_1": 40, "raptor_2": 40, "tyrant_rex_1": 43, "gi_fighter_1": 40, "monkey_brawler_1": 42,
+    "android_scout_1": 42, "android_tank_1": 45, "bio_android_1": 47, "demon_king_1": 48,
     # The bigger realm (user request).
-    "raptor_3": 18, "raptor_4": 18, "tyrant_rex_2": 20, "gi_fighter_2": 18, "monkey_brawler_2": 19,
-    "android_scout_2": 19, "android_tank_2": 21, "ki_bear_1": 19, "ki_bear_2": 20, "ki_wisp_1": 19,
-    "ki_viper_1": 18, "ki_salamander_1": 20, "demon_king_2": 22,
+    "raptor_3": 42, "raptor_4": 42, "tyrant_rex_2": 45, "gi_fighter_2": 42, "monkey_brawler_2": 43,
+    "android_scout_2": 43, "android_tank_2": 47, "ki_bear_1": 43, "ki_bear_2": 45, "ki_wisp_1": 43,
+    "ki_viper_1": 42, "ki_salamander_1": 45, "demon_king_2": 48,
+    # M7b, the Eastern Reaches: Stormreach 22-27, Duskfen 28-33, Skyreach Peaks 34-40.
+    "storm_storm_bat_1": 22, "storm_gale_beast_1": 22, "storm_cliff_lizard_1": 23, "storm_thunder_eye_1": 23, "storm_storm_bat_2": 24, "storm_gale_beast_2": 25, "storm_cliff_lizard_2": 25, "storm_thunder_eye_2": 26, "storm_storm_bat_3": 26, "storm_gale_beast_3": 27, "dusk_dusk_spider_1": 28, "dusk_fen_octopus_1": 28, "dusk_shade_spirit_1": 29, "dusk_fen_skull_1": 29, "dusk_dusk_spider_2": 30, "dusk_fen_octopus_2": 31, "dusk_shade_spirit_2": 31, "dusk_fen_skull_2": 32, "dusk_dusk_spider_3": 32, "dusk_fen_octopus_3": 33, "sky_crystal_cyclops_1": 34, "sky_sky_dragonling_1": 34, "sky_peak_reptile_1": 35, "sky_frost_spirit_1": 35, "sky_crystal_cyclops_2": 36, "sky_sky_dragonling_2": 37, "sky_peak_reptile_2": 37, "sky_frost_spirit_2": 38, "sky_crystal_cyclops_3": 38, "sky_sky_dragonling_3": 39,
 }
 
 static func level_of(id: String, difficulty: int) -> int:
@@ -82,6 +84,37 @@ const CREATURES := [
     ["demon_king_1", "demon_king", Vector2(-790, 235), 2], ["demon_king_2", "demon_king", Vector2(-1250, 300), 2],
     ["ki_bear_1", "frost_bear", Vector2(-1080, -170), 1], ["ki_bear_2", "frost_bear", Vector2(-920, -200), 2], ["ki_wisp_1", "snow_wisp", Vector2(-980, -150), 1],
     ["ki_viper_1", "dune_viper", Vector2(-1160, 280), 1], ["ki_salamander_1", "salamander", Vector2(-600, 230), 1],
+    # M7b, the Eastern Reaches (tiles found on open ground by a placement tool).
+    ["storm_storm_bat_1", "storm_bat", Vector2(874, -173), 1],
+    ["storm_gale_beast_1", "gale_beast", Vector2(1097, 31), 1],
+    ["storm_cliff_lizard_1", "cliff_lizard", Vector2(958, -53), 1],
+    ["storm_thunder_eye_1", "thunder_eye", Vector2(1009, -159), 2],
+    ["storm_storm_bat_2", "storm_bat", Vector2(1167, -16), 1],
+    ["storm_gale_beast_2", "gale_beast", Vector2(1077, -73), 1],
+    ["storm_cliff_lizard_2", "cliff_lizard", Vector2(1060, -87), 1],
+    ["storm_thunder_eye_2", "thunder_eye", Vector2(939, -143), 2],
+    ["storm_storm_bat_3", "storm_bat", Vector2(1037, -23), 1],
+    ["storm_gale_beast_3", "gale_beast", Vector2(1047, -69), 2],
+    ["dusk_dusk_spider_1", "dusk_spider", Vector2(1025, 277), 1],
+    ["dusk_fen_octopus_1", "fen_octopus", Vector2(880, 298), 1],
+    ["dusk_shade_spirit_1", "shade_spirit", Vector2(939, 278), 1],
+    ["dusk_fen_skull_1", "fen_skull", Vector2(980, 353), 2],
+    ["dusk_dusk_spider_2", "dusk_spider", Vector2(907, 250), 1],
+    ["dusk_fen_octopus_2", "fen_octopus", Vector2(877, 262), 1],
+    ["dusk_shade_spirit_2", "shade_spirit", Vector2(940, 246), 1],
+    ["dusk_fen_skull_2", "fen_skull", Vector2(1010, 240), 2],
+    ["dusk_dusk_spider_3", "dusk_spider", Vector2(1149, 376), 1],
+    ["dusk_fen_octopus_3", "fen_octopus", Vector2(969, 388), 2],
+    ["sky_crystal_cyclops_1", "crystal_cyclops", Vector2(1412, -34), 1],
+    ["sky_sky_dragonling_1", "sky_dragonling", Vector2(1249, 48), 1],
+    ["sky_peak_reptile_1", "peak_reptile", Vector2(1443, 89), 1],
+    ["sky_frost_spirit_1", "frost_spirit", Vector2(1336, 138), 2],
+    ["sky_crystal_cyclops_2", "crystal_cyclops", Vector2(1364, -21), 1],
+    ["sky_sky_dragonling_2", "sky_dragonling", Vector2(1267, -125), 1],
+    ["sky_peak_reptile_2", "peak_reptile", Vector2(1332, 247), 1],
+    ["sky_frost_spirit_2", "frost_spirit", Vector2(1326, -49), 2],
+    ["sky_crystal_cyclops_3", "crystal_cyclops", Vector2(1308, -44), 1],
+    ["sky_sky_dragonling_3", "sky_dragonling", Vector2(1257, -10), 2],
 ]
 ## Hidden leveling spots (24a, user decision: two per creature region, unmarked until a character
 ## discovers them): [id, kind, centre tile, difficulty, level, creatures]. Their creatures respawn
@@ -107,12 +140,20 @@ const SPOTS := [
     ["spot_sakura_b", "paper_lantern", Vector2(650, -20), 1, 16, 2],
     ["spot_ember_a", "ember_flame", Vector2(500, 360), 1, 18, 3],
     ["spot_ember_b", "salamander", Vector2(600, 300), 2, 19, 2],
-    ["spot_ki_a", "raptor", Vector2(-1120, -50), 1, 18, 3],
-    ["spot_ki_b", "android_scout", Vector2(-610, -60), 1, 20, 2],
-    ["spot_ki_c", "frost_bear", Vector2(-960, -185), 1, 21, 2],
-    ["spot_ki_d", "gi_fighter", Vector2(-730, 200), 1, 22, 3],
+    ["spot_ki_a", "raptor", Vector2(-1120, -50), 1, 42, 3],
+    ["spot_ki_b", "android_scout", Vector2(-610, -60), 1, 45, 2],
+    ["spot_ki_c", "frost_bear", Vector2(-960, -185), 1, 47, 2],
+    ["spot_ki_d", "gi_fighter", Vector2(-730, 200), 1, 48, 3],
+    # M7b.
+    ["spot_storm_a", "gale_beast", Vector2(875, -120), 1, 24, 3],
+    ["spot_storm_b", "thunder_eye", Vector2(1075, -128), 1, 26, 2],
+    ["spot_dusk_a", "dusk_spider", Vector2(991, 370), 1, 30, 3],
+    ["spot_dusk_b", "shade_spirit", Vector2(1110, 255), 1, 32, 2],
+    ["spot_sky_a", "crystal_cyclops", Vector2(1282, 115), 1, 36, 3],
+    ["spot_sky_b", "sky_dragonling", Vector2(1301, 163), 1, 39, 2],
 ]
 const SPOT_NAMES := {
+    "spot_storm_a": "Howling Gorge", "spot_storm_b": "Eye of the Storm", "spot_dusk_a": "Webbed Hollow", "spot_dusk_b": "Shade Pools", "spot_sky_a": "Cyclops Steps", "spot_sky_b": "Dragon Roost",
     "spot_meadow_a": "Gnasher Hollow", "spot_meadow_b": "Eastern Thicket", "spot_thornwood_a": "Fang Grove",
     "spot_thornwood_b": "Quill Den", "spot_lake_a": "Reed Shallows", "spot_lake_b": "Keepward Rocks",
     "spot_crater_a": "Ember Rim", "spot_crater_b": "Ashen Pit",

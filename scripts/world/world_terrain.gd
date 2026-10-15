@@ -29,7 +29,7 @@ const SHORE_SAND := [Source.WATER, 0]
 const SHORE_GRASS := [Source.WATER, 6]
 const LAVA_ASH := [Source.LAVA, 0]
 ## Roads: the dirt corner set in paths.png, one 6-row copy per ground fringe (prepare_world.py).
-const PATH_VARIANT := {0: 1, 1: 0, 2: 0, 3: 6, 4: 5, 5: 2, 6: 3, 7: 4}
+const PATH_VARIANT := {0: 1, 1: 0, 2: 0, 3: 6, 4: 5, 5: 2, 6: 3, 7: 4, 8: 4, 9: 1, 10: 0}
 ## Rounded 3x3 patches of the field sheet per WorldMap.Ground: [top-left tile, plain tiles]. They
 ## layer every ground over the sand base and draw plateau rims (their dark edge reads as a ledge).
 const PATCHES := {
@@ -41,6 +41,10 @@ const PATCHES := {
     5: [Vector2i(0, 12), [Vector2i(3, 12), Vector2i(4, 12), Vector2i(3, 13), Vector2i(4, 13)]],
     6: [Vector2i(0, 9), [Vector2i(3, 9), Vector2i(4, 9), Vector2i(3, 10), Vector2i(4, 10)]],
     7: [Vector2i(0, 15), [Vector2i(3, 15), Vector2i(4, 15), Vector2i(3, 16), Vector2i(4, 16)]],
+    # M7b: recoloured grass patches (tools: the gloom, steppe and jade rows of terrain_field.png).
+    8: [Vector2i(0, 24), [Vector2i(3, 24), Vector2i(4, 24), Vector2i(3, 25), Vector2i(4, 25)]],
+    9: [Vector2i(0, 27), [Vector2i(3, 27), Vector2i(4, 27), Vector2i(3, 28), Vector2i(4, 28)]],
+    10: [Vector2i(0, 30), [Vector2i(3, 30), Vector2i(4, 30), Vector2i(3, 31), Vector2i(4, 31)]],
 }
 ## Plain grass and forest use the floor sheet's varied tiles.
 const PLAIN_GRASS := [Vector2i(0, 12), Vector2i(0, 12), Vector2i(0, 12), Vector2i(1, 12), Vector2i(2, 12), Vector2i(3, 12)]
@@ -53,7 +57,7 @@ const PATCH_LAYOUT := [Vector2i(-1, -1), Vector2i(0, 0), Vector2i(2, 0), Vector2
 ## autumn and ash. Columns: left end, middle, right end; rows: upper and lower wall tile.
 const WALL_GREY := [Vector2i(4, 1), Vector2i(5, 1), Vector2i(6, 1), 1]
 const WALL_BROWN := [Vector2i(4, 6), Vector2i(5, 6), Vector2i(6, 6), 6]
-const BROWN_WALL_GROUNDS := [0, 3, 4]
+const BROWN_WALL_GROUNDS := [0, 3, 4, 9]
 ## Stairs where a road climbs a wall (relief detail sheet): grey and orange steps.
 const STAIRS_GREY := [Vector2i(5, 0), Vector2i(5, 1)]
 const STAIRS_BROWN := [Vector2i(5, 3), Vector2i(5, 4)]
@@ -101,6 +105,18 @@ const PROPS := {
     "tower": ["res://assets/game/world/desert.png", Rect2(48, 0, 32, 80), Vector2(26, 18)],
     "wall": ["res://assets/game/world/desert.png", Rect2(272, 64, 48, 48), Vector2(48, 18)],
     "ferry_boat": ["res://assets/game/world/boat.png", Rect2(0, 0, 80, 32), Vector2.ZERO],
+    # M7b: the Eastern Reaches' own plants (recoloured from nature.png, plus a mushroom and a paddy).
+    "tree_gloom": ["res://assets/game/world/nature_ext.png", Rect2(0, 0, 32, 32), Vector2(10, 8)],
+    "tree_gloom_dead": ["res://assets/game/world/nature_ext.png", Rect2(32, 0, 32, 32), Vector2(10, 8)],
+    "bush_gloom": ["res://assets/game/world/nature_ext.png", Rect2(64, 0, 16, 16), Vector2.ZERO],
+    "mushroom_glow": ["res://assets/game/world/nature_ext.png", Rect2(80, 0, 16, 16), Vector2.ZERO],
+    "tree_gloom_big": ["res://assets/game/world/nature_ext.png", Rect2(0, 32, 48, 48), Vector2(12, 10)],
+    "tree_acacia": ["res://assets/game/world/nature_ext.png", Rect2(48, 32, 48, 48), Vector2(12, 10)],
+    "bush_dry": ["res://assets/game/world/nature_ext.png", Rect2(0, 80, 16, 16), Vector2.ZERO],
+    "tree_steppe": ["res://assets/game/world/nature_ext.png", Rect2(16, 80, 32, 32), Vector2(10, 8)],
+    "tree_jade": ["res://assets/game/world/nature_ext.png", Rect2(48, 80, 32, 32), Vector2(10, 8)],
+    "pine_jade": ["res://assets/game/world/nature_ext.png", Rect2(80, 80, 32, 32), Vector2(10, 8)],
+    "paddy": ["res://assets/game/world/nature_ext.png", Rect2(112, 80, 32, 16), Vector2.ZERO],
 }
 ## Hand-placed landmarks (tile positions of the foot).
 const LANDMARKS := [
@@ -125,6 +141,10 @@ const THEMES := {
     "dome": ["hall", "shop", ["dome_hut", "dome_hut", "house_round", "dome_hut", "house_round"], ["palm", "tree_round"]],
     "atoll": ["", "", ["house_c"], ["palm", "palm"]],
     "arena": ["", "", [], ["ruin_pillar", "ruin_pillar", "ruin_pillar", "ruin_pillar"]],
+    # M7b: nomad camps on the steppe, gloomy hamlets, rice-farming villages with pagoda roofs.
+    "steppe": ["hall", "stall", ["hut_tent", "hut_straw", "hut_tent", "house_wood"], ["tree_acacia", "well", "bush_dry"]],
+    "gloom": ["hall", "hut_tent", ["house_round", "hut_straw", "house_wood", "house_round"], ["tree_gloom", "mushroom_glow", "bush_gloom"]],
+    "jade": ["hall", "shop_green", ["house_c", "house_round", "house_c", "shop_green"], ["tree_jade", "torii", "bamboo", "paddy"]],
 }
 const PROP_SEED := 9001
 ## Props are spawned in square chunks of this many tiles around every character.
@@ -181,6 +201,7 @@ func _ready() -> void:
     features = _layer("Features", tiles, -2)
     bridges = _layer("Bridges", tiles, -1)
     var all: Array = [ground, blend, canopy, heights, cliffs, features, bridges]
+    _add_sea()
     if _layer_cache.is_empty() and MAP.use_cache:
         var stored: Variant = CACHE.load_part("layers")
         if stored is Dictionary:
@@ -207,6 +228,26 @@ func _ready() -> void:
     add_child(props)
     _plan_once()
     stream_props()
+
+## The open sea: the plain water tile repeated under the whole map (one node, no cells).
+func _add_sea() -> void:
+    var sheet: Image = load(SHEETS[Source.WATER]).get_image()
+    if sheet.is_compressed():
+        sheet.decompress()
+    var at: Vector2i = (CORNER_LAYOUT[15] + Vector2i(0, SHORE_SAND[1])) * TILE
+    var tile := ImageTexture.create_from_image(sheet.get_region(Rect2i(at, Vector2i(TILE, TILE))))
+    var sea := TextureRect.new()
+    sea.name = "Sea"
+    sea.texture = tile
+    sea.stretch_mode = TextureRect.STRETCH_TILE
+    sea.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+    sea.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var area := MAP.bounds()
+    sea.position = area.position
+    sea.size = area.size
+    sea.z_index = -3
+    add_child(sea)
+    move_child(sea, 0)
 
 func _box(rect: Rect2) -> void:
     var shape := CollisionShape2D.new()
@@ -261,7 +302,10 @@ func _fill() -> void:
         for x in range(MAP.MIN.x, MAP.MIN.x + MAP.COLS):
             var cell := Vector2i(x, y) + offset
             var feature := feature_for(x, y)
-            if not feature.is_empty():
+            # Open sea is the tiled background (M7b: the grown map held over a million sea cells,
+            # which made every world load and unload seconds slower).
+            var open_sea: bool = not feature.is_empty() and feature[0] == SHORE_SAND[0] and feature[1] == CORNER_LAYOUT[15] + Vector2i(0, SHORE_SAND[1])
+            if not feature.is_empty() and not open_sea:
                 features.set_cell(cell, feature[0], feature[1])
             if feature.is_empty() or feature[1] != CORNER_LAYOUT[15] + Vector2i(0, SHORE_SAND[1]) or feature[0] != SHORE_SAND[0]:
                 _land(x, y, cell)
@@ -273,7 +317,7 @@ func _fill() -> void:
 func _land(x: int, y: int, cell: Vector2i) -> void:
     var codes := {}
     var full := false
-    for kind in [MAP.Ground.GRASS, MAP.Ground.AUTUMN, MAP.Ground.SNOW, MAP.Ground.BLOSSOM, MAP.Ground.MUD]:
+    for kind in [MAP.Ground.GRASS, MAP.Ground.AUTUMN, MAP.Ground.SNOW, MAP.Ground.BLOSSOM, MAP.Ground.MUD, MAP.Ground.GLOOM, MAP.Ground.STEPPE, MAP.Ground.JADE]:
         var kinds: Array = [MAP.Ground.GRASS, MAP.Ground.FOREST] if kind == MAP.Ground.GRASS else [kind]
         var code := _ground_code(x, y, kinds)
         if code > 0:
@@ -512,6 +556,15 @@ static func _scatter(kind: int, region: int, roll: float, pick: int) -> String:
         MAP.Ground.BLOSSOM:
             if roll < 0.13:
                 return ["tree_pink", "tree_blossom", "bamboo", "bamboo", "bush"][pick % 5]
+        MAP.Ground.GLOOM:
+            if roll < 0.3:
+                return ["tree_gloom", "tree_gloom", "tree_gloom_big", "tree_gloom_dead", "bush_gloom", "mushroom_glow", "mushroom_glow", "tree_gloom", "boulder", "bush_gloom"][pick % 10]
+        MAP.Ground.STEPPE:
+            if roll < 0.13:
+                return ["tree_acacia", "bush_dry", "bush_dry", "tree_steppe", "boulder", "bush_dry", "bush_dry", "tree_acacia"][pick % 8]
+        MAP.Ground.JADE:
+            if roll < 0.22:
+                return ["paddy", "paddy", "bamboo", "bamboo", "tree_jade", "pine_jade", "paddy", "bush", "boulder", "tree_jade"][pick % 10]
         MAP.Ground.MUD:
             if roll < 0.16:
                 return ["tree_dead", "tree_dead", "bush", "pebbles", "bush"][pick % 5]

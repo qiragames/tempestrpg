@@ -95,24 +95,30 @@ const WOODS := {
     "log_pine": ["Pine Log", 10, 12, Color("7a5230"), ["pine", "pine_snow", "tree_snow"], ["Thornwood", "Frostpeak"], 6],
     "log_palm": ["Palm Log", 12, 14, Color("c8a060"), ["palm"], ["Sunscorch Desert", "The Ki Realm"], 10],
     "log_maple": ["Maple Log", 15, 20, Color("c2532d"), ["tree_autumn", "tree_big", "tree_round"], ["Ambervale"], 10],
-    "log_bamboo": ["Bamboo Cane", 18, 18, Color("8fbf4a"), ["bamboo"], ["Sakura Vale"], 10],
+    "log_bamboo": ["Bamboo Cane", 18, 18, Color("8fbf4a"), ["bamboo"], ["Sakura Vale", "Jade Terraces"], 10],
     "log_frostbark": ["Frostbark Log", 20, 30, Color("a8d4e8"), ["tree_snow", "tree_snow_big", "pine_snow"], ["Frostpeak"], 5],
     "log_cherry": ["Cherrywood Log", 25, 40, Color("e88aa8"), ["tree_pink", "tree_blossom"], ["Sakura Vale"], 10],
     "log_bogwood": ["Bogwood Log", 28, 50, Color("4f5a36"), ["tree_dead"], ["Mirewood Marsh"], 10],
     "log_ironwood": ["Ironwood Log", 30, 70, Color("5a5f66"), ["tree_big"], ["Thornwood", "Ambervale", "Harrowmere"], 1],
     "log_emberwood": ["Emberwood Log", 35, 90, Color("e0602a"), ["tree_dead"], ["Emberreach Isles", "Cinder Crater"], 10],
+    # M7b: the Eastern Reaches.
+    "log_acacia": ["Acacia Log", 23, 60, Color("c89a4a"), ["tree_acacia", "tree_steppe"], ["Goldwind Steppe"], 10],
+    "log_gloomwood": ["Gloomwood Log", 30, 100, Color("6e4a8c"), ["tree_gloom", "tree_gloom_big", "tree_gloom_dead"], ["Gloomveil"], 10],
+    "log_jadewood": ["Jadewood Log", 36, 130, Color("3fae7e"), ["tree_jade", "pine_jade"], ["Jade Terraces"], 10],
     "log_spiritwood": ["Spiritwood Log", 42, 150, Color("8fe8ff"), ["tree_round", "tree_big", "pine", "palm", "tree_dead", "pine_snow", "tree_snow"], ["The Ki Realm"], 10],
     "log_worldtree": ["World Tree Branch", 48, 260, Color("ffe27a"), ["tree_big", "tree_snow_big"], ["The Ki Realm"], 1],
 }
 const ORES := {
     "ore_copper": ["Copper Ore", 1, 6, Color("e0803a"), ["boulder"], ["The First Clearing", "Verdant Isle", "Thornwood", "Mirror Lake"], 10],
     "ore_tin": ["Tin Ore", 5, 8, Color("c8ccd0"), ["boulder"], ["Verdant Isle", "Thornwood", "Mirror Lake", "Harrowmere"], 7],
-    "ore_iron": ["Iron Ore", 10, 14, Color("9a6a58"), ["boulder", "boulder_snow"], ["Harrowmere", "Sunscorch Desert", "Frostpeak", "Ambervale"], 8],
+    "ore_iron": ["Iron Ore", 10, 14, Color("9a6a58"), ["boulder", "boulder_snow"], ["Harrowmere", "Sunscorch Desert", "Frostpeak", "Ambervale", "Goldwind Steppe"], 8],
     "ore_coal": ["Coal", 12, 12, Color("2a2a2e"), ["boulder"], ["Sunscorch Desert", "Cinder Crater", "Ambervale"], 8],
     "ore_silver": ["Silver Ore", 18, 26, Color("e8eef4"), ["boulder", "boulder_snow"], ["Frostpeak", "Ambervale", "Sakura Vale"], 6],
-    "ore_gold": ["Gold Ore", 25, 45, Color("f0c840"), ["boulder"], ["Cinder Crater", "Sunscorch Desert", "Emberreach Isles"], 5],
-    "ore_mithril": ["Mithril Ore", 32, 80, Color("6fb8ff"), ["boulder", "boulder_snow"], ["Frostpeak", "Cinder Crater", "Emberreach Isles"], 3],
-    "ore_adamantite": ["Adamantite Ore", 40, 130, Color("4fd08a"), ["boulder"], ["Emberreach Isles", "The Ki Realm"], 6],
+    "ore_gold": ["Gold Ore", 25, 45, Color("f0c840"), ["boulder"], ["Cinder Crater", "Sunscorch Desert", "Emberreach Isles", "Goldwind Steppe"], 8],
+    "ore_mithril": ["Mithril Ore", 32, 80, Color("6fb8ff"), ["boulder", "boulder_snow"], ["Frostpeak", "Cinder Crater", "Emberreach Isles", "Gloomveil"], 5],
+    "ore_shadowite": ["Shadowite Ore", 30, 90, Color("9a5ad0"), ["boulder"], ["Gloomveil"], 8],
+    "ore_jade": ["Jade Ore", 37, 150, Color("4fd09a"), ["boulder"], ["Jade Terraces"], 8],
+    "ore_adamantite": ["Adamantite Ore", 40, 130, Color("4fd08a"), ["boulder"], ["Emberreach Isles", "The Ki Realm", "Jade Terraces"], 6],
     "ore_starmetal": ["Starmetal Ore", 46, 220, Color("d8a0ff"), ["boulder", "boulder_snow"], ["The Ki Realm"], 4],
 }
 ## Herbs gathered from bushes (Alchemy, picked by hand): [name, level, price, colour, props, regions, weight]
@@ -122,9 +128,13 @@ const HERBS := {
     "herb_ambercap": ["Ambercap", 14, 18, Color("e0803a"), ["bush"], ["Ambervale"], 10],
     "herb_sakura": ["Sakura Petal", 18, 24, Color("ff9ac0"), ["bush"], ["Sakura Vale"], 10],
     "herb_bogmoss": ["Bogmoss", 24, 30, Color("6a8a3a"), ["bush"], ["Mirewood Marsh"], 10],
+    "herb_steppe_sage": ["Steppe Sage", 22, 40, Color("d8c070"), ["bush", "bush_dry"], ["Goldwind Steppe"], 10],
+    "herb_nightshade": ["Nightshade", 30, 60, Color("8a4ad0"), ["bush", "bush_gloom"], ["Gloomveil"], 10],
+    "herb_jade_lotus": ["Jade Lotus", 36, 90, Color("7ae0b0"), ["bush"], ["Jade Terraces"], 10],
     "herb_senzu": ["Senzu Sprout", 42, 120, Color("a8ff6a"), ["bush"], ["The Ki Realm"], 10],
+    "herb_dragon_blossom": ["Dragon Blossom", 48, 200, Color("ff7a5a"), ["bush"], ["The Ki Realm"], 4],
 }
-const HERB_PROPS := ["bush"]
+const HERB_PROPS := ["bush", "bush_gloom", "bush_dry"]
 
 ## Gems a mining success can turn up (by the ore's level): [name, price, from ore level]
 const GEMS := {
@@ -138,7 +148,7 @@ const GEM_CHANCE := 0.012
 ## Woodcutting milestone 30: rare sap.
 const SAP := {"amber_sap": ["Amber Sap", 150]}
 
-const TREE_PROPS := ["pine", "tree_big", "tree_round", "tree_autumn", "tree_dead", "pine_snow", "tree_snow", "tree_snow_big", "tree_pink", "tree_blossom", "bamboo", "palm"]
+const TREE_PROPS := ["pine", "tree_big", "tree_round", "tree_autumn", "tree_dead", "pine_snow", "tree_snow", "tree_snow_big", "tree_pink", "tree_blossom", "bamboo", "palm", "tree_gloom", "tree_gloom_dead", "tree_gloom_big", "tree_acacia", "tree_steppe", "tree_jade", "pine_jade"]
 const ROCK_PROPS := ["boulder", "boulder_snow"]
 
 ## Swings per unit of a resource and the units a node holds.

@@ -65,12 +65,35 @@ const FOUR := {
     "burrow_mole": {"walk": "res://assets/game/sprites/burrow_mole/burrow_mole_walk.png"},
     "ember_flame": {"walk": "res://assets/game/sprites/ember_flame/ember_flame_walk.png"},
     "salamander": {"walk": "res://assets/game/sprites/salamander/salamander_walk.png"},
+    # M7b: the Eastern Reaches' creatures (Ninja Adventure monsters).
+    "storm_bat": {"walk": "res://assets/game/sprites/storm_bat/storm_bat_walk.png"},
+    "gale_beast": {"walk": "res://assets/game/sprites/gale_beast/gale_beast_walk.png"},
+    "cliff_lizard": {"walk": "res://assets/game/sprites/cliff_lizard/cliff_lizard_walk.png"},
+    "thunder_eye": {"walk": "res://assets/game/sprites/thunder_eye/thunder_eye_walk.png"},
+    "dusk_spider": {"walk": "res://assets/game/sprites/dusk_spider/dusk_spider_walk.png"},
+    "fen_octopus": {"walk": "res://assets/game/sprites/fen_octopus/fen_octopus_walk.png"},
+    "shade_spirit": {"walk": "res://assets/game/sprites/shade_spirit/shade_spirit_walk.png"},
+    "fen_skull": {"walk": "res://assets/game/sprites/fen_skull/fen_skull_walk.png"},
+    "crystal_cyclops": {"walk": "res://assets/game/sprites/crystal_cyclops/crystal_cyclops_walk.png"},
+    "sky_dragonling": {"walk": "res://assets/game/sprites/sky_dragonling/sky_dragonling_walk.png"},
+    "peak_reptile": {"walk": "res://assets/game/sprites/peak_reptile/peak_reptile_walk.png"},
+    "frost_spirit": {"walk": "res://assets/game/sprites/frost_spirit/frost_spirit_walk.png"},
 }
 const SIDE := {
     "gnasher": {"idle": ["res://assets/game/sprites/gnasher/gnasher_idle.png", 32], "run": ["res://assets/game/sprites/gnasher/gnasher_run.png", 64], "death": ["res://assets/game/sprites/gnasher/gnasher_death.png", 64]},
     "thornback": {"idle": ["res://assets/game/sprites/thornback/thornback_idle.png", 32], "run": ["res://assets/game/sprites/thornback/thornback_run.png", 64], "death": ["res://assets/game/sprites/thornback/thornback_death.png", 64]},
     "goblin": {"idle": ["res://assets/game/sprites/ally_goblin/goblin_idle.png", 32], "run": ["res://assets/game/sprites/ally_goblin/goblin_run.png", 64]},
     "hobgoblin": {"idle": ["res://assets/game/sprites/hobgoblin/hobgoblin_idle.png", 32], "run": ["res://assets/game/sprites/hobgoblin/hobgoblin_run.png", 64]},
+    # M7: raid boss sprites (Ninja Adventure bosses: one row of frames, front view).
+    "giant_racoon": {"idle": ["res://assets/game/sprites/giant_racoon/giant_racoon_idle.png", 60], "run": ["res://assets/game/sprites/giant_racoon/giant_racoon_run.png", 60]},
+    "giant_frog": {"idle": ["res://assets/game/sprites/giant_frog/giant_frog_idle.png", 40], "run": ["res://assets/game/sprites/giant_frog/giant_frog_run.png", 40]},
+    "giant_frog_blue": {"idle": ["res://assets/game/sprites/giant_frog_blue/giant_frog_blue_idle.png", 40], "run": ["res://assets/game/sprites/giant_frog_blue/giant_frog_blue_run.png", 40]},
+    "giant_flam": {"idle": ["res://assets/game/sprites/giant_flam/giant_flam_idle.png", 50], "run": ["res://assets/game/sprites/giant_flam/giant_flam_run.png", 50]},
+    "tengu_red": {"idle": ["res://assets/game/sprites/tengu_red/tengu_red_idle.png", 82], "run": ["res://assets/game/sprites/tengu_red/tengu_red_run.png", 82]},
+    "tengu_blue": {"idle": ["res://assets/game/sprites/tengu_blue/tengu_blue_idle.png", 68], "run": ["res://assets/game/sprites/tengu_blue/tengu_blue_run.png", 82]},
+    "blue_samurai": {"idle": ["res://assets/game/sprites/blue_samurai/blue_samurai_idle.png", 48], "run": ["res://assets/game/sprites/blue_samurai/blue_samurai_run.png", 48]},
+    "squid_red": {"idle": ["res://assets/game/sprites/squid_red/squid_red_idle.png", 79], "run": ["res://assets/game/sprites/squid_red/squid_red_run.png", 79]},
+    "demon_cyclops": {"idle": ["res://assets/game/sprites/demon_cyclops/demon_cyclops_idle.png", 50], "run": ["res://assets/game/sprites/demon_cyclops/demon_cyclops_run.png", 50]},
 }
 const SPEEDS := {"idle": 4.0, "walk": 8.0, "run": 10.0, "attack": 1.0, "dead": 1.0, "death": 10.0}
 

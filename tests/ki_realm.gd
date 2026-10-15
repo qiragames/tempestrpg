@@ -1,6 +1,6 @@
 extends SceneTree
 ## M4.7 the Ki Realm (user plan): hidden from the normal maps, reached only through the secret
-## hermit in Sakura Vale (level 15 and the right answer), the guide back; mentors teaching the ki
+## hermit in Sakura Vale (level 36 since M7b, and the right answer), the guide back; mentors teaching the ki
 ## attacks and the Kaio Surge for Zeni; transformations (damage, speed, Magicule drain); the seven
 ## wish orbs and the four wishes (then the orbs rest and scatter); the tournament (five rounds in
 ## the ring, the champion's Golden Aura); saves, forgeries and the v25 -> v26 migration.
@@ -75,13 +75,13 @@ func _run() -> void:
     _check(ki_ok and EFFECTS.effects("turtle_wave").get("reach", 0.0) > EFFECTS.effects("ki_blast").get("reach", 0.0) and EFFECTS.effects("spirit_orb").has("area"), "Four ki attacks: Ki Blast (fast), Turtle Wave (long charged beam), Ki Disc (piercing), Spirit Orb (huge area)")
     # --- The hermit
     _at(REALM.HERMIT_TILE)
-    LEVELING.grant(actor, LEVELING.xp_for_level(14) - int(actor.progression.experience))
-    _check(realm.nearest_person(actor) == "secret_hermit" and not realm.answer_hermit(actor, REALM.HERMIT_RIGHT) and not MAP.in_realm(actor.global_position), "Below level 15 the hermit sends you away")
-    LEVELING.grant(actor, LEVELING.xp_for_level(18) - int(actor.progression.experience))
-    _check(int(actor.progression.level) == 18, "Leveled to 18")
+    LEVELING.grant(actor, LEVELING.xp_for_level(REALM.REQUIRED_LEVEL - 1) - int(actor.progression.experience))
+    _check(realm.nearest_person(actor) == "secret_hermit" and not realm.answer_hermit(actor, REALM.HERMIT_RIGHT) and not MAP.in_realm(actor.global_position), "Below the required level the hermit sends you away")
+    LEVELING.grant(actor, LEVELING.xp_for_level(42) - int(actor.progression.experience))
+    _check(int(actor.progression.level) == 42, "Leveled to 42 (every mentor's level)")
     var wrong := (REALM.HERMIT_RIGHT + 1) % REALM.HERMIT_ANSWERS.size()
     _check(not realm.answer_hermit(actor, wrong) and not MAP.in_realm(actor.global_position), "A wrong answer gets nothing")
-    _check(session.apply_action(actor, "realm", {"operation": "answer", "id": str(REALM.HERMIT_RIGHT)}) and MAP.in_realm(actor.global_position), "The right answer (level 15+) folds the world: you stand in the Ki Realm")
+    _check(session.apply_action(actor, "realm", {"operation": "answer", "id": str(REALM.HERMIT_RIGHT)}) and MAP.in_realm(actor.global_position), "The right answer (level 15+) folds the world: you stand in the Ki Realm (level 36+)")
     # --- Maps
     var hud = world.get_node("HUD")
     hud.world_map.open()
@@ -98,7 +98,7 @@ func _run() -> void:
     _check(session.apply_action(actor, "realm", {"operation": "learn", "id": "spire_sage"}) and actor.get_node("SkillBook").knows(&"ki_blast") and actor.zeni() == 50000 - int(mentor[7]), "The Spire Sage teaches the Ki Blast for %d Zeni" % mentor[7])
     _check(not realm.learn(actor, "spire_sage"), "A lesson is learned only once")
     _at(REALM.mentor("guardian")[3])
-    _check(realm.learn(actor, "guardian") and actor.get_node("SkillBook").knows(&"spirit_orb"), "The Guardian teaches the Spirit Orb at level 18")
+    _check(realm.learn(actor, "guardian") and actor.get_node("SkillBook").knows(&"spirit_orb"), "The Guardian teaches the Spirit Orb at level 42")
     _at(REALM.mentor("mountain_master")[3])
     _check(realm.learn(actor, "mountain_master") and "kaio_surge" in actor.progression.auras, "The Mountain Master teaches the Kaio Surge")
     # --- Transformations

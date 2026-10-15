@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3]
+[ext_resource type="Script" path="res://scripts/enemies/forest_gnasher.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/combat/health.gd" id="2"]
+[sub_resource type="CircleShape2D" id="Shape"]
+radius = 7.0
+
+[node name="ThunderEye" type="CharacterBody2D"]
+motion_mode = 1
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1")
+specimen = null
+kind = "thunder_eye"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("Shape")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("2")
+maximum = 30
+immunity_seconds = 0.1

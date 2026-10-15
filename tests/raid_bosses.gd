@@ -138,12 +138,20 @@ func _run() -> void:
     actor.get_node("Health").current = normal_hp
     _check(session.save_world() == OK, "A world with bosses saves")
     var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(dir.path_join("boss.json")))
-    _check(int(raw.version) == 33 and raw.enemies.any(func(enemy): return enemy.id == "boss_majin"), "Saved with the bosses (v33)")
+    _check(int(raw.version) == STORE.VERSION and raw.enemies.any(func(enemy): return enemy.id == "boss_majin"), "Saved with the bosses")
     var old: Dictionary = raw.duplicate(true)
     old.version = 32
     old.enemies = old.enemies.filter(func(enemy): return not BOSS.is_boss(enemy.id))
     old.respawns = old.respawns.filter(func(entry): return not BOSS.is_boss(entry.id))
+    # An older (v33) world: realm creatures at their old, lower health; no Eastern Reaches yet.
+    for enemy in old.enemies:
+        if enemy.id == "raptor_1":
+            enemy.maximum_hp = 100
+            enemy.hp = 100
+    old.enemies = old.enemies.filter(func(enemy): return not String(enemy.id).begins_with("storm_"))
     var migrated: Variant = STORE.migrate(old)
+    var raptor: Array = migrated.enemies.filter(func(enemy): return enemy.id == "raptor_1") if migrated is Dictionary else []
+    _check(not raptor.is_empty() and int(raptor[0].maximum_hp) == preload("res://scripts/enemies/forest_gnasher.gd").scaled_health(1, REGION.level_of("raptor_1", 1)) and migrated.enemies.any(func(enemy): return enemy.id == "storm_storm_bat_1"), "Older worlds: the Ki Realm's creatures rise to their new levels, the Eastern Reaches' creatures arrive")
     _check(migrated is Dictionary and BOSS.RAID.keys().all(func(id): return migrated.enemies.any(func(enemy): return enemy.id == id)) and STORE.validate(migrated), "v32 worlds get every boss and stay valid")
     world.queue_free()
     await _frames()

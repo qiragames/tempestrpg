@@ -149,6 +149,10 @@ const MERCHANTS := [
     ["merchant_bogsend", "Bogsend Peddler", "merchant_marsh", "town", "bogsend", 16],
     ["merchant_hanamura", "Hanamura Emporium", "merchant_sakura", "town", "hanamura", 15],
     ["merchant_cinderport", "Cinderport Exchange", "merchant_ember", "town", "cinderport", 18],
+    # M7b: the Eastern Reaches' towns.
+    ["merchant_galehaven", "Galehaven Caravanserai", "merchant_desert", "town", "galehaven", 25],
+    ["merchant_gloomhollow", "Gloomhollow Curios", "merchant_marsh", "town", "gloomhollow", 31],
+    ["merchant_jadehaven", "Jadehaven Teahouse", "merchant_sakura", "town", "highwind", 37],
     ["camp_trader", "Camp Trader", "camp_trader", "trader", "", 4],
     ["camp_smith", "Camp Smith", "camp_smith", "smith", "", 6],
     ["traveller", "Travelling Merchant", "traveller", "traveller", "", 16],

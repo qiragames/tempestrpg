@@ -15,6 +15,7 @@ const COLORS := {
     "path": Color("b8784f"), "bridge": Color("d79a55"),
     0: Color("f2cf8f"), 1: Color("a7bb3c"), 2: Color("5f9a3a"), 3: Color("f0a35a"), 4: Color("7a7072"),
     5: Color("eef2f8"), 6: Color("f4b6c8"), 7: Color("6d6a3e"), "cliff": Color("4a4440"),
+    8: Color("6e4a8c"), 9: Color("d8b85c"), 10: Color("3fae7e"),
 }
 ## Label anchors (tiles) per region.
 const LABELS := {
@@ -23,6 +24,7 @@ const LABELS := {
     MAP.Region.EMBERREACH: Vector2(560, 268), MAP.Region.SEA: Vector2(330, 160),
     MAP.Region.FROSTPEAK: Vector2(190, -200), MAP.Region.SUNSCORCH: Vector2(-150, 30), MAP.Region.SAKURA_VALE: Vector2(560, -120),
     MAP.Region.MIREWOOD: Vector2(-170, 300), MAP.Region.VERDANT: Vector2(110, 196),
+    MAP.Region.STORMREACH: Vector2(1000, -185), MAP.Region.DUSKFEN: Vector2(1020, 205), MAP.Region.SKYREACH: Vector2(1340, -210),
 }
 ## Inside the Ki Realm (M4.7) only the realm is shown, with its own places named.
 const REALM_LABELS := [

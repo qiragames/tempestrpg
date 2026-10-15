@@ -11,18 +11,22 @@ extends RefCounted
 ## Attacks: slam (circle around the boss), charge (a line it dashes along), rain (circles under
 ## the characters), ring (a ring around the boss: stand close to it or far away).
 const RAID := {
-    "boss_grumblehorn": ["Old Grumblehorn", "Terror of the Meadows", "gnasher", Vector2(170, 168), 9, 8, Color(0.9, 1.0, 0.75), ["slam", "charge"], ["boss_grumble_horn"]],
+    "boss_grumblehorn": ["Old Grumblehorn", "Terror of the Meadows", "giant_racoon", Vector2(170, 168), 9, 8, Color(0.9, 1.0, 0.75), ["slam", "charge"], ["boss_grumble_horn"]],
     "boss_gnashmaw": ["Gnashmaw", "Matriarch of Thornwood", "gnasher", Vector2(106, 85), 9, 11, Color(0.75, 1.0, 0.7), ["slam", "charge", "rain"], ["boss_thorncrown", "boss_matriarch_fang"]],
-    "boss_quillback": ["Quillback Colossus", "Warden of Mirror Lake", "thornback", Vector2(222, 88), 8, 13, Color(0.7, 0.85, 1.0), ["slam", "rain", "ring"], ["boss_mirror_quill"]],
-    "boss_cinderquill": ["Cinderquill", "Heart of the Crater", "thornback", Vector2(274, 166), 9, 17, Color(1.0, 0.6, 0.45), ["slam", "rain", "ring", "charge"], ["boss_crater_heart", "boss_ashen_spines"]],
+    "boss_quillback": ["Old Croaker", "Warden of Mirror Lake", "giant_frog_blue", Vector2(222, 88), 8, 13, Color(0.7, 0.85, 1.0), ["slam", "rain", "ring"], ["boss_mirror_quill"]],
+    "boss_cinderquill": ["Cinderheart", "Flame of the Crater", "giant_flam", Vector2(274, 166), 9, 17, Color(1.0, 0.6, 0.45), ["slam", "rain", "ring", "charge"], ["boss_crater_heart", "boss_ashen_spines"]],
     "boss_rimefang": ["Rimefang", "Glacier King", "frost_bear", Vector2(187, -97), 10, 22, Color(0.75, 0.9, 1.0), ["slam", "charge", "ring"], ["boss_rimefang_claw", "boss_glacier_mantle"]],
     "boss_sandmaw": ["Sandmaw", "Dune Serpent", "dune_viper", Vector2(-153, 103), 10, 21, Color(1.0, 0.85, 0.55), ["charge", "rain", "ring"], ["boss_sandmaw_fang", "boss_dune_wraps"]],
     "boss_hollowwing": ["Hollowwing", "Elder Owl of Ambervale", "amber_owl", Vector2(202, 338), 10, 26, Color(1.0, 0.75, 0.45), ["rain", "charge", "ring"], ["boss_hollow_quill", "boss_elder_feather"]],
-    "boss_bog_shogun": ["The Bog Shogun", "Lord of Mirewood", "bog_kappa", Vector2(-170, 398), 10, 30, Color(0.65, 0.9, 0.6), ["slam", "rain", "ring", "charge"], ["boss_shogun_blade", "boss_kappa_shell"]],
-    "boss_lantern_empress": ["The Lantern Empress", "Light of Sakura Vale", "paper_lantern", Vector2(573, 40), 10, 30, Color(1.0, 0.7, 0.8), ["rain", "ring", "slam"], ["boss_empress_lantern", "boss_sakura_veil"]],
+    "boss_bog_shogun": ["The Bog Shogun", "Lord of Mirewood", "giant_frog", Vector2(-170, 398), 10, 30, Color(0.65, 0.9, 0.6), ["slam", "rain", "ring", "charge"], ["boss_shogun_blade", "boss_kappa_shell"]],
+    "boss_lantern_empress": ["The Crimson Tengu", "Lord of Sakura Vale", "tengu_red", Vector2(573, 40), 10, 30, Color(1.0, 0.7, 0.8), ["rain", "ring", "slam"], ["boss_empress_lantern", "boss_sakura_veil"]],
     "boss_pyreclaw": ["Pyreclaw", "Salamander King", "salamander", Vector2(583, 313), 10, 34, Color(1.0, 0.5, 0.35), ["slam", "charge", "rain", "ring"], ["boss_pyreclaw_scythe", "boss_salamander_crown"]],
-    "boss_rex_prime": ["Tyrant Rex Prime", "Apex of Raptor Gulch", "tyrant_rex", Vector2(-1150, -15), 12, 45, Color(1.0, 0.8, 0.7), ["slam", "charge", "rain", "ring"], ["boss_apex_fang", "boss_rex_hide"]],
-    "boss_majin": ["Majin Overlord", "The Demon at the Canyon's End", "demon_king", Vector2(-760, 220), 12, 50, Color(1.0, 0.65, 0.9), ["slam", "charge", "rain", "ring"], ["boss_majin_halo", "boss_overlord_edge"]],
+    # M7b: the Eastern Reaches.
+    "boss_raijin": ["Raijin", "Storm Samurai of the Goldwind Steppe", "blue_samurai", Vector2(1124, -76), 10, 27, Color(0.85, 0.95, 1.0), ["charge", "slam", "rain", "ring"], ["boss_raijin_blade", "boss_storm_kabuto"]],
+    "boss_gloomtide": ["Gloomtide", "Kraken of Gloomveil", "squid_red", Vector2(975, 233), 10, 33, Color(0.9, 0.8, 1.0), ["rain", "ring", "slam", "charge"], ["boss_gloom_tentacle", "boss_ink_mantle"]],
+    "boss_skylord": ["The Jade Tengu", "Lord of the Jade Terraces", "tengu_blue", Vector2(1347, -4), 10, 40, Color(0.9, 0.95, 1.0), ["charge", "rain", "ring", "slam"], ["boss_skylord_fan", "boss_peak_crown"]],
+    "boss_rex_prime": ["Tyrant Rex Prime", "Apex of Raptor Gulch", "tyrant_rex", Vector2(-1150, -15), 12, 47, Color(1.0, 0.8, 0.7), ["slam", "charge", "rain", "ring"], ["boss_apex_fang", "boss_rex_hide"]],
+    "boss_majin": ["Majin Overlord", "The Demon at the Canyon's End", "demon_cyclops", Vector2(-760, 220), 12, 50, Color(1.0, 0.65, 0.9), ["slam", "charge", "rain", "ring"], ["boss_majin_halo", "boss_overlord_edge"]],
 }
 
 const RESPAWN := 1800.0

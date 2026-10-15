@@ -9,7 +9,8 @@ const MAP := preload("res://scripts/world/world_map.gd")
 const HERMIT_TILE := Vector2(640, -88)
 const ARRIVAL_TILE := Vector2(-894, 66)
 const GUIDE_TILE := Vector2(-890, 64)
-const REQUIRED_LEVEL := 15
+## M7b (user request): the realm is later content than the Eastern Reaches.
+const REQUIRED_LEVEL := 36
 ## The hermit's question and the answers he offers (only one is right).
 const HERMIT_QUESTION := "The petals fall like stars tonight... Tell me, traveller: what do you seek?"
 const HERMIT_ANSWERS := [
@@ -23,11 +24,11 @@ const NPC_REACH := 34.0
 
 ## --- Mentors: [id, name, sprite, tile, kind ("skill" / "aura"), what, level, price, words]
 const MENTORS := [
-    ["turtle_sage", "Turtle Sage", "turtle_sage", Vector2(-1350, 252), "skill", "turtle_wave", 16, 2000, "Gather your ki in your palms... and release it all at once!"],
-    ["spire_sage", "Spire Sage", "spire_sage", Vector2(-760, -104), "skill", "ki_blast", 15, 800, "You climbed my spire. Now learn to throw your ki like a stone."],
-    ["guardian", "The Guardian", "guardian", Vector2(-764, -152), "skill", "spirit_orb", 18, 4000, "Borrow a little energy from every living thing, and shape it into one orb."],
-    ["canyon_hermit", "Canyon Hermit", "canyon_hermit", Vector2(-740, 210), "skill", "ki_disc", 17, 1500, "Flatten your ki into a disc. It cuts through anything."],
-    ["mountain_master", "Mountain Master", "mountain_master", Vector2(-1012, -176), "aura", "kaio_surge", 17, 3000, "Double your power for a moment — just do not overdo it."],
+    ["turtle_sage", "Turtle Sage", "turtle_sage", Vector2(-1350, 252), "skill", "turtle_wave", 39, 2000, "Gather your ki in your palms... and release it all at once!"],
+    ["spire_sage", "Spire Sage", "spire_sage", Vector2(-760, -104), "skill", "ki_blast", 38, 800, "You climbed my spire. Now learn to throw your ki like a stone."],
+    ["guardian", "The Guardian", "guardian", Vector2(-764, -152), "skill", "spirit_orb", 42, 4000, "Borrow a little energy from every living thing, and shape it into one orb."],
+    ["canyon_hermit", "Canyon Hermit", "canyon_hermit", Vector2(-740, 210), "skill", "ki_disc", 40, 1500, "Flatten your ki into a disc. It cuts through anything."],
+    ["mountain_master", "Mountain Master", "mountain_master", Vector2(-1012, -176), "aura", "kaio_surge", 40, 3000, "Double your power for a moment — just do not overdo it."],
 ]
 
 ## --- Transformations (buff states): [name, damage factor, speed factor, Magicules per second,
@@ -64,10 +65,10 @@ static func is_orb(id: String) -> bool:
 ## --- The World Martial Grounds: five rounds in the ring; the champion's first win teaches the
 ## Golden Aura. [kind, tier, level]
 const ROUNDS := [
-    ["gi_fighter", 1, 16], ["monkey_brawler", 1, 17], ["android_scout", 2, 18], ["bio_android", 2, 19], ["demon_king", 2, 21],
+    ["gi_fighter", 1, 40], ["monkey_brawler", 1, 42], ["android_scout", 2, 44], ["bio_android", 2, 46], ["demon_king", 2, 49],
 ]
 const ENTRY_FEE := 500
-const TOURNAMENT_LEVEL := 16
+const TOURNAMENT_LEVEL := 40
 const PRIZE := 5000
 const RING_RADIUS := 7.0
 const ANNOUNCER_TILE := Vector2(-872, 365)

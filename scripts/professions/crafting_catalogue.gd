@@ -22,7 +22,8 @@ const BARS := {
 ## The gear level band each bar forges: [lowest, highest] base level.
 const BAR_LEVELS := {
     "bar_bronze": [1, 4], "bar_iron": [4, 7], "bar_steel": [6, 9], "bar_silver": [8, 11],
-    "bar_gold": [10, 13], "bar_mithril": [12, 15], "bar_adamantite": [14, 17], "bar_starmetal": [16, 20],
+    # M7b: the higher bars forge the level 24-48 tiers.
+    "bar_gold": [12, 18], "bar_mithril": [18, 26], "bar_adamantite": [24, 38], "bar_starmetal": [36, 48],
 }
 ## What can be forged: [name, bars, logs (any wood), gems (any)]
 const FORGE := {

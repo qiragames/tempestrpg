@@ -1,6 +1,6 @@
 extends Node2D
 ## The Ki Realm of one world (M4.7, user plan): the secret hermit in Sakura Vale and the way in
-## (the right answer, level 15+), the guide back, the mentors who teach ki attacks and the Kaio
+## (the right answer, level 36+, M7b), the guide back, the mentors who teach ki attacks and the Kaio
 ## Surge, the seven wish orbs (lying at hidden spots until taken; all seven make one wish at the
 ## Guardian's altar, then they rest for an hour and scatter again) and the World Martial Grounds'
 ## tournament (five rounds in the ring; the champion's first win teaches the Golden Aura). The host

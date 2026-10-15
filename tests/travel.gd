@@ -46,14 +46,14 @@ func _friend(id: String) -> CharacterBody2D:
 func _run() -> void:
     session = root.get_node("GameSession")
     # --- Harbours (static)
-    var harbours_ok := MAP.HARBOURS.size() == 9
+    var harbours_ok := MAP.HARBOURS.size() == 12
     var regions := {}
     for entry in MAP.HARBOURS:
         var dock := Vector2i(entry[2])
         var end: Vector2i = dock + Vector2i(entry[3]) * MAP.PIER_LENGTH
         harbours_ok = harbours_ok and not MAP.solid(dock.x, dock.y) and not MAP.solid(end.x, end.y) and MAP.data().ocean[MAP.vertex_index(end.x, end.y)] == 1
         regions[MAP.region_at(MAP.to_world(entry[2]))] = true
-    _check(harbours_ok and regions.size() >= 8 and MAP.HARBOURS.filter(func(entry): return entry[4]).size() == 3, "Nine harbours with walkable piers out to sea, in every region; shipwrights in three harbour towns")
+    _check(harbours_ok and regions.size() >= 8 and MAP.HARBOURS.filter(func(entry): return entry[4]).size() == 3, "Twelve harbours with walkable piers out to sea, in every region; shipwrights in three harbour towns")
     _check(TRAVEL.fare("sunfall", "amberhold") < TRAVEL.fare("sunfall", "cinderport") and TRAVEL.fare("sunfall", "amberhold") >= 20, "Ticket prices grow with the distance")
     # --- Hosted world
     var dir := OS.get_temp_dir().path_join("tempestrpg-travel-" + Crypto.new().generate_random_bytes(6).hex_encode())

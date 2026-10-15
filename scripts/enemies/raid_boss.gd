@@ -213,7 +213,7 @@ func _defeat() -> void:
             var rarity: int = maxi(int(GEAR.BASES[base].min_rarity), 4 if rng.randf() < 0.7 else 5)
             item = GEAR.roll(base, rarity, rng)
         else:
-            item = SOURCES._item(rng, LOOT_RARITY, mini(level, 20))
+            item = SOURCES._item(rng, LOOT_RARITY, level)
         # Personal loot: only this helper can pick it up (for a long while).
         var spot := position + Vector2.from_angle(TAU * index / maxf(1.0, ranked.size())) * 26.0
         if world.has_method("drop_gear"):
@@ -228,8 +228,9 @@ func _process(_delta: float) -> void:
     super._process(_delta)
     if not is_instance_valid(body_sprite):
         return
-    body_sprite.scale = Vector2.ONE * DRAWN_SCALE
-    body_sprite.position.y = SPRITES.FEET_Y * (1.0 - DRAWN_SCALE)
+    var drawn: float = 1.0 if SPRITES.is_side(sprite_kind()) and sprite_kind() != "gnasher" and sprite_kind() != "thornback" else DRAWN_SCALE
+    body_sprite.scale = Vector2.ONE * drawn
+    body_sprite.position.y = SPRITES.FEET_Y * (1.0 - drawn)
     if state == State.DEFEATED:
         return
     var tint: Color = BOSS.RAID[entity_id][6] if BOSS.is_boss(entity_id) else Color.WHITE

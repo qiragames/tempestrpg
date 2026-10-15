@@ -817,7 +817,7 @@ func _run() -> void:
     var realm_data := preload("res://scripts/realm/realm_catalogue.gd")
     var realm = world.realm
     var hud_realm = world.get_node("HUD")
-    preload("res://scripts/progression/leveling.gd").grant(showcase, preload("res://scripts/progression/leveling.gd").xp_for_level(18) - int(showcase.progression.experience))
+    preload("res://scripts/progression/leveling.gd").grant(showcase, preload("res://scripts/progression/leveling.gd").xp_for_level(42) - int(showcase.progression.experience))
     showcase.progression["zeni"] = 20000
     # The secret hermit in Sakura Vale asks his question.
     showcase.position = tour_map.to_world(realm_data.HERMIT_TILE) + Vector2(0, 18)
@@ -827,7 +827,7 @@ func _run() -> void:
     hud_realm._ally_dialog._talk_realm("secret_hermit")
     await _wait(0.2)
     _check(hud_realm.dialog_panel.is_open(), "The secret hermit in Sakura Vale offers four answers")
-    await _shot("realm_hermit", "The secret hermit in Sakura Vale (level 15+): pick the right answer to enter the hidden Ki Realm")
+    await _shot("realm_hermit", "The secret hermit in Sakura Vale (level 36+ since M7b): pick the right answer to enter the hidden Ki Realm")
     hud_realm.dialog_panel.close()
     _check(realm.answer_hermit(showcase, realm_data.HERMIT_RIGHT), "The right answer opens the way")
     await _wait(0.5)
@@ -1118,6 +1118,12 @@ func _run() -> void:
     await _wait(0.3)
     await _shot("map_levels", "The world map shows each region's level range (user request)")
     hud_nation.world_map.close()
+    _log("## 29. The Eastern Reaches (M7b)")
+    for land in [["steppe", Vector2(1000, -70), "The Goldwind Steppe (levels 22-27): golden grass, acacias and the nomad town of Galehaven"], ["gloomveil", Vector2(1020, 288), "Gloomveil (levels 28-33): a purple, gloomy land of dark trees and glowing mushrooms around Gloomhollow"], ["jade", Vector2(1260, 30), "The Jade Terraces (levels 34-40): rice paddies, bamboo and pagoda villages under misty jade peaks"]]:
+        showcase.global_position = tour_map.to_world(land[1])
+        world.terrain.ensure_props_at(showcase.global_position)
+        await _wait(0.5)
+        await _shot(land[0], land[2])
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

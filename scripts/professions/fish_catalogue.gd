@@ -45,6 +45,10 @@ const FISH := {
     "ember_eel": ["Ember Eel", 42, "Emberreach Isles", 18, 1, 10],
     "lava_crab": ["Lava Crab", 55, "Emberreach Isles", 20, 1, 8],
     "ki_carp": ["Ki Carp", 120, "The Ki Realm", 38, 1, 10],
+    # M7b: the Eastern Reaches.
+    "goldfin": ["Goldfin", 70, "Goldwind Steppe", 22, 1, 10],
+    "void_eel": ["Void Eel", 95, "Gloomveil", 29, 1, 10],
+    "jade_koi": ["Jade Koi", 110, "Jade Terraces", 35, 1, 10],
     # Rare.
     "salmon": ["Salmon", 70, "lake", 15, 2, 10],
     "tuna": ["Bluefin Tuna", 80, "sea", 18, 2, 10],
@@ -56,6 +60,9 @@ const FISH := {
     "bog_lurker": ["Bog Lurker", 170, "Mirewood Marsh", 30, 2, 10],
     "magma_ray": ["Magma Ray", 200, "Emberreach Isles", 32, 2, 10],
     "ki_marlin": ["Ki Marlin", 300, "The Ki Realm", 44, 2, 10],
+    "steppe_sturgeon": ["Steppe Sturgeon", 220, "Goldwind Steppe", 26, 2, 10],
+    "gloom_angler": ["Gloom Angler", 260, "Gloomveil", 32, 2, 10],
+    "cloud_carp": ["Cloud Carp", 290, "Jade Terraces", 38, 2, 10],
     # Epic.
     "golden_carp": ["Golden Carp", 160, "any", 12, 3, 10],
     "moonfish": ["Moonfish", 400, "sea", 30, 3, 8],
@@ -65,6 +72,7 @@ const FISH := {
     "coelacanth": ["Ancient Coelacanth", 1500, "sea", 42, 4, 10],
     "jade_dragonfish": ["Jade Dragonfish", 2000, "Sakura Vale", 45, 4, 10],
     "sun_marlin": ["Sun Marlin", 1800, "sea@Sunscorch Desert", 43, 4, 10],
+    "golden_dragon_carp": ["Golden Dragon Carp", 2600, "Jade Terraces", 46, 4, 10],
     # Mythical sea creatures (user request): very rare, worth a fortune.
     "kraken": ["Kraken", 30000, "sea", 40, 5, 10],
     "leviathan": ["Leviathan", 40000, "sea", 45, 5, 6],
