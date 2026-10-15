@@ -25,8 +25,8 @@ const CLEARING := Rect2i(160, 96, 60, 40)
 const NOISE_SEED := 4410
 
 ## M7b (user request: the new lands must look different): purple gloom, golden steppe, jade.
-enum Ground {SAND, GRASS, FOREST, AUTUMN, ASH, SNOW, BLOSSOM, MUD, GLOOM, STEPPE, JADE}
-enum Region {SEA, CLEARING, THORNWOOD, MIRROR_LAKE, CINDER_CRATER, VERDANT, HARROWMERE, AMBERVALE, EMBERREACH, FROSTPEAK, SUNSCORCH, SAKURA_VALE, MIREWOOD, KI_REALM, STORMREACH, DUSKFEN, SKYREACH}
+enum Ground {SAND, GRASS, FOREST, AUTUMN, ASH, SNOW, BLOSSOM, MUD, GLOOM, STEPPE, JADE, CAVE}
+enum Region {SEA, CLEARING, THORNWOOD, MIRROR_LAKE, CINDER_CRATER, VERDANT, HARROWMERE, AMBERVALE, EMBERREACH, FROSTPEAK, SUNSCORCH, SAKURA_VALE, MIREWOOD, KI_REALM, STORMREACH, DUSKFEN, SKYREACH, UNDERDEEP}
 const REGION_NAMES := {
     Region.SEA: "The Sapphire Sea",
     Region.CLEARING: "The First Clearing",
@@ -46,6 +46,8 @@ const REGION_NAMES := {
     Region.STORMREACH: "Goldwind Steppe",
     Region.DUSKFEN: "Gloomveil",
     Region.SKYREACH: "Jade Terraces",
+    # M7c: the hidden dungeons.
+    Region.UNDERDEEP: "The Underdeep",
 }
 ## The Ki Realm (M4.7): a hidden island group far out at sea, reached only through the secret
 ## hermit in Sakura Vale. It never shows on the normal maps; inside it, the maps show only it.
@@ -57,6 +59,26 @@ const WORLD_VIEW := Rect2i(-400, -256, 1900, 768)
 
 static func in_realm(world: Vector2) -> bool:
     return REALM_RECT.has_point(to_tile(world))
+
+## M7c: the dungeon a world position lies in ("" outside the Underdeep).
+static func dungeon_at(world: Vector2) -> String:
+    return preload("res://scripts/dungeons/dungeon_catalogue.gd").at_tile(to_tile(world))
+
+## Dungeon rooms as land blobs of the Underdeep.
+static func dungeon_land() -> Array:
+    var dungeons := preload("res://scripts/dungeons/dungeon_catalogue.gd")
+    var blobs: Array = []
+    for id in dungeons.ORDER:
+        for room in dungeons.rooms(id):
+            blobs.append([room[0], room[1], Region.UNDERDEEP])
+    return blobs
+
+static func dungeon_bridges() -> Array:
+    var dungeons := preload("res://scripts/dungeons/dungeon_catalogue.gd")
+    var all: Array = []
+    for id in dungeons.ORDER:
+        all.append_array(dungeons.bridges(id))
+    return all
 ## The home continent (user decision, M4.5c): Verdant Isle joined by land to Frostpeak and the
 ## Sunscorch Desert, plus Harrowmere over its bridge — all reachable on foot. The southern
 ## continent (Ambervale and Mirewood Marsh), Sakura Vale and the Emberreach Isles are reached by
@@ -69,6 +91,7 @@ const REGION_GROUND := {
     Region.FROSTPEAK: Ground.SNOW, Region.SUNSCORCH: Ground.SAND, Region.SAKURA_VALE: Ground.BLOSSOM, Region.MIREWOOD: Ground.MUD,
     Region.KI_REALM: Ground.GRASS,
     Region.STORMREACH: Ground.STEPPE, Region.DUSKFEN: Ground.GLOOM, Region.SKYREACH: Ground.JADE,
+    Region.UNDERDEEP: Ground.CAVE,
 }
 
 ## Land masses: [centre (tiles), radii (tiles), region]. A vertex is land when its distance to a
@@ -403,7 +426,7 @@ static func compute() -> Dictionary:
     var land_region := PackedByteArray()
     land_region.resize(vertex_count)
     # Land: blobs in order, each only over its own box (the first match names the vertex).
-    for blob in LAND:
+    for blob in LAND + dungeon_land():
         var span := _span(blob[0], blob[1] * 1.2 + Vector2(2, 2))
         for y in range(span.position.y, span.end.y):
             for x in range(span.position.x, span.end.x):
@@ -505,7 +528,7 @@ static func compute() -> Dictionary:
     # Per-tile: bridge flags and region (by the tile's top-left vertex, clearing first).
     var bridge := PackedByteArray()
     bridge.resize(COLS * ROWS)
-    for rect in BRIDGES + piers():
+    for rect in BRIDGES + piers() + dungeon_bridges():
         for y in range(rect.position.y, rect.end.y):
             for x in range(rect.position.x, rect.end.x):
                 if in_grid(Vector2i(x, y)):
@@ -603,6 +626,9 @@ static func town_at(world: Vector2) -> Array:
 
 ## What the HUD shows: the town or village you are in, else the region.
 static func place_name(world: Vector2) -> String:
+    var dungeon := dungeon_at(world)
+    if not dungeon.is_empty():
+        return preload("res://scripts/dungeons/dungeon_catalogue.gd").DUNGEONS[dungeon][0]
     var town := town_at(world)
     return town[1] if not town.is_empty() else region_name(world)
 

@@ -85,6 +85,7 @@ const SIDE := {
     "goblin": {"idle": ["res://assets/game/sprites/ally_goblin/goblin_idle.png", 32], "run": ["res://assets/game/sprites/ally_goblin/goblin_run.png", 64]},
     "hobgoblin": {"idle": ["res://assets/game/sprites/hobgoblin/hobgoblin_idle.png", 32], "run": ["res://assets/game/sprites/hobgoblin/hobgoblin_run.png", 64]},
     # M7: raid boss sprites (Ninja Adventure bosses: one row of frames, front view).
+    "giant_spirit": {"idle": ["res://assets/game/sprites/giant_spirit/giant_spirit_idle.png", 50], "run": ["res://assets/game/sprites/giant_spirit/giant_spirit_run.png", 50]},
     "giant_racoon": {"idle": ["res://assets/game/sprites/giant_racoon/giant_racoon_idle.png", 60], "run": ["res://assets/game/sprites/giant_racoon/giant_racoon_run.png", 60]},
     "giant_frog": {"idle": ["res://assets/game/sprites/giant_frog/giant_frog_idle.png", 40], "run": ["res://assets/game/sprites/giant_frog/giant_frog_run.png", 40]},
     "giant_frog_blue": {"idle": ["res://assets/game/sprites/giant_frog_blue/giant_frog_blue_idle.png", 40], "run": ["res://assets/game/sprites/giant_frog_blue/giant_frog_blue_run.png", 40]},

@@ -68,7 +68,7 @@ func _run() -> void:
         if not enemy.is_in_group("raid_bosses"):
             enemy.set_physics_process(false)
     var bosses: Array = get_nodes_in_group("raid_bosses")
-    _check(bosses.size() == BOSS.RAID.size(), "Every raid boss stands in the world")
+    _check(bosses.size() == BOSS.all_ids().size() and BOSS.RAID.keys().all(func(id): return world.entity_by_id(id) != null), "Every raid boss stands in the world")
     var boss: Node2D = world.entity_by_id("boss_gnashmaw")
     _check(boss != null and boss.level == 11 and boss.get_node("Health").maximum > 1000 and boss.sprite_kind() == "gnasher", "Gnashmaw: level 11, huge health, a Gnasher's look")
     var actor = world.get_local_player()

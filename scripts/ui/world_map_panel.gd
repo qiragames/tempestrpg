@@ -15,7 +15,7 @@ const COLORS := {
     "path": Color("b8784f"), "bridge": Color("d79a55"),
     0: Color("f2cf8f"), 1: Color("a7bb3c"), 2: Color("5f9a3a"), 3: Color("f0a35a"), 4: Color("7a7072"),
     5: Color("eef2f8"), 6: Color("f4b6c8"), 7: Color("6d6a3e"), "cliff": Color("4a4440"),
-    8: Color("6e4a8c"), 9: Color("d8b85c"), 10: Color("3fae7e"),
+    8: Color("6e4a8c"), 9: Color("d8b85c"), 10: Color("3fae7e"), 11: Color("5a5664"),
 }
 ## Label anchors (tiles) per region.
 const LABELS := {
@@ -60,6 +60,9 @@ static func image() -> Image:
             var ocean: int = MAP.corners(map.ocean, x, y)
             if map.bridge[MAP.tile_index(x, y)] == 1:
                 color = COLORS.bridge
+            elif ocean > 0 and preload("res://scripts/dungeons/dungeon_catalogue.gd").in_strip(Vector2i(x, y)):
+                # M7c: the Underdeep's chasms are dark rock.
+                color = Color("1c1a22")
             elif ocean == 15:
                 color = COLORS.ocean
             elif ocean > 0:
@@ -161,6 +164,26 @@ static func realm_texture() -> ImageTexture:
 func _in_realm() -> bool:
     return is_instance_valid(hud.player) and MAP.in_realm(hud.player.global_position)
 
+## M7c: the dungeon this character is in ("" outside).
+func _dungeon() -> String:
+    return MAP.dungeon_at(hud.player.global_position) if is_instance_valid(hud.player) else ""
+
+## What the map shows: the archipelago and the Reaches, the Ki Realm, or one dungeon.
+func _zone_rect() -> Rect2i:
+    var dungeon := _dungeon()
+    if not dungeon.is_empty():
+        return DUNGEONS.view(dungeon)
+    return MAP.REALM_RECT if _in_realm() else MAP.WORLD_VIEW
+
+const DUNGEONS := preload("res://scripts/dungeons/dungeon_catalogue.gd")
+static var _dungeon_textures: Dictionary = {}
+
+static func dungeon_texture(id: String) -> ImageTexture:
+    if not _dungeon_textures.has(id) or _detail == null:
+        var rect: Rect2i = DUNGEONS.view(id)
+        _dungeon_textures[id] = ImageTexture.create_from_image(detail_image().get_region(Rect2i(rect.position - MAP.MIN, rect.size)))
+    return _dungeon_textures[id]
+
 func _init(owner_hud: CanvasLayer) -> void:
     hud = owner_hud
     name = "WorldMapPanel"
@@ -209,13 +232,12 @@ var _centre := Vector2.ZERO
 var _dragging := false
 
 func _choose_view() -> void:
-    var realm := _in_realm()
-    _view = Rect2(MAP.REALM_RECT) if realm else Rect2(MAP.WORLD_VIEW)
+    _view = Rect2(_zone_rect())
     _fit = minf(_canvas.size.x / _view.size.x, _canvas.size.y / _view.size.y)
     zoom = 1.0
     _centre = _view.get_center()
     _apply_zoom()
-    _title.text = "WORLD MAP · THE KI REALM" if realm else "WORLD MAP · THE ARCHIPELAGO"
+    _title.text = ("WORLD MAP · " + DUNGEONS.DUNGEONS[_dungeon()][0].to_upper()) if not _dungeon().is_empty() else ("WORLD MAP · THE KI REALM" if _in_realm() else "WORLD MAP · THE ARCHIPELAGO")
 
 func _apply_zoom() -> void:
     _scale = _fit * zoom
@@ -273,16 +295,22 @@ func _draw_props() -> void:
                 _canvas.draw_texture_rect_region(spec[0], Rect2(at - Vector2(region.size.x / 2.0, region.size.y * 0.75) * size, region.size * size), region)
 
 func _shown(tile: Vector2) -> bool:
-    return MAP.REALM_RECT.has_point(Vector2i(tile.floor())) == _in_realm()
+    return _zone_rect().has_point(Vector2i(tile.floor()))
 
 func _draw_map() -> void:
-    var realm := _in_realm()
-    _canvas.draw_rect(Rect2(Vector2.ZERO, _canvas.size), COLORS.ocean)
-    _canvas.draw_texture_rect(realm_texture() if realm else world_texture(), Rect2(_offset, _view.size * _scale), false)
+    var dungeon := _dungeon()
+    var realm := _in_realm() or not dungeon.is_empty()
+    _canvas.draw_rect(Rect2(Vector2.ZERO, _canvas.size), COLORS.ocean if dungeon.is_empty() else Color("1c1a22"))
+    _canvas.draw_texture_rect(dungeon_texture(dungeon) if not dungeon.is_empty() else (realm_texture() if realm else world_texture()), Rect2(_offset, _view.size * _scale), false)
     _draw_props()
     _canvas.draw_rect(Rect2(Vector2(-1, -1), _canvas.size + Vector2(2, 2)), UI.GOLD_DARK, false, 1.0)
     var font: Font = _canvas.get_theme_default_font()
-    if realm:
+    if not dungeon.is_empty():
+        var spec: Array = DUNGEONS.DUNGEONS[dungeon]
+        var title := "%s · Lv %d–%d · %s in the deepest chamber" % [spec[0], spec[3][0], spec[3][1], spec[5]]
+        _canvas.draw_string_outline(font, Vector2(8, 14), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, 3, Color(0.03, 0.04, 0.06))
+        _canvas.draw_string(font, Vector2(8, 14), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("ffcf7a"))
+    elif realm:
         for entry in REALM_LABELS:
             var size := font.get_string_size(entry[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 9)
             var at: Vector2 = tile_to_map(entry[1]) - Vector2(size.x / 2.0, 0)
@@ -339,6 +367,21 @@ func _draw_map() -> void:
         var pier := tile_to_map(ferry[2]).round()
         _canvas.draw_arc(pier, 2.5, 0, TAU, 10, Color(0.03, 0.04, 0.06), 2.0)
         _canvas.draw_arc(pier, 2.0, 0, TAU, 10, Color("9fe8ff"), 1.0)
+    # M7c: cave mouths (brown arches) and the hidden elites you have found (red rings).
+    for cave in DUNGEONS.ORDER:
+        if _shown(DUNGEONS.DUNGEONS[cave][2]):
+            var mouth := tile_to_map(DUNGEONS.DUNGEONS[cave][2]).round()
+            _canvas.draw_arc(mouth, 3.0, PI, TAU, 8, Color("c89a6a"), 2.0)
+            _canvas.draw_string_outline(font, mouth + Vector2(5, 3), DUNGEONS.DUNGEONS[cave][0], HORIZONTAL_ALIGNMENT_LEFT, -1, 7, 3, Color(0.03, 0.04, 0.06))
+            _canvas.draw_string(font, mouth + Vector2(5, 3), DUNGEONS.DUNGEONS[cave][0], HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("e8c89a"))
+    var bosses := preload("res://scripts/bosses/boss_catalogue.gd")
+    for elite in hud.player.progression.get("elites", []):
+        if bosses.ELITES.has(elite) and _shown(bosses.ELITES[elite][3]):
+            var at_elite := tile_to_map(bosses.ELITES[elite][3]).round()
+            _canvas.draw_arc(at_elite, 3.5, 0, TAU, 12, Color("ff5a5a"), 1.5)
+            var label: String = "%s (Lv %d)" % [bosses.ELITES[elite][0], bosses.ELITES[elite][5]]
+            _canvas.draw_string_outline(font, at_elite + Vector2(5, 3), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, 3, Color(0.03, 0.04, 0.06))
+            _canvas.draw_string(font, at_elite + Vector2(5, 3), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("ffb0a0"))
     # Discovered leveling spots (violet rings, named) and your dropped item piles (gold) — 24a.
     var known: Array = hud.player.progression.get("spots", [])
     var region_content := preload("res://scripts/world/region_content.gd")
@@ -349,13 +392,13 @@ func _draw_map() -> void:
             _canvas.draw_string_outline(font, at + Vector2(5, 3), region_content.SPOT_NAMES[spot[0]], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.03, 0.04, 0.06))
             _canvas.draw_string(font, at + Vector2(5, 3), region_content.SPOT_NAMES[spot[0]], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("e0c8ff"))
     for node in hud.get_parent().get_children():
-        if node.is_in_group("item_piles") and node.owner_id == hud.player.character_id and MAP.in_realm(node.global_position) == realm:
+        if node.is_in_group("item_piles") and node.owner_id == hud.player.character_id and _shown(Vector2(MAP.to_tile(node.global_position))):
             var pile := to_map(node.global_position).round()
             _canvas.draw_line(pile + Vector2(-3, -3), pile + Vector2(3, 3), Color("f0a34a"), 2.0)
             _canvas.draw_line(pile + Vector2(-3, 3), pile + Vector2(3, -3), Color("f0a34a"), 2.0)
     # Other characters, then you (blinking).
     for child in hud.get_parent().get_children():
-        if child is CharacterBody2D and child.has_method("race") and child != hud.player and MAP.in_realm(child.global_position) == realm:
+        if child is CharacterBody2D and child.has_method("race") and child != hud.player and _shown(Vector2(MAP.to_tile(child.global_position))):
             var party: Node = hud.get_parent().get("party")
             var mate: bool = party != null and party.same_party(hud.player.character_id, child.character_id)
             _canvas.draw_rect(Rect2(to_map(child.global_position).round() - Vector2(1.5, 1.5) if mate else to_map(child.global_position).round() - Vector2(1, 1), Vector2(4, 4) if mate else Vector2(3, 3)), Color("ff8adf") if mate else Color.WHITE)

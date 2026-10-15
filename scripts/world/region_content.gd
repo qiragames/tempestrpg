@@ -36,6 +36,8 @@ const LEVELS := {
 }
 
 static func level_of(id: String, difficulty: int) -> int:
+    if id.begins_with("dg_"):
+        return preload("res://scripts/dungeons/dungeon_catalogue.gd").creature_level(id)
     if preload("res://scripts/bosses/boss_catalogue.gd").is_boss(id):
         return preload("res://scripts/bosses/boss_catalogue.gd").level(id)
     if LEVELS.has(id):
@@ -179,14 +181,15 @@ static func spot_creatures() -> Array:
 
 ## Every fixed creature outside the clearing (regions and leveling spots).
 static func all_creatures() -> Array:
-    return CREATURES + spot_creatures()
+    # M7c: the dungeons' creatures too.
+    return CREATURES + spot_creatures() + preload("res://scripts/dungeons/dungeon_catalogue.gd").all_creatures().map(func(entry): return entry.slice(0, 4))
 
 static func is_spot_creature(id: String) -> bool:
     return id.begins_with("spot_")
 
 static func respawn_seconds(id: String, difficulty: int) -> float:
     if preload("res://scripts/bosses/boss_catalogue.gd").is_boss(id):
-        return preload("res://scripts/bosses/boss_catalogue.gd").RESPAWN
+        return preload("res://scripts/bosses/boss_catalogue.gd").respawn(id)
     var base: float = RESPAWN_SECONDS[clampi(difficulty, 0, 2)]
     return base / SPOT_SPEEDUP if is_spot_creature(id) else base
 
@@ -241,7 +244,7 @@ static func creature_ids() -> Array:
     return all_creatures().map(func(entry): return entry[0])
 
 static func chest_ids() -> Array:
-    return CHESTS.map(func(entry): return entry[0])
+    return chests().map(func(entry): return entry.id)
 
 ## Region deposit entries from the camp's table.
 static func deposits() -> Dictionary:
@@ -253,10 +256,12 @@ static func deposits() -> Dictionary:
 
 ## Chest entries (same shape as WorldLayout chests) plus the `rich` flag.
 static func chests() -> Array:
-    return CHESTS.map(func(entry): return {"id": entry[0], "position": at(entry[1]), "rich": entry[2]})
+    var dungeons := preload("res://scripts/dungeons/dungeon_catalogue.gd")
+    # M7c: each dungeon's boss chamber holds a rich chest.
+    return CHESTS.map(func(entry): return {"id": entry[0], "position": at(entry[1]), "rich": entry[2]}) + dungeons.ORDER.map(func(id): return {"id": dungeons.chest_id(id), "position": at(dungeons.chest_tile(id)), "rich": true})
 
 static func is_rich_chest(id: String) -> bool:
-    return CHESTS.any(func(entry): return entry[0] == id and entry[2])
+    return id.begins_with("chest_dg_") or CHESTS.any(func(entry): return entry[0] == id and entry[2])
 
 ## Saved enemy entry for a fresh region creature (used by the v20 migration).
 static func fresh_enemy(entry: Array) -> Dictionary:

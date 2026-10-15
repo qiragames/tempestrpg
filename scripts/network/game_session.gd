@@ -706,6 +706,12 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             rejected_requests += 1
             return false
         return world.camp.transact(actor, payload.operation, payload.id)
+    if action == "dungeon":
+        # M7c: clients name the cave; the host checks the distance.
+        if payload.size() != 2 or not payload.get("operation") in ["enter", "leave"] or not payload.get("id") is String or payload.id.length() > 32:
+            rejected_requests += 1
+            return false
+        return world.dungeon_gates.enter(actor, payload.id) if payload.operation == "enter" else world.dungeon_gates.leave(actor, payload.id)
     if action == "craft":
         # M6c: clients name a recipe; the host checks the station, ingredients and bag.
         if payload.size() != 1 or not payload.get("id") is String or payload.id.length() > 64:

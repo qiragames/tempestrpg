@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 34
+const VERSION := 35
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -191,6 +191,12 @@ static func validate_player(state: Variant, id: String) -> bool:
     # Chests opened by this character (v19): IDs are the same in every seed.
     if not SOURCES.valid_opened(progression.get("chests"), LAYOUT.ALL_CHEST_IDS):
         return false
+    # Discovered hidden elites (M7c; optional).
+    if progression.has("elites"):
+        var elites: Variant = progression.elites
+        var bosses := preload("res://scripts/bosses/boss_catalogue.gd")
+        if not elites is Array or elites.size() > bosses.ELITES.size() or elites.any(func(id): return not id is String or not bosses.ELITES.has(id)) or elites.size() != _unique(elites):
+            return false
     # Discovered hidden leveling spots (v21; optional for older characters).
     if progression.has("spots"):
         var spots: Variant = progression.spots
@@ -832,6 +838,19 @@ static func migrate(data: Variant) -> Variant:
             enemy["hp"] = full
             enemy["credit"] = {}
             enemy["group_scaled"] = false
+    # v35 (M7c): the hidden elites, the dungeons' creatures and bosses arrive.
+    if data.get("version") == 34:
+        if not data.get("enemies") is Array:
+            return null
+        data = data.duplicate(true)
+        data.version = 35
+        var all_bosses := preload("res://scripts/bosses/boss_catalogue.gd")
+        for entry in REGION.all_creatures():
+            if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == entry[0]):
+                data.enemies.append(REGION.fresh_enemy(entry).merged({"credit": {}, "group_scaled": false, "status": ""}))
+        for id in all_bosses.all_ids():
+            if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == id):
+                data.enemies.append(fresh_boss(id))
     return data
 
 ## Saved enemy entry for a raid boss at full health in its arena (v33 and new worlds).
@@ -839,7 +858,7 @@ static func fresh_boss(id: String) -> Dictionary:
     var bosses := preload("res://scripts/bosses/boss_catalogue.gd")
     var gnasher := preload("res://scripts/enemies/forest_gnasher.gd")
     var spot: Vector2 = bosses.centre(id)
-    var health: int = int(round(gnasher.scaled_health(2, bosses.level(id)) * bosses.HEALTH_FACTOR))
+    var health: int = int(round(gnasher.scaled_health(2, bosses.level(id)) * bosses.health_factor(id)))
     return {"id": id, "kind": id, "position": [spot.x, spot.y], "home": [spot.x, spot.y], "difficulty": 2, "hp": health, "maximum_hp": health, "immunity": 0.0, "state": 0, "state_time": 0.0, "target": "", "credit": {}, "group_scaled": false, "status": ""}
 
 static func _unique(values: Array) -> int:

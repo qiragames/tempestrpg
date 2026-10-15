@@ -55,30 +55,92 @@ const ZENI_FACTOR := 30
 ## Characters further than this from the arena's edge count as gone (the boss resets).
 const LEASH_MARGIN := 80.0
 
+## --- M7c (user decision: hidden elites in forests, on plateaus and in caves, and dungeon end
+## bosses): the same fights on a smaller scale — two phases, a small arena, 7 × an Elite's HP, a
+## guaranteed Rare-or-better personal drop for every helper, back after 10 minutes. Hidden elites
+## show on the world map once a character has come near; dungeon bosses guard their chamber.
+## Same shape as RAID (uniques empty).
+const ELITES := {
+    "elite_oakfang": ["Old Oakfang", "Hidden in Thornwood", "gnasher", Vector2(125, 64), 5, 9, Color(0.8, 1.0, 0.7), ["slam", "charge"], []],
+    "elite_snowmane": ["Snowmane", "Ghost of the Glacier", "frost_bear", Vector2(13, -170), 5, 15, Color(0.85, 0.95, 1.0), ["slam", "ring"], []],
+    "elite_dune_stalker": ["The Dune Stalker", "Terror of the Sands", "dune_viper", Vector2(-125, 162), 5, 14, Color(1.0, 0.85, 0.6), ["charge", "rain"], []],
+    "elite_ambershriek": ["Ambershriek", "Owl of the Harvest Moon", "amber_owl", Vector2(172, 366), 5, 17, Color(1.0, 0.75, 0.5), ["rain", "charge"], []],
+    "elite_fen_witch": ["The Fen Witch", "Mother of Mirecaps", "mirecap", Vector2(-139, 305), 5, 19, Color(0.75, 0.9, 0.7), ["rain", "ring"], []],
+    "elite_bamboo_ronin": ["The Bamboo Ronin", "Wanderer of Sakura Vale", "bamboo_sprite", Vector2(517, 83), 5, 18, Color(0.85, 1.0, 0.75), ["charge", "slam"], []],
+    "elite_storm_eye": ["The Storm Eye", "Watcher of the Steppe", "thunder_eye", Vector2(1051, -178), 5, 26, Color(0.85, 0.9, 1.0), ["rain", "ring"], []],
+    "elite_nightweaver": ["Nightweaver", "Queen of Gloomveil's Webs", "dusk_spider", Vector2(939, 230), 5, 32, Color(0.85, 0.7, 1.0), ["slam", "rain"], []],
+    "elite_cloud_serpent": ["The Cloud Serpent", "Spirit of the Terraces", "sky_dragonling", Vector2(1373, 0), 5, 39, Color(0.85, 1.0, 0.95), ["charge", "ring"], []],
+    "elite_rex_alpha": ["Rex Alpha", "The Gulch's Fiercest", "raptor", Vector2(-704, 31), 5, 46, Color(1.0, 0.85, 0.75), ["charge", "slam"], []],
+}
+const ELITE_HEALTH := 7.0
+const ELITE_RESPAWN := 600.0
+const ELITE_PHASES := [1.0, 0.5]
+## Hidden elites are discovered from this far (px).
+const DISCOVER_RADIUS := 140.0
+
+## Dungeon end bosses, built from the dungeon catalogue: [name, title, sprite, arena (boss
+## chamber), radius, level, tint, attacks, uniques].
+static var DUNGEON_BOSSES: Dictionary = _dungeon_bosses()
+
+static func _dungeon_bosses() -> Dictionary:
+    var dungeons := preload("res://scripts/dungeons/dungeon_catalogue.gd")
+    var all := {}
+    for id in dungeons.ORDER:
+        var spec: Array = dungeons.DUNGEONS[id]
+        var chamber: Array = dungeons.rooms(id)[3]
+        all[dungeons.boss_id(id)] = [spec[5], spec[0], spec[6], chamber[0], int(chamber[1].x) - 3, int(spec[7]), Color(0.9, 0.85, 1.0), ["slam", "rain", "ring", "charge"], []]
+    return all
+
+static func entry(id: String) -> Array:
+    if RAID.has(id):
+        return RAID[id]
+    if ELITES.has(id):
+        return ELITES[id]
+    return DUNGEON_BOSSES.get(id, [])
+
+static func all_ids() -> Array:
+    return RAID.keys() + ELITES.keys() + DUNGEON_BOSSES.keys()
+
 static func is_boss(id: String) -> bool:
+    return RAID.has(id) or ELITES.has(id) or DUNGEON_BOSSES.has(id)
+
+static func is_raid(id: String) -> bool:
     return RAID.has(id)
+
+static func is_hidden_elite(id: String) -> bool:
+    return ELITES.has(id)
 
 static func centre(id: String) -> Vector2:
     var map := preload("res://scripts/world/world_map.gd")
-    return map.to_world(RAID[id][3]) + Vector2(map.TILE / 2.0, map.TILE / 2.0)
+    return map.to_world(entry(id)[3]) + Vector2(map.TILE / 2.0, map.TILE / 2.0)
 
 static func radius(id: String) -> float:
-    return float(RAID[id][4]) * 16.0
+    return float(entry(id)[4]) * 16.0
 
 static func level(id: String) -> int:
-    return int(RAID[id][5])
+    return int(entry(id)[5])
 
 static func display_name(id: String) -> String:
-    return "%s, %s" % [RAID[id][0], RAID[id][1]]
+    return "%s, %s" % [entry(id)[0], entry(id)[1]]
+
+static func health_factor(id: String) -> float:
+    return HEALTH_FACTOR if is_raid(id) else ELITE_HEALTH
+
+static func respawn(id: String) -> float:
+    return RESPAWN if is_raid(id) else ELITE_RESPAWN
+
+static func phases(id: String) -> Array:
+    return PHASES if is_raid(id) else ELITE_PHASES
 
 ## Phase (0-based) for a health share.
-static func phase_for(share: float) -> int:
+static func phase_for(share: float, id: String = "") -> int:
+    var list: Array = phases(id) if not id.is_empty() else PHASES
     var phase := 0
-    for index in range(PHASES.size()):
-        if share <= PHASES[index]:
+    for index in range(list.size()):
+        if share <= list[index]:
             phase = index
     return phase
 
-## Arena centre tiles (props keep clear of them, like other content spots).
+## Arena centre tiles of overworld bosses (props keep clear of them, like other content spots).
 static func arena_tiles() -> Array:
-    return RAID.values().map(func(entry): return [entry[3], entry[4]])
+    return (RAID.values() + ELITES.values()).map(func(entry): return [entry[3], entry[4]])

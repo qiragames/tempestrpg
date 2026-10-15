@@ -389,7 +389,7 @@ func _refresh_boss_bar() -> void:
     if shown == null:
         return
     var health: Node = shown.get_node("Health")
-    var phase: int = bosses.phase_for(float(health.current) / float(maxi(1, health.maximum)))
+    var phase: int = bosses.phase_for(float(health.current) / float(maxi(1, health.maximum)), shown.entity_id)
     holder.get_node("Title").text = "Lv %d %s · phase %d" % [shown.level, bosses.display_name(shown.entity_id), phase + 1]
     holder.get_node("Bar").max_value = health.maximum
     holder.get_node("Bar").value = health.current
@@ -474,6 +474,10 @@ func _process(_delta: float) -> void:
         get_node("SiegeBanner").text = siege_node.banner()
     _refresh_node_prompt()
     _refresh_boss_bar()
+    # M7c: underground it is darker.
+    var cave_dark: Node = get_parent().get_node_or_null("CaveDark")
+    if cave_dark != null:
+        cave_dark.visible = not WORLD_MAP.dungeon_at(player.global_position).is_empty()
     _refresh_reel(_delta)
     var place: String = WORLD_MAP.place_name(player.global_position)
     # M5a: inside your settlement, its name (or tier).

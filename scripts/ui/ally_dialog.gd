@@ -147,6 +147,13 @@ func open_nearest() -> void:
     if not wild.is_empty():
         session.request_action("mount", {"operation": "tame", "id": wild})
         return
+    # M7c: F at a cave mouth goes in; at the way out, back up.
+    var gates = hud.get_parent().get("dungeon_gates")
+    if gates != null:
+        var gate: Array = gates.nearest(hud.player)
+        if not gate.is_empty():
+            session.request_action("dungeon", {"operation": gate[0], "id": gate[1]})
+            return
     # M6a: F at a tree or ore rock of the world works it (professions).
     var nodes = hud.get_parent().get("nodes")
     if nodes != null and hud.player.fishing_bite_in == -INF:

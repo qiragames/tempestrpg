@@ -32,6 +32,8 @@ var respawner: Node
 var nodes: Node
 ## M7a: raid boss telegraphs and arenas.
 var boss_fx: Node2D
+## M7c: dungeon cave mouths and ways out.
+var dungeon_gates: Node2D
 ## Host-side randomness for gear drops, chests, trial rewards and the forge (17g).
 var loot_rng := RandomNumberGenerator.new()
 var chest_layer: Node2D
@@ -95,7 +97,7 @@ func _ready() -> void:
         wire_enemy(creature)
     # M7a: the raid bosses in their arenas.
     var bosses := preload("res://scripts/bosses/boss_catalogue.gd")
-    for id in bosses.RAID:
+    for id in bosses.all_ids():
         var boss = load("res://scenes/enemies/raid_boss.tscn").instantiate()
         boss.entity_id = id
         boss.difficulty = 2
@@ -105,6 +107,14 @@ func _ready() -> void:
         wire_enemy(boss)
     boss_fx = load("res://scripts/bosses/boss_fx.gd").new()
     add_child(boss_fx)
+    # M7c: cave mouths, the ways out, and the Underdeep's darkness.
+    dungeon_gates = load("res://scripts/dungeons/dungeon_gates.gd").new()
+    add_child(dungeon_gates)
+    var dark := CanvasModulate.new()
+    dark.name = "CaveDark"
+    dark.color = Color(0.62, 0.6, 0.72)
+    dark.visible = false
+    add_child(dark)
     _add_obstacle(POND)
     # The clearing no longer ends at its edges: the archipelago surrounds it (world edges are
     # ocean and are closed by the terrain).
@@ -304,6 +314,16 @@ func _discover_spots() -> void:
             actor.progression["spots"] = known + [spot[0]]
             known = actor.progression.spots
             session.notify_character(actor.character_id, "Leveling spot discovered: %s. Its creatures return three times faster." % REGION.SPOT_NAMES[spot[0]])
+            session.queue_save()
+        # M7c: hidden elites.
+        var bosses := preload("res://scripts/bosses/boss_catalogue.gd")
+        var found: Array = actor.progression.get("elites", [])
+        for id in bosses.ELITES:
+            if id in found or actor.global_position.distance_to(bosses.centre(id)) > bosses.DISCOVER_RADIUS:
+                continue
+            actor.progression["elites"] = found + [id]
+            found = actor.progression.elites
+            session.notify_character(actor.character_id, "A hidden elite: %s! (level %d)" % [bosses.display_name(id), bosses.level(id)])
             session.queue_save()
 
 func _analysis_changed(message: String) -> void:

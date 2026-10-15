@@ -8,6 +8,7 @@ extends Node2D
 ## collisions only: the same on host and clients, nothing saved. Layer data, the prop list and
 ## the collisions come from WorldCache when it is current.
 const MAP := preload("res://scripts/world/world_map.gd")
+const DUNGEONS := preload("res://scripts/dungeons/dungeon_catalogue.gd")
 const CACHE := preload("res://scripts/world/world_cache.gd")
 const TILE := 16
 ## The 16 corner combinations (top-left 8, top-right 4, bottom-left 2, bottom-right 1; bit =
@@ -29,7 +30,7 @@ const SHORE_SAND := [Source.WATER, 0]
 const SHORE_GRASS := [Source.WATER, 6]
 const LAVA_ASH := [Source.LAVA, 0]
 ## Roads: the dirt corner set in paths.png, one 6-row copy per ground fringe (prepare_world.py).
-const PATH_VARIANT := {0: 1, 1: 0, 2: 0, 3: 6, 4: 5, 5: 2, 6: 3, 7: 4, 8: 4, 9: 1, 10: 0}
+const PATH_VARIANT := {0: 1, 1: 0, 2: 0, 3: 6, 4: 5, 5: 2, 6: 3, 7: 4, 8: 4, 9: 1, 10: 0, 11: 5}
 ## Rounded 3x3 patches of the field sheet per WorldMap.Ground: [top-left tile, plain tiles]. They
 ## layer every ground over the sand base and draw plateau rims (their dark edge reads as a ledge).
 const PATCHES := {
@@ -45,6 +46,8 @@ const PATCHES := {
     8: [Vector2i(0, 24), [Vector2i(3, 24), Vector2i(4, 24), Vector2i(3, 25), Vector2i(4, 25)]],
     9: [Vector2i(0, 27), [Vector2i(3, 27), Vector2i(4, 27), Vector2i(3, 28), Vector2i(4, 28)]],
     10: [Vector2i(0, 30), [Vector2i(3, 30), Vector2i(4, 30), Vector2i(3, 31), Vector2i(4, 31)]],
+    # M7c: the Underdeep's cave floor.
+    11: [Vector2i(0, 33), [Vector2i(3, 33), Vector2i(4, 33), Vector2i(3, 34), Vector2i(4, 34)]],
 }
 ## Plain grass and forest use the floor sheet's varied tiles.
 const PLAIN_GRASS := [Vector2i(0, 12), Vector2i(0, 12), Vector2i(0, 12), Vector2i(1, 12), Vector2i(2, 12), Vector2i(3, 12)]
@@ -248,6 +251,18 @@ func _add_sea() -> void:
     sea.z_index = -3
     add_child(sea)
     move_child(sea, 0)
+    # M7c: dark rock over the Underdeep strip (its chasms between the cave rooms).
+    var rock := TextureRect.new()
+    rock.name = "UnderdeepRock"
+    rock.texture = load("res://assets/game/world/cave_rock.png")
+    rock.stretch_mode = TextureRect.STRETCH_TILE
+    rock.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+    rock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    rock.position = MAP.to_world(Vector2(DUNGEONS.STRIP.position))
+    rock.size = Vector2(DUNGEONS.STRIP.size * TILE)
+    rock.z_index = -3
+    add_child(rock)
+    move_child(rock, 1)
 
 func _box(rect: Rect2) -> void:
     var shape := CollisionShape2D.new()
@@ -305,6 +320,13 @@ func _fill() -> void:
             # Open sea is the tiled background (M7b: the grown map held over a million sea cells,
             # which made every world load and unload seconds slower).
             var open_sea: bool = not feature.is_empty() and feature[0] == SHORE_SAND[0] and feature[1] == CORNER_LAYOUT[15] + Vector2i(0, SHORE_SAND[1])
+            # M7c: in the Underdeep the "sea" is dark rock (drawn by the rock background).
+            var underdeep: bool = DUNGEONS.in_strip(Vector2i(x, y))
+            if underdeep and not feature.is_empty() and feature[0] == SHORE_SAND[0]:
+                open_sea = true
+                if feature[1] != CORNER_LAYOUT[15] + Vector2i(0, SHORE_SAND[1]):
+                    _land(x, y, cell)
+                continue
             if not feature.is_empty() and not open_sea:
                 features.set_cell(cell, feature[0], feature[1])
             if feature.is_empty() or feature[1] != CORNER_LAYOUT[15] + Vector2i(0, SHORE_SAND[1]) or feature[0] != SHORE_SAND[0]:
@@ -317,13 +339,19 @@ func _fill() -> void:
 func _land(x: int, y: int, cell: Vector2i) -> void:
     var codes := {}
     var full := false
-    for kind in [MAP.Ground.GRASS, MAP.Ground.AUTUMN, MAP.Ground.SNOW, MAP.Ground.BLOSSOM, MAP.Ground.MUD, MAP.Ground.GLOOM, MAP.Ground.STEPPE, MAP.Ground.JADE]:
+    for kind in [MAP.Ground.GRASS, MAP.Ground.AUTUMN, MAP.Ground.SNOW, MAP.Ground.BLOSSOM, MAP.Ground.MUD, MAP.Ground.GLOOM, MAP.Ground.STEPPE, MAP.Ground.JADE, MAP.Ground.CAVE]:
         var kinds: Array = [MAP.Ground.GRASS, MAP.Ground.FOREST] if kind == MAP.Ground.GRASS else [kind]
         var code := _ground_code(x, y, kinds)
         if code > 0:
             codes[kind] = code
             full = full or code == 15
     var ash := _ground_code(x, y, [MAP.Ground.ASH])
+    # M7c: cave floor patches lie straight on the dark rock (no sand base).
+    if DUNGEONS.in_strip(Vector2i(x, y)):
+        var cave := _ground_code(x, y, [MAP.Ground.CAVE])
+        if cave > 0:
+            blend.set_cell(cell, Source.FIELD, PATCHES[MAP.Ground.CAVE][0] + (Vector2i(1, 1) if cave == 15 else PATCH_LAYOUT[cave]))
+        return
     var forest := _ground_code(x, y, [MAP.Ground.FOREST])
     if ash > 0:
         ground.set_cell(cell, Source.LAVA, Vector2i(0, 5))
@@ -556,6 +584,9 @@ static func _scatter(kind: int, region: int, roll: float, pick: int) -> String:
         MAP.Ground.BLOSSOM:
             if roll < 0.13:
                 return ["tree_pink", "tree_blossom", "bamboo", "bamboo", "bush"][pick % 5]
+        MAP.Ground.CAVE:
+            if roll < 0.08:
+                return ["boulder", "pebbles", "mushroom_glow", "pebbles", "mushroom_glow"][pick % 5]
         MAP.Ground.GLOOM:
             if roll < 0.3:
                 return ["tree_gloom", "tree_gloom", "tree_gloom_big", "tree_gloom_dead", "bush_gloom", "mushroom_glow", "mushroom_glow", "tree_gloom", "boulder", "bush_gloom"][pick % 10]

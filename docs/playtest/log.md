@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.1 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.2 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -299,7 +299,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (960x540)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Uncommon Royal Medallion
+- [x] The chest gave an Uncommon-or-better item: Rare Ice Visor
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (960x540)
@@ -334,7 +334,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *Playable races, left to right: Slime, Human, Demon (placeholder looks)* (960x540)
 
 ## 15. The archipelago (M4.5a)
-- [x] Walking east follows the road out of the clearing: x 1168
+- [x] Walking east follows the road out of the clearing: x 1169
 
 ![The east road continues beyond the clearing towards the Harrowmere bridge](56_road_east.png)
 *The east road continues beyond the clearing towards the Harrowmere bridge* (960x540)
@@ -395,7 +395,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *World map: your pile (gold X) and discovered leveling spots (violet)* (960x540)
 
 ## 16. Sound and effects (step 23)
-- Sounds played during this run: analysis ×3, build ×3, chest ×1, defeat ×7, evolve ×1, form ×2, gather ×12, hit ×13, hurt ×4, learned ×2, level_up ×3, magicules ×3, swing ×12, ui_accept ×16, ui_move ×13
+- Sounds played during this run: analysis ×3, build ×3, chest ×1, defeat ×7, evolve ×1, form ×2, gather ×12, hit ×13, hurt ×3, learned ×2, level_up ×3, magicules ×3, swing ×12, ui_accept ×16, ui_move ×13
 - Effects shown: aura ×3, boost ×4, claw ×7, hit_spark ×54, ring ×7, slash ×13, smoke ×12, sparkle ×4
 - [x] The run produced the "swing" cue
 - [x] The run produced the "hit" cue
@@ -666,6 +666,21 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 ![The Jade Terraces (levels 34-40): rice paddies, bamboo and pagoda villages under misty jade peaks](119_jade.png)
 *The Jade Terraces (levels 34-40): rice paddies, bamboo and pagoda villages under misty jade peaks* (960x540)
 
+## 30. Dungeons and hidden elites (M7c)
+
+![A cave mouth in Frostpeak: F climbs down into Frostfang Cavern (a dungeon for levels 14-17)](120_cave_mouth.png)
+*A cave mouth in Frostpeak: F climbs down into Frostfang Cavern (a dungeon for levels 14-17)* (960x540)
+
+- [x] Climbed down into Frostfang Cavern
+
+![Inside a dungeon: dark cave halls joined by wooden walkways over chasms, full of creatures](121_dungeon_hall.png)
+*Inside a dungeon: dark cave halls joined by wooden walkways over chasms, full of creatures* (960x540)
+
+
+![The deepest chamber: Frostfang, the Ice Cyclops, guards a rich chest](122_dungeon_boss.png)
+*The deepest chamber: Frostfang, the Ice Cyclops, guards a rich chest* (960x540)
+
+- [x] Climbed back out
 
 ## System messages seen
 
@@ -725,7 +740,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +1500 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Rare Ivory Longsword.
+- Trial reward: Rare Mercenary's Harvester.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +21 XP (defeat).
@@ -742,8 +757,8 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Uncommon Royal Medallion.
-- +42 Zeni (chest).
+- Chest opened: Rare Ice Visor.
+- +39 Zeni (chest).
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 - Your router did not answer (UPnP off?). Forward UDP 24560 to this PC by hand for friends outside your network.
@@ -751,4 +766,4 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 The bot retreated 0 time(s) to let Magicules recover.
 XP assistance for skill points: 550 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 119 screenshots.**
+**Result: 0 failed checks, 122 screenshots.**

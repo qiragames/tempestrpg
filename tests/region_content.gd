@@ -111,7 +111,7 @@ func _run() -> void:
         var creature = world.entity_by_id(entry[0])
         spawned_ok = spawned_ok and creature != null and creature.kind == entry[1] and creature.difficulty == entry[3] and creature.home == REGION.at(entry[2]) and creature.get_node("Health").maximum == creature.scaled_health(entry[3], REGION.level_of(entry[0], entry[3]))
     _check(spawned_ok, "Each region creature spawns at its home with its kind and difficulty")
-    _check(world.layout.chests.size() == LAYOUT.CHEST_IDS.size() + REGION.CHESTS.size() and world.camp.sites.has("stone_crater_1"), "The world knows the region chests and deposits")
+    _check(world.layout.chests.size() == LAYOUT.CHEST_IDS.size() + REGION.chests().size() and REGION.chests().size() == REGION.CHESTS.size() + 5 and world.camp.sites.has("stone_crater_1"), "The world knows the region chests (and the five dungeon chests) and deposits")
     # Gather a region deposit into the shared stock.
     world.camp.state.founded = true
     world.camp.state.founder = actor.character_id

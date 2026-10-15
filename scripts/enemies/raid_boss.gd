@@ -10,8 +10,9 @@ const BOSS_ITEMS := preload("res://scripts/bosses/boss_items.gd")
 const GEAR := preload("res://scripts/items/gear_catalogue.gd")
 const SOURCES := preload("res://scripts/items/gear_sources.gd")
 const DRAWN_SCALE := 2.4
-## Personal drops: Epic, Legendary, Mythic weights.
+## Personal drops: Epic, Legendary, Mythic weights (raid bosses); Rare and better (elites, M7c).
 const LOOT_RARITY := [0, 0, 0, 60, 32, 8]
+const ELITE_LOOT_RARITY := [0, 0, 55, 32, 11, 2]
 
 var phase := 0
 var _attack_in := 3.0
@@ -32,7 +33,7 @@ func _ready() -> void:
     $CollisionShape2D.shape.radius = 14.0
 
 func sprite_kind() -> String:
-    return BOSS.RAID[entity_id][2] if BOSS.is_boss(entity_id) else "gnasher"
+    return BOSS.entry(entity_id)[2] if BOSS.is_boss(entity_id) else "gnasher"
 
 func boss_name() -> String:
     return BOSS.display_name(entity_id)
@@ -47,13 +48,13 @@ func set_difficulty(value: int) -> void:
     queue_redraw()
 
 func full_health(characters: int) -> int:
-    return int(round(scaled_health(Difficulty.ELITE, level) * BOSS.HEALTH_FACTOR * (1.0 + BOSS.GROUP_BONUS * maxi(0, characters - 1))))
+    return int(round(scaled_health(Difficulty.ELITE, level) * BOSS.health_factor(entity_id) * (1.0 + BOSS.GROUP_BONUS * maxi(0, characters - 1))))
 
 func restore_stats() -> void:
     level = BOSS.level(entity_id)
     damage = int(round(scaled_damage(Difficulty.ELITE, level) * BOSS.DAMAGE_FACTOR))
     speed = 62.0
-    phase = BOSS.phase_for(float(health.current) / float(maxi(1, health.maximum)))
+    phase = BOSS.phase_for(float(health.current) / float(maxi(1, health.maximum)), entity_id)
 
 ## Characters inside the arena (alive).
 func challengers() -> Array:
@@ -113,10 +114,10 @@ func _physics_process(delta: float) -> void:
             if get_slide_collision_count() > 0:
                 _dash_to = Vector2.INF
         return
-    var now_phase := BOSS.phase_for(float(health.current) / float(maxi(1, health.maximum)))
+    var now_phase := BOSS.phase_for(float(health.current) / float(maxi(1, health.maximum)), entity_id)
     if now_phase > phase:
         phase = now_phase
-        _announce_near(inside, "%s grows furious! (phase %d)" % [BOSS.RAID[entity_id][0], phase + 1])
+        _announce_near(inside, "%s grows furious! (phase %d)" % [BOSS.entry(entity_id)[0], phase + 1])
         _start_attack("ring")
         return
     if state == State.WINDUP and state_time > 0.0 and _attack_in > 900.0:
@@ -129,7 +130,7 @@ func _physics_process(delta: float) -> void:
         return
     _attack_in -= delta
     if _attack_in <= 0.0 and state != State.WINDUP:
-        var attacks: Array = BOSS.RAID[entity_id][7]
+        var attacks: Array = BOSS.entry(entity_id)[7]
         var unlocked: int = clampi(2 + phase, 1, attacks.size())
         _start_attack(attacks[_attack_rng.randi_range(0, unlocked - 1)])
         return
@@ -199,28 +200,29 @@ func _defeat() -> void:
     var ranked := qualifying()
     _drop_magicules.call_deferred(ranked)
     var rng: RandomNumberGenerator = world.loot_rng if world != null and world.get("loot_rng") != null else _attack_rng
-    var uniques: Array = BOSS.RAID[entity_id][8]
+    var uniques: Array = BOSS.entry(entity_id)[8]
     var index := 0
     for entry in ranked:
         var actor: Node = world.player_by_id(entry[0]) if world != null and world.has_method("player_by_id") else null
         if not is_instance_valid(actor):
             continue
-        actor.gain_experience(LEVELING.defeat_xp(level, Difficulty.ELITE) * BOSS.XP_FACTOR, "boss")
-        actor.gain_zeni(TRADE.zeni_for(level, Difficulty.ELITE) * BOSS.ZENI_FACTOR, "boss")
+        var raid: bool = BOSS.is_raid(entity_id)
+        actor.gain_experience(LEVELING.defeat_xp(level, Difficulty.ELITE) * (BOSS.XP_FACTOR if raid else 8), "boss")
+        actor.gain_zeni(TRADE.zeni_for(level, Difficulty.ELITE) * (BOSS.ZENI_FACTOR if raid else 10), "boss")
         var item: Dictionary
         if rng.randf() < BOSS.UNIQUE_CHANCE and not uniques.is_empty():
             var base: String = uniques[rng.randi_range(0, uniques.size() - 1)]
             var rarity: int = maxi(int(GEAR.BASES[base].min_rarity), 4 if rng.randf() < 0.7 else 5)
             item = GEAR.roll(base, rarity, rng)
         else:
-            item = SOURCES._item(rng, LOOT_RARITY, level)
+            item = SOURCES._item(rng, LOOT_RARITY if raid else ELITE_LOOT_RARITY, level)
         # Personal loot: only this helper can pick it up (for a long while).
         var spot := position + Vector2.from_angle(TAU * index / maxf(1.0, ranked.size())) * 26.0
         if world.has_method("drop_gear"):
             world.drop_gear.call_deferred(item, spot, "", actor.character_id, (world.progression.get("world_time", 0.0) + 1800.0))
         index += 1
     if world != null and world.has_method("_announce"):
-        world._announce("%s has fallen!" % BOSS.RAID[entity_id][0])
+        world._announce("%s has fallen!" % BOSS.entry(entity_id)[0])
     queue_redraw()
 
 ## Runs on every peer: a big, tinted sprite and its phase glow.
@@ -233,7 +235,7 @@ func _process(_delta: float) -> void:
     body_sprite.position.y = SPRITES.FEET_Y * (1.0 - drawn)
     if state == State.DEFEATED:
         return
-    var tint: Color = BOSS.RAID[entity_id][6] if BOSS.is_boss(entity_id) else Color.WHITE
+    var tint: Color = BOSS.entry(entity_id)[6] if BOSS.is_boss(entity_id) else Color.WHITE
     if state == State.WINDUP:
         tint = Color(1.0, 0.45, 0.4)
     body_sprite.modulate = tint
@@ -244,4 +246,4 @@ func _draw() -> void:
     var width := 48.0
     draw_rect(Rect2(-width / 2.0, -52, width, 4), Color("352d36"))
     draw_rect(Rect2(-width / 2.0, -52, width * health.current / maxi(1, health.maximum), 4), Color("e05a4a"))
-    draw_string(ThemeDB.fallback_font, Vector2(-width / 2.0, -56), "Lv %d %s" % [level, BOSS.RAID[entity_id][0] if BOSS.is_boss(entity_id) else ""], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(1, 0.8, 0.6))
+    draw_string(ThemeDB.fallback_font, Vector2(-width / 2.0, -56), "Lv %d %s" % [level, BOSS.entry(entity_id)[0] if BOSS.is_boss(entity_id) else ""], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(1, 0.8, 0.6))

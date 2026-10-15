@@ -29,7 +29,7 @@ const CLASSIC := {
 ## Chests (17g) are drawn after everything else, so adding them did not move older layouts.
 const CHEST_IDS := ["chest_1", "chest_2", "chest_3"]
 ## Every chest a character can have opened: the seeded three plus the fixed region chests (M4.5b).
-const ALL_CHEST_IDS := ["chest_1", "chest_2", "chest_3", "chest_thornwood", "chest_keep", "chest_crater", "chest_harrowmere", "chest_beach", "chest_glacier", "chest_dunes", "chest_marsh", "chest_shrine", "chest_amber", "chest_volcano"]
+const ALL_CHEST_IDS := ["chest_1", "chest_2", "chest_3", "chest_thornwood", "chest_keep", "chest_crater", "chest_harrowmere", "chest_beach", "chest_glacier", "chest_dunes", "chest_marsh", "chest_shrine", "chest_amber", "chest_volcano", "chest_dg_thornwood_hollow", "chest_dg_frostfang_cavern", "chest_dg_ember_depths", "chest_dg_gloom_catacombs", "chest_dg_jade_grotto"]
 ## Candidate spots for points of interest. Each keeps the trial arena and its spawns inside the map.
 const STONE_SPOTS: Array[Vector2] = [Vector2(480, 100), Vector2(170, 120), Vector2(800, 520), Vector2(150, 520)]
 const ALLY_SPOTS: Array[Vector2] = [Vector2(220, 360), Vector2(260, 420), Vector2(250, 250), Vector2(440, 430)]
