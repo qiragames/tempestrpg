@@ -30,6 +30,12 @@ KINDS = {
     "ember_flame": "Flam",
     "salamander": "Reptile2",
 }
+# Ki Realm foes (M4.7): kind -> Actor folder (monsters and characters share the 64x64 layout).
+REALM_FOES = {
+    "raptor": "Monster/Dragon", "tyrant_rex": "Monster/TRex", "gi_fighter": "Character/FighterRed",
+    "monkey_brawler": "Character/MonkeyBoxerRed", "android_scout": "Character/RobotGrey",
+    "bio_android": "Character/RobotGreen", "android_tank": "Character/RobotCamouflage", "demon_king": "Character/DemonRed",
+}
 
 
 CHARACTERS = ROOT / "assets/source/packs/ninja_adventure/Actor/Character"
@@ -39,6 +45,9 @@ NPCS = {
     "merchant_sakura": "Monk", "merchant_amber": "Hunter", "merchant_marsh": "Shaman",
     "merchant_ember": "OldMan", "merchant_harrow": "Noble", "camp_trader": "Woman",
     "camp_smith": "FighterWhite", "traveller": "MaskRacoon", "ferryman": "OldMan2", "shipwright": "Inspector",
+    # Ki Realm (M4.7): the secret hermit (Sakura Vale), the realm's guide home, mentors, the announcer.
+    "secret_hermit": "OldMan3", "realm_guide": "OldMan3", "turtle_sage": "Master", "spire_sage": "CaveLion",
+    "guardian": "MaskFrog", "canyon_hermit": "Caveman2", "mountain_master": "Tengu", "announcer": "Villager5",
 }
 
 
@@ -70,6 +79,12 @@ def main():
         assert image.size == (64, 64), (kind, image.size)
         frame = image.crop((0, 0, 16, 16)).resize((64, 64), Image.NEAREST)
         preview.alpha_composite(frame, (index * 72 + 4, 4))
+    for kind, folder in REALM_FOES.items():
+        target = SPRITES / kind
+        target.mkdir(parents=True, exist_ok=True)
+        source = ROOT / "assets/source/packs/ninja_adventure/Actor" / folder
+        walk = source / "SeparateAnim" / "Walk.png"
+        shutil.copyfile(walk if walk.exists() else sheet(source), target / f"{kind}_walk.png")
     for npc, folder in NPCS.items():
         target = SPRITES / npc
         target.mkdir(parents=True, exist_ok=True)

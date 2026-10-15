@@ -22,6 +22,10 @@ const BASIC_EFFECTS := [&"strike", &"sword", &"spear", &"scythe", &"bow"]
 const SKILL_EFFECTS := preload("res://scripts/skills/skill_effects.gd")
 ## The skill whose utility effects the current strike applies ("" for basic strikes).
 var _skill_id: String = ""
+## The last beam's shape and colour (presentation).
+var _flash_length := PIERCE_LENGTH
+var _flash_width := 3.0
+var _flash_color := Color("c9f6df")
 const GEAR := preload("res://scripts/items/gear_catalogue.gd")
 ## Where the last bow shot ended (for the flash).
 var shot_end := Vector2.ZERO
@@ -38,6 +42,10 @@ func _race() -> Dictionary:
     return get_parent().race_stats() if get_parent().has_method("race_stats") else {"strike_damage": damage, "strike_cost": magicule_cost, "strike_bonus": 0, "recovery": 1.0, "skill_bonus": 0.0, "drain": 0.0}
 
 ## The basic strike's Magicule cost for this attacker (by race, 24b).
+## M4.7: a transformation multiplies strike and skill damage.
+func _aura() -> float:
+    return get_parent().aura_damage() if get_parent().has_method("aura_damage") else 1.0
+
 func strike_cost() -> float:
     return float(_race().get("strike_cost", magicule_cost))
 
@@ -50,9 +58,9 @@ func attack(facing: Vector2) -> bool:
     # An equipped weapon replaces the unarmed damage and sets the attack's shape and timing.
     var weapon: Dictionary = get_parent().equipped_weapon() if get_parent().has_method("equipped_weapon") else {}
     if weapon.is_empty():
-        return _strike(facing, int(race.get("strike_damage", damage)) + bonus + race.strike_bonus, strike_cost(), cooldown * race.recovery)
+        return _strike(facing, int(round((int(race.get("strike_damage", damage)) + bonus + race.strike_bonus) * _aura())), strike_cost(), cooldown * race.recovery)
     var kind: String = GEAR.BASES[weapon.base].weapon
-    return _strike(facing, int(weapon.stats.damage) + bonus + race.strike_bonus, strike_cost(), GEAR.WEAPONS[kind].recovery * race.recovery, StringName(kind))
+    return _strike(facing, int(round((int(weapon.stats.damage) + bonus + race.strike_bonus) * _aura())), strike_cost(), GEAR.WEAPONS[kind].recovery * race.recovery, StringName(kind))
 
 func attack_skill(facing: Vector2, skill_id: StringName) -> bool:
     var book = get_parent().get_node("SkillBook")
@@ -64,7 +72,10 @@ func attack_skill(facing: Vector2, skill_id: StringName) -> bool:
     # Demons hit harder with skills and drain part of the damage; Humans recover faster.
     var race := _race()
     var keen: float = 0.1 if get_parent().has_method("gear_passive") and get_parent().gear_passive("keen") else 0.0
-    var power := int(round(skill.damage * (1.0 + race.skill_bonus + keen)))
+    var power := int(round(skill.damage * (1.0 + race.skill_bonus + keen) * _aura()))
+    _flash_length = PIERCE_LENGTH
+    _flash_width = 3.0
+    _flash_color = Color("c9f6df")
     var fx: Dictionary = SKILL_EFFECTS.effects(String(skill_id))
     var drain: float = race.drain + float(fx.get("drain", 0.0))
     var done := false
@@ -133,10 +144,15 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
         query.transform = Transform2D(0.0, global_position + direction * 10.0)
         reach_dot = -0.3
     elif effect == &"pierce":
+        # M4.7: ki beams set their own reach and width.
+        var length: float = float(fx.get("reach", PIERCE_LENGTH))
         var line := RectangleShape2D.new()
-        line.size = Vector2(PIERCE_LENGTH, PIERCE_WIDTH)
+        line.size = Vector2(length, float(fx.get("width", PIERCE_WIDTH)))
         query.shape = line
-        query.transform = Transform2D(direction.angle(), global_position + direction * (PIERCE_LENGTH / 2.0 + 4.0))
+        query.transform = Transform2D(direction.angle(), global_position + direction * (length / 2.0 + 4.0))
+        _flash_length = length
+        _flash_width = float(fx.get("width", 3.0))
+        _flash_color = Color(String(fx.get("color", "c9f6df")))
     else:
         var circle := CircleShape2D.new()
         circle.radius = float(fx.get("area", 16.0))
@@ -202,7 +218,7 @@ func _draw() -> void:
     elif flash_left > 0.0 and flash_effect == &"scythe":
         draw_arc(direction * 10.0, SCYTHE_RADIUS, direction.angle() - 1.9, direction.angle() + 1.9, 18, tint, 3.0)
     elif flash_left > 0.0 and flash_effect == &"pierce":
-        draw_line(direction * 6.0, direction * (PIERCE_LENGTH + 4.0), Color("e8dcc0"), 3.0)
-        draw_line(direction * 6.0, direction * (PIERCE_LENGTH + 4.0), Color("c9f6df"), 1.0)
+        draw_line(direction * 6.0, direction * (_flash_length + 4.0), Color(_flash_color, 0.45), maxf(3.0, _flash_width))
+        draw_line(direction * 6.0, direction * (_flash_length + 4.0), Color(1, 1, 1, 0.9), maxf(1.0, _flash_width * 0.35))
     elif flash_left > 0.0:
         draw_arc(direction * 18.0, 16.0, direction.angle() - 1.0, direction.angle() + 1.0, 10, Color("c9f6df"), 3.0)

@@ -24,7 +24,7 @@ const CLEARING := Rect2i(160, 96, 60, 40)
 const NOISE_SEED := 4410
 
 enum Ground {SAND, GRASS, FOREST, AUTUMN, ASH, SNOW, BLOSSOM, MUD}
-enum Region {SEA, CLEARING, THORNWOOD, MIRROR_LAKE, CINDER_CRATER, VERDANT, HARROWMERE, AMBERVALE, EMBERREACH, FROSTPEAK, SUNSCORCH, SAKURA_VALE, MIREWOOD}
+enum Region {SEA, CLEARING, THORNWOOD, MIRROR_LAKE, CINDER_CRATER, VERDANT, HARROWMERE, AMBERVALE, EMBERREACH, FROSTPEAK, SUNSCORCH, SAKURA_VALE, MIREWOOD, KI_REALM}
 const REGION_NAMES := {
     Region.SEA: "The Sapphire Sea",
     Region.CLEARING: "The First Clearing",
@@ -39,7 +39,14 @@ const REGION_NAMES := {
     Region.SUNSCORCH: "Sunscorch Desert",
     Region.SAKURA_VALE: "Sakura Vale",
     Region.MIREWOOD: "Mirewood Marsh",
+    Region.KI_REALM: "The Ki Realm",
 }
+## The Ki Realm (M4.7): a hidden island group far out at sea, reached only through the secret
+## hermit in Sakura Vale. It never shows on the normal maps; inside it, the maps show only it.
+const REALM_RECT := Rect2i(-398, -254, 246, 166)
+
+static func in_realm(world: Vector2) -> bool:
+    return REALM_RECT.has_point(to_tile(world))
 ## The home continent (user decision, M4.5c): Verdant Isle joined by land to Frostpeak and the
 ## Sunscorch Desert, plus Harrowmere over its bridge — all reachable on foot. The southern
 ## continent (Ambervale and Mirewood Marsh), Sakura Vale and the Emberreach Isles are reached by
@@ -50,6 +57,7 @@ const BY_FERRY := [Region.AMBERVALE, Region.MIREWOOD, Region.SAKURA_VALE, Region
 const REGION_GROUND := {
     Region.VERDANT: Ground.GRASS, Region.HARROWMERE: Ground.GRASS, Region.AMBERVALE: Ground.AUTUMN, Region.EMBERREACH: Ground.ASH,
     Region.FROSTPEAK: Ground.SNOW, Region.SUNSCORCH: Ground.SAND, Region.SAKURA_VALE: Ground.BLOSSOM, Region.MIREWOOD: Ground.MUD,
+    Region.KI_REALM: Ground.GRASS,
 }
 
 ## Land masses: [centre (tiles), radii (tiles), region]. A vertex is land when its distance to a
@@ -92,12 +100,19 @@ const LAND := [
     [Vector2(450, -190), Vector2(13, 8), Region.FROSTPEAK],
     [Vector2(720, 470), Vector2(12, 9), Region.EMBERREACH],
     [Vector2(30, 470), Vector2(18, 10), Region.AMBERVALE],
-    [Vector2(-330, -160), Vector2(16, 10), Region.FROSTPEAK],
+    # The Ki Realm (M4.7): the main island, Hermit Atoll and the World Martial Grounds.
+    [Vector2(-272, -176), Vector2(80, 52), Region.KI_REALM],
+    [Vector2(-374, -141), Vector2(9, 6), Region.KI_REALM],
+    [Vector2(-300, -103), Vector2(17, 9), Region.KI_REALM],
 ]
 ## Sub-regions on land: [centre, radii, region, ground].
 const AREAS := [
     [Vector2(104, 84), Vector2(42, 38), Region.THORNWOOD, Ground.FOREST],
     [Vector2(256, 166), Vector2(30, 26), Region.CINDER_CRATER, Ground.ASH],
+    # Ki Realm: Raptor Gulch (forest), Wasteland Canyon (sand), Android Works (ash).
+    [Vector2(-322, -152), Vector2(26, 20), Region.KI_REALM, Ground.FOREST],
+    [Vector2(-212, -150), Vector2(30, 24), Region.KI_REALM, Ground.SAND],
+    [Vector2(-218, -204), Vector2(22, 16), Region.KI_REALM, Ground.ASH],
 ]
 const LAKE := [Vector2(246, 72), Vector2(24, 15)]
 const LAKE_ISLET := [Vector2(246, 70), Vector2(6, 4)]
@@ -156,12 +171,22 @@ const PATHS := [
     [Vector2(545, 40), Vector2(600, 110)],
     # Up to Sakura Vale's hilltop shrine.
     [Vector2(545, 40), Vector2(575, 4), Vector2(600, -40)],
+    # Ki Realm roads: Dome City to the Spire's top, the canyon, the gulch, the works, the atoll
+    # and the martial grounds.
+    [Vector2(-268, -170), Vector2(-280, -192), Vector2(-286, -212)],
+    [Vector2(-268, -170), Vector2(-240, -160), Vector2(-212, -150)],
+    [Vector2(-268, -170), Vector2(-300, -160), Vector2(-322, -150)],
+    [Vector2(-240, -160), Vector2(-226, -190), Vector2(-218, -204)],
+    [Vector2(-300, -160), Vector2(-340, -141), Vector2(-372, -141)],
+    [Vector2(-268, -170), Vector2(-290, -140), Vector2(-299.5, -103)],
 ]
 const PATH_HALF_WIDTH := 1.6
 ## Bridges (tile rects, walkable over water).
 const BRIDGES := [
     Rect2i(282, 90, 40, 3), Rect2i(245, 74, 3, 14),
     Rect2i(-84, 318, 36, 3),
+    # Ki Realm: to Hermit Atoll and to the World Martial Grounds.
+    Rect2i(-366, -142, 42, 3), Rect2i(-301, -126, 3, 18),
 ]
 ## Harbours (M4.5c piers, M4.5d proper harbours in every region): [id, name, dock tile (on the
 ## shore), pier direction, has a shipwright]. Each has a pier, a ferryman selling tickets and
@@ -190,6 +215,9 @@ const HIGHLANDS := [
     [Vector2(600, -50), Vector2(38, 24), 1],
     [Vector2(100, 372), Vector2(40, 18), 1], [Vector2(262, 290), Vector2(40, 16), 1],
     [Vector2(592, 352), Vector2(40, 28), 1], [Vector2(594, 352), Vector2(20, 13), 2],
+    # Ki Realm: Sage Spire (two levels, the Guardian's Lookout on top) and the canyon's mesas.
+    [Vector2(-286, -208), Vector2(15, 11), 1], [Vector2(-286, -212), Vector2(7, 5), 2],
+    [Vector2(-198, -142), Vector2(9, 6), 1], [Vector2(-226, -136), Vector2(6, 5), 1],
 ]
 const MAX_LEVEL := 2
 
@@ -221,6 +249,10 @@ const TOWNS := [
     ["hanamura", "Hanamura", Region.SAKURA_VALE, Vector2(545, 40), "town", "sakura"],
     ["bamboo_hollow", "Bamboo Hollow", Region.SAKURA_VALE, Vector2(480, -30), "village", "sakura"],
     ["koi_pond", "Koi Pond", Region.SAKURA_VALE, Vector2(600, 110), "village", "sakura"],
+    # The Ki Realm (M4.7).
+    ["dome_city", "Dome City", Region.KI_REALM, Vector2(-268, -170), "town", "dome"],
+    ["hermit_atoll", "Hermit Atoll", Region.KI_REALM, Vector2(-374, -141), "village", "atoll"],
+    ["martial_grounds", "World Martial Grounds", Region.KI_REALM, Vector2(-300, -102), "village", "arena"],
 ]
 ## Plaza radius (tiles) and the radius within which the HUD names the place.
 const PLAZA := {"town": 4.5, "village": 2.5}

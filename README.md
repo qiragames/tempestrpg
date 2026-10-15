@@ -4,20 +4,37 @@ A Godot **4.6.3** / GDScript prototype for a top-down pixel-art Isekai RPG.
 
 ## Screenshots
 
-Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 89 captures are in `docs/playtest/` with `docs/playtest/log.md`.
+Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 98 captures are in `docs/playtest/` with `docs/playtest/log.md`.
 
 <table>
+<tr><td align="center"><img src="docs/playtest/90_realm_hermit.png" width="400" alt="The secret hermit in Sakura Vale"><br><sub>The secret hermit in Sakura Vale</sub></td><td align="center"><img src="docs/playtest/91_dome_city.png" width="400" alt="Dome City in the hidden Ki Realm"><br><sub>Dome City in the hidden Ki Realm</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/94_kaio_surge.png" width="400" alt="Kaio Surge transformation (X)"><br><sub>Kaio Surge transformation (X)</sub></td><td align="center"><img src="docs/playtest/95_turtle_wave.png" width="400" alt="Turtle Wave: a long ki beam"><br><sub>Turtle Wave: a long ki beam</sub></td></tr>
+<tr><td align="center"><img src="docs/playtest/98_tournament.png" width="400" alt="The World Martial Grounds tournament"><br><sub>The World Martial Grounds tournament</sub></td><td align="center"><img src="docs/playtest/97_realm_map.png" width="400" alt="Inside the realm the map shows only the realm"><br><sub>Inside the realm the map shows only the realm</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/88_party_frames.png" width="400" alt="In a party: frames and minimap marker"><br><sub>In a party: frames and minimap marker</sub></td><td align="center"><img src="docs/playtest/89_party_window.png" width="400" alt="The party window (P)"><br><sub>The party window (P)</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/77_harbour_map.png" width="400" alt="Harbours: travel by map"><br><sub>Harbours: travel by map</sub></td><td align="center"><img src="docs/playtest/84_own_ship.png" width="400" alt="Your own ship docked at Cinderport"><br><sub>Your own ship docked at Cinderport</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/83_world_map_full.png" width="400" alt="The world: home continent, ferry lands, towns and harbours"><br><sub>The world: home continent, ferry lands, towns and harbours</sub></td><td align="center"><img src="docs/playtest/75_shop_buy.png" width="400" alt="A town merchant's shop (Zeni)"><br><sub>A town merchant's shop (Zeni)</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/85_riding.png" width="400" alt="Riding a horse from the stable"><br><sub>Riding a horse from the stable</sub></td><td align="center"><img src="docs/playtest/71_frost_mountain.png" width="400" alt="Frostpeak's mountain: ledges and rock walls"><br><sub>Frostpeak's mountain: ledges and rock walls</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/80_hanamura.png" width="400" alt="Hanamura in Sakura Vale (by ferry)"><br><sub>Hanamura in Sakura Vale (by ferry)</sub></td><td align="center"><img src="docs/playtest/81_volcano.png" width="400" alt="The Emberreach volcano's slopes"><br><sub>The Emberreach volcano's slopes</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/01_title_menu.png" width="400" alt="Title screen"><br><sub>Title screen</sub></td><td align="center"><img src="docs/playtest/55_races.png" width="400" alt="Slime, Human and Demon"><br><sub>Slime, Human and Demon</sub></td></tr>
 </table>
 
 ## The world
 
 The First Clearing is the start of an archipelago of about 10 × 11 screens (M4.5a): **Verdant Isle** with Thornwood (dense forest), Mirror Lake (a bridge to the ruined keep on its islet), Cinder Crater (ash, boulders, a lava pool) and its beaches; **Harrowmere**, the walled-town island across a long bridge; **Ambervale**, the autumn continent, and the volcanic **Emberreach Isles** across the sea (reachable once ferries and ships exist). The clearing's roads continue as paths, the HUD names the region you are in, and **M** (or the pause menu) opens the world map with your position. Coasts, lakes and lava block movement; bridges carry you across. The regions have their own content (M4.5b): 13 creatures that respawn (easy Gnashers in the meadows and on the beach, Gnashers and a Thornback in Thornwood and by Mirror Lake, Elites in Cinder Crater; Harrowmere is peaceful), six richer deposits (Thornwood wood, crater and lakeshore stone, meadow wood) that explorers gather into the camp's stock, and five chests — the keep's and the crater's give Rare or Epic gear. Tests: `tests/world_map.gd` (23), `tests/region_content.gd` (21).
+
+## The Ki Realm (M4.7)
+
+A hidden island group far out at sea, inspired by a certain martial-arts anime (original names, obvious nods). It never shows on the normal world map; inside it, the map (M) shows only the realm.
+
+- **The way in:** an old **hermit** sits unmarked in Sakura Vale. At **level 15+** he asks what you seek — pick the right answer (F to talk) and the world folds. The **realm guide** in Dome City sends you back.
+- **Places:** **Dome City** (capsule-dome houses), **Hermit Atoll** across a long bridge, the **World Martial Grounds** (tournament ring) to the south, the **Sage Spire** with the **Guardian's Lookout** on top, **Raptor Gulch**, **Wasteland Canyon** with its mesas and the **Android Works**.
+- **Foes** (they cannot be analysed): raptors and a tyrant rex, gi fighters and monkey brawlers, android scouts, tanks and a bio-android, and the Demon King; two leveling spots (Raptor Nest, Scrap Yard).
+- **Mentors** teach for Zeni: **Ki Blast** (Spire Sage, fast long shot), **Turtle Wave** (Turtle Sage, long charged beam), **Ki Disc** (Canyon Hermit, piercing with bleed), **Spirit Orb** (the Guardian, huge area that stuns) and the **Kaio Surge** (Mountain Master). Activate learned skills in the skill tree (K).
+- **Transformations** (**X** to power up / down): **Kaio Surge** (red, ×1.3 damage, ×1.2 speed), **Golden Aura** (×1.5 / ×1.3) and **Golden Aura II** (×1.8 / ×1.35). A flame aura shows for everyone; it drains Magicules every second and fades when they run out.
+- **Seven wish orbs** lie at hidden spots (F picks one up; they cannot be sold or thrown away). Bring all seven to the **altar on the Guardian's Lookout** and wish for a **Legendary item**, **20,000 Zeni**, **3 skill points** or **the next transformation**. Then the orbs turn to stone and scatter to new spots after an hour of world time.
+- **The tournament** (level 16, 500 Zeni): five bouts in the ring (Gi Fighter → Monkey Brawler → Android Scout → Bio-Android → Demon King). Falling or leaving the ring loses. The champion wins **5,000 Zeni**, and the first title brings the **Golden Aura**.
+- The realm's own storyline comes later (user plan).
+- Saves: schema **v26**.
+
+Tests: `tests/ki_realm.gd` (38).
 
 ## Parties (M4.6)
 
@@ -169,6 +186,7 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/region_creatures.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/travel.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/party.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/ki_realm.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/balance_edges.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
@@ -178,7 +196,7 @@ python3 tests/network_worlds.py
 "$GODOT_BIN" --headless --path . --quit-after 120
 ```
 
-The checks validate import, 44 local gameplay/persistence/UI/visual suites (1256 checks including the bot balance probe) and 266 real multi-process networking checks (1522 total through M4.6 on Windows; use `python3` on Linux or `python` on Windows). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
+The checks validate import, 45 local gameplay/persistence/UI/visual suites (1296 checks including the bot balance probe) and 266 real multi-process networking checks (1562 total through M4.7 on Windows; use `python3` on Linux or `python` on Windows). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
 
 ## Structure
 

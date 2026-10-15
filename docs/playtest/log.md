@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 94.9 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.2 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -299,7 +299,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (640x360)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Rare Scale Mail
+- [x] The chest gave an Uncommon-or-better item: Rare Copper Ring
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (640x360)
@@ -369,7 +369,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 ![Sunfall Beach: the south coast; Ambervale lies across the strait](62_sunfall_beach.png)
 *Sunfall Beach: the south coast; Ambervale lies across the strait* (640x360)
 
-- [x] All 37 region creatures are in the world
+- [x] All 46 region creatures are in the world
 
 ![Thornwood's Gnashers (one Elite) near a wood deposit and the Thornwood chest](63_thornwood_creatures.png)
 *Thornwood's Gnashers (one Elite) near a wood deposit and the Thornwood chest* (640x360)
@@ -515,6 +515,52 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 ![The party window (P): members, invitations, leave and remove](89_party_window.png)
 *The party window (P): members, invitations, leave and remove* (640x360)
 
+## 21. The Ki Realm (M4.7)
+- [x] The secret hermit in Sakura Vale offers four answers
+
+![The secret hermit in Sakura Vale (level 15+): pick the right answer to enter the hidden Ki Realm](90_realm_hermit.png)
+*The secret hermit in Sakura Vale (level 15+): pick the right answer to enter the hidden Ki Realm* (640x360)
+
+- [x] The right answer opens the way
+
+![Dome City, the Ki Realm's capital: capsule-dome houses, palms and the realm guide](91_dome_city.png)
+*Dome City, the Ki Realm's capital: capsule-dome houses, palms and the realm guide* (640x360)
+
+
+![The top of the Sage Spire: the Guardian (Spirit Orb) beside the wish altar](92_sage_spire.png)
+*The top of the Sage Spire: the Guardian (Spirit Orb) beside the wish altar* (640x360)
+
+- [x] The Mountain Master teaches the Kaio Surge
+
+![The Turtle Sage on Hermit Atoll teaches the Turtle Wave (level 16, 2,000 Zeni)](93_turtle_sage.png)
+*The Turtle Sage on Hermit Atoll teaches the Turtle Wave (level 16, 2,000 Zeni)* (640x360)
+
+- [x] The Turtle Sage teaches the Turtle Wave
+- [x] Powered up: Kaio Surge
+
+![Kaio Surge (X): a red flame aura, x1.3 damage and x1.2 speed while it drains Magicules](94_kaio_surge.png)
+*Kaio Surge (X): a red flame aura, x1.3 damage and x1.2 speed while it drains Magicules* (640x360)
+
+- [x] Activated the Turtle Wave in the skill tree
+- [x] A Turtle Wave fired
+
+![Turtle Wave: a long charged ki beam through Raptor Gulch](95_turtle_wave.png)
+*Turtle Wave: a long charged ki beam through Raptor Gulch* (640x360)
+
+
+![A wish orb (one star) lying at a hidden spot; all seven make one wish at the Guardian's altar](96_wish_orb.png)
+*A wish orb (one star) lying at a hidden spot; all seven make one wish at the Guardian's altar* (640x360)
+
+- [x] Inside the realm the map shows only the realm
+
+![The map inside the Ki Realm: only the realm (it never shows on the normal map)](97_realm_map.png)
+*The map inside the Ki Realm: only the realm (it never shows on the normal map)* (640x360)
+
+- [x] Entered the tournament
+
+![The World Martial Grounds: round one of five against a Gi Fighter (the champion wins 5,000 Zeni and the Golden Aura)](98_tournament.png)
+*The World Martial Grounds: round one of five against a Gi Fighter (the champion wins 5,000 Zeni and the Golden Aura)* (640x360)
+
 
 ## System messages seen
 
@@ -574,7 +620,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +1500 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Rare Padded Vest.
+- Trial reward: Rare Spirit Amulet.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +21 XP (defeat).
@@ -591,7 +637,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Rare Scale Mail.
+- Chest opened: Rare Copper Ring.
 - +32 Zeni (chest).
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
@@ -599,4 +645,4 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 The bot retreated 1 time(s) to let Magicules recover.
 XP assistance for skill points: 550 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 89 screenshots.**
+**Result: 0 failed checks, 98 screenshots.**

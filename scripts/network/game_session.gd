@@ -507,6 +507,34 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             "revive":
                 return world.party.revive(actor, who)
         return false
+    if action == "realm":
+        # M4.7: clients name a hermit answer, a mentor, an orb or a wish; the host checks the rest.
+        var realm_operation: Variant = payload.get("operation")
+        var what: Variant = payload.get("id", "")
+        if not realm_operation in ["answer", "leave", "learn", "orb", "wish", "enter"] or not what is String or what.length() > 32 or payload.size() > 2:
+            rejected_requests += 1
+            return false
+        if actor.input_blocked:
+            return false
+        match realm_operation:
+            "answer":
+                return what.is_valid_int() and world.realm.answer_hermit(actor, int(what))
+            "leave":
+                return world.realm.leave_realm(actor)
+            "learn":
+                return world.realm.learn(actor, what)
+            "orb":
+                return what.is_valid_int() and world.realm.take_orb(actor, int(what))
+            "wish":
+                return world.realm.wish(actor, what)
+            "enter":
+                return world.realm.enter_tournament(actor)
+        return false
+    if action == "aura":
+        if payload.size() != 1 or payload.get("operation") != "toggle":
+            rejected_requests += 1
+            return false
+        return actor.toggle_aura()
     if action == "fish":
         if payload.size() != 1 or not payload.get("operation") in ["cast", "reel"]:
             rejected_requests += 1
@@ -566,6 +594,9 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
     if action == "discard":
         if payload.size() != 1 or not payload.get("id") is String or payload.id.length() > 64:
             rejected_requests += 1
+            return false
+        # Wish orbs cannot be thrown away (they only return to the realm through a wish).
+        if preload("res://scripts/realm/realm_catalogue.gd").is_orb(payload.id):
             return false
         return actor.get_node("Inventory").discard(StringName(payload.id))
     if actor.input_blocked or actor.is_exhausted():

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/skills/skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"ki_blast"
+display_name = "Ki Blast"
+tier = "Unique"
+description = "A quick bolt of ki that flies far in a straight line."
+damage = 40
+magicule_cost = 10.0
+cooldown = 0.5
+effect = &"pierce"

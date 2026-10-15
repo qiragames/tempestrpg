@@ -21,7 +21,7 @@ var exhaustion_active: bool = false
 var exhaustion_left: float = 0.0
 var remote_direction := Vector2.ZERO
 var last_input_msec: int = 0
-var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "race": "Slime", "quests": {}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": [], "zeni": 0, "ship": {"owned": false, "at": ""}, "ferry_pass_until": 0.0, "tools": {"axe": 0, "pickaxe": 0, "rod": 0}, "mounts": [], "mount": "", "augments": []}
+var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "race": "Slime", "quests": {}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": [], "zeni": 0, "ship": {"owned": false, "at": ""}, "ferry_pass_until": 0.0, "tools": {"axe": 0, "pickaxe": 0, "rod": 0}, "mounts": [], "mount": "", "augments": [], "auras": [], "aura": "", "bonus_points": 0, "champion": false}
 ## Current mimic form and the time until it can change again (host-owned, saved).
 ## Gear (17e): owned items and active cooldowns; equipped item IDs live in progression.equipment.
 var gear: Dictionary = {"items": [], "cooldowns": {}}
@@ -41,6 +41,8 @@ var _fishing_spot := Vector2.ZERO
 var _fishing_lake := false
 var _tame_cooldown := 0.0
 var _mount_sprite: Sprite2D
+const REALM := preload("res://scripts/realm/realm_catalogue.gd")
+var _aura_node: Node2D
 ## Consumables (M4.5c): shared cooldown and the effects still running (seconds left, per second).
 var consumable_cooldown: float = 0.0
 var _heal_left := 0.0
@@ -225,6 +227,38 @@ func _animate(delta: float) -> void:
     var attacking: bool = has_node("MeleeAttack") and $MeleeAttack.flash_left > 0.0
     SPRITES.play(body_sprite, ("attack_" if attacking and _body_set != "slime" else ("walk_" if walking else "idle_")) + direction)
     _draw_mount(direction, walking)
+    _draw_aura()
+
+## The transformation's aura (M4.7): flickering flame-like spikes behind the character, tinted
+## body; seen by everyone (the active aura is in the replicated progression).
+func _draw_aura() -> void:
+    var active := aura()
+    if active.is_empty() or not REALM.AURAS.has(active) or $Health.current <= 0:
+        if is_instance_valid(_aura_node):
+            _aura_node.visible = false
+        return
+    if not is_instance_valid(_aura_node):
+        _aura_node = Node2D.new()
+        _aura_node.name = "Aura"
+        _aura_node.show_behind_parent = true
+        add_child(_aura_node)
+        move_child(_aura_node, 0)
+        _aura_node.draw.connect(func():
+            var color: Color = REALM.AURAS[aura()][4] if REALM.AURAS.has(aura()) else Color.WHITE
+            var t := Time.get_ticks_msec() / 1000.0
+            var points := PackedVector2Array()
+            for i in range(18):
+                var angle := -PI + float(i) / 17.0 * PI * 2.0
+                var radius := 14.0 + (8.0 if i % 2 == 0 else 0.0) + sin(t * 12.0 + i) * 2.5
+                # Flames lick upwards: the upper half reaches higher.
+                points.append(Vector2(cos(angle) * radius * 0.75, sin(angle) * radius - 6.0 - (8.0 if sin(angle) < 0 else 0.0)))
+            _aura_node.draw_circle(Vector2(0, -6), 16.0, Color(color, 0.18))
+            _aura_node.draw_colored_polygon(points, Color(color, 0.45))
+            _aura_node.draw_polyline(points + PackedVector2Array([points[0]]), Color(color.lightened(0.3), 0.95), 1.5)
+        )
+    _aura_node.visible = true
+    _aura_node.queue_redraw()
+    body_sprite.modulate = body_sprite.modulate.lerp(REALM.AURAS[active][4], 0.35)
 
 ## The mount under a riding character (M4.5d): side view when moving sideways, else the front
 ## view; two walk frames; the rider sits a little higher.
@@ -398,7 +432,7 @@ func _physics_process(_delta: float) -> void:
     queue_redraw()
 
 func current_speed() -> float:
-    return maxf(10.0, move_speed + gear_bonus("speed")) * FORMS.FORMS[form].speed * mount_speed()
+    return maxf(10.0, move_speed + gear_bonus("speed")) * FORMS.FORMS[form].speed * mount_speed() * aura_speed()
 
 ## ---- Gear (17e) ----
 func item_by_id(id: String) -> Dictionary:
@@ -558,6 +592,49 @@ func absorb_factor() -> float:
 ## --- Mounts (M4.5d)
 func riding() -> String:
     return String(progression.get("mount", ""))
+
+## --- Transformations (M4.7): a learned aura multiplies damage and speed and drains Magicules.
+func aura() -> String:
+    return String(progression.get("aura", ""))
+
+func aura_damage() -> float:
+    return float(REALM.AURAS[aura()][1]) if REALM.AURAS.has(aura()) else 1.0
+
+func aura_speed() -> float:
+    return float(REALM.AURAS[aura()][2]) if REALM.AURAS.has(aura()) else 1.0
+
+## Host: power up with the strongest learned transformation, or power down.
+func toggle_aura() -> bool:
+    if not AUTHORITY.can_mutate(self):
+        return false
+    if not aura().is_empty():
+        progression["aura"] = ""
+        session.notify_character(character_id, "You power down.")
+        return true
+    var learned: Array = progression.get("auras", [])
+    if learned.is_empty():
+        session.notify_character(character_id, "No transformation learned yet.")
+        return false
+    if $Health.current <= 0 or is_exhausted() or form != FORMS.BASE:
+        return false
+    var best: String = ""
+    for id in REALM.AURA_ORDER:
+        if id in learned:
+            best = id
+    if $Magicules.current < REALM.AURAS[best][3] * 2.0:
+        session.notify_character(character_id, "Not enough Magicules to power up.")
+        return false
+    progression["aura"] = best
+    session.notify_character(character_id, "%s! (x%.1f damage, -%d Magicules/s; X to power down)" % [REALM.AURAS[best][0], REALM.AURAS[best][1], int(REALM.AURAS[best][3])])
+    return true
+
+func _tick_aura(delta: float) -> void:
+    if aura().is_empty():
+        return
+    var cost: float = float(REALM.AURAS[aura()][3]) * delta
+    if $Health.current <= 0 or $Magicules.current < cost or not $Magicules.try_spend(cost):
+        progression["aura"] = ""
+        session.notify_character(character_id, "Your aura fades.")
 
 func mount_speed() -> float:
     return 1.0 + float(TRAVEL.MOUNTS[riding()][1]) if TRAVEL.MOUNTS.has(riding()) else 1.0
@@ -813,6 +890,7 @@ func _process(delta: float) -> void:
     if $Health.current > 0:
         _tick_consumables(delta)
     _tick_fishing(delta)
+    _tick_aura(delta)
     for id in gear.cooldowns.keys():
         gear.cooldowns[id] = maxf(0.0, gear.cooldowns[id] - delta)
         if gear.cooldowns[id] <= 0.0:
@@ -839,6 +917,9 @@ func _unhandled_input(event: InputEvent) -> void:
             session.request_action("transform", {"form": target})
         else:
             try_transform(target)
+        return
+    if event.is_action_pressed("aura") and not event.is_echo():
+        session.request_action("aura", {"operation": "toggle"})
         return
     if event.is_action_pressed("mount") and not event.is_echo():
         session.request_action("mount", {"operation": "toggle"})

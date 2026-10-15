@@ -53,7 +53,11 @@ static func valid(progression: Dictionary) -> bool:
         return false
     if not (points is int or points is float) or points != floor(points) or points < 0:
         return false
-    return progression.get("level") == level_for(int(experience)) and points <= progression.level
+    # M4.7: a wish can grant bonus points on top of one per level.
+    var bonus: Variant = progression.get("bonus_points", 0)
+    if not (bonus is int or bonus is float) or bonus != floor(bonus) or bonus < 0 or bonus > 30:
+        return false
+    return progression.get("level") == level_for(int(experience)) and points <= progression.level + int(bonus)
 
 ## Award experience on the host. Returns the number of levels gained.
 static func grant(actor: Node, amount: int) -> int:

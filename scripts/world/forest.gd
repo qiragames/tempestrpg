@@ -22,6 +22,8 @@ var trade: Node2D
 var harbours: Node2D
 ## Parties (M4.6).
 var party: Node
+## The Ki Realm: its people, wish orbs and tournament (M4.7).
+var realm: Node2D
 var respawner: Node
 ## Host-side randomness for gear drops, chests, trial rewards and the forge (17g).
 var loot_rng := RandomNumberGenerator.new()
@@ -49,6 +51,8 @@ func _ready() -> void:
     add_child(load("res://scripts/travel/wild_mounts.gd").new())
     party = load("res://scripts/party/world_party.gd").new()
     add_child(party)
+    realm = load("res://scripts/realm/ki_realm.gd").new()
+    add_child(realm)
     trial = load("res://scripts/trials/proving_trial.gd").new()
     trial.name = "ProvingTrial"
     trial.y_sort_enabled = true

@@ -53,6 +53,8 @@ func _reachable(start: Vector2i) -> PackedByteArray:
     var queue: Array = [start]
     for ferry in MAP.HARBOURS:
         queue.append(Vector2i(ferry[2]))
+    # M4.7: the secret hermit's door into the Ki Realm.
+    queue.append(Vector2i(preload("res://scripts/realm/realm_catalogue.gd").ARRIVAL_TILE))
     for tile in queue:
         seen[MAP.tile_index(tile.x, tile.y)] = 1
     var head := 0
@@ -73,7 +75,7 @@ func _run() -> void:
     session = root.get_node("GameSession")
     # --- Leveling spots: placement and respawn speed
     var reach := _reachable(MAP.to_tile(LAYOUT.SPAWN))
-    var spots_ok := REGION.SPOTS.size() == 20
+    var spots_ok := REGION.SPOTS.size() == 22
     for entry in REGION.spot_creatures():
         var tile := Vector2i(entry[2])
         spots_ok = spots_ok and not MAP.solid(tile.x, tile.y) and reach[MAP.tile_index(tile.x, tile.y)] == 1 and MAP.region_at(REGION.at(entry[2])) != MAP.Region.CLEARING
@@ -82,7 +84,7 @@ func _run() -> void:
         var area: String = spot[0].get_slice("_", 1)
         per_region[area] = int(per_region.get(area, 0)) + 1
     spots_ok = spots_ok and MAP.region_at(REGION.at(REGION.SPOTS[2][2])) == MAP.Region.THORNWOOD and MAP.region_at(REGION.at(REGION.SPOTS[6][2])) == MAP.Region.CINDER_CRATER
-    _check(spots_ok and per_region.size() == 10 and per_region.values().all(func(count): return count == 2), "Twenty hidden leveling spots, two per creature region (with M4.5c's six new regions), on reachable land")
+    _check(spots_ok and per_region.size() == 11 and per_region.values().all(func(count): return count == 2), "Twenty-two hidden leveling spots, two per creature region (with M4.5c's six new regions and the Ki Realm), on reachable land")
     _check(REGION.respawn_seconds("gnasher_1", 0) == 45.0 and REGION.respawn_seconds("x", 1) == 90.0 and REGION.respawn_seconds("x", 2) == 180.0 and REGION.respawn_seconds("spot_crater_a_1", 2) == 60.0, "Respawn by tier 45/90/180 s; leveling-spot creatures three times faster")
     # --- Creature levels and naming cost
     var ally_script = load("res://scripts/allies/goblin_ally.gd")

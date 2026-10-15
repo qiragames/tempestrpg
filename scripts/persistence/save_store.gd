@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 25
+const VERSION := 26
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -23,6 +23,8 @@ const TRADE := preload("res://scripts/trade/trade_catalogue.gd")
 const WORLD_TRADE := preload("res://scripts/trade/world_trade.gd")
 const HARBOURS := preload("res://scripts/travel/world_harbours.gd")
 const PARTY := preload("res://scripts/party/world_party.gd")
+const KI_REALM := preload("res://scripts/realm/ki_realm.gd")
+const REALM := preload("res://scripts/realm/realm_catalogue.gd")
 const TRAVEL := preload("res://scripts/travel/travel_catalogue.gd")
 const UPGRADES := preload("res://scripts/items/upgrade_catalogue.gd")
 
@@ -161,6 +163,13 @@ static func validate_player(state: Variant, id: String) -> bool:
         return false
     var augments: Variant = progression.get("augments")
     if not augments is Array or augments.size() > UPGRADES.augment_slots(int(progression.get("level", 1))) or augments.any(func(id): return not id is String or not UPGRADES.is_augment(id)) or augments.size() != _unique(augments):
+        return false
+    # The Ki Realm (v26): learned transformations (one of them active), wish bonus points
+    # (checked with the level), the champion's title.
+    var auras: Variant = progression.get("auras")
+    if not auras is Array or auras.any(func(id): return not id is String or not REALM.AURAS.has(id)) or auras.size() != _unique(auras):
+        return false
+    if not progression.get("aura") is String or (not progression.aura.is_empty() and not progression.aura in auras) or not progression.get("champion") is bool:
         return false
     var fishing: Variant = state.get("fishing", [])
     if not fishing is Array or not fishing.size() in [0, 2] or fishing.any(func(value): return not (value is float or value is int) or not is_finite(float(value)) or absf(float(value)) > 60.0):
@@ -329,6 +338,9 @@ static func validate(data: Variant) -> bool:
     for party in data.party.parties.values():
         if party.members.any(func(id): return not data.players.has(id)):
             return false
+    # The wish orbs and the tournament (v26).
+    if not KI_REALM.valid_state(data.get("realm")):
+        return false
     return true
 
 static func migrate(data: Variant) -> Variant:
@@ -676,6 +688,19 @@ static func migrate(data: Variant) -> Variant:
         data = data.duplicate(true)
         data.version = 25
         data["party"] = data.get("party", PARTY.initial_state())
+    # v26 (M4.7): no transformations, wish points or titles yet; the orbs at their first spots.
+    if data.get("version") == 25:
+        if not data.get("players") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = 26
+        for state in data.players.values():
+            if not state is Dictionary or not state.get("progression") is Dictionary:
+                return null
+            var defaults := {"auras": [], "aura": "", "bonus_points": 0, "champion": false}
+            for key in defaults:
+                state.progression[key] = state.progression.get(key, defaults[key])
+        data["realm"] = data.get("realm", KI_REALM.initial_state())
     return data
 
 static func _unique(values: Array) -> int:

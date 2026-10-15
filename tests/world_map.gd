@@ -82,14 +82,17 @@ func _run() -> void:
         by_ferry = by_ferry and reach[MAP.tile_index(at.x, at.y)] == 0
     _check(by_ferry and reach[MAP.tile_index(356, 176)] == 0, "Ambervale, Mirewood Marsh, Sakura Vale and the Emberreach Isles lie across the sea")
     var docks: Array = MAP.HARBOURS.map(func(ferry): return Vector2i(ferry[2]))
-    var sailing := _reachable(MAP.to_tile(LAYOUT.SPAWN), docks)
+    var sealed := _reachable(MAP.to_tile(LAYOUT.SPAWN), docks)
+    var arrival := Vector2i(preload("res://scripts/realm/realm_catalogue.gd").ARRIVAL_TILE)
+    _check(sealed[MAP.tile_index(arrival.x, arrival.y)] == 0 and not MAP.in_realm(LAYOUT.SPAWN) and MAP.in_realm(MAP.to_world(Vector2(arrival))), "The Ki Realm cannot be reached on foot or by ferry (only through the hermit)")
+    var sailing := _reachable(MAP.to_tile(LAYOUT.SPAWN), docks + [arrival])
     var every_town := true
     for town in MAP.TOWNS:
         var at := Vector2i(town[3])
         every_town = every_town and sailing[MAP.tile_index(at.x, at.y)] == 1
         if sailing[MAP.tile_index(at.x, at.y)] == 0:
             push_error("Not reachable by ferry: " + town[0])
-    _check(every_town and MAP.TOWNS.size() == 24 and MAP.TOWNS.filter(func(town): return town[4] == "town").size() == 8, "With the ferries every one of the 8 towns and 16 villages can be reached")
+    _check(every_town and MAP.TOWNS.size() == 27 and MAP.TOWNS.filter(func(town): return town[4] == "town").size() == 9, "With the ferries (and the hermit) every one of the 9 towns and 18 villages can be reached")
     var bridge_ok := true
     for rect in MAP.BRIDGES:
         for y in range(rect.position.y, rect.end.y):
@@ -142,7 +145,9 @@ func _run() -> void:
     _check(hud.get_node("Title").text == "HARROWMERE", "The HUD names the region you are in")
     hud.world_map.open()
     await _frames(2)
-    _check(hud.world_map.visible and paused and hud.menu_open() and hud.world_map.map_texture != null and hud.world_map.map_texture.get_size() == Vector2(MAP.COLS, MAP.ROWS), "M opens the world map (one pixel per tile) and pauses solo play")
+    _check(hud.world_map.visible and paused and hud.menu_open() and hud.world_map.world_texture().get_size() == Vector2(MAP.COLS, MAP.ROWS), "M opens the world map (one pixel per tile) and pauses solo play")
+    var realm_at := Vector2i(preload("res://scripts/realm/realm_catalogue.gd").ARRIVAL_TILE) - MAP.MIN
+    _check(hud.world_map.world_texture().get_image().get_pixelv(realm_at) == hud.world_map.COLORS.ocean and hud.world_map.image().get_pixelv(realm_at) != hud.world_map.COLORS.ocean and hud.world_map._title.text.ends_with("ARCHIPELAGO"), "The normal map hides the Ki Realm under open sea")
     _check(hud.world_map.image().get_pixelv(Vector2i(5, 5)) == hud.world_map.COLORS.ocean, "The map shows the sea and land in their colours")
     hud.world_map.close()
     _check(not paused and not hud.world_map.visible, "Closing the map resumes")

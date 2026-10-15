@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/skills/skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"turtle_wave"
+display_name = "Turtle Wave"
+tier = "Unique"
+description = "Gather your ki in your palms and release one great beam."
+damage = 77
+magicule_cost = 24.0
+cooldown = 1.6
+effect = &"pierce"

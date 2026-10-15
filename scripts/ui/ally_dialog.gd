@@ -29,6 +29,33 @@ func _ready() -> void:
     _close.pressed.connect(close_dialog)
     hide()
 
+## M4.7: what a realm person says and offers (requests go to the host, which decides).
+func _talk_realm(person: String) -> void:
+    var REALM := preload("res://scripts/realm/realm_catalogue.gd")
+    var send := func(operation: String, id: String = ""):
+        session.request_action("realm", {"operation": operation, "id": id})
+    var options: Array = []
+    match person:
+        "secret_hermit":
+            for index in range(REALM.HERMIT_ANSWERS.size()):
+                options.append([REALM.HERMIT_ANSWERS[index], send.bind("answer", str(index))])
+            hud.dialog_panel.open("Old Hermit", REALM.HERMIT_QUESTION, options)
+        "realm_guide":
+            hud.dialog_panel.open("Realm Guide", "The hermit's door works both ways. Shall I send you back to Sakura Vale?", [["Take me back.", send.bind("leave")], ["I'll stay a while.", func(): pass]])
+        "announcer":
+            hud.dialog_panel.open("Announcer", "Welcome to the World Martial Grounds! Five bouts in the ring; leave it or fall and you lose. Fighters must be level %d." % REALM.TOURNAMENT_LEVEL, [["Enter the tournament (%d Zeni)" % REALM.ENTRY_FEE, send.bind("enter")], ["Not today.", func(): pass]])
+        "altar":
+            var wishes := {"item": "A Legendary treasure", "zeni": "%d Zeni" % REALM.WISH_ZENI, "points": "%d skill points" % REALM.WISH_POINTS, "aura": "A greater transformation"}
+            for wish in REALM.WISHES:
+                options.append(["I wish for... %s" % wishes[wish], send.bind("wish", wish)])
+            hud.dialog_panel.open("The Guardian's Altar", "Seven hollows wait in the stone. Place all seven orbs and speak your wish.", options)
+        _:
+            var mentor: Array = REALM.mentor(person)
+            if mentor.is_empty():
+                return
+            var what: String = REALM.AURAS[mentor[5]][0] if mentor[4] == "aura" else load(preload("res://scripts/skills/skill_catalogue.gd").SKILLS[mentor[5]]).display_name
+            hud.dialog_panel.open(mentor[1], "\"%s\"" % mentor[8], [["Learn %s (level %d, %d Zeni)" % [what, mentor[6], mentor[7]], send.bind("learn", person)], ["Maybe later.", func(): pass]])
+
 func open_nearest() -> void:
     if hud.menu_open() or hud.player.get_node("Health").current <= 0:
         return
@@ -44,6 +71,17 @@ func open_nearest() -> void:
         var fallen: String = party.revivable_near(hud.player)
         if not fallen.is_empty():
             session.request_action("party", {"operation": "revive", "id": fallen})
+            return
+    # M4.7: the Ki Realm's people, the wish altar and the orbs.
+    var realm = hud.get_parent().get("realm")
+    if realm != null:
+        var orb: int = realm.nearest_orb(hud.player)
+        if orb >= 0:
+            session.request_action("realm", {"operation": "orb", "id": str(orb)})
+            return
+        var person: String = realm.nearest_person(hud.player)
+        if not person.is_empty():
+            _talk_realm(person)
             return
     # F next to an unopened chest opens it (17g).
     var chest: String = hud.get_parent().nearest_chest(hud.player)

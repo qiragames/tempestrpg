@@ -200,7 +200,7 @@ func _process(delta: float) -> void:
             close_panel()
 
 func _draw_map() -> void:
-    _canvas.draw_texture_rect(preload("res://scripts/ui/minimap.gd").texture(), Rect2(Vector2.ZERO, _canvas.size), false)
+    _canvas.draw_texture_rect(preload("res://scripts/ui/world_map_panel.gd").world_texture(), Rect2(Vector2.ZERO, _canvas.size), false)
     _canvas.draw_rect(Rect2(Vector2(-1, -1), _canvas.size + Vector2(2, 2)), UI.GOLD_DARK, false, 1.0)
     var font: Font = _canvas.get_theme_default_font()
     for entry in MAP.HARBOURS:

@@ -10,6 +10,7 @@ const SOURCES := preload("res://scripts/items/gear_sources.gd")
 const MAP := preload("res://scripts/world/world_map.gd")
 const TRAVEL := preload("res://scripts/travel/travel_catalogue.gd")
 const UPGRADES := preload("res://scripts/items/upgrade_catalogue.gd")
+const REALM := preload("res://scripts/realm/realm_catalogue.gd")
 
 const DEATH_SHARE := 0.1
 const SELL_SHARE := 0.3
@@ -80,7 +81,7 @@ static func bag_item(id: String) -> bool:
     return preload("res://scripts/skills/skill_catalogue.gd").MATERIALS.has(id) or is_good(id)
 
 static func is_good(id: String) -> bool:
-    return CONSUMABLES.has(id) or scroll_skill(id) in COMMON_SCROLLS + RARE_SCROLLS or not TRAVEL.ticket_harbour(id).is_empty() or TRAVEL.is_fish(id) or UPGRADES.is_rune(id) or UPGRADES.is_augment(id)
+    return CONSUMABLES.has(id) or scroll_skill(id) in COMMON_SCROLLS + RARE_SCROLLS or not TRAVEL.ticket_harbour(id).is_empty() or TRAVEL.is_fish(id) or UPGRADES.is_rune(id) or UPGRADES.is_augment(id) or REALM.is_orb(id)
 
 ## [name, category, description] of a good.
 static func good_info(id: String) -> Array:
@@ -95,6 +96,9 @@ static func good_info(id: String) -> Array:
         return [UPGRADES.RUNES[id][0], "Runes", UPGRADES.describe(id)]
     if UPGRADES.is_augment(id):
         return [UPGRADES.AUGMENTS[id][0], "Augments", UPGRADES.describe(id)]
+    if REALM.is_orb(id):
+        var stars := int(id.trim_prefix("wish_orb_"))
+        return ["Wish Orb (%d star%s)" % [stars, "" if stars == 1 else "s"], "Wish Orbs", "One of the seven wish orbs of the Ki Realm. Bring all seven to the Guardian's altar."]
     var skill := scroll_skill(id)
     var data: Resource = load(preload("res://scripts/skills/skill_catalogue.gd").SKILLS[skill])
     return ["Scroll: %s" % data.display_name, "Scrolls", ("A very rare scroll teaching %s, a skill found nowhere else. Read it from the bag." if skill in RARE_SCROLLS else "Teaches %s without analysis. Read it from the bag.") % data.display_name]

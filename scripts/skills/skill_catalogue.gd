@@ -26,7 +26,8 @@ const MATERIALS := {"gnasher_essence": "forest_gnasher", "thornback_quill": "tho
     "frost_pelt": "frost_bear", "wisp_mote": "snow_wisp", "viper_scale": "dune_viper", "scuttler_shell": "sand_scuttler", "kappa_shell": "bog_kappa", "mirecap_spore": "mirecap", "bamboo_fiber": "bamboo_sprite", "lantern_paper": "paper_lantern", "owl_feather": "amber_owl", "mole_claw": "burrow_mole", "ember_core": "ember_flame", "salamander_scale": "salamander"}
 const SKILLS := {"rending_bite": "res://data/skills/rending_bite.tres", "thorn_lash": "res://data/skills/thorn_lash.tres", "piercing_fang": "res://data/skills/piercing_fang.tres", "predator_focus": "res://data/skills/predator_focus.tres",
     "frost_maul": "res://data/skills/frost_maul.tres", "chill_touch": "res://data/skills/chill_touch.tres", "venom_fang": "res://data/skills/venom_fang.tres", "sand_burst": "res://data/skills/sand_burst.tres", "mire_grasp": "res://data/skills/mire_grasp.tres", "spore_cloud": "res://data/skills/spore_cloud.tres", "bamboo_thrust": "res://data/skills/bamboo_thrust.tres", "lantern_flare": "res://data/skills/lantern_flare.tres", "gale_wing": "res://data/skills/gale_wing.tres", "burrow_strike": "res://data/skills/burrow_strike.tres", "ember_burst": "res://data/skills/ember_burst.tres", "magma_bite": "res://data/skills/magma_bite.tres",
-    "tempest_edge": "res://data/skills/tempest_edge.tres", "glacial_nova": "res://data/skills/glacial_nova.tres", "meteor_fall": "res://data/skills/meteor_fall.tres", "phantom_step": "res://data/skills/phantom_step.tres"}
+    "tempest_edge": "res://data/skills/tempest_edge.tres", "glacial_nova": "res://data/skills/glacial_nova.tres", "meteor_fall": "res://data/skills/meteor_fall.tres", "phantom_step": "res://data/skills/phantom_step.tres",
+    "ki_blast": "res://data/skills/ki_blast.tres", "turtle_wave": "res://data/skills/turtle_wave.tres", "ki_disc": "res://data/skills/ki_disc.tres", "spirit_orb": "res://data/skills/spirit_orb.tres"}
 const RULES := {
     "rending_bite": {"tier": "Common", "analysis": "forest_gnasher"},
     "thorn_lash": {"tier": "Common", "analysis": "thornback_gnasher"},
@@ -50,6 +51,11 @@ const RULES := {
     "glacial_nova": {"tier": "Unique", "scroll": true},
     "meteor_fall": {"tier": "Unique", "scroll": true},
     "phantom_step": {"tier": "Unique", "scroll": true},
+    # M4.7 ki attacks, taught by the Ki Realm's mentors (recorded like a read scroll).
+    "ki_blast": {"tier": "Unique", "scroll": true},
+    "turtle_wave": {"tier": "Unique", "scroll": true},
+    "ki_disc": {"tier": "Unique", "scroll": true},
+    "spirit_orb": {"tier": "Unique", "scroll": true},
 }
 ## Trials and ascension milestones that can actually be completed. No ascension exists before M6,
 ## so Ultimate skills stay locked.

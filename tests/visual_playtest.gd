@@ -796,6 +796,81 @@ func _run() -> void:
     await _wait(0.2)
     await _shot("party_window", "The party window (P): members, invitations, leave and remove")
     world.get_node("HUD").party_panel.close()
+    mate.queue_free()
+    _log("## 21. The Ki Realm (M4.7)")
+    var realm_data := preload("res://scripts/realm/realm_catalogue.gd")
+    var realm = world.realm
+    var hud_realm = world.get_node("HUD")
+    preload("res://scripts/progression/leveling.gd").grant(showcase, preload("res://scripts/progression/leveling.gd").xp_for_level(18) - int(showcase.progression.experience))
+    showcase.progression["zeni"] = 20000
+    # The secret hermit in Sakura Vale asks his question.
+    showcase.position = tour_map.to_world(realm_data.HERMIT_TILE) + Vector2(0, 18)
+    showcase.facing = Vector2.UP
+    world.terrain.ensure_props_at(showcase.position)
+    await _wait(0.3)
+    hud_realm._ally_dialog._talk_realm("secret_hermit")
+    await _wait(0.2)
+    _check(hud_realm.dialog_panel.is_open(), "The secret hermit in Sakura Vale offers four answers")
+    await _shot("realm_hermit", "The secret hermit in Sakura Vale (level 15+): pick the right answer to enter the hidden Ki Realm")
+    hud_realm.dialog_panel.close()
+    _check(realm.answer_hermit(showcase, realm_data.HERMIT_RIGHT), "The right answer opens the way")
+    await _wait(0.5)
+    await _shot("dome_city", "Dome City, the Ki Realm's capital: capsule-dome houses, palms and the realm guide")
+    # The Sage Spire and the Guardian's Lookout with the wish altar.
+    showcase.position = tour_map.to_world(realm_data.mentor("guardian")[3]) + Vector2(14, 14)
+    world.terrain.ensure_props_at(showcase.position)
+    await _wait(0.4)
+    await _shot("sage_spire", "The top of the Sage Spire: the Guardian (Spirit Orb) beside the wish altar")
+    # Learning from the mentors: the Kaio Surge and the Turtle Wave.
+    showcase.position = tour_map.to_world(realm_data.mentor("mountain_master")[3]) + Vector2(0, 12)
+    _check(realm.learn(showcase, "mountain_master"), "The Mountain Master teaches the Kaio Surge")
+    showcase.position = tour_map.to_world(realm_data.mentor("turtle_sage")[3]) + Vector2(0, 12)
+    world.terrain.ensure_props_at(showcase.position)
+    hud_realm._ally_dialog._talk_realm("turtle_sage")
+    await _wait(0.3)
+    await _shot("turtle_sage", "The Turtle Sage on Hermit Atoll teaches the Turtle Wave (level 16, 2,000 Zeni)")
+    hud_realm.dialog_panel.close()
+    _check(realm.learn(showcase, "turtle_sage"), "The Turtle Sage teaches the Turtle Wave")
+    # Powered up: the Kaio Surge's red aura, then a Turtle Wave down Raptor Gulch.
+    showcase.position = tour_map.to_world(Vector2(-300, -160))
+    world.terrain.ensure_props_at(showcase.position)
+    showcase.get_node("Magicules")._current = showcase.get_node("Magicules").maximum
+    _check(showcase.toggle_aura() and showcase.aura() == "kaio_surge", "Powered up: Kaio Surge")
+    await _wait(0.3)
+    await _shot("kaio_surge", "Kaio Surge (X): a red flame aura, x1.3 damage and x1.2 speed while it drains Magicules")
+    _check(showcase.activate_skill("turtle_wave"), "Activated the Turtle Wave in the skill tree")
+    showcase.get_node("SkillBook").assign_slot(0, &"turtle_wave")
+    showcase.get_node("MeleeAttack").cooldown_left = 0.0
+    showcase.facing = Vector2.LEFT
+    showcase.get_node("Magicules")._current = showcase.get_node("Magicules").maximum
+    var waved: bool = showcase.get_node("MeleeAttack").attack_skill(Vector2.LEFT, &"turtle_wave")
+    await _wait(0.05)
+    _check(waved, "A Turtle Wave fired")
+    await _shot("turtle_wave", "Turtle Wave: a long charged ki beam through Raptor Gulch")
+    showcase.toggle_aura()
+    # A wish orb glowing at its spot.
+    var orb_spot: Vector2 = realm_data.ORB_SPOTS[int(realm.state.orbs[0])]
+    showcase.position = tour_map.to_world(orb_spot) + Vector2(-20, 8)
+    world.terrain.ensure_props_at(showcase.position)
+    await _wait(0.3)
+    await _shot("wish_orb", "A wish orb (one star) lying at a hidden spot; all seven make one wish at the Guardian's altar")
+    # The map inside the realm shows only the realm.
+    hud_realm.world_map.open()
+    await _wait(0.3)
+    _check(hud_realm.world_map._title.text.ends_with("KI REALM"), "Inside the realm the map shows only the realm")
+    await _shot("realm_map", "The map inside the Ki Realm: only the realm (it never shows on the normal map)")
+    hud_realm.world_map.close()
+    # The tournament: round one in the ring.
+    showcase.position = tour_map.to_world(realm_data.ANNOUNCER_TILE) + Vector2(0, 10)
+    world.terrain.ensure_props_at(showcase.position)
+    _check(realm.enter_tournament(showcase), "Entered the tournament")
+    var bout = world.entity_by_id("tourney_0")
+    if bout != null:
+        bout.set_physics_process(false)
+    await _wait(0.4)
+    await _shot("tournament", "The World Martial Grounds: round one of five against a Gi Fighter (the champion wins 5,000 Zeni and the Golden Aura)")
+    showcase.position += Vector2(600, 0)
+    await _wait(0.2)
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

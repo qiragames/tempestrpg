@@ -62,7 +62,7 @@ func _run() -> void:
             ferry_min = mini(ferry_min, level)
         else:
             home_max = maxi(home_max, level)
-    _check(home_max <= 13 and ferry_min >= 12 and REGION.SPOTS.size() == 20, "Home-continent creatures reach level 13; ferry lands start at 12 (up to 20); two leveling spots per region")
+    _check(home_max <= 13 and ferry_min >= 12 and REGION.SPOTS.size() == 22, "Home-continent creatures reach level 13; ferry lands start at 12 (up to 20); two leveling spots per region")
     # --- In a world: spawned, animated, analyzable
     var world: Node2D = load("res://scenes/world/forest.tscn").instantiate()
     root.add_child(world)

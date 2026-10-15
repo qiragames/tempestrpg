@@ -59,4 +59,14 @@ Copies of Ninja Adventure sheets (CC0): 64x64, four columns (down, up, left, rig
 
 Mounts (M4.5d): `mount_donkey`, `mount_horse`, `mount_black_horse`, `mount_wild_boar`, `mount_lion` hold `front.png` and `side.png` copied from Actor/Animal (Donkey grey, Horse brown/black, WildBoar, Lion orange); two walk frames each (the boar has only a side view).
 
+Ki Realm (M4.7), same four-direction format:
+
+| Folder | Source (Actor/…) | Used for |
+| --- | --- | --- |
+| `raptor`, `tyrant_rex` | Monster/Dragon, Monster/TRex | Raptor Gulch's dinosaurs |
+| `gi_fighter`, `monkey_brawler` | Character/FighterRed, MonkeyBoxerRed | Martial artists (canyon, tournament) |
+| `android_scout`, `bio_android`, `android_tank` | Character/RobotGrey, RobotGreen, RobotCamouflage | The Android Works |
+| `demon_king` | Character/DemonRed | The canyon's boss and the tournament's final bout |
+| `secret_hermit`, `realm_guide`, `turtle_sage`, `spire_sage`, `guardian`, `canyon_hermit`, `mountain_master`, `announcer` | Character/OldMan3 (both), Master, CaveLion, MaskFrog, Caveman2, Tengu, Villager5 | The hermit in Sakura Vale, the guide, the mentors and the tournament's announcer |
+
 Licences and credits: see `CREDITS.md` at the repository root and the licence files next to each pack in `assets/source/packs/`.

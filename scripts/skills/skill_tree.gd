@@ -149,7 +149,7 @@ static func valid(progression: Dictionary, known: Array) -> bool:
             return false
         free[id] = true
     var points: Variant = progression.get("skill_points")
-    return (points is int or points is float) and int(points) + spent(tree) == int(progression.get("level", 0))
+    return (points is int or points is float) and int(points) + spent(tree) == int(progression.get("level", 0)) + int(progression.get("bonus_points", 0))
 
 ## Tree-skill resources must exist, match their IDs and use a known effect.
 static func resource_errors() -> Array:

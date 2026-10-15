@@ -121,6 +121,10 @@ const THEMES := {
     "sakura": ["hall", "shop_green", ["house_c", "house_round", "house_c", "shop_green"], ["tree_pink", "torii", "bamboo"]],
     "marsh": ["hall", "hut_tent", ["hut_straw", "hut_tent", "hut_straw", "house_wood"], ["tree_dead", "bush"]],
     "ember": ["hall", "house_round", ["house_round", "hut_tent", "house_round", "hut_tent"], ["boulder", "tree_dead"]],
+    # Ki Realm: capsule-dome houses, the hermit's pink house on the atoll, the tournament ring.
+    "dome": ["hall", "shop", ["dome_hut", "dome_hut", "house_round", "dome_hut", "house_round"], ["palm", "tree_round"]],
+    "atoll": ["", "", ["house_c"], ["palm", "palm"]],
+    "arena": ["", "", [], ["ruin_pillar", "ruin_pillar", "ruin_pillar", "ruin_pillar"]],
 }
 const PROP_SEED := 9001
 ## Props are spawned in square chunks of this many tiles around every character.

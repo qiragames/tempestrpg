@@ -39,11 +39,17 @@ const EFFECTS := {
     "glacial_nova": {"area": 40.0, "root": 1.0, "slow": [0.4, 3.0]},
     "meteor_fall": {"area": 36.0, "stun": 0.8, "dot": [8.0, 3.0]},
     "phantom_step": {"dash": 64.0, "stun": 0.6, "drain": 0.2},
+    # M4.7 ki attacks: "reach"/"width" shape a beam, "color" tints it.
+    "ki_blast": {"reach": 130.0, "width": 8.0, "color": "8fe3ff"},
+    "turtle_wave": {"reach": 220.0, "width": 16.0, "knockback": 40.0, "color": "7fd8ff"},
+    "ki_disc": {"reach": 150.0, "width": 6.0, "dot": [6.0, 3.0], "color": "f8f39a"},
+    "spirit_orb": {"area": 72.0, "stun": 0.8, "color": "a8e6ff"},
 }
 ## Short words for tooltips and the skill tree.
 const SUMMARY := {
     "slow": "slows", "root": "roots", "stun": "stuns", "knockback": "knocks back", "dot": "burns/bleeds",
     "area": "hits an area", "drain": "drains HP", "dash": "dashes forward",
+    "reach": "long beam", "width": "", "color": "",
 }
 
 static func damage_for(cost: float) -> int:
@@ -56,5 +62,6 @@ static func effects(id: String) -> Dictionary:
 static func describe(id: String) -> String:
     var words: Array = []
     for key in effects(id):
-        words.append(SUMMARY[key])
+        if not String(SUMMARY.get(key, "")).is_empty():
+            words.append(SUMMARY[key])
     return " · ".join(words)
