@@ -209,8 +209,10 @@ func _gather_here() -> bool:
     var before: int = camp.state.wood + camp.state.stone
     await _tap("camp")
     var ok: bool = await _click(hud._camp_dialog._gather)
-    await _tap("camp")
-    return ok and camp.state.wood + camp.state.stone > before
+    # Gathering is chopping/mining now: the window closes and the swings take a few seconds.
+    if hud._camp_dialog.visible:
+        await _tap("camp")
+    return ok and await _until(func(): return camp.state.wood + camp.state.stone > before, 8.0)
 
 func _run() -> void:
     DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
@@ -1030,6 +1032,27 @@ func _run() -> void:
     for marcher in siege_node.creatures():
         marcher.get_node("Health").take_damage(99999, showcase)
     siege_node._finish(true)
+    _log("## 26. Chopping, detailed maps (user requests)")
+    var chop_camp = world.camp
+    var tree_site: String = ""
+    for id in chop_camp.sites:
+        if chop_camp.sites[id].resource == "wood" and int(chop_camp.state.deposits[id]) > 0:
+            tree_site = id
+            break
+    if not tree_site.is_empty():
+        showcase.global_position = chop_camp.sites[tree_site].position + Vector2(-14, 4)
+        world.terrain.ensure_props_at(showcase.global_position)
+        await _wait(0.2)
+        _check(chop_camp.transact(showcase, "chop", tree_site), "Chopping a tree with an axe")
+        await _wait(0.45)
+        await _shot("chopping", "Chopping a tree: the axe swings, the tree shakes and wood chips fly (pickaxes mine rocks and ore the same way)")
+        showcase.stop_gather()
+    hud_nation.world_map.open()
+    await _wait(0.2)
+    hud_nation.world_map.zoom_at(hud_nation.world_map.to_map(showcase.global_position), 6.0)
+    await _wait(0.3)
+    await _shot("map_zoom", "The world map zoomed in with the mouse wheel: the real trees, rocks and houses")
+    hud_nation.world_map.close()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

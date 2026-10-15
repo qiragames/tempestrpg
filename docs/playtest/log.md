@@ -255,144 +255,148 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - [x] I opens the bag
 - [x] The bag's Equipment button opens the equipment window
 
-![Equipment window: slots, owned items in rarity colours, details of the Legendary ring](42_equipment.png)
-*Equipment window: slots, owned items in rarity colours, details of the Legendary ring* (960x540)
+![Equipment window (paper doll): the character wearing the gear, armour slots left, jewellery right, gear score and stats, items as a grid](42_equipment.png)
+*Equipment window (paper doll): the character wearing the gear, armour slots left, jewellery right, gear score and stats, items as a grid* (960x540)
+
+
+![Hovering an item shows its card (the Legendary ring)](43_equipment_card.png)
+*Hovering an item shows its card (the Legendary ring)* (960x540)
 
 - [x] I closes the equipment window
 - [x] Equipped: +34 max HP and 6 defense
 - [x] G uses the mail's Barrier active
 
-![Gear looks on the slime: helm and mail in rarity colours](43_gear_looks.png)
+![Gear looks on the slime: helm and mail in rarity colours](44_gear_looks.png)
 *Gear looks on the slime: helm and mail in rarity colours* (960x540)
 
 ## 11d. Weapons
 - (Showcase weapons handed over; sources arrive in 17g)
 - [x] Walked to an open practice spot
 
-![Sword: balanced arc in front](44_weapon_sword.png)
+![Sword: balanced arc in front](45_weapon_sword.png)
 *Sword: balanced arc in front* (960x540)
 
 - [x] Sword hits its 1 practice target(s)
 
-![Spear: long thrust through a line](45_weapon_spear.png)
+![Spear: long thrust through a line](46_weapon_spear.png)
 *Spear: long thrust through a line* (960x540)
 
 - [x] Spear hits its 2 practice target(s)
 
-![Scythe: wide sweep around the front](46_weapon_scythe.png)
+![Scythe: wide sweep around the front](47_weapon_scythe.png)
 *Scythe: wide sweep around the front* (960x540)
 
 - [x] Scythe hits its 3 practice target(s)
 
-![Bow: shot at the first creature up to 200 px (the arrow in flight)](47_weapon_bow.png)
+![Bow: shot at the first creature up to 200 px (the arrow in flight)](48_weapon_bow.png)
 *Bow: shot at the first creature up to 200 px (the arrow in flight)* (960x540)
 
 - [x] Bow hits its 1 practice target(s)
 ## 11e. Chests
 - [x] Walked to the chest north of the pond
 
-![A closed chest (gold lock) at a point of interest](48_chest_closed.png)
+![A closed chest (gold lock) at a point of interest](49_chest_closed.png)
 *A closed chest (gold lock) at a point of interest* (960x540)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Uncommon Cloth Hood
+- [x] The chest gave an Uncommon-or-better item: Uncommon Obsidian Cutter
 
-![Chest opened (lid up) and the item announced](49_chest_open.png)
+![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (960x540)
 
 ## 12. Pause menu and Open to friends
 - [x] World is hosted solo and saved, no port open
 - [x] Esc opens the pause menu and freezes the solo world
 
-![Pause overlay while playing solo: GAME PAUSED banner, menu with shortcuts (bag, skill tree, fusion), Open to friends, Save, Options, Save & quit; character and world card](50_pause_solo.png)
+![Pause overlay while playing solo: GAME PAUSED banner, menu with shortcuts (bag, skill tree, fusion), Open to friends, Save, Options, Save & quit; character and world card](51_pause_solo.png)
 *Pause overlay while playing solo: GAME PAUSED banner, menu with shortcuts (bag, skill tree, fusion), Open to friends, Save, Options, Save & quit; character and world card* (960x540)
 
 - [x] Open to friends starts listening without a restart
 
-![Pause menu after Open to friends: port and LAN address for friends](51_pause_open.png)
+![Pause menu after Open to friends: port and LAN address for friends](52_pause_open.png)
 *Pause menu after Open to friends: port and LAN address for friends* (960x540)
 
 - [x] Esc resumes
 ## 13. Seeded worlds
 
-![Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed](52_seed_goblin_camp.png)
+![Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed](53_seed_goblin_camp.png)
 *Seed "goblin camp" (761927873): deposits, creatures, trial stone, ally, 9 trees and 3 rocks placed from the seed* (960x540)
 
 
-![Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed](53_seed_tempest.png)
+![Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed](54_seed_tempest.png)
 *Seed "tempest" (1487913639): deposits, creatures, trial stone, ally, 7 trees and 3 rocks placed from the seed* (960x540)
 
 - [x] Different seeds lay out different worlds; the same seed repeats exactly
 ## 14. Playable races
 - [x] Human and Demon are created with their own stats
 
-![Playable races, left to right: Slime, Human, Demon (placeholder looks)](54_races.png)
+![Playable races, left to right: Slime, Human, Demon (placeholder looks)](55_races.png)
 *Playable races, left to right: Slime, Human, Demon (placeholder looks)* (960x540)
 
 ## 15. The archipelago (M4.5a)
-- [x] Walking east follows the road out of the clearing: x 1169
+- [x] Walking east follows the road out of the clearing: x 1168
 
-![The east road continues beyond the clearing towards the Harrowmere bridge](55_road_east.png)
+![The east road continues beyond the clearing towards the Harrowmere bridge](56_road_east.png)
 *The east road continues beyond the clearing towards the Harrowmere bridge* (960x540)
 
 - [x] HUD shows the region name at thornwood
 
-![Thornwood: dense forest west of the clearing](56_thornwood.png)
+![Thornwood: dense forest west of the clearing](57_thornwood.png)
 *Thornwood: dense forest west of the clearing* (960x540)
 
 - [x] HUD shows the region name at mirror_lake
 
-![Mirror Lake: the bridge to the ruined keep on its islet](57_mirror_lake.png)
+![Mirror Lake: the bridge to the ruined keep on its islet](58_mirror_lake.png)
 *Mirror Lake: the bridge to the ruined keep on its islet* (960x540)
 
 - [x] HUD shows the region name at harrowmere_bridge
 
-![The bridge to Harrowmere](58_harrowmere_bridge.png)
+![The bridge to Harrowmere](59_harrowmere_bridge.png)
 *The bridge to Harrowmere* (960x540)
 
 - [x] HUD shows the region name at harrowmere
 
-![Harrowmere: the walled-town island](59_harrowmere.png)
+![Harrowmere: the walled-town island](60_harrowmere.png)
 *Harrowmere: the walled-town island* (960x540)
 
 - [x] HUD shows the region name at cinder_crater
 
-![Cinder Crater: ash, boulders and a lava pool](60_cinder_crater.png)
+![Cinder Crater: ash, boulders and a lava pool](61_cinder_crater.png)
 *Cinder Crater: ash, boulders and a lava pool* (960x540)
 
 - [x] HUD shows the region name at sunfall_beach
 
-![Sunfall Beach: the south coast; Ambervale lies across the strait](61_sunfall_beach.png)
+![Sunfall Beach: the south coast; Ambervale lies across the strait](62_sunfall_beach.png)
 *Sunfall Beach: the south coast; Ambervale lies across the strait* (960x540)
 
-- [x] All 46 region creatures are in the world
+- [x] All 59 region creatures are in the world
 
-![Thornwood's Gnashers (one Elite) near a wood deposit and the Thornwood chest](62_thornwood_creatures.png)
+![Thornwood's Gnashers (one Elite) near a wood deposit and the Thornwood chest](63_thornwood_creatures.png)
 *Thornwood's Gnashers (one Elite) near a wood deposit and the Thornwood chest* (960x540)
 
 - [x] M opens the world map (HUD and map window visible)
 
-![World map (M): Verdant Isle with the clearing, Thornwood, Mirror Lake, Cinder Crater; Harrowmere by bridge; Ambervale and the Emberreach Isles across the sea](63_world_map.png)
+![World map (M): Verdant Isle with the clearing, Thornwood, Mirror Lake, Cinder Crater; Harrowmere by bridge; Ambervale and the Emberreach Isles across the sea](64_world_map.png)
 *World map (M): Verdant Isle with the clearing, Thornwood, Mirror Lake, Cinder Crater; Harrowmere by bridge; Ambervale and the Emberreach Isles across the sea* (960x540)
 
 ## 17. Death piles, minimap and leveling spots (step 24a)
 - [x] A dropped bag lies as your pile and shows on the minimap
 
-![Your dropped bag (pile) and its gold marker on the round minimap (creatures red, chests yellow)](64_pile_minimap.png)
+![Your dropped bag (pile) and its gold marker on the round minimap (creatures red, chests yellow)](65_pile_minimap.png)
 *Your dropped bag (pile) and its gold marker on the round minimap (creatures red, chests yellow)* (960x540)
 
 - [x] Coming close discovers the hidden leveling spot "Gnasher Hollow"
 
-![A hidden leveling spot discovered (Gnasher Hollow): its creatures return three times faster; levels above the health bars](65_leveling_spot.png)
+![A hidden leveling spot discovered (Gnasher Hollow): its creatures return three times faster; levels above the health bars](66_leveling_spot.png)
 *A hidden leveling spot discovered (Gnasher Hollow): its creatures return three times faster; levels above the health bars* (960x540)
 
 
-![World map: your pile (gold X) and discovered leveling spots (violet)](66_world_map_markers.png)
+![World map: your pile (gold X) and discovered leveling spots (violet)](67_world_map_markers.png)
 *World map: your pile (gold X) and discovered leveling spots (violet)* (960x540)
 
 ## 16. Sound and effects (step 23)
-- Sounds played during this run: analysis ×3, build ×3, chest ×1, defeat ×7, evolve ×1, form ×2, gather ×6, hit ×13, hurt ×2, learned ×2, level_up ×3, magicules ×3, swing ×12, ui_accept ×16, ui_move ×12
-- Effects shown: aura ×3, boost ×4, claw ×5, hit_spark ×20, ring ×7, slash ×13, smoke ×12, sparkle ×4
+- Sounds played during this run: analysis ×3, build ×3, chest ×1, defeat ×7, evolve ×1, form ×2, gather ×12, hit ×13, hurt ×3, learned ×2, level_up ×3, magicules ×3, swing ×12, ui_accept ×16, ui_move ×12
+- Effects shown: aura ×3, boost ×4, claw ×7, hit_spark ×53, ring ×7, slash ×13, smoke ×12, sparkle ×4
 - [x] The run produced the "swing" cue
 - [x] The run produced the "hit" cue
 - [x] The run produced the "defeat" cue
@@ -404,7 +408,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - [x] The run produced the "evolve" cue
 - [x] The run produced the "build" cue
 
-![Effects: hit flash, sparkle (pickups, chests), level-up glow, ring (skills, buildings)](67_effects.png)
+![Effects: hit flash, sparkle (pickups, chests), level-up glow, ring (skills, buildings)](68_effects.png)
 *Effects: hit flash, sparkle (pickups, chests), level-up glow, ring (skills, buildings)* (960x540)
 
 ## 17. Skill effects and numbers (step 24b)
@@ -412,164 +416,164 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Basic strikes: Slime 12 dmg for 2 Magicules, Human 10 dmg for free, Demon 14 dmg for 4 Magicules
 - XP to reach levels 2 / 5 / 10 / 20: 100 / 4850 / 46976 / 380636 (balance report: docs/balance/report.md)
 
-![Skill effects on creatures: stunned (yellow), rooted (green), slowed (blue), burning/bleeding (violet)](68_skill_effects.png)
+![Skill effects on creatures: stunned (yellow), rooted (green), slowed (blue), burning/bleeding (violet)](69_skill_effects.png)
 *Skill effects on creatures: stunned (yellow), rooted (green), slowed (blue), burning/bleeding (violet)* (960x540)
 
 ## 18. The bigger world, towns and trade (M4.5c)
 - [x] The HUD names Rimeholm
 
-![Rimeholm, Frostpeak's town of igloos and lodges, on the snow](69_rimeholm.png)
+![Rimeholm, Frostpeak's town of igloos and lodges, on the snow](70_rimeholm.png)
 *Rimeholm, Frostpeak's town of igloos and lodges, on the snow* (960x540)
 
 - [x] The HUD names Frostpeak
 
-![Frostpeak's mountain: plateau rims are ledges with rock walls below (verticality)](70_frost_mountain.png)
+![Frostpeak's mountain: plateau rims are ledges with rock walls below (verticality)](71_frost_mountain.png)
 *Frostpeak's mountain: plateau rims are ledges with rock walls below (verticality)* (960x540)
 
 - [x] The HUD names Frostpeak
 
-![Frost Bears at a hidden leveling spot (Bear Hollow)](71_frost_creatures.png)
+![Frost Bears at a hidden leveling spot (Bear Hollow)](72_frost_creatures.png)
 *Frost Bears at a hidden leveling spot (Bear Hollow)* (960x540)
 
 - [x] The HUD names Dunemarch
 
-![Dunemarch in the Sunscorch Desert: domed houses, palms and a bazaar](72_dunemarch.png)
+![Dunemarch in the Sunscorch Desert: domed houses, palms and a bazaar](73_dunemarch.png)
 *Dunemarch in the Sunscorch Desert: domed houses, palms and a bazaar* (960x540)
 
 - [x] The HUD names Brookhaven
 
-![Brookhaven, Verdant Isle's town, with its merchant on the plaza](73_brookhaven.png)
+![Brookhaven, Verdant Isle's town, with its merchant on the plaza](74_brookhaven.png)
 *Brookhaven, Verdant Isle's town, with its merchant on the plaza* (960x540)
 
 - [x] F beside a merchant opens the shop with its stock
 
-![The Brookhaven Trader's shop: gear, draughts and tonics, materials (prices in Zeni)](74_shop_buy.png)
+![The Brookhaven Trader's shop: gear, draughts and tonics, materials (prices in Zeni)](75_shop_buy.png)
 *The Brookhaven Trader's shop: gear, draughts and tonics, materials (prices in Zeni)* (960x540)
 
 - [x] Bought a Healing Draught for 25 Zeni
 
-![Selling: the merchant pays 30% of the price for goods and unequipped gear](75_shop_sell.png)
+![Selling: the merchant pays 30% of the price for goods and unequipped gear](76_shop_sell.png)
 *Selling: the merchant pays 30% of the price for goods and unequipped gear* (960x540)
 
 - [x] F at a harbour opens travel by map; a ticket lets you sail
 
-![Sunfall Harbour: pick a harbour on the map; sail with a ticket, a ferry pass or your own ship](76_harbour_map.png)
+![Sunfall Harbour: pick a harbour on the map; sail with a ticket, a ferry pass or your own ship](77_harbour_map.png)
 *Sunfall Harbour: pick a harbour on the map; sail with a ticket, a ferry pass or your own ship* (960x540)
 
 
-![The voyage across the map to Amberhold](77_voyage.png)
+![The voyage across the map to Amberhold](78_voyage.png)
 *The voyage across the map to Amberhold* (960x540)
 
 - [x] The ferry crosses to Ambervale (a region you cannot walk to)
 
-![Arrived at Amberhold Harbour in Ambervale, the autumn continent](78_amberhold_pier.png)
+![Arrived at Amberhold Harbour in Ambervale, the autumn continent](79_amberhold_pier.png)
 *Arrived at Amberhold Harbour in Ambervale, the autumn continent* (960x540)
 
 
-![Hanamura in Sakura Vale (ferry): cherry blossoms, bamboo and pagoda-style houses](79_hanamura.png)
+![Hanamura in Sakura Vale (ferry): cherry blossoms, bamboo and pagoda-style houses](80_hanamura.png)
 *Hanamura in Sakura Vale (ferry): cherry blossoms, bamboo and pagoda-style houses* (960x540)
 
 
-![The Emberreach volcano (ferry): its slopes rise in two levels around a lava crater](80_volcano.png)
+![The Emberreach volcano (ferry): its slopes rise in two levels around a lava crater](81_volcano.png)
 *The Emberreach volcano (ferry): its slopes rise in two levels around a lava crater* (960x540)
 
 
-![Bogsend in Mirewood Marsh (ferry): mud, pools and stilt huts](81_bogsend.png)
+![Bogsend in Mirewood Marsh (ferry): mud, pools and stilt huts](82_bogsend.png)
 *Bogsend in Mirewood Marsh (ferry): mud, pools and stilt huts* (960x540)
 
 
-![The world map: the home continent, the ferry lands, every town (gold) and the ferry piers](82_world_map_full.png)
+![The world map: the home continent, the ferry lands, every town (gold) and the ferry piers](83_world_map_full.png)
 *The world map: the home continent, the ferry lands, every town (gold) and the ferry piers* (960x540)
 
 ## 19. Ships, tools, mounts, runes and augments (M4.5d)
 - [x] Bought a ship from Cinderport's shipwright (40,000 Zeni)
 
-![Your own ship docked at Cinderport: no more tickets, and up to three friends sail with you](83_own_ship.png)
+![Your own ship docked at Cinderport: no more tickets, and up to three friends sail with you](84_own_ship.png)
 *Your own ship docked at Cinderport: no more tickets, and up to three friends sail with you* (960x540)
 
 - [x] Riding a horse from the stable (+60% speed, H)
 
-![Riding a horse bought at Brookhaven's stable (+60% speed on land; a hit or an attack throws you off)](84_riding.png)
+![Riding a horse bought at Brookhaven's stable (+60% speed on land; a hit or an attack throws you off)](85_riding.png)
 *Riding a horse bought at Brookhaven's stable (+60% speed on land; a hit or an attack throws you off)* (960x540)
 
 
-![Fishing from Sunfall's pier: the HUD calls the bite (press F); rods catch rarer fish by tier](85_fishing.png)
+![Fishing from Sunfall's pier: the HUD calls the bite (press F); rods catch rarer fish by tier](86_fishing.png)
 *Fishing from Sunfall's pier: the HUD calls the bite (press F); rods catch rarer fish by tier* (960x540)
 
 - [x] Caught a fish
 
-![A wild desert lion: offer it viper scales (F) to tame it as a mount](86_wild_lion.png)
+![A wild desert lion: offer it viper scales (F) to tame it as a mount](87_wild_lion.png)
 *A wild desert lion: offer it viper scales (F) to tame it as a mount* (960x540)
 
 ## 20. Parties (M4.6)
 - [x] A friend joined the party
 
-![In a party: your friend's HP and Magicules under your status card, their marker on the minimap](87_party_frames.png)
+![In a party: your friend's HP and Magicules under your status card, their marker on the minimap](88_party_frames.png)
 *In a party: your friend's HP and Magicules under your status card, their marker on the minimap* (960x540)
 
 
-![The party window (P): members, invitations, leave and remove](88_party_window.png)
+![The party window (P): members, invitations, leave and remove](89_party_window.png)
 *The party window (P): members, invitations, leave and remove* (960x540)
 
 ## 21. The Ki Realm (M4.7)
 - [x] The secret hermit in Sakura Vale offers four answers
 
-![The secret hermit in Sakura Vale (level 15+): pick the right answer to enter the hidden Ki Realm](89_realm_hermit.png)
+![The secret hermit in Sakura Vale (level 15+): pick the right answer to enter the hidden Ki Realm](90_realm_hermit.png)
 *The secret hermit in Sakura Vale (level 15+): pick the right answer to enter the hidden Ki Realm* (960x540)
 
 - [x] The right answer opens the way
 
-![Dome City, the Ki Realm's capital: capsule-dome houses, palms and the realm guide](90_dome_city.png)
+![Dome City, the Ki Realm's capital: capsule-dome houses, palms and the realm guide](91_dome_city.png)
 *Dome City, the Ki Realm's capital: capsule-dome houses, palms and the realm guide* (960x540)
 
 
-![The top of the Sage Spire: the Guardian (Spirit Orb) beside the wish altar](91_sage_spire.png)
+![The top of the Sage Spire: the Guardian (Spirit Orb) beside the wish altar](92_sage_spire.png)
 *The top of the Sage Spire: the Guardian (Spirit Orb) beside the wish altar* (960x540)
 
 - [x] The Mountain Master teaches the Kaio Surge
 
-![The Turtle Sage on Hermit Atoll teaches the Turtle Wave (level 16, 2,000 Zeni)](92_turtle_sage.png)
+![The Turtle Sage on Hermit Atoll teaches the Turtle Wave (level 16, 2,000 Zeni)](93_turtle_sage.png)
 *The Turtle Sage on Hermit Atoll teaches the Turtle Wave (level 16, 2,000 Zeni)* (960x540)
 
 - [x] The Turtle Sage teaches the Turtle Wave
 - [x] Powered up: Kaio Surge
 
-![Kaio Surge (X): a red flame aura, x1.3 damage and x1.2 speed while it drains Magicules](93_kaio_surge.png)
+![Kaio Surge (X): a red flame aura, x1.3 damage and x1.2 speed while it drains Magicules](94_kaio_surge.png)
 *Kaio Surge (X): a red flame aura, x1.3 damage and x1.2 speed while it drains Magicules* (960x540)
 
 - [x] Activated the Turtle Wave in the skill tree
 - [x] A Turtle Wave fired
 
-![Turtle Wave: a long charged ki beam through Raptor Gulch](94_turtle_wave.png)
+![Turtle Wave: a long charged ki beam through Raptor Gulch](95_turtle_wave.png)
 *Turtle Wave: a long charged ki beam through Raptor Gulch* (960x540)
 
 
-![A wish orb (one star) lying at a hidden spot; all seven make one wish at the Guardian's altar](95_wish_orb.png)
+![A wish orb (one star) lying at a hidden spot; all seven make one wish at the Guardian's altar](96_wish_orb.png)
 *A wish orb (one star) lying at a hidden spot; all seven make one wish at the Guardian's altar* (960x540)
 
 - [x] Inside the realm the map shows only the realm
 
-![The map inside the Ki Realm: only the realm (it never shows on the normal map)](96_realm_map.png)
+![The map inside the Ki Realm: only the realm (it never shows on the normal map)](97_realm_map.png)
 *The map inside the Ki Realm: only the realm (it never shows on the normal map)* (960x540)
 
 - [x] Entered the tournament
 
-![The World Martial Grounds: round one of five against a Gi Fighter (the champion wins 5,000 Zeni and the Golden Aura)](97_tournament.png)
+![The World Martial Grounds: round one of five against a Gi Fighter (the champion wins 5,000 Zeni and the Golden Aura)](98_tournament.png)
 *The World Martial Grounds: round one of five against a Gi Fighter (the champion wins 5,000 Zeni and the Golden Aura)* (960x540)
 
 ## 22. Nation building (M5a)
 - [x] Placed houses, a well, a banner and a hut around the camp
 - [x] The camp became a village
 
-![The nation window (N): your nation's name and banner, its tier and what the next needs, buildings to place](98_nation_window.png)
+![The nation window (N): your nation's name and banner, its tier and what the next needs, buildings to place](99_nation_window.png)
 *The nation window (N): your nation's name and banner, its tier and what the next needs, buildings to place* (960x540)
 
 
-![Build mode: the ghost follows the mouse on the tile grid inside the village's ring (green fits, red shows why not)](99_build_mode.png)
+![Build mode: the ghost follows the mouse on the tile grid inside the village's ring (green fits, red shows why not)](100_build_mode.png)
 *Build mode: the ghost follows the mouse on the tile grid inside the village's ring (green fits, red shows why not)* (960x540)
 
 
-![Tempest Federation, now a village: freely placed houses, a well and the blue star banner around the camp](100_village.png)
+![Tempest Federation, now a village: freely placed houses, a well and the blue star banner around the camp](101_village.png)
 *Tempest Federation, now a village: freely placed houses, a well and the blue star banner around the camp* (960x540)
 
 ## 23. Citizens, fields and food (M5b)
@@ -577,33 +581,43 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - [x] Wheat harvested
 - [x] Citizens moved into the homes
 
-![Citizens walk about the village; fields of wheat, carrots and pumpkins grow (F to plant and harvest)](101_citizens_fields.png)
+![Citizens walk about the village; fields of wheat, carrots and pumpkins grow (F to plant and harvest)](102_citizens_fields.png)
 *Citizens walk about the village; fields of wheat, carrots and pumpkins grow (F to plant and harvest)* (960x540)
 
 
-![The nation window: population and homes, the food store and what it eats a day, the next newcomer](102_population.png)
+![The nation window: population and homes, the food store and what it eats a day, the next newcomer](103_population.png)
 *The nation window: population and homes, the food store and what it eats a day, the next newcomer* (960x540)
 
 ## 24. Citizen roles, trade and caravans (M5c)
 - [x] Citizens took jobs (6)
 
-![Citizens & trade: jobs by workplace (workers, farmers, crafters, merchants, guards), the treasury, trade goods and a caravan on the road](103_citizens_trade.png)
+![Citizens & trade: jobs by workplace (workers, farmers, crafters, merchants, guards), the treasury, trade goods and a caravan on the road](104_citizens_trade.png)
 *Citizens & trade: jobs by workplace (workers, farmers, crafters, merchants, guards), the treasury, trade goods and a caravan on the road* (960x540)
 
 ## 25. Rival nations and the siege (M5d)
 - [x] Talking to a rival nation's leader
 
-![A rival nation: the Sakura Shogunate's leader in Hanamura beside its banner (neither friend nor foe for now)](104_rival_leader.png)
+![A rival nation: the Sakura Shogunate's leader in Hanamura beside its banner (neither friend nor foe for now)](105_rival_leader.png)
 *A rival nation: the Sakura Shogunate's leader in Hanamura beside its banner (neither friend nor foe for now)* (960x540)
 
 
-![The world map with the rival nations' banners at their capitals and your own nation at the camp](105_world_map_nations.png)
+![The world map with the rival nations' banners at their capitals and your own nation at the camp](106_world_map_nations.png)
 *The world map with the rival nations' banners at their capitals and your own nation at the camp* (960x540)
 
 - [x] Faced the horde
 
-![The siege: a monster horde marches on the flag from one side (wave 1 of 3); guards shoot from the watchtower](106_siege.png)
+![The siege: a monster horde marches on the flag from one side (wave 1 of 3); guards shoot from the watchtower](107_siege.png)
 *The siege: a monster horde marches on the flag from one side (wave 1 of 3); guards shoot from the watchtower* (960x540)
+
+## 26. Chopping, detailed maps (user requests)
+- [x] Chopping a tree with an axe
+
+![Chopping a tree: the axe swings, the tree shakes and wood chips fly (pickaxes mine rocks and ore the same way)](108_chopping.png)
+*Chopping a tree: the axe swings, the tree shakes and wood chips fly (pickaxes mine rocks and ore the same way)* (960x540)
+
+
+![The world map zoomed in with the mouse wheel: the real trees, rocks and houses](109_map_zoom.png)
+*The world map zoomed in with the mouse wheel: the real trees, rocks and houses* (960x540)
 
 
 ## System messages seen
@@ -664,7 +678,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +1500 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Rare Copper Ring.
+- Trial reward: Epic Guard's Bow.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +21 XP (defeat).
@@ -681,8 +695,8 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Uncommon Cloth Hood.
-- +21 Zeni (chest).
+- Chest opened: Uncommon Obsidian Cutter.
+- +20 Zeni (chest).
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 - Your router did not answer (UPnP off?). Forward UDP 24560 to this PC by hand for friends outside your network.
@@ -690,4 +704,4 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 The bot retreated 0 time(s) to let Magicules recover.
 XP assistance for skill points: 550 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 106 screenshots.**
+**Result: 0 failed checks, 109 screenshots.**
