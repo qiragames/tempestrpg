@@ -871,6 +871,59 @@ func _run() -> void:
     await _shot("tournament", "The World Martial Grounds: round one of five against a Gi Fighter (the champion wins 5,000 Zeni and the Golden Aura)")
     showcase.position += Vector2(600, 0)
     await _wait(0.2)
+    _log("## 22. Nation building (M5a)")
+    var nation_camp = world.camp
+    var nation_data := preload("res://scripts/nation/nation_catalogue.gd")
+    var hud_nation = world.get_node("HUD")
+    showcase.position = nation_camp.SITE + Vector2(0, 40)
+    world.terrain.ensure_props_at(showcase.position)
+    if not nation_camp.state.founded:
+        nation_camp.state.founded = true
+        nation_camp.state.founder = showcase.character_id
+    for _round in range(4):
+        for id in nation_camp.sites:
+            if nation_camp.state.deposits[id] > 0:
+                nation_camp.harvest(id)
+        nation_camp._refill(nation_camp.REFILL_SECONDS + 1.0)
+    nation_camp.state.essence = int(nation_camp.state.essence) + 4
+    nation_camp.state.essence_offered = int(nation_camp.state.essence_offered) + 4
+    for id in ["hut_1", "storehouse_1"]:
+        if not nation_camp.built(id):
+            nation_camp.complete(id)
+    nation_camp.transact(showcase, "name", "Tempest Federation")
+    nation_camp.transact(showcase, "banner", "1,0")
+    await _wait(0.2)
+    # Free placement: a few houses, a well and the banner around the flag.
+    var centre: Vector2i = tour_map.to_tile(nation_camp.SITE)
+    var placed_kinds: Array = []
+    for kind in ["house", "house", "well", "banner", "hut"]:
+        var done := false
+        for ring in range(3, 9):
+            if done:
+                break
+            for dy in range(-ring, ring + 1):
+                if done:
+                    break
+                for dx in range(-ring, ring + 1):
+                    if maxi(absi(dx), absi(dy)) == ring and nation_camp.place(null, kind, centre + Vector2i(dx, dy)):
+                        placed_kinds.append(kind)
+                        done = true
+                        break
+    await _wait(0.2)
+    _check(placed_kinds.size() == 5, "Placed houses, a well, a banner and a hut around the camp")
+    _check(nation_camp.rank_up() and nation_camp.tier() == 1, "The camp became a village")
+    hud_nation.nation_panel.open()
+    await _wait(0.3)
+    await _shot("nation_window", "The nation window (N): your nation's name and banner, its tier and what the next needs, buildings to place")
+    hud_nation.nation_panel.start_mode("big_house")
+    var ghost_at: Vector2 = nation_camp.SITE + Vector2(-110, 70)
+    hud_nation.nation_panel.aim(ghost_at)
+    await _wait(0.2)
+    await _shot("build_mode", "Build mode: the ghost follows the mouse on the tile grid inside the village's ring (green fits, red shows why not)")
+    hud_nation.nation_panel.stop_mode()
+    showcase.position = nation_camp.SITE + Vector2(0, 50)
+    await _wait(0.4)
+    await _shot("village", "Tempest Federation, now a village: freely placed houses, a well and the blue star banner around the camp")
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

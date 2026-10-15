@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 26
+const VERSION := 27
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -701,6 +701,13 @@ static func migrate(data: Variant) -> Variant:
             for key in defaults:
                 state.progression[key] = state.progression.get(key, defaults[key])
         data["realm"] = data.get("realm", KI_REALM.initial_state())
+    # v27 (M5a): the camp has no nation yet (no name, banner, tier or placed buildings).
+    if data.get("version") == 26:
+        if not data.get("camp") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = 27
+        data.camp["nation"] = data.camp.get("nation", preload("res://scripts/nation/nation_catalogue.gd").initial_state())
     return data
 
 static func _unique(values: Array) -> int:

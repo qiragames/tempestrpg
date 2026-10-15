@@ -172,6 +172,17 @@ func _draw_map() -> void:
         if big:
             _canvas.draw_string_outline(font, spot + Vector2(4, 9), town[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 7, 3, Color(0.03, 0.04, 0.06))
             _canvas.draw_string(font, spot + Vector2(4, 9), town[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 7, UI.GOLD_LIGHT)
+    # M5a: your nation's name and banner at the camp.
+    var camp: Node2D = hud.get_parent().get("camp")
+    if camp != null and camp.state.founded and not realm:
+        var at := to_map(camp.SITE).round()
+        var nation: Dictionary = camp.state.nation
+        var color: Color = camp.NATION.COLORS[int(nation.color)]
+        _canvas.draw_rect(Rect2(at + Vector2(-1, -10), Vector2(1, 10)), Color("6b4a2b"))
+        _canvas.draw_rect(Rect2(at + Vector2(0, -10), Vector2(7, 5)), color)
+        var title: String = nation.name if not String(nation.name).is_empty() else camp.NATION.tier_name(int(nation.tier))
+        _canvas.draw_string_outline(font, at + Vector2(9, -4), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.03, 0.04, 0.06))
+        _canvas.draw_string(font, at + Vector2(9, -4), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, color.lightened(0.3))
     for ferry in ([] if realm else MAP.HARBOURS):
         var pier := tile_to_map(ferry[2]).round()
         _canvas.draw_arc(pier, 2.5, 0, TAU, 10, Color(0.03, 0.04, 0.06), 2.0)

@@ -51,6 +51,13 @@ const SHRINE_RANGE := 60.0
 ## Extra regeneration near the shrine, as a multiple of the character's own rate.
 const SHRINE_BONUS := 1.0
 const STOREHOUSE_WORK_FACTOR := 0.5
+## M5a: the nation (tiers, freely placed buildings, name and banner); see nation_catalogue.gd.
+const NATION := preload("res://scripts/nation/nation_catalogue.gd")
+const MAP := preload("res://scripts/world/world_map.gd")
+## How far from a character a building may be placed.
+const PLACE_REACH := 200.0
+## Placed buildings' nodes by building ID (presentation and collision, rebuilt from the state).
+var _placed: Dictionary = {}
 ## This world's deposits (positions/amounts depend on the seed).
 var sites: Dictionary = DEPOSITS
 var state: Dictionary = initial_state()
@@ -64,13 +71,13 @@ static func initial_state(table: Dictionary = DEPOSITS) -> Dictionary:
     var deposits: Dictionary = {}
     for id in table:
         deposits[id] = table[id].amount
-    return {"id": "camp_1", "founded": false, "founder": "", "wood": 0, "stone": 0, "essence": 0, "essence_offered": 0, "hut": false, "storehouse": false, "shrine": false, "forge": false, "stall": false, "smithy": false, "staff": {"trader": false, "smith": false}, "tool_yield": {"wood": 0, "stone": 0}, "deposits": deposits, "refills": {}, "refill_left": {}}
+    return {"id": "camp_1", "founded": false, "founder": "", "wood": 0, "stone": 0, "essence": 0, "essence_offered": 0, "hut": false, "storehouse": false, "shrine": false, "forge": false, "stall": false, "smithy": false, "staff": {"trader": false, "smith": false}, "tool_yield": {"wood": 0, "stone": 0}, "deposits": deposits, "refills": {}, "refill_left": {}, "nation": NATION.initial_state()}
 
 static func _whole(value: Variant, high: float = 1000000) -> bool:
     return (value is float or value is int) and value >= 0 and value <= high and value == floor(value)
 
 static func valid_state(value: Variant, players: Dictionary, table: Dictionary = DEPOSITS) -> bool:
-    if not value is Dictionary or value.size() != 18 or value.get("id") != "camp_1" or not value.get("founded") is bool or not value.get("founder") is String:
+    if not value is Dictionary or value.size() != 19 or value.get("id") != "camp_1" or not value.get("founded") is bool or not value.get("founder") is String:
         return false
     for id in STRUCTURES:
         if not value.get(STRUCTURES[id].key) is bool:
@@ -105,6 +112,9 @@ static func valid_state(value: Variant, players: Dictionary, table: Dictionary =
             return false
     if not _whole(value.get("essence_offered")) or (not value.founded and value.essence_offered != 0):
         return false
+    # M5a: the nation's tiers and buildings (their costs are spent from the stock below).
+    if not NATION.valid(value.get("nation"), value.founded):
+        return false
     if not value.get("refills") is Dictionary or not value.get("refill_left") is Dictionary:
         return false
     for id in value.refills:
@@ -125,6 +135,7 @@ static func valid_state(value: Variant, players: Dictionary, table: Dictionary =
         for id in STRUCTURES:
             if value[STRUCTURES[id].key]:
                 income -= STRUCTURES[id].cost.get(resource, 0)
+        income -= int(value.nation.spent[resource])
         # Prevent edited/corrupt saves from duplicating finite resources.
         if stock != income or stock < 0:
             return false
@@ -158,7 +169,213 @@ func restore(value: Dictionary) -> void:
     state = value.duplicate(true)
     for id in STRUCTURES:
         _shapes[id].set_deferred("disabled", not state[STRUCTURES[id].key])
+    _sync_placed()
     queue_redraw()
+
+## --- M5a: the nation
+func nation() -> Dictionary:
+    return state.nation
+
+func tier() -> int:
+    return int(state.nation.tier)
+
+## Is this world position inside the settlement (the founded camp's radius for its tier)?
+func in_settlement(world: Vector2) -> bool:
+    return state.founded and world.distance_to(SITE) <= NATION.radius(tier())
+
+## Why a building cannot go on this tile ("" when it can); `actor` may be null (tests, previews).
+func place_problem(actor: Node2D, kind: String, tile: Vector2i) -> String:
+    if not state.founded:
+        return "Found the camp first."
+    if not NATION.BUILDINGS.has(kind):
+        return "Unknown building."
+    var spec: Array = NATION.BUILDINGS[kind]
+    if int(spec[4]) > tier():
+        return "%s needs a %s." % [spec[0], NATION.tier_name(int(spec[4])).to_lower()]
+    if spec[5] and NATION.count(state.nation, kind) > 0:
+        return "Your nation has a %s already." % spec[0]
+    if state.nation.buildings.size() >= NATION.MAX_BUILDINGS:
+        return "No more buildings fit the settlement."
+    var area := NATION.footprint(kind, tile)
+    if area.get_center().distance_to(SITE) + area.size.length() / 2.0 > NATION.radius(tier()):
+        return "Outside your %s (grow it to build further out)." % NATION.tier_name(tier()).to_lower()
+    if actor != null and actor.global_position.distance_to(NATION.foot(tile)) > PLACE_REACH:
+        return "Too far away."
+    for resource in spec[3]:
+        if int(state[resource]) < int(spec[3][resource]):
+            return "%s costs %s." % [spec[0], NATION.cost_text(spec[3])]
+    return clear_problem(area)
+
+## Free ground: no water or cliffs, other buildings, the camp's structures (built or not), the
+## flag, deposits, chests, the trial stone, trees, rocks, props or anyone standing there.
+func clear_problem(area: Rect2) -> String:
+    var padded := area.grow(NATION.GAP)
+    for y in range(MAP.to_tile(padded.position).y, MAP.to_tile(padded.end).y + 1):
+        for x in range(MAP.to_tile(padded.position).x, MAP.to_tile(padded.end).x + 1):
+            if MAP.solid(x, y):
+                return "Not on water or rock."
+    for entry in state.nation.buildings:
+        if NATION.footprint(entry.kind, Vector2i(entry.tile[0], entry.tile[1])).grow(NATION.GAP).intersects(area):
+            return "Too close to another building."
+    for id in STRUCTURES:
+        if Rect2(STRUCTURES[id].site - STRUCTURES[id].size / 2.0, STRUCTURES[id].size).grow(NATION.GAP + 4.0).intersects(area):
+            return "That ground is kept for the %s." % STRUCTURES[id].name
+    var points: Array = [SITE]
+    for id in sites:
+        points.append(sites[id].position)
+    var world: Node = get_parent()
+    if world != null and "layout" in world:
+        for chest in world.layout.get("chests", []):
+            points.append(chest.position)
+    if world != null and world.get("trial") != null:
+        points.append(world.trial.stone)
+    for point in points:
+        if padded.grow(NATION.DEPOSIT_CLEARANCE - NATION.GAP).has_point(point):
+            return "Too close to the flag, a deposit, a chest or the trial stone."
+    if world != null:
+        for node in world.get_children():
+            if (node.is_in_group("player") or node.is_in_group("allies") or node.is_in_group("enemies")) and padded.grow(6.0).has_point(node.position):
+                if not node.is_in_group("enemies") or node.get_node("Health").current > 0:
+                    return "Someone is standing there."
+    if is_inside_tree():
+        var query := PhysicsShapeQueryParameters2D.new()
+        var box := RectangleShape2D.new()
+        box.size = area.size
+        query.shape = box
+        query.transform = Transform2D(0.0, area.get_center())
+        query.collision_mask = 1
+        if not get_world_2d().direct_space_state.intersect_shape(query, 1).is_empty():
+            return "Something is in the way (a tree, rock or wall)."
+    return ""
+
+## Host: build `kind` on a tile from the shared stock.
+func place(actor: Node2D, kind: String, tile: Vector2i) -> bool:
+    if not AUTHORITY.can_mutate(self):
+        return false
+    var problem := place_problem(actor, kind, tile)
+    if not problem.is_empty():
+        if actor != null:
+            get_node("/root/GameSession").notify_character(actor.character_id, problem)
+        return false
+    var cost: Dictionary = NATION.BUILDINGS[kind][3]
+    for resource in cost:
+        state[resource] -= int(cost[resource])
+        state.nation.spent[resource] = int(state.nation.spent[resource]) + int(cost[resource])
+    state.nation.buildings.append({"id": "b_%d" % int(state.nation.next), "kind": kind, "tile": [tile.x, tile.y]})
+    state.nation.next = int(state.nation.next) + 1
+    _sync_placed()
+    queue_redraw()
+    return true
+
+## Host: tear a building down (its materials are not returned).
+func demolish(id: String) -> bool:
+    if not AUTHORITY.can_mutate(self):
+        return false
+    for index in range(state.nation.buildings.size()):
+        if state.nation.buildings[index].id == id:
+            state.nation.buildings.remove_at(index)
+            _sync_placed()
+            queue_redraw()
+            return true
+    return false
+
+## The placed building whose footprint holds a world position ("" if none).
+func building_at(world: Vector2) -> String:
+    for entry in state.nation.buildings:
+        if NATION.footprint(entry.kind, Vector2i(entry.tile[0], entry.tile[1])).grow(6.0).has_point(world):
+            return entry.id
+    return ""
+
+## Host: rank the settlement up (camp → village → town).
+func rank_up() -> bool:
+    if not AUTHORITY.can_mutate(self) or not state.founded or not NATION.tier_problem(state.nation, state).is_empty():
+        return false
+    var next: int = tier() + 1
+    for resource in NATION.TIERS[next][2]:
+        state[resource] -= int(NATION.TIERS[next][2][resource])
+        state.nation.spent[resource] = int(state.nation.spent[resource]) + int(NATION.TIERS[next][2][resource])
+    state.nation.tier = next
+    queue_redraw()
+    return true
+
+## Host: the founder names the nation and picks its banner.
+static func clean_name(text: String) -> String:
+    var cleaned := ""
+    for character in text.strip_edges():
+        if character.unicode_at(0) >= 32 and character.unicode_at(0) != 127:
+            cleaned += character
+    return cleaned.substr(0, NATION.NAME_LENGTH)
+
+## Placed buildings as nodes: art standing on its foot with a collision box (or a drawn banner).
+func _sync_placed() -> void:
+    var wanted := {}
+    for entry in state.nation.buildings:
+        wanted[entry.id] = entry
+    for id in _placed.keys():
+        if not wanted.has(id):
+            if is_instance_valid(_placed[id]):
+                _placed[id].queue_free()
+            _placed.erase(id)
+    for id in wanted:
+        if _placed.has(id) and is_instance_valid(_placed[id]):
+            continue
+        var entry: Dictionary = wanted[id]
+        var tile := Vector2i(entry.tile[0], entry.tile[1])
+        var spec: Array = NATION.BUILDINGS[entry.kind]
+        var body := StaticBody2D.new()
+        body.name = "Building_%s" % id
+        body.position = NATION.foot(tile)
+        body.set_meta("building", entry.kind)
+        var shape := CollisionShape2D.new()
+        var box := RectangleShape2D.new()
+        box.size = spec[2]
+        shape.shape = box
+        shape.position = Vector2(0, -spec[2].y / 2.0)
+        body.add_child(shape)
+        if String(spec[1]).is_empty():
+            var flag := Node2D.new()
+            flag.name = "Flag"
+            flag.draw.connect(_draw_banner.bind(flag))
+            body.add_child(flag)
+        else:
+            var terrain_props: Dictionary = preload("res://scripts/world/world_terrain.gd").PROPS
+            var sprite := Sprite2D.new()
+            var texture := AtlasTexture.new()
+            texture.atlas = load(terrain_props[spec[1]][0])
+            texture.region = terrain_props[spec[1]][1]
+            sprite.texture = texture
+            sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+            sprite.offset = Vector2(0, -texture.region.size.y / 2.0)
+            body.add_child(sprite)
+        get_parent().add_child.call_deferred(body)
+        _placed[id] = body
+
+## A pole with the nation's flag in its colour, emblem drawn small.
+func _draw_banner(canvas: Node2D) -> void:
+    var color: Color = NATION.COLORS[int(state.nation.color)]
+    canvas.draw_rect(Rect2(-1, -30, 2, 30), Color("6b4a2b"))
+    canvas.draw_rect(Rect2(1, -29, 14, 10), color)
+    canvas.draw_rect(Rect2(1, -29, 14, 10), color.darkened(0.4), false, 1.0)
+    draw_emblem(canvas, int(state.nation.emblem), Vector2(8, -24), color.darkened(0.5) if color.get_luminance() > 0.6 else Color(1, 1, 1, 0.9))
+
+static func draw_emblem(canvas: CanvasItem, emblem: int, at: Vector2, ink: Color, scale: float = 1.0) -> void:
+    match emblem:
+        0:
+            var star := PackedVector2Array()
+            for i in range(10):
+                star.append(at + Vector2.from_angle(-PI / 2 + i * PI / 5) * (3.0 if i % 2 == 0 else 1.3) * scale)
+            canvas.draw_colored_polygon(star, ink)
+        1:
+            canvas.draw_arc(at, 2.6 * scale, PI * 0.35, PI * 1.65, 10, ink, 1.4 * scale)
+        2:
+            canvas.draw_colored_polygon(PackedVector2Array([at + Vector2(-2.5, -3) * scale, at + Vector2(2.5, -3) * scale, at + Vector2(0, 3.5) * scale]), ink)
+        3:
+            canvas.draw_colored_polygon(PackedVector2Array([at + Vector2(0, -3.5) * scale, at + Vector2(2.5, 1) * scale, at + Vector2(0, 3) * scale, at + Vector2(-2.5, 1) * scale]), ink)
+        4:
+            canvas.draw_circle(at, 2.2 * scale, ink)
+            canvas.draw_line(at, at + Vector2(0, 3.5) * scale, ink, 1.0)
+        _:
+            canvas.draw_colored_polygon(PackedVector2Array([at + Vector2(-3, 2) * scale, at + Vector2(-3, -2) * scale, at + Vector2(-1.5, 0) * scale, at + Vector2(0, -3) * scale, at + Vector2(1.5, 0) * scale, at + Vector2(3, -2) * scale, at + Vector2(3, 2) * scale]), ink)
 
 func built(id: String) -> bool:
     return STRUCTURES.has(id) and state[STRUCTURES[id].key]
@@ -301,6 +518,45 @@ func transact(actor: Node2D, operation: String, id: String) -> bool:
                 return false
             state.staff[id] = true
             message = "You hired a %s for %d Zeni. Talk to them with F." % [STAFF[id][2], STAFF[id][1]]
+        "place":
+            # M5a: "kind@x,y" (a tile); the host checks the tier, stock, reach and free ground.
+            var parts := id.split("@")
+            var coords := parts[1].split(",") if parts.size() == 2 else PackedStringArray()
+            if coords.size() != 2 or not coords[0].is_valid_int() or not coords[1].is_valid_int():
+                return false
+            if not place(actor, parts[0], Vector2i(int(coords[0]), int(coords[1]))):
+                return false
+            message = "%s built. Shared materials consumed." % NATION.BUILDINGS[parts[0]][0]
+        "demolish":
+            if not state.founded or not can_reach_point(actor, id) or not demolish(id):
+                return false
+            message = "Building torn down (its materials are lost)."
+        "rank":
+            var problem := NATION.tier_problem(state.nation, state) if state.founded else "Found the camp first."
+            if not problem.is_empty() or not can_reach(actor, SITE, 55):
+                if not problem.is_empty():
+                    get_node("/root/GameSession").notify_character(actor.character_id, problem)
+                return false
+            rank_up()
+            message = "Your settlement is now a %s!" % NATION.tier_name(tier()).to_lower()
+        "name":
+            var cleaned := clean_name(id)
+            if not state.founded or actor.character_id != state.founder or cleaned.is_empty():
+                return false
+            state.nation.name = cleaned
+            message = "Your nation is now called %s." % cleaned
+        "banner":
+            var pick := id.split(",")
+            if not state.founded or actor.character_id != state.founder or pick.size() != 2 or not pick[0].is_valid_int() or not pick[1].is_valid_int():
+                return false
+            if int(pick[0]) < 0 or int(pick[0]) >= NATION.COLORS.size() or int(pick[1]) < 0 or int(pick[1]) >= NATION.EMBLEMS.size():
+                return false
+            state.nation.color = int(pick[0])
+            state.nation.emblem = int(pick[1])
+            for node in _placed.values():
+                if is_instance_valid(node) and node.has_node("Flag"):
+                    node.get_node("Flag").queue_redraw()
+            message = "New banner raised."
         "offer":
             # Discard and credit together on the host so an essence is never lost or counted twice.
             if id != OFFER_ITEM or not can_offer(actor) or not actor.get_node("Inventory").discard(StringName(OFFER_ITEM)):
@@ -315,6 +571,13 @@ func transact(actor: Node2D, operation: String, id: String) -> bool:
     session.notify_character(actor.character_id, message)
     session.queue_save()
     return true
+
+## A building to demolish must be close to the character.
+func can_reach_point(actor: Node2D, id: String) -> bool:
+    for entry in state.nation.buildings:
+        if entry.id == id:
+            return actor.global_position.distance_to(NATION.foot(Vector2i(entry.tile[0], entry.tile[1]))) <= PLACE_REACH
+    return false
 
 func harvest(id: String) -> bool:
     if not AUTHORITY.can_mutate(self) or not sites.has(id) or state.deposits[id] <= 0:
@@ -363,6 +626,9 @@ func _draw() -> void:
             _center.texture = ART.atlas(center)
             _center.offset = Vector2(0, -ART.PROPS[center][1].size.y / 2.0)
     draw_arc(SITE, 21, 0, TAU, 20, Color("e1bf79") if state.founded else Color("a1a99b"), 2)
+    for node in _placed.values():
+        if is_instance_valid(node) and node.has_node("Flag"):
+            node.get_node("Flag").queue_redraw()
     for id in sites:
         var point: Vector2 = sites[id].position
         if state.deposits[id] == 0:

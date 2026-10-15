@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.2 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.1 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -299,7 +299,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (640x360)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Rare Copper Ring
+- [x] The chest gave an Uncommon-or-better item: Rare Spirit Amulet
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (640x360)
@@ -561,6 +561,21 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 ![The World Martial Grounds: round one of five against a Gi Fighter (the champion wins 5,000 Zeni and the Golden Aura)](98_tournament.png)
 *The World Martial Grounds: round one of five against a Gi Fighter (the champion wins 5,000 Zeni and the Golden Aura)* (640x360)
 
+## 22. Nation building (M5a)
+- [x] Placed houses, a well, a banner and a hut around the camp
+- [x] The camp became a village
+
+![The nation window (N): your nation's name and banner, its tier and what the next needs, buildings to place](99_nation_window.png)
+*The nation window (N): your nation's name and banner, its tier and what the next needs, buildings to place* (640x360)
+
+
+![Build mode: the ghost follows the mouse on the tile grid inside the village's ring (green fits, red shows why not)](100_build_mode.png)
+*Build mode: the ghost follows the mouse on the tile grid inside the village's ring (green fits, red shows why not)* (640x360)
+
+
+![Tempest Federation, now a village: freely placed houses, a well and the blue star banner around the camp](101_village.png)
+*Tempest Federation, now a village: freely placed houses, a well and the blue star banner around the camp* (640x360)
+
 
 ## System messages seen
 
@@ -620,7 +635,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +1500 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Rare Spirit Amulet.
+- Trial reward: Epic Travel Boots.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +21 XP (defeat).
@@ -637,12 +652,12 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Rare Copper Ring.
-- +32 Zeni (chest).
+- Chest opened: Rare Spirit Amulet.
+- +38 Zeni (chest).
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 
 The bot retreated 1 time(s) to let Magicules recover.
 XP assistance for skill points: 550 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 98 screenshots.**
+**Result: 0 failed checks, 101 screenshots.**

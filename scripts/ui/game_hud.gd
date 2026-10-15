@@ -43,6 +43,8 @@ var harbour_panel: Control
 var party_panel: Control
 ## Talking window (M4.7), see dialog_panel.gd.
 var dialog_panel: Control
+## Nation window and build mode (M5a), see nation_panel.gd.
+var nation_panel: Control
 var _zeni: Label
 var _close: Button
 var _log: RichTextLabel
@@ -96,6 +98,8 @@ func _ready() -> void:
     add_child(party_panel)
     dialog_panel = load("res://scripts/ui/dialog_panel.gd").new(self)
     add_child(dialog_panel)
+    nation_panel = load("res://scripts/ui/nation_panel.gd").new(self)
+    add_child(nation_panel)
     _hook_pause_returns()
     get_parent().system_message.connect(fusion.show_message)
     _ally_dialog = load("res://scripts/ui/ally_dialog.gd").new()
@@ -104,7 +108,7 @@ func _ready() -> void:
     add_child(_camp_dialog)
 
 func menu_open() -> bool:
-    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible) or (is_instance_valid(harbour_panel) and harbour_panel.visible) or (is_instance_valid(party_panel) and party_panel.is_open()) or (is_instance_valid(dialog_panel) and dialog_panel.is_open())
+    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible) or (is_instance_valid(harbour_panel) and harbour_panel.visible) or (is_instance_valid(party_panel) and party_panel.is_open()) or (is_instance_valid(dialog_panel) and dialog_panel.is_open()) or (is_instance_valid(nation_panel) and nation_panel.is_open())
 
 func bind_player(actor: Node2D) -> void:
     if player == actor:
@@ -352,6 +356,10 @@ func _process(_delta: float) -> void:
     # Region name of where this character stands (M4.5a).
     # The town or village you are in, else the region (M4.5c).
     var place: String = WORLD_MAP.place_name(player.global_position)
+    # M5a: inside your settlement, its name (or tier).
+    var camp: Node2D = get_parent().get("camp")
+    if camp != null and camp.in_settlement(player.global_position):
+        place = camp.state.nation.name if not String(camp.state.nation.name).is_empty() else "Your %s" % camp.NATION.tier_name(camp.tier())
     if $Title.get_meta("place", "") != place:
         $Title.set_meta("place", place)
         $Title.text = place.to_upper()
