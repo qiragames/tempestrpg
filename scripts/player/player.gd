@@ -23,7 +23,7 @@ var exhaustion_active: bool = false
 var exhaustion_left: float = 0.0
 var remote_direction := Vector2.ZERO
 var last_input_msec: int = 0
-var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "race": "Slime", "quests": {}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": [], "zeni": 0, "ship": {"owned": false, "at": ""}, "ferry_pass_until": 0.0, "tools": {"axe": 0, "pickaxe": 0, "rod": 0}, "mounts": [], "mount": "", "augments": [], "auras": [], "aura": "", "bonus_points": 0, "champion": false, "professions": {"woodcutting": 0, "mining": 0, "fishing": 0, "smithing": 0, "alchemy": 0}}
+var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "race": "Slime", "quests": {}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": [], "zeni": 0, "ship": {"owned": false, "at": ""}, "ferry_pass_until": 0.0, "tools": {"axe": 0, "pickaxe": 0, "rod": 0}, "mounts": [], "mount": "", "augments": [], "auras": [], "aura": "", "bonus_points": 0, "champion": false, "professions": {"woodcutting": 0, "mining": 0, "fishing": 0, "smithing": 0, "alchemy": 0}, "fish_log": {}}
 ## Current mimic form and the time until it can change again (host-owned, saved).
 ## Gear (17e): owned items and active cooldowns; equipped item IDs live in progression.equipment.
 var gear: Dictionary = {"items": [], "cooldowns": {}}
@@ -39,6 +39,10 @@ const UPGRADES := preload("res://scripts/items/upgrade_catalogue.gd")
 ## fishing; the bite window by rod tier; where the line was cast.
 var fishing_bite_in := -INF
 var fishing_window := 0.0
+## M6b: the reel-in minigame while a fish is hooked (host-owned, replicated in snapshots):
+## {fish, rarity, need, hits, misses, centre, width, speed, t}. Empty when nothing is hooked.
+var reel: Dictionary = {}
+const FISHES := preload("res://scripts/professions/fish_catalogue.gd")
 var _fishing_spot := Vector2.ZERO
 var _fishing_lake := false
 var _tame_cooldown := 0.0
@@ -853,29 +857,77 @@ func cast_line() -> bool:
     dismount()
     _fishing_lake = lake
     _fishing_spot = global_position
-    fishing_window = TRAVEL.BITE_WINDOW[tier]
-    fishing_bite_in = randf_range(TRAVEL.BITE_DELAY[0], TRAVEL.BITE_DELAY[1])
-    session.notify_character(character_id, "You cast your line… press F when it bites.")
+    fishing_window = FISHES.REEL_SECONDS
+    reel = {}
+    # Fishing 20 (Patient): bites come 25% sooner.
+    var patience: float = 0.75 if PRO.level_of(progression, "fishing") >= 20 else 1.0
+    fishing_bite_in = randf_range(TRAVEL.BITE_DELAY[0], TRAVEL.BITE_DELAY[1]) * patience
+    session.notify_character(character_id, "You cast your line… wait for a bite.")
     return true
 
-## Host: pull in the line: a catch inside the bite window, nothing too early or too late.
-func reel() -> bool:
-    if not AUTHORITY.can_mutate(self) or fishing_bite_in == -INF:
-        return false
-    var biting: bool = fishing_bite_in <= 0.0 and -fishing_bite_in <= fishing_window
-    fishing_bite_in = -INF
-    if not biting:
-        session.notify_character(character_id, "Too early — it swam off.")
-        return false
+## Host: a fish bites — pick it and start the reel-in minigame.
+func _hook_fish() -> void:
     var map := preload("res://scripts/world/world_map.gd")
     var rng := RandomNumberGenerator.new()
     rng.randomize()
-    var fish: String = TRAVEL.catch_fish(map.region_name(_fishing_spot), _fishing_lake, int(progression.get("tools", {}).get("rod", 0)), rng)
+    var rod: int = int(progression.get("tools", {}).get("rod", 0))
+    var level: int = PRO.level_of(progression, "fishing")
+    var fish: String = FISHES.pick(map.region_name(_fishing_spot), _fishing_lake, rod, level, rng)
+    var rarity: int = int(FISHES.FISH[fish][4])
+    var width: float = FISHES.zone(level, fish, rod)
+    reel = {"fish": fish, "rarity": rarity, "need": FISHES.HITS[rarity], "hits": 0, "misses": 0, "centre": rng.randf_range(width / 2.0, 1.0 - width / 2.0), "width": width, "speed": FISHES.SPEED[rarity], "t": 0.0}
+    session.notify_character(character_id, "%s bite! Press F while the marker is in the green zone (%d%% per press, %d hit%s)." % [FISHES.RARITIES[rarity], int(round(width * 100.0)), reel.need, "" if reel.need == 1 else "s"])
+
+## Host: land the hooked fish (bag, fish log, XP); mythical catches are announced to everyone.
+func _land_fish() -> bool:
+    var fish: String = reel.fish
+    var rarity: int = int(reel.rarity)
+    reel = {}
+    fishing_bite_in = -INF
     if $Inventory.add_material(fish, 1) != 1:
-        session.notify_character(character_id, "Caught a %s, but the bag is full." % TRAVEL.FISH[fish][0])
+        session.notify_character(character_id, "Caught a %s, but the bag is full — it slipped back." % FISHES.FISH[fish][0])
         return false
-    session.notify_character(character_id, "Caught a %s!" % TRAVEL.FISH[fish][0])
+    if not progression.get("fish_log") is Dictionary:
+        progression["fish_log"] = {}
+    var first: bool = not progression.fish_log.has(fish)
+    progression.fish_log[fish] = int(progression.fish_log.get(fish, 0)) + 1
+    gain_profession_xp("fishing", FISHES.xp_for(fish))
+    session.notify_character(character_id, "Caught a %s (%s)!%s" % [FISHES.FISH[fish][0], FISHES.RARITIES[rarity], " New in your fish log." if first else ""])
+    if rarity >= 5 and get_parent() != null and get_parent().has_method("_announce"):
+        get_parent()._announce("A mythical %s was landed!" % FISHES.FISH[fish][0])
     session.queue_save()
+    return true
+
+func _lose_fish(message: String) -> void:
+    if not reel.is_empty():
+        gain_profession_xp("fishing", maxi(1, FISHES.xp_for(reel.fish) / 10))
+    reel = {}
+    fishing_bite_in = -INF
+    session.notify_character(character_id, message)
+
+## Host: pull in the line: a catch inside the bite window, nothing too early or too late.
+## M6b: F while a fish is hooked: a hit when the marker is in the green zone (enough hits land
+## it), a miss otherwise (too many and it escapes). F before a bite pulls the line in empty.
+func reel_in() -> bool:
+    if not AUTHORITY.can_mutate(self) or fishing_bite_in == -INF:
+        return false
+    if reel.is_empty():
+        fishing_bite_in = -INF
+        session.notify_character(character_id, "Too early — nothing on the line.")
+        return false
+    var at: float = FISHES.marker(float(reel.t), float(reel.speed))
+    if absf(at - float(reel.centre)) <= float(reel.width) / 2.0:
+        reel.hits = int(reel.hits) + 1
+        if int(reel.hits) >= int(reel.need):
+            return _land_fish()
+        # The fish pulls: the zone moves.
+        var width: float = reel.width
+        reel.centre = clampf(1.0 - float(reel.centre) + randf_range(-0.15, 0.15), width / 2.0, 1.0 - width / 2.0)
+        return true
+    reel.misses = int(reel.misses) + 1
+    if int(reel.misses) > FISHES.MISSES:
+        _lose_fish("The line went slack — it escaped.")
+        return false
     return true
 
 func _tick_fishing(delta: float) -> void:
@@ -887,11 +939,14 @@ func _tick_fishing(delta: float) -> void:
         return
     var before := fishing_bite_in
     fishing_bite_in -= delta
-    if before > 0.0 and fishing_bite_in <= 0.0:
-        session.notify_character(character_id, "A bite! Press F!")
+    if before > 0.0 and fishing_bite_in <= 0.0 and AUTHORITY.can_mutate(self):
+        _hook_fish()
+    elif not reel.is_empty():
+        reel.t = float(reel.t) + delta
+        if float(reel.t) > FISHES.REEL_SECONDS and AUTHORITY.can_mutate(self):
+            _lose_fish("It fought too long and got away.")
     elif fishing_bite_in < -fishing_window:
         fishing_bite_in = -INF
-        session.notify_character(character_id, "It got away.")
 
 ## Host-only: put an owned item into a slot (swapping out what was there).
 func add_item(item: Dictionary) -> bool:
@@ -1023,6 +1078,8 @@ func begin_exhaustion(seconds: float) -> void:
 func _process(delta: float) -> void:
     _animate(delta)
     _animate_gather()
+    if fishing_bite_in != -INF:
+        queue_redraw()
     if session.replica_world:
         return
     if death_left > 0.0 and $Health.current <= 0:
@@ -1103,6 +1160,8 @@ func configure_replica() -> void:
 
 func _draw() -> void:
     _draw_body()
+    if fishing_bite_in != -INF and has_node("Health") and $Health.current > 0:
+        _draw_line()
     if not gather_id.is_empty() and has_node("Health") and $Health.current > 0:
         CHOP.draw_tool(self, CHOP.tool_for(gather_resource), gather_phase(), facing)
     if has_node("Health") and $Health.current > 0 and not exhaustion_active and form == FORMS.BASE:
@@ -1114,6 +1173,25 @@ var _weapon_icon: Texture2D
 var _weapon_icon_key := ""
 
 var _weapon_fx: CPUParticles2D
+
+## M6b: the rod's line and bobber on the water; a hooked fish pulls the bobber under.
+func _draw_line() -> void:
+    var direction := facing.normalized() if facing.length() > 0.1 else Vector2.DOWN
+    var tip := direction * 8.0 + Vector2(0, -12)
+    var now := Time.get_ticks_msec() / 1000.0
+    var bobber := direction * TRAVEL.FISH_REACH + Vector2(0, sin(now * 3.0) * 1.0)
+    var hooked := not reel.is_empty()
+    if hooked:
+        bobber += Vector2(sin(now * 31.0) * 1.5, 2.0)
+    draw_line(Vector2(0, -6) + direction * 3.0, tip, Color("6b4a2b"), 1.0)
+    draw_line(tip, bobber, Color(0.92, 0.92, 0.92, 0.8), 1.0)
+    if hooked:
+        var ripple := fmod(now * 2.0, 1.0)
+        draw_arc(bobber, 3.0 + ripple * 6.0, 0, TAU, 16, Color(1, 1, 1, 0.6 * (1.0 - ripple)), 1.0)
+        draw_circle(bobber, 1.5, Color("d4473f"))
+    else:
+        draw_circle(bobber, 2.0, Color("d4473f"))
+        draw_rect(Rect2(bobber + Vector2(-2, -1), Vector2(4, 1)), Color.WHITE)
 
 func _draw_weapon(item: Dictionary) -> void:
     var key := "%s:%d" % [item.base, int(item.rarity)]

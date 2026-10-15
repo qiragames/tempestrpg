@@ -777,9 +777,15 @@ func _run() -> void:
     showcase.facing = Vector2.DOWN
     showcase.cast_line()
     showcase._tick_fishing(showcase.fishing_bite_in + 0.05)
-    await _wait(0.2)
-    await _shot("fishing", "Fishing from Sunfall's pier: the HUD calls the bite (press F); rods catch rarer fish by tier")
-    _check(showcase.reel(), "Caught a fish")
+    await _wait(0.4)
+    await _shot("fishing", "Fishing from Sunfall's pier: a fish is hooked — press F while the marker is in the green zone (the zone is your chance per press)")
+    var fish_landed := false
+    for _press in range(6):
+        if showcase.reel.is_empty():
+            break
+        showcase.reel.centre = preload("res://scripts/professions/fish_catalogue.gd").marker(float(showcase.reel.t), float(showcase.reel.speed))
+        fish_landed = showcase.reel_in() and showcase.reel.is_empty()
+    _check(fish_landed, "Caught a fish")
     # A wild desert lion to tame.
     var lion_spot: Array = preload("res://scripts/travel/travel_catalogue.gd").WILD_MOUNTS.filter(func(entry): return entry[1] == "lion")[0]
     showcase.position = tour_map.to_world(lion_spot[2]) + Vector2(-26, 8)

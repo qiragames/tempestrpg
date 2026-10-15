@@ -151,14 +151,18 @@ func sell(actor: Node2D, merchant_id: String, kind: String, item_id: String) -> 
         session().notify_character(actor.character_id, "Sold %s for %d Zeni." % [actor.GEAR.display_name(item), value])
         session().queue_save()
         return true
-    if kind != "bag" or merchant_kind == "smith":
+    if not kind in ["bag", "bag_all"] or merchant_kind == "smith":
         return _refuse(actor, "The smith only buys gear.")
     var price := CATALOGUE.price(item_id)
-    if price <= 0 or not actor.get_node("Inventory").discard(StringName(item_id), 1):
+    var bag: Node = actor.get_node("Inventory")
+    # M6b: "Sell all" sells the whole stack.
+    var count: int = bag.count_of(item_id) if kind == "bag_all" else 1
+    if price <= 0 or count <= 0 or not bag.discard(StringName(item_id), count):
         return false
-    var value := CATALOGUE.sell_price(price)
+    var value := CATALOGUE.sell_price(price) * count
     actor.gain_zeni(value, "sale")
-    session().notify_character(actor.character_id, "Sold 1 %s for %d Zeni." % [item_id.replace("_", " "), value])
+    var label: String = CATALOGUE.good_info(item_id)[0] if CATALOGUE.is_good(item_id) else item_id.replace("_", " ")
+    session().notify_character(actor.character_id, "Sold %d %s for %d Zeni." % [count, label, value])
     session().queue_save()
     return true
 

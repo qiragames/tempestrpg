@@ -4,6 +4,7 @@ extends Control
 ## its required level and your current success chance (soft gates: everything can be tried).
 const UI := preload("res://scripts/ui/ui_style.gd")
 const PRO := preload("res://scripts/professions/profession_catalogue.gd")
+const FISHES := preload("res://scripts/professions/fish_catalogue.gd")
 const FRAME := Rect2(40, 10, 560, 338)
 
 var hud: CanvasLayer
@@ -103,6 +104,8 @@ func _entries(profession: String) -> Array:
         "mining":
             for id in PRO.ORES:
                 rows.append([PRO.ORES[id][0], int(PRO.ORES[id][1]), ", ".join(PRO.ORES[id][5])])
+        "fishing":
+            rows = FISHES.entries()
         _:
             rows = PRO.entries_for(profession)
     rows.sort_custom(func(a, b): return a[1] < b[1])
@@ -130,6 +133,21 @@ func refresh() -> void:
     for child in _list.get_children():
         child.queue_free()
     var rows := _entries(_selected)
+    if _selected == "fishing":
+        var log: Dictionary = progression.get("fish_log", {})
+        var rod: int = int(progression.get("tools", {}).get("rod", 0))
+        var line: Label = hud._label("Fish log: %d / %d kinds caught · the %% is the green zone (your chance per press)" % [log.size(), FISHES.FISH.size()], Vector2.ZERO, Vector2(FRAME.size.x - 44, 13), _list, 8)
+        line.custom_minimum_size = Vector2(FRAME.size.x - 44, 13)
+        line.add_theme_color_override("font_color", UI.GOLD_LIGHT)
+        for row in rows:
+            var caught: int = int(log.get(row[4], 0))
+            var zone := FISHES.zone(level, row[4], rod)
+            var known: bool = caught > 0 or int(row[3]) < 5
+            var text := "%s%s · %s · needs Lv %d · zone %d%% · %s%s" % ["" if caught > 0 else "○ ", row[0] if known else "???", FISHES.RARITIES[row[3]], row[1], int(round(zone * 100.0)), row[2], " · caught ×%d" % caught if caught > 0 else ""]
+            var fish_line: Label = hud._label(text, Vector2.ZERO, Vector2(FRAME.size.x - 44, 13), _list, 8)
+            fish_line.custom_minimum_size = Vector2(FRAME.size.x - 44, 13)
+            fish_line.add_theme_color_override("font_color", FISHES.RARITY_COLOURS[row[3]] if caught > 0 else FISHES.RARITY_COLOURS[row[3]].darkened(0.35))
+        return
     for row in rows:
         var chance := PRO.chance(level, row[1])
         var line: Label = hud._label("%-22s needs Lv %2d · your chance %d%%%s" % [row[0], row[1], int(round(chance * 100.0)), "   (%s)" % row[2] if row.size() > 2 and not String(row[2]).is_empty() else ""], Vector2.ZERO, Vector2(FRAME.size.x - 44, 13), _list, 8)

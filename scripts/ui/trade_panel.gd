@@ -18,6 +18,7 @@ var _details: Label
 var _action: Button
 var _buy_tab: Button
 var _sell_tab: Button
+var _sell_all: Button
 var _close: Button
 var _rows: Array = []
 var _paused_before := false
@@ -62,6 +63,10 @@ func _init(owner_hud: CanvasLayer) -> void:
     _details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     _action = hud._button("", o + Vector2(242, 216), Vector2(194, 30), self)
     _action.pressed.connect(_act)
+    # M6b: sell a whole stack (fish, logs, ores) at once.
+    _sell_all = hud._button("", o + Vector2(242, 182), Vector2(194, 30), self)
+    _sell_all.pressed.connect(func(): _act(true))
+    _sell_all.hide()
     hud._label("F / Esc: close · Selling pays %d%% of the price" % int(TRADE.SELL_SHARE * 100), o + Vector2(12, FRAME.size.y - 22), Vector2(400, 14), self, 9).add_theme_color_override("font_color", UI.TEXT_DIM)
     hide()
 
@@ -162,6 +167,9 @@ func _refresh_details() -> void:
         "bag":
             text = "%s ×%d\n\nSell one for %d Zeni." % [row.name, int(row.count), int(row.price)]
     _details.text = text
+    _sell_all.visible = selling and row.kind == "bag" and int(row.get("count", 1)) > 1
+    if _sell_all.visible:
+        _sell_all.text = "Sell all ×%d · %d Zeni" % [int(row.count), int(row.price) * int(row.count)]
     if selling:
         _action.text = "Sell · %d Zeni" % int(row.price)
         _action.disabled = false
@@ -169,13 +177,13 @@ func _refresh_details() -> void:
         _action.text = "Buy · %d Zeni" % int(row.price)
         _action.disabled = hud.player.zeni() < int(row.price)
 
-func _act() -> void:
+func _act(all: bool = false) -> void:
     var selected: PackedInt32Array = _list.get_selected_items()
     if _rows.is_empty() or selected.is_empty():
         return
     var row: Dictionary = _rows[selected[0]]
     if selling:
-        hud.session.request_action("trade", {"operation": "sell", "merchant": merchant_id, "kind": "gear" if row.kind == "gear" else "bag", "id": row.id})
+        hud.session.request_action("trade", {"operation": "sell", "merchant": merchant_id, "kind": "gear" if row.kind == "gear" else ("bag_all" if all else "bag"), "id": row.id})
     else:
         hud.session.request_action("trade", {"operation": "buy", "merchant": merchant_id, "id": row.id})
     # Online the host answers with the next snapshot; refresh a moment later.

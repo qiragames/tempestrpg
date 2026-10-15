@@ -175,6 +175,13 @@ static func validate_player(state: Variant, id: String) -> bool:
     # Professions (v32): experience per profession within the curve.
     if not preload("res://scripts/professions/profession_catalogue.gd").valid(progression.get("professions")):
         return false
+    # The fish log (v32): caught fish by kind.
+    var fish_log: Variant = progression.get("fish_log")
+    if not fish_log is Dictionary:
+        return false
+    for fish in fish_log:
+        if not fish is String or not TRAVEL.FISH.has(fish) or not _number(fish_log[fish], 1, 1000000000, true):
+            return false
     var fishing: Variant = state.get("fishing", [])
     if not fishing is Array or not fishing.size() in [0, 2] or fishing.any(func(value): return not (value is float or value is int) or not is_finite(float(value)) or absf(float(value)) > 60.0):
         return false
@@ -785,6 +792,8 @@ static func migrate(data: Variant) -> Variant:
                 return null
             if not state.progression.get("professions") is Dictionary:
                 state.progression["professions"] = preload("res://scripts/professions/profession_catalogue.gd").initial_state()
+            if not state.progression.get("fish_log") is Dictionary:
+                state.progression["fish_log"] = {}
             if state.get("inventory") is Dictionary and (state.inventory.get("capacity") is int or state.inventory.get("capacity") is float):
                 state.inventory["capacity"] = maxi(100, int(state.inventory.capacity))
     return data

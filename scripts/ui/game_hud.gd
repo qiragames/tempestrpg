@@ -357,6 +357,22 @@ func _activate_slot(index: int) -> void:
         else:
             player.get_node("MeleeAttack").attack_skill(player.facing, skill.id)
 
+## M6b: the reel-in bar while a fish is hooked: the green zone is the chance per press.
+func _refresh_reel(delta: float) -> void:
+    if not has_node("ReelBar"):
+        var bar: Control = load("res://scripts/ui/reel_bar.gd").new()
+        bar.name = "ReelBar"
+        bar.position = Vector2(220, 262)
+        bar.size = Vector2(200, 28)
+        add_child(bar)
+    var reel_bar: Control = get_node("ReelBar")
+    # Clients advance the marker between snapshots.
+    if session.replica_world and not player.reel.is_empty():
+        player.reel.t = float(player.reel.t) + delta
+    reel_bar.reel = player.reel
+    reel_bar.visible = not player.reel.is_empty() and not menu_open()
+    reel_bar.queue_redraw()
+
 ## M6a: "F: Chop Oak Log · Woodcutting 3/1 · 78%" next to a tree or ore rock (the chance is
 ## always shown), or what is being worked on.
 func _refresh_node_prompt() -> void:
@@ -401,7 +417,7 @@ func _process(_delta: float) -> void:
     if not player.riding().is_empty():
         extras += " · riding (H)"
     if player.fishing_bite_in != -INF:
-        extras += " · BITE! press F" if player.fishing_bite_in <= 0.0 else " · fishing…"
+        extras += " · REEL IN! (F)" if not player.reel.is_empty() else " · fishing…"
     _zeni.text = "%d Zeni%s" % [player.zeni(), extras]
     # Region name of where this character stands (M4.5a).
     # The town or village you are in, else the region (M4.5c).
@@ -417,6 +433,7 @@ func _process(_delta: float) -> void:
             siege_label.add_theme_constant_override("outline_size", 4)
         get_node("SiegeBanner").text = siege_node.banner()
     _refresh_node_prompt()
+    _refresh_reel(_delta)
     var place: String = WORLD_MAP.place_name(player.global_position)
     # M5a: inside your settlement, its name (or tier).
     var camp: Node2D = get_parent().get("camp")

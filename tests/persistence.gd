@@ -19,7 +19,7 @@ func _run() -> void:
     current_scene = world
     var player = world.get_local_player()
     player.position = Vector2(300, 340)
-    player.progression = {"level": 4, "experience": 3000, "skill_points": 4, "race": "Slime", "quests": {"intro": {"stage": 2}}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": [], "zeni": 0, "ship": {"owned": false, "at": ""}, "ferry_pass_until": 0.0, "tools": {"axe": 0, "pickaxe": 0, "rod": 0}, "mounts": [], "mount": "", "augments": [], "auras": [], "aura": "", "bonus_points": 0, "champion": false, "professions": {"woodcutting": 0, "mining": 0, "fishing": 0, "smithing": 0, "alchemy": 0}}
+    player.progression = {"level": 4, "experience": 3000, "skill_points": 4, "race": "Slime", "quests": {"intro": {"stage": 2}}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": [], "zeni": 0, "ship": {"owned": false, "at": ""}, "ferry_pass_until": 0.0, "tools": {"axe": 0, "pickaxe": 0, "rod": 0}, "mounts": [], "mount": "", "augments": [], "auras": [], "aura": "", "bonus_points": 0, "champion": false, "professions": {"woodcutting": 0, "mining": 0, "fishing": 0, "smithing": 0, "alchemy": 0}, "fish_log": {}}
     player.get_node("Magicules").try_spend(30)
     player.get_node("Health").take_damage(23)
     player.get_node("SkillBook").record_analysis(&"forest_gnasher")

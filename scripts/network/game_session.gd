@@ -747,7 +747,7 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
         var operation: Variant = payload.get("operation")
         if operation == "buy" and payload.size() == 3 and payload.get("merchant") is String and payload.merchant.length() <= 32 and payload.get("id") is String and payload.id.length() <= 64:
             return world.trade.buy(actor, payload.merchant, payload.id)
-        if operation == "sell" and payload.size() == 4 and payload.get("merchant") is String and payload.merchant.length() <= 32 and payload.get("kind") in ["gear", "bag"] and payload.get("id") is String and payload.id.length() <= 64:
+        if operation == "sell" and payload.size() == 4 and payload.get("merchant") is String and payload.merchant.length() <= 32 and payload.get("kind") in ["gear", "bag", "bag_all"] and payload.get("id") is String and payload.id.length() <= 64:
             return world.trade.sell(actor, payload.merchant, payload.kind, payload.id)
         rejected_requests += 1
         return false
@@ -828,7 +828,7 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
         if payload.size() != 1 or not payload.get("operation") in ["cast", "reel"]:
             rejected_requests += 1
             return false
-        return actor.cast_line() if payload.operation == "cast" else actor.reel()
+        return actor.cast_line() if payload.operation == "cast" else actor.reel_in()
     if action == "mount":
         var mount_operation: Variant = payload.get("operation")
         if mount_operation == "toggle" and payload.size() <= 2 and payload.get("id", "") is String and String(payload.get("id", "")).length() <= 32:
@@ -983,6 +983,87 @@ func save_world() -> Error:
         world._announce("Save failed; the previous valid save is retained.")
     return result
 
+## Delta snapshots (found during M6b: full snapshots were ~77 KB 20 times a second per guest —
+## every creature of the world and every merchant's stock). Each guest gets a part only when it
+## changed since it was last sent to that guest, and creatures only when their own entry changed;
+## the guest keeps the last copy of everything. A guest missing a base asks for a full resync.
+## What the host last sent each guest: {peer: {part or "enemy:<id>": hash}}.
+var _peer_parts: Dictionary = {}
+## Guest side: the last copy of every part and creature.
+var _snapshot_parts: Dictionary = {}
+var _snapshot_enemies: Dictionary = {}
+## Always sent whole (small, or changing every tick).
+const ALWAYS_SENT := ["players", "version", "world_id", "progression", "gathering", "reeling"]
+
+func _delta_for(peer: int, data: Dictionary, hashes: Dictionary, enemy_hashes: Array) -> Dictionary:
+    var sent: Dictionary = _peer_parts.get(peer, {})
+    var out := {"delta": not sent.is_empty()}
+    var omitted: Array = []
+    for key in data:
+        if key == "enemies":
+            continue
+        if key in ALWAYS_SENT:
+            out[key] = data[key]
+        elif sent.get(key) == hashes[key]:
+            omitted.append(key)
+        else:
+            out[key] = data[key]
+            sent[key] = hashes[key]
+    var ids: Array = []
+    var changed: Array = []
+    for index in range(data.enemies.size()):
+        var entry: Dictionary = data.enemies[index]
+        var key := "enemy:%s" % entry.id
+        ids.append(entry.id)
+        if sent.get(key) != enemy_hashes[index]:
+            changed.append(entry)
+            sent[key] = enemy_hashes[index]
+    out["enemy_ids"] = ids
+    out["enemies_changed"] = changed
+    out["omitted"] = omitted
+    _peer_parts[peer] = sent
+    return out
+
+## Guest: rebuild the whole snapshot from a delta and the kept parts ({} when a base is missing).
+func _expand_snapshot(data: Dictionary) -> Dictionary:
+    if not data.has("enemy_ids"):
+        return data
+    if not data.get("delta", false):
+        _snapshot_parts = {}
+        _snapshot_enemies = {}
+    var full := {}
+    for key in data:
+        if not key in ["delta", "omitted", "enemy_ids", "enemies_changed"]:
+            full[key] = data[key]
+            if not key in ALWAYS_SENT:
+                _snapshot_parts[key] = data[key]
+    for key in data.get("omitted", []):
+        if not _snapshot_parts.has(key):
+            return {}
+        full[key] = _snapshot_parts[key]
+    for entry in data.enemies_changed:
+        _snapshot_enemies[entry.id] = entry
+    var enemies: Array = []
+    for id in data.enemy_ids:
+        if not _snapshot_enemies.has(id):
+            return {}
+        enemies.append(_snapshot_enemies[id])
+    # Forget creatures the host no longer lists.
+    if _snapshot_enemies.size() > enemies.size():
+        var listed := {}
+        for id in data.enemy_ids:
+            listed[id] = true
+        for id in _snapshot_enemies.keys():
+            if not listed.has(id):
+                _snapshot_enemies.erase(id)
+    full["enemies"] = enemies
+    return full
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_resync() -> void:
+    if multiplayer.is_server():
+        _peer_parts.erase(multiplayer.get_remote_sender_id())
+
 func _broadcast() -> void:
     var data := document()
     var connected: Dictionary = {}
@@ -998,19 +1079,41 @@ func _broadcast() -> void:
         if actor != null and not String(actor.gather_id).is_empty():
             gathering[id] = [actor.gather_id, actor.gather_resource, [actor.gather_at.x, actor.gather_at.y], actor.gather_clock, actor.gather_period]
     data["gathering"] = gathering
+    # M6b: hooked fish and their reel-in minigame (not saved).
+    var reeling := {}
+    for id in owners.values():
+        var angler = world.player_by_id(id)
+        if angler != null and not angler.reel.is_empty():
+            reeling[id] = angler.reel.duplicate()
+    data["reeling"] = reeling
     # M6a: used-up trees and rocks (not saved).
     if world.get("nodes") != null:
         data["nodes"] = world.nodes.state()
     _revision += 1
+    var hashes := {}
+    for key in data:
+        if key != "enemies" and not key in ALWAYS_SENT:
+            hashes[key] = hash(data[key])
+    var enemy_hashes: Array = data.enemies.map(func(entry): return hash(entry))
     # Several clients can disconnect in the same poll. Do not broadcast to ENet
     # peers whose channels have already closed but whose callback is still queued.
     for peer in multiplayer.get_peers():
         if owners.has(peer) and _peer_ready(peer):
-            _snapshot.rpc_id(peer, data, _revision)
+            _snapshot.rpc_id(peer, _delta_for(peer, data, hashes, enemy_hashes), _revision)
+    for peer in _peer_parts.keys():
+        if not owners.has(peer):
+            _peer_parts.erase(peer)
 
 @rpc("authority", "call_remote", "reliable", 2)
-func _snapshot(data: Dictionary, revision: int) -> void:
+func _snapshot(packet: Dictionary, revision: int) -> void:
     if multiplayer.is_server() or local_character_id.is_empty() or revision <= _received_revision:
+        return
+    var data := _expand_snapshot(packet)
+    if data.is_empty():
+        # A delta without its base (it arrived before we were accepted): ask for everything.
+        _snapshot_parts = {}
+        _snapshot_enemies = {}
+        _request_resync.rpc_id(1)
         return
     _received_revision = revision
     latest_snapshot = data
@@ -1043,6 +1146,8 @@ func _snapshot(data: Dictionary, revision: int) -> void:
             actor.gather_period = float(job[4]) if job.size() == 5 else 0.55
         else:
             actor.gather_id = ""
+        var hooked: Variant = data.get("reeling", {}).get(id)
+        actor.reel = hooked.duplicate() if hooked is Dictionary else {}
     for actor in world.get_children():
         if actor.is_in_group("player") and not wanted.has(actor.character_id):
             world.remove_child(actor)
@@ -1119,6 +1224,10 @@ func stop_session(save: bool = true) -> void:
     _join_deadline = 0
     multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
     owners.clear()
+    _peer_parts.clear()
+    _snapshot_parts = {}
+    _snapshot_enemies = {}
+    _received_revision = -1
 
 func _fail(message: String) -> void:
     stop_session(false)

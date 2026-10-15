@@ -37,9 +37,7 @@ const TOOLS := {
 }
 ## Extra share of wood (axe) or stone (pickaxe) when you gather a deposit, by tier.
 const GATHER_BONUS := [0.0, 0.25, 0.5, 1.0]
-## Fishing: seconds to react after a bite, and the chance of a rare fish, by rod tier.
-const BITE_WINDOW := [0.0, 0.9, 1.15, 1.45]
-const RARE_FISH := [0.0, 0.04, 0.09, 0.18]
+## Fishing: seconds until a bite (Fishing 20 makes it 25% sooner).
 const BITE_DELAY := [2.0, 5.0]
 ## Water must be within this many pixels in front of the character to fish.
 const FISH_REACH := 30.0
@@ -58,34 +56,11 @@ static func parse_tool(id: String) -> Array:
 static func tool_price(tool: String, tier: int) -> int:
     return TOOLS[tool][1][tier - 1]
 
-## Fish: [name, sell value base price, where] — where: "any", "lake", "sea" or a region name.
-const FISH := {
-    "minnow": ["Minnow", 8, "any"],
-    "trout": ["Lake Trout", 16, "lake"],
-    "sea_bass": ["Sea Bass", 18, "sea"],
-    "glacier_cod": ["Glacier Cod", 30, "Frostpeak"],
-    "sand_eel": ["Sand Eel", 28, "Sunscorch Desert"],
-    "bog_eel": ["Bog Eel", 32, "Mirewood Marsh"],
-    "koi": ["Koi", 36, "Sakura Vale"],
-    "ember_eel": ["Ember Eel", 42, "Emberreach Isles"],
-    "amber_perch": ["Amber Perch", 30, "Ambervale"],
-    "golden_carp": ["Golden Carp", 160, "rare"],
-}
+## Fish (M6b): the full catalogue lives in FishCatalogue; [name, price, where, level, rarity, weight].
+const FISH := preload("res://scripts/professions/fish_catalogue.gd").FISH
 
 static func is_fish(id: String) -> bool:
     return FISH.has(id)
-
-## The fish a cast catches (host): rare golden carp by rod tier, else a regional fish (if the
-## water is in its region), the water's own fish, or a minnow.
-static func catch_fish(region_name: String, lake: bool, tier: int, rng: RandomNumberGenerator) -> String:
-    if rng.randf() < RARE_FISH[clampi(tier, 0, 3)]:
-        return "golden_carp"
-    var pool: Array = ["minnow", "trout" if lake else "sea_bass"]
-    for id in FISH:
-        if FISH[id][2] == region_name:
-            pool.append(id)
-            pool.append(id)
-    return pool[rng.randi_range(0, pool.size() - 1)]
 
 ## --- Mounts: bought at stables or tamed in the wild. [name, speed bonus, price (0 = tame
 ## only), sprite set, tame material, tame count, tame chance]

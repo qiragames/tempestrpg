@@ -130,11 +130,18 @@ func _run() -> void:
     _at(actor, MAP.dock_position("sunfall"))
     actor.facing = Vector2(MAP.HARBOURS[0][3])
     _check(actor.cast_line() and actor.fishing_bite_in > 0.0, "Casting at the water from the pier")
-    _check(not actor.reel() and actor.fishing_bite_in == -INF, "Pulling too early loses the fish")
+    _check(not actor.reel_in() and actor.fishing_bite_in == -INF, "Pulling too early loses the fish")
     actor.cast_line()
     actor._tick_fishing(actor.fishing_bite_in + 0.1)
     var fish_before: int = actor.get_node("Inventory").total_units()
-    _check(actor.reel() and actor.get_node("Inventory").total_units() == fish_before + 1, "Pulling in during the bite catches a fish")
+    # M6b: land it by pressing while the marker is in the zone (as many hits as it needs).
+    var landed := false
+    for _press in range(6):
+        if actor.reel.is_empty():
+            break
+        actor.reel.centre = preload("res://scripts/professions/fish_catalogue.gd").marker(float(actor.reel.t), float(actor.reel.speed))
+        landed = actor.reel_in() and actor.reel.is_empty()
+    _check(landed and actor.get_node("Inventory").total_units() == fish_before + 1, "Pulling in during the bite catches a fish")
     actor.cast_line()
     actor.global_position += Vector2(30, 0)
     actor._tick_fishing(0.1)
