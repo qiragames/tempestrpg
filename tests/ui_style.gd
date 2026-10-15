@@ -99,7 +99,10 @@ func _run() -> void:
     hud.gear_panel.open()
     await _frames(2)
     var slot: String = hud.gear_panel.target_slot(item)
-    _check(hud.gear_panel._slot_buttons[slot].icon == UI.gear_icon(item) and hud.gear_panel._items.get_item_icon(0) == UI.gear_icon(item), "Worn and owned gear show their base and rarity icon")
+    var spare: Dictionary = SOURCES.roll_chest(rng)
+    actor.add_item(spare)
+    await _frames(2)
+    _check(hud.gear_panel._slot_cells[slot].item_id == item.id and hud.gear_panel._slot_cells[slot].texture != null and hud.gear_panel._grid[0].item_id == spare.id and hud.gear_panel._grid[0].texture != null, "Worn gear sits in its slot and owned gear in the grid, both with their icons")
     _check(hud.menu_open() and not hud._modal.visible, "The equipment window is modal")
     hud.gear_panel.close()
     # --- Hotbar

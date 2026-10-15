@@ -82,9 +82,9 @@ func _run() -> void:
     actor.add_item(hood)
     actor.equip(hood.id, "head")
     hud.gear_panel.open()
-    hud.gear_panel._selected = scythe.id
+    hud.gear_panel._hovered = scythe.id
     await _frames(2)
-    _check(hud.gear_panel.card.visible and hud.gear_panel.card.item.id == scythe.id and hud.gear_panel.card.plain_text().contains("In the bag") and not hud.gear_panel._details.visible, "The equipment window shows the selected item's card")
+    _check(hud.gear_panel.card.visible and hud.gear_panel.card.item.id == scythe.id and hud.gear_panel.card.plain_text().contains("In the bag") and not hud.gear_panel._details.visible, "Hovering an item in the grid shows its card")
     hud.gear_panel._hovered = hood.id
     await _frames(2)
     _check(hud.gear_panel.card.item.id == hood.id and hud.gear_panel.card.plain_text().contains("Worn: Head"), "Hovering another item (or a worn slot) previews its card")

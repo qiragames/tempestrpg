@@ -167,10 +167,12 @@ func _run() -> void:
     await _frames(1)
     var panel = hud.gear_panel
     _check(panel.visible and not hud._modal.visible and paused, "The bag's Equipment button opens the equipment window")
-    _check(panel._slot_buttons.head.text == "Head: Rare Iron Helm" and panel._items.item_count == 6, "Slots show what is worn; the list shows every owned item")
-    panel._slot_buttons.head.pressed.emit()
+    var worn_count: int = actor.progression.equipment.size()
+    var in_grid: int = panel._grid.filter(func(cell): return not cell.item_id.is_empty()).size()
+    _check(panel._slot_cells.head.item_id == helm.id and in_grid + worn_count == 6, "The helm is in the head slot; the grid shows every other owned item")
+    panel.dropped({"item": helm.id, "from": "head"}, "")
     await _frames(1)
-    _check(not actor.progression.equipment.has("head"), "Clicking a slot takes the item off")
+    _check(not actor.progression.equipment.has("head"), "Dragging a worn item to the grid takes it off")
     panel._selected = helm.id
     panel.refresh()
     panel._equip.pressed.emit()

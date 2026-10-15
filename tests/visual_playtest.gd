@@ -475,8 +475,13 @@ func _run() -> void:
         hud.gear_panel._equip.pressed.emit()
         await _wait(0.2)
     hud.gear_panel._selected = "item_showcase_ring"
+    hud.gear_panel._hovered = ""
     await _wait(0.2)
-    await _shot("equipment", "Equipment window: slots, owned items in rarity colours, details of the Legendary ring")
+    await _shot("equipment", "Equipment window (paper doll): the character wearing the gear, armour slots left, jewellery right, gear score and stats, items as a grid")
+    hud.gear_panel._hovered = "item_showcase_ring"
+    await _wait(0.2)
+    await _shot("equipment_card", "Hovering an item shows its card (the Legendary ring)")
+    hud.gear_panel._hovered = ""
     await _tap("inventory")
     _check(await _until(func(): return not hud.gear_panel.visible and not paused), "I closes the equipment window")
     _check(player.get_node("Health").maximum == max_before + 34 and player.get_node("Health").armor == 6, "Equipped: +34 max HP and 6 defense")
