@@ -1054,7 +1054,10 @@ func _hook_fish() -> void:
     rng.randomize()
     var rod: int = int(progression.get("tools", {}).get("rod", 0))
     var level: int = PRO.level_of(progression, "fishing")
-    var fish: String = FISHES.pick(map.region_name(_fishing_spot), _fishing_lake, rod, level, rng)
+    var day_night := preload("res://scripts/world/day_night.gd")
+    var time: float = float(get_parent().progression.get("world_time", 0.0))
+    var region: String = map.region_name(_fishing_spot)
+    var fish: String = FISHES.pick(region, _fishing_lake, rod, level, rng, day_night.is_night(time), day_night.weather(region, time))
     var rarity: int = int(FISHES.FISH[fish][4])
     var width: float = FISHES.zone(level, fish, rod)
     reel = {"fish": fish, "rarity": rarity, "need": FISHES.HITS[rarity], "hits": 0, "misses": 0, "centre": rng.randf_range(width / 2.0, 1.0 - width / 2.0), "width": width, "speed": FISHES.SPEED[rarity], "t": 0.0}

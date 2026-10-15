@@ -235,9 +235,21 @@ func _detection() -> float:
 func _speed() -> float:
     return speed * (slow_factor if slow_left > 0.0 else 1.0)
 
+## Night stalkers (M9b) sleep by day: hidden, without collision, untouchable, not acting.
+func dormant() -> bool:
+    return REGION.is_night_creature(entity_id) and state != State.DEFEATED and not DAY_NIGHT.is_night(_world_time())
+
 func _physics_process(delta: float) -> void:
     if not AUTHORITY.can_mutate(self):
         return
+    if REGION.is_night_creature(entity_id):
+        var asleep := dormant()
+        $CollisionShape2D.disabled = asleep or state == State.DEFEATED
+        if asleep:
+            health.immunity_left = 1.0
+            velocity = Vector2.ZERO
+            global_position = home
+            return
     velocity = Vector2.ZERO
     state_time = maxf(0.0, state_time - delta)
     if state == State.DEFEATED:
@@ -384,6 +396,8 @@ func _nearest_player() -> CharacterBody2D:
 func _process(_delta: float) -> void:
     if not is_instance_valid(body_sprite):
         return
+    if REGION.is_night_creature(entity_id):
+        visible = not dormant()
     var moved: bool = _last_position != Vector2.INF and position.distance_to(_last_position) > 0.05
     var four := not SPRITES.is_side(sprite_kind()) and SPRITES.has_set(sprite_kind())
     if moved:

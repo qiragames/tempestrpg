@@ -92,7 +92,7 @@ func element_hit(target: Node2D, dealt: int, already: Array = []) -> void:
     if effect.has("chain") and world != null and is_instance_valid(target):
         var best: Node2D = null
         var distance := ELEMENTS.CHAIN_REACH
-        for creature in get_tree().get_nodes_in_group("enemies"):
+        for creature in get_tree().get_nodes_in_group("enemies").filter(func(node): return not (node.has_method("dormant") and node.dormant())):
             if creature == target or creature in already or creature.get_node("Health").current <= 0:
                 continue
             var gap: float = creature.global_position.distance_to(target.global_position)
@@ -123,7 +123,7 @@ func ability_damage(target: Node2D, value: int) -> int:
     return value
 
 func _creatures_near(at: Vector2, reach: float, skip: Array) -> Array:
-    return get_tree().get_nodes_in_group("enemies").filter(func(node): return not node in skip and not node.is_queued_for_deletion() and node.get_node("Health").current > 0 and node.global_position.distance_to(at) <= reach)
+    return get_tree().get_nodes_in_group("enemies").filter(func(node): return not node in skip and not node.is_queued_for_deletion() and not (node.has_method("dormant") and node.dormant()) and node.get_node("Health").current > 0 and node.global_position.distance_to(at) <= reach)
 
 func _unique_hit(target: Node2D, dealt: int, already: Array) -> void:
     var ability := weapon_ability()

@@ -134,6 +134,13 @@ func strike(actor: Node2D, index: int, rng: RandomNumberGenerator) -> bool:
         var gem := PRO.gem_for(int(node.required), rng.randi())
         if bag.add_material(gem, 1) == 1:
             note += " and a %s!" % PRO.GEMS[gem][0]
+    elif profession == "alchemy":
+        var day_night := preload("res://scripts/world/day_night.gd")
+        var time: float = float(world.progression.get("world_time", 0.0))
+        if day_night.is_night(time) and rng.randf() < 0.25 and bag.add_material("herb_moonbloom", 1) == 1:
+            note += " and a Moonbloom (it only opens at night)!"
+        elif day_night.weather(MAP.region_name(node.foot), time) == "storm" and rng.randf() < 0.2 and bag.add_material("herb_storm_orchid", 1) == 1:
+            note += " and a Storm Orchid!"
     elif profession == "woodcutting" and level >= 30 and rng.randf() < 0.01:
         if bag.add_material("amber_sap", 1) == 1:
             note += " and Amber Sap!"

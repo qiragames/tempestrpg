@@ -35,7 +35,24 @@ const LEVELS := {
     "storm_storm_bat_1": 22, "storm_gale_beast_1": 22, "storm_cliff_lizard_1": 23, "storm_thunder_eye_1": 23, "storm_storm_bat_2": 24, "storm_gale_beast_2": 25, "storm_cliff_lizard_2": 25, "storm_thunder_eye_2": 26, "storm_storm_bat_3": 26, "storm_gale_beast_3": 27, "dusk_dusk_spider_1": 28, "dusk_fen_octopus_1": 28, "dusk_shade_spirit_1": 29, "dusk_fen_skull_1": 29, "dusk_dusk_spider_2": 30, "dusk_fen_octopus_2": 31, "dusk_shade_spirit_2": 31, "dusk_fen_skull_2": 32, "dusk_dusk_spider_3": 32, "dusk_fen_octopus_3": 33, "sky_crystal_cyclops_1": 34, "sky_sky_dragonling_1": 34, "sky_peak_reptile_1": 35, "sky_frost_spirit_1": 35, "sky_crystal_cyclops_2": 36, "sky_sky_dragonling_2": 37, "sky_peak_reptile_2": 37, "sky_frost_spirit_2": 38, "sky_crystal_cyclops_3": 38, "sky_sky_dragonling_3": 39,
 }
 
+## M9b (user request: creatures only at night): a night stalker at every leveling spot, three
+## levels above it, asleep (hidden, untouchable) by day.
+static func night_creatures() -> Array:
+    var all: Array = []
+    for spot in SPOTS:
+        var level: int = int(spot[4]) + 3
+        var kind: String = "shade_spirit" if level < 12 else ("storm_bat" if level < 22 else ("thunder_eye" if level < 32 else "fen_skull"))
+        all.append(["night_" + String(spot[0]).trim_prefix("spot_"), kind, Vector2(spot[2]) + Vector2(0, -3), 2])
+    return all
+
+static func is_night_creature(id: String) -> bool:
+    return id.begins_with("night_")
+
 static func level_of(id: String, difficulty: int) -> int:
+    if id.begins_with("night_"):
+        for spot in SPOTS:
+            if "night_" + String(spot[0]).trim_prefix("spot_") == id:
+                return int(spot[4]) + 3
     if id.begins_with("dg_"):
         return preload("res://scripts/dungeons/dungeon_catalogue.gd").creature_level(id)
     if preload("res://scripts/bosses/boss_catalogue.gd").is_boss(id):
@@ -182,7 +199,7 @@ static func spot_creatures() -> Array:
 ## Every fixed creature outside the clearing (regions and leveling spots).
 static func all_creatures() -> Array:
     # M7c: the dungeons' creatures too.
-    return CREATURES + spot_creatures() + preload("res://scripts/dungeons/dungeon_catalogue.gd").all_creatures().map(func(entry): return entry.slice(0, 4))
+    return CREATURES + spot_creatures() + night_creatures() + preload("res://scripts/dungeons/dungeon_catalogue.gd").all_creatures().map(func(entry): return entry.slice(0, 4))
 
 static func is_spot_creature(id: String) -> bool:
     return id.begins_with("spot_")

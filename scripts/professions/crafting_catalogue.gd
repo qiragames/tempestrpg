@@ -45,6 +45,7 @@ const POTIONS := {
     "elixir_swiftness": ["Elixir of Swiftness", 22, 200, "speed", 25, 120.0, {"herb_sakura": 2, "koi": 1}, "+25% movement speed for 2 minutes."],
     "elixir_iron": ["Elixir of Iron Skin", 25, 220, "iron", 6, 120.0, {"herb_ambercap": 2, "bar_iron": 1}, "+6 defence for 2 minutes."],
     "elixir_might": ["Elixir of Might", 28, 260, "might", 20, 120.0, {"herb_bogmoss": 2, "ember_core": 1}, "+20% damage for 2 minutes."],
+    "potion_moonlight": ["Moonlight Draught", 30, 400, "heal", 220, 5.0, {"herb_moonbloom": 2, "herb_storm_orchid": 1}, "Restores 220 HP over 5 s."],
     "senzu_bean": ["Senzu Bean", 45, 1500, "full", 0, 0.0, {"herb_senzu": 3, "ki_carp": 1}, "Instantly restores all HP and Magicules."],
 }
 ## Potions that share the draught/tonic cooldown (the rest are elixirs with their own timers).

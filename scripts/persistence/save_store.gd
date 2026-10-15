@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 35
+const VERSION := 36
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -851,6 +851,15 @@ static func migrate(data: Variant) -> Variant:
         for id in all_bosses.all_ids():
             if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == id):
                 data.enemies.append(fresh_boss(id))
+    # v36 (M9b): the night stalkers arrive.
+    if data.get("version") == 35:
+        if not data.get("enemies") is Array:
+            return null
+        data = data.duplicate(true)
+        data.version = 36
+        for entry in REGION.night_creatures():
+            if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == entry[0]):
+                data.enemies.append(REGION.fresh_enemy(entry).merged({"credit": {}, "group_scaled": false, "status": ""}))
     return data
 
 ## Saved enemy entry for a raid boss at full health in its arena (v33 and new worlds).

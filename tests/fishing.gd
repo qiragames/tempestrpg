@@ -51,10 +51,12 @@ func _run() -> void:
     _check(seen.has("ice_pike") and not seen.has("koi") and not seen.has("tuna"), "Frostpeak's lakes have their own fish, not the sea's or Sakura's")
     var mythic := 0
     rng.seed = 5
-    for _i in range(20000):
-        if int(FISHES.FISH[FISHES.pick("Verdant Isle", false, 0, 1, rng)][4]) == 5:
+    # Across all weathers and times (the Kraken only rises in thunderstorms since M9b).
+    for index in range(40000):
+        var weather: String = ["clear", "rain", "storm", "fog"][index % 4]
+        if int(FISHES.FISH[FISHES.pick("Verdant Isle", false, 0, 1, rng, index % 3 == 0, weather)][4]) == 5:
             mythic += 1
-    _check(mythic > 0 and mythic < 60, "Mythical creatures are very rare (%d in 20000 sea bites)" % mythic)
+    _check(mythic > 0 and mythic < 120, "Mythical creatures are very rare (%d in 40000 sea bites)" % mythic)
     _check(FISHES.zone(1, "minnow", 0) > FISHES.zone(1, "kraken", 0) and FISHES.zone(50, "kraken", 3) > FISHES.zone(1, "kraken", 3), "The zone (chance) shrinks for fish above your level and grows with level")
     _check(FISHES.marker(0.0, 1.0) == 0.0 and is_equal_approx(FISHES.marker(1.0, 1.0), 1.0) and is_equal_approx(FISHES.marker(1.5, 1.0), 0.5), "The marker sweeps back and forth")
     # In a world: cast at a pier, hook, miss, land.

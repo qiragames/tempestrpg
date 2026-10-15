@@ -132,6 +132,10 @@ const HERBS := {
     "herb_nightshade": ["Nightshade", 30, 60, Color("8a4ad0"), ["bush", "bush_gloom"], ["Gloomveil"], 10],
     "herb_jade_lotus": ["Jade Lotus", 36, 90, Color("7ae0b0"), ["bush"], ["Jade Terraces"], 10],
     "herb_senzu": ["Senzu Sprout", 42, 120, Color("a8ff6a"), ["bush"], ["The Ki Realm"], 10],
+    # M9b: no bush grows these; picking any herb at night (Moonbloom) or in a thunderstorm (Storm
+    # Orchid) can turn one up.
+    "herb_moonbloom": ["Moonbloom", 12, 45, Color("c8d8ff"), ["bush"], [], 0],
+    "herb_storm_orchid": ["Storm Orchid", 25, 80, Color("a8a0ff"), ["bush"], [], 0],
     "herb_dragon_blossom": ["Dragon Blossom", 48, 200, Color("ff7a5a"), ["bush"], ["The Ki Realm"], 4],
 }
 const HERB_PROPS := ["bush", "bush_gloom", "bush_dry"]

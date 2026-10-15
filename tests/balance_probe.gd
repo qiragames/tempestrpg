@@ -86,6 +86,8 @@ func _wear(rarity: int) -> void:
         actor.equip(_sets[rarity][slot].id, slot)
 
 func _fight(race: String, tier: int, level: int, skill: String, rarity: int = -1) -> Dictionary:
+    # The probe measures daytime fights (night creatures bite harder): every fight starts at 08:00.
+    world.progression.world_time = 0.0
     # A lost fight goes through the game's own respawn (it re-enables the Magicule pool).
     if actor.get_node("Health").current <= 0:
         actor.session.respawn_character(actor)
@@ -156,6 +158,7 @@ func _run() -> void:
     await _frames()
     for enemy in get_nodes_in_group("enemies"):
         enemy.set_physics_process(false)
+        enemy.set_process(false)
         enemy.position += Vector2(4000, 4000)
     actor = world.get_local_player()
     await _frames(2)

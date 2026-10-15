@@ -100,6 +100,60 @@ func _run() -> void:
     await _frames(3)
     var expected := int(round(preload("res://scripts/progression/leveling.gd").defeat_xp(zeni_level, creature.difficulty) * DAY.NIGHT_XP))
     _check(int(actor.progression.experience) - xp == expected, "Night kills give 10%% more XP (%d)" % (int(actor.progression.experience) - xp))
+    # M9b: night and weather catches.
+    var fishes := preload("res://scripts/professions/fish_catalogue.gd")
+    var rng := RandomNumberGenerator.new()
+    rng.seed = 21
+    var by_day := {}
+    var by_night := {}
+    var in_storm := {}
+    for _i in range(6000):
+        by_day[fishes.pick("Verdant Isle", false, 3, 50, rng, false, "clear")] = true
+        by_night[fishes.pick("Verdant Isle", false, 3, 50, rng, true, "clear")] = true
+        in_storm[fishes.pick("Verdant Isle", false, 3, 50, rng, false, "storm")] = true
+    _check(not by_day.has("lantern_angler") and by_night.has("lantern_angler") and in_storm.has("thunder_eel") and not by_day.has("thunder_eel") and not by_day.has("moonfish"), "Some fish only bite at night or in thunderstorms")
+    _check(fishes.entries().any(func(row): return row[4] == "ghost_koi" and String(row[2]).contains("at night")), "The fish log says when they bite")
+    # Night stalkers sleep by day.
+    var stalker: Node2D = world.entity_by_id("night_meadow_a")
+    _check(stalker != null and stalker.difficulty == 2 and stalker.level == 6, "A night stalker waits at every leveling spot (an elite, three levels above it)")
+    world.progression.world_time = _at_hour(12.0)
+    stalker.set_physics_process(true)
+    await _frames(3)
+    var hp: int = stalker.get_node("Health").current
+    stalker.get_node("Health").take_damage(10, actor)
+    _check(stalker.dormant() and not stalker.visible and stalker.get_node("CollisionShape2D").disabled and stalker.get_node("Health").current == hp, "By day it sleeps: hidden and untouchable")
+    world.progression.world_time = _at_hour(23.0)
+    await _frames(3)
+    stalker.get_node("Health").immunity_left = 0.0
+    stalker.get_node("Health").take_damage(10, actor)
+    _check(not stalker.dormant() and stalker.visible and not stalker.get_node("CollisionShape2D").disabled and stalker.get_node("Health").current < hp, "At night it hunts")
+    stalker.set_physics_process(false)
+    # Night herbs.
+    var plan: Array = world.terrain.planned_props()
+    var bush := -1
+    for index in range(plan.size()):
+        if world.nodes.info(index).get("resource") == "herb_mint":
+            bush = index
+            break
+    actor.global_position = world.nodes.work_point(bush) + Vector2(0, 6)
+    world.terrain.ensure_props_at(actor.global_position)
+    var herb_rng := RandomNumberGenerator.new()
+    herb_rng.seed = 3
+    for _i in range(200):
+        world.nodes.regrow.clear()
+        world.nodes.used.clear()
+        world.nodes.strike(actor, bush, herb_rng)
+    _check(actor.get_node("Inventory").count_of("herb_moonbloom") > 0, "Picking herbs at night turns up Moonblooms")
+    # Saves: older worlds get the night stalkers.
+    _check(session.save_world() == OK, "Saved")
+    var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(dir.path_join("day.json")))
+    var old: Dictionary = raw.duplicate(true)
+    old.version = 35
+    old.enemies = old.enemies.filter(func(enemy): return not String(enemy.id).begins_with("night_"))
+    old.respawns = old.respawns.filter(func(entry): return not String(entry.id).begins_with("night_"))
+    var store := preload("res://scripts/persistence/save_store.gd")
+    var migrated: Variant = store.migrate(old)
+    _check(migrated is Dictionary and migrated.enemies.any(func(enemy): return enemy.id == "night_sky_b") and store.validate(migrated), "v35 worlds get the night stalkers")
     world.queue_free()
     await _frames()
     session.stop_session(false)

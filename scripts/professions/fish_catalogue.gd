@@ -47,6 +47,15 @@ const FISH := {
     "ki_carp": ["Ki Carp", 120, "The Ki Realm", 38, 1, 10],
     # M7b: the Eastern Reaches.
     "goldfin": ["Goldfin", 70, "Goldwind Steppe", 22, 1, 10],
+    # M9b: only at night or in some weather (see CONDITIONS).
+    "nightglow_minnow": ["Nightglow Minnow", 40, "any", 5, 1, 8],
+    "rain_trout": ["Rain Trout", 55, "lake", 8, 1, 8],
+    "lantern_angler": ["Lantern Angler", 240, "sea", 20, 2, 8],
+    "thunder_eel": ["Thunder Eel", 300, "sea", 26, 2, 8],
+    "sandglass_fish": ["Sandglass Fish", 200, "Sunscorch Desert", 16, 2, 10],
+    "frostmoon_carp": ["Frostmoon Carp", 520, "Frostpeak", 24, 3, 10],
+    "ghost_koi": ["Ghost Koi", 640, "Gloomveil", 31, 3, 10],
+    "mist_carp": ["Mist Carp", 320, "Jade Terraces", 35, 2, 10],
     "void_eel": ["Void Eel", 95, "Gloomveil", 29, 1, 10],
     "jade_koi": ["Jade Koi", 110, "Jade Terraces", 35, 1, 10],
     # Rare.
@@ -82,6 +91,33 @@ const FISH := {
     "shenlong_koi": ["Shenlong Koi", 60000, "The Ki Realm", 48, 5, 10],
 }
 
+## M9b (user request: night- and weather-only catches): when a fish bites at all — "night",
+## "day", "wet" (rain, storm, monsoon), "storm", "snow", "sandstorm" or "fog" (fog, gloom mist).
+const CONDITIONS := {
+    "moonfish": "night", "crystal_eel": "night", "storm_shark": "storm", "kraken": "storm",
+    "nightglow_minnow": "night", "rain_trout": "wet", "lantern_angler": "night", "thunder_eel": "storm",
+    "frostmoon_carp": "snow", "sandglass_fish": "sandstorm", "ghost_koi": "night", "mist_carp": "fog",
+}
+const CONDITION_TEXT := {"night": "at night", "day": "by day", "wet": "in the rain", "storm": "in thunderstorms", "snow": "while it snows", "sandstorm": "in sandstorms", "fog": "in fog or mist"}
+
+static func condition_met(id: String, night: bool, weather: String) -> bool:
+    match CONDITIONS.get(id, ""):
+        "night":
+            return night
+        "day":
+            return not night
+        "wet":
+            return weather in ["rain", "storm", "monsoon"]
+        "storm":
+            return weather == "storm"
+        "snow":
+            return weather == "snow"
+        "sandstorm":
+            return weather == "sandstorm"
+        "fog":
+            return weather in ["fog", "gloom_mist"]
+    return true
+
 static func is_fish(id: String) -> bool:
     return FISH.has(id)
 
@@ -101,11 +137,11 @@ static func bites_here(id: String, region: String, lake: bool) -> bool:
 
 ## The fish that bites (host): rarity weights, raised for rare fish by the rod and Fishing
 ## milestones (30: ×1.5 Rare and better, 40: ×2 Mythical).
-static func pick(region: String, lake: bool, rod: int, level: int, rng: RandomNumberGenerator) -> String:
+static func pick(region: String, lake: bool, rod: int, level: int, rng: RandomNumberGenerator, night: bool = false, weather: String = "clear") -> String:
     var pool: Array = []
     var total := 0.0
     for id in FISH:
-        if not bites_here(id, region, lake):
+        if not bites_here(id, region, lake) or not condition_met(id, night, weather):
             continue
         var rarity: int = FISH[id][4]
         var weight: float = RARITY_WEIGHT[rarity] * float(FISH[id][5]) / 10.0
@@ -141,5 +177,8 @@ static func xp_for(id: String) -> int:
 static func entries() -> Array:
     var rows: Array = []
     for id in FISH:
-        rows.append([FISH[id][0], int(FISH[id][3]), String(FISH[id][2]).replace("lake@", "lakes of ").replace("sea@", "sea off "), int(FISH[id][4]), id])
+        var where: String = String(FISH[id][2]).replace("lake@", "lakes of ").replace("sea@", "sea off ")
+        if CONDITIONS.has(id):
+            where += ", " + CONDITION_TEXT[CONDITIONS[id]]
+        rows.append([FISH[id][0], int(FISH[id][3]), where, int(FISH[id][4]), id])
     return rows
