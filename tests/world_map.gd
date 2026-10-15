@@ -149,6 +149,20 @@ func _run() -> void:
     var realm_at := Vector2i(preload("res://scripts/realm/realm_catalogue.gd").ARRIVAL_TILE) - MAP.MIN
     _check(hud.world_map.world_texture().get_image().get_pixelv(realm_at) == hud.world_map.COLORS.ocean and hud.world_map.image().get_pixelv(realm_at) != hud.world_map.COLORS.ocean and hud.world_map._title.text.ends_with("ARCHIPELAGO"), "The normal map hides the Ki Realm under open sea")
     _check(hud.world_map.image().get_pixelv(Vector2i(5, 5)) == hud.world_map.COLORS.ocean, "The map shows the sea and land in their colours")
+    # Detail and zoom (user feedback): props marked on the picture, the mouse wheel zooms in.
+    var detail: Image = hud.world_map.detail_image()
+    var differs := 0
+    var plain: Image = hud.world_map.image()
+    for prop in preload("res://scripts/world/world_terrain.gd").planned_props().slice(0, 200):
+        var at := Vector2i(((Vector2(prop[1]) - MAP.ORIGIN) / MAP.TILE).floor()) - MAP.MIN
+        if detail.get_pixelv(at) != plain.get_pixelv(at):
+            differs += 1
+    _check(differs > 100, "Trees, rocks and buildings are marked on the map (%d of 200)" % differs)
+    var scale_before: float = hud.world_map._scale
+    hud.world_map.zoom_at(hud.world_map._canvas.size / 2.0, 4.0)
+    _check(hud.world_map.zoom == 4.0 and is_equal_approx(hud.world_map._scale, scale_before * 4.0), "The mouse wheel zooms in (4x)")
+    hud.world_map.zoom_at(Vector2.ZERO, 0.01)
+    _check(hud.world_map.zoom == 1.0, "…and back out to the whole map")
     hud.world_map.close()
     _check(not paused and not hud.world_map.visible, "Closing the map resumes")
     hud.open_pause()

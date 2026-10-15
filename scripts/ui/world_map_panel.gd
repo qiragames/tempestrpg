@@ -75,10 +75,75 @@ static func image() -> Image:
             picture.set_pixel(x - MAP.MIN.x, y - MAP.MIN.y, color)
     return picture
 
+## --- Detail (user feedback: the map looked like a sketch): trees, rocks and buildings are
+## marked on the picture; zoomed in, the real pixel-art props are drawn at small size.
+const TERRAIN := preload("res://scripts/world/world_terrain.gd")
+static var _detail: Image
+static var _full_texture: ImageTexture
+static var _sheets: Dictionary = {}
+
+## The colour a prop leaves on the map ([colour, size in pixels]; size 0 = not drawn).
+static func prop_mark(id: String) -> Array:
+    if id.begins_with("pine") or id.begins_with("tree_snow"):
+        return [Color("2e5a34") if not id.contains("snow") else Color("d8e2ea"), 1]
+    if id in ["tree_big", "tree_round"]:
+        return [Color("3c7430"), 1]
+    if id == "tree_autumn":
+        return [Color("b8642a"), 1]
+    if id == "tree_dead":
+        return [Color("6e5a44"), 1]
+    if id in ["tree_pink", "tree_blossom"]:
+        return [Color("e48aa8"), 1]
+    if id in ["bamboo", "palm"]:
+        return [Color("4f8a30"), 1]
+    if id.begins_with("boulder"):
+        return [Color("8a8a92") if not id.contains("snow") else Color("c8d0d8"), 1]
+    if id.begins_with("ruin"):
+        return [Color("8a7f72"), 2]
+    if id in ["torii"]:
+        return [Color("c0392b"), 1]
+    if id in ["well", "stall"]:
+        return [Color("8a6a4a"), 1]
+    if id == "wall":
+        return [Color("8a8478"), 1]
+    if id in ["bush", "pebbles", "ferry_boat"]:
+        return [Color(), 0]
+    return [Color("a0522d"), 2]
+
+## The map picture with every planned prop marked (built once the world planned its props).
+static func detail_image() -> Image:
+    if _detail != null:
+        return _detail
+    var picture := image()
+    for prop in TERRAIN.planned_props():
+        var mark := prop_mark(String(prop[0]))
+        if int(mark[1]) == 0:
+            continue
+        var tile := Vector2i(((Vector2(prop[1]) - MAP.ORIGIN) / MAP.TILE).floor()) - MAP.MIN
+        for dy in range(int(mark[1])):
+            for dx in range(int(mark[1])):
+                var at := tile + Vector2i(dx, -dy)
+                if at.x >= 0 and at.y >= 0 and at.x < picture.get_width() and at.y < picture.get_height():
+                    picture.set_pixelv(at, mark[0])
+    if not TERRAIN.planned_props().is_empty():
+        _detail = picture
+    return picture
+
+## The detailed map including the realm (the minimap's picture).
+static func full_texture() -> ImageTexture:
+    if _full_texture == null or _detail == null:
+        _full_texture = ImageTexture.create_from_image(detail_image())
+    return _full_texture
+
+static func sheet(path: String) -> Texture2D:
+    if not _sheets.has(path):
+        _sheets[path] = load(path)
+    return _sheets[path]
+
 ## The world's map without the hidden Ki Realm (painted over as open sea).
 static func world_texture() -> ImageTexture:
-    if _world_texture == null:
-        var picture := image()
+    if _world_texture == null or _detail == null:
+        var picture := detail_image().duplicate()
         var rect := MAP.REALM_RECT
         picture.fill_rect(Rect2i(rect.position - MAP.MIN, rect.size), COLORS.ocean)
         _world_texture = ImageTexture.create_from_image(picture)
@@ -86,9 +151,9 @@ static func world_texture() -> ImageTexture:
 
 ## Only the Ki Realm.
 static func realm_texture() -> ImageTexture:
-    if _realm_texture == null:
+    if _realm_texture == null or _detail == null:
         var rect := MAP.REALM_RECT
-        _realm_texture = ImageTexture.create_from_image(image().get_region(Rect2i(rect.position - MAP.MIN, rect.size)))
+        _realm_texture = ImageTexture.create_from_image(detail_image().get_region(Rect2i(rect.position - MAP.MIN, rect.size)))
     return _realm_texture
 
 func _in_realm() -> bool:
@@ -113,10 +178,12 @@ func _init(owner_hud: CanvasLayer) -> void:
     _canvas = Control.new()
     _canvas.position = IMAGE_AT
     _canvas.size = Vector2(MAP.COLS, MAP.ROWS) * SCALE
-    _canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    _canvas.mouse_filter = Control.MOUSE_FILTER_STOP
+    _canvas.clip_contents = true
     _canvas.draw.connect(_draw_map)
+    _canvas.gui_input.connect(_map_input)
     add_child(_canvas)
-    hud._label("Faded names: reached by ferry (anchors) · squares: towns and villages · gold X: your items · violet: leveling spots · M / Esc: close", FRAME.position + Vector2(14, FRAME.size.y - 22), Vector2(560, 14), self, 9).add_theme_color_override("font_color", UI.TEXT_DIM)
+    hud._label("Mouse wheel: zoom · drag: move · faded names: by ferry · squares: towns · gold X: your items · violet: leveling spots · M / Esc: close", FRAME.position + Vector2(14, FRAME.size.y - 22), Vector2(560, 14), self, 9).add_theme_color_override("font_color", UI.TEXT_DIM)
     hide()
 
 func _process(delta: float) -> void:
@@ -132,12 +199,76 @@ func tile_to_map(tile: Vector2) -> Vector2:
     return _offset + (tile - _view.position) * _scale
 
 ## Whole world, or (inside the Ki Realm) only the realm, scaled to fit and centred.
+## Zoom (mouse wheel, 1x–10x of the fitted map) and the tile in the middle of the canvas.
+const MAX_ZOOM := 10.0
+var zoom := 1.0
+var _fit := 1.0
+var _centre := Vector2.ZERO
+var _dragging := false
+
 func _choose_view() -> void:
     var realm := _in_realm()
     _view = Rect2(MAP.REALM_RECT) if realm else Rect2(Vector2(MAP.MIN), Vector2(MAP.COLS, MAP.ROWS))
-    _scale = minf(_canvas.size.x / _view.size.x, _canvas.size.y / _view.size.y)
-    _offset = ((_canvas.size - _view.size * _scale) / 2.0).round()
+    _fit = minf(_canvas.size.x / _view.size.x, _canvas.size.y / _view.size.y)
+    zoom = 1.0
+    _centre = _view.get_center()
+    _apply_zoom()
     _title.text = "WORLD MAP · THE KI REALM" if realm else "WORLD MAP · THE ARCHIPELAGO"
+
+func _apply_zoom() -> void:
+    _scale = _fit * zoom
+    # Keep the view inside the map (centred when the map is smaller than the canvas).
+    var half := _canvas.size / (2.0 * _scale)
+    var lo := _view.position + half
+    var hi := _view.end - half
+    _centre = Vector2(_view.get_center().x if lo.x > hi.x else clampf(_centre.x, lo.x, hi.x), _view.get_center().y if lo.y > hi.y else clampf(_centre.y, lo.y, hi.y))
+    _offset = (_canvas.size / 2.0 - (_centre - _view.position) * _scale).round()
+
+## Zoom toward a canvas point (the tile under it stays put).
+func zoom_at(point: Vector2, factor: float) -> void:
+    var tile := _view.position + (point - _offset) / _scale
+    zoom = clampf(zoom * factor, 1.0, MAX_ZOOM)
+    _scale = _fit * zoom
+    _centre = tile - (point - _canvas.size / 2.0) / _scale
+    _apply_zoom()
+
+func _map_input(event: InputEvent) -> void:
+    if event is InputEventMouseButton and event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
+        zoom_at(event.position, 1.25 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 0.8)
+        _canvas.accept_event()
+    elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+        _dragging = event.pressed
+    elif event is InputEventMouseMotion and _dragging:
+        _centre -= event.relative / _scale
+        _apply_zoom()
+
+## Zoomed in, the real props are drawn small (only those in view).
+func _draw_props() -> void:
+    if _scale < 2.5:
+        return
+    var lo := _view.position + (-_offset) / _scale - Vector2(3, 3)
+    var hi := _view.position + (_canvas.size - _offset) / _scale + Vector2(3, 6)
+    var size := _scale / MAP.TILE
+    for prop in TERRAIN.planned_props():
+        var foot: Vector2 = prop[1]
+        var tile := (foot - MAP.ORIGIN) / MAP.TILE
+        if tile.x < lo.x or tile.y < lo.y or tile.x > hi.x or tile.y > hi.y or not _shown(tile):
+            continue
+        var spec: Array = TERRAIN.PROPS.get(String(prop[0]), [])
+        if spec.is_empty():
+            continue
+        var region: Rect2 = spec[1]
+        var at := tile_to_map(tile)
+        _canvas.draw_texture_rect_region(sheet(spec[0]), Rect2(at - Vector2(region.size.x / 2.0, region.size.y) * size, region.size * size), region)
+    # The clearing's own seeded trees and rocks.
+    var art := preload("res://scripts/visual/world_art.gd")
+    for entry in [["tree", hud.get_parent().layout.get("trees", [])], ["rock", hud.get_parent().layout.get("rocks", [])]]:
+        var spec: Array = art.PROPS[entry[0]]
+        var region: Rect2 = spec[1]
+        for spot in entry[1]:
+            var at := to_map(spot.get_center() + Vector2(0, spot.size.y / 2.0) if spot is Rect2 else spot)
+            if at.x > -20 and at.y > -20 and at.x < _canvas.size.x + 20 and at.y < _canvas.size.y + 20:
+                _canvas.draw_texture_rect_region(spec[0], Rect2(at - Vector2(region.size.x / 2.0, region.size.y * 0.75) * size, region.size * size), region)
 
 func _shown(tile: Vector2) -> bool:
     return MAP.REALM_RECT.has_point(Vector2i(tile.floor())) == _in_realm()
@@ -146,6 +277,7 @@ func _draw_map() -> void:
     var realm := _in_realm()
     _canvas.draw_rect(Rect2(Vector2.ZERO, _canvas.size), COLORS.ocean)
     _canvas.draw_texture_rect(realm_texture() if realm else world_texture(), Rect2(_offset, _view.size * _scale), false)
+    _draw_props()
     _canvas.draw_rect(Rect2(Vector2(-1, -1), _canvas.size + Vector2(2, 2)), UI.GOLD_DARK, false, 1.0)
     var font: Font = _canvas.get_theme_default_font()
     if realm:

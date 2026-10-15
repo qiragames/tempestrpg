@@ -40,8 +40,8 @@ func _init(owner_hud: CanvasLayer) -> void:
     set_meta("ring", ring)
 
 static func texture() -> ImageTexture:
-    if _texture == null:
-        _texture = ImageTexture.create_from_image(preload("res://scripts/ui/world_map_panel.gd").image())
+    # The detailed picture appears once the world has planned its props (cached there).
+    _texture = preload("res://scripts/ui/world_map_panel.gd").full_texture()
     return _texture
 
 func _draw() -> void:
@@ -68,6 +68,32 @@ func _draw_view() -> void:
     var tile: Vector2 = (centre - MAP.ORIGIN) / MAP.TILE - Vector2(MAP.MIN)
     var span: float = size.x / ZOOM
     _view.draw_texture_rect_region(texture(), Rect2(Vector2.ZERO, size), Rect2(tile - Vector2(span, span) / 2.0, Vector2(span, span)))
+    # The real trees, rocks and buildings around you, drawn small (user feedback).
+    var terrain := preload("res://scripts/world/world_terrain.gd")
+    var map_panel := preload("res://scripts/ui/world_map_panel.gd")
+    var here: Vector2i = terrain.chunk_of(centre)
+    var shrink := ZOOM / MAP.TILE
+    for dy in range(-1, 2):
+        for dx in range(-1, 2):
+            for index in terrain._chunks.get(here + Vector2i(dx, dy), []):
+                var prop: Array = terrain.planned_props()[index]
+                var spec: Array = terrain.PROPS.get(String(prop[0]), [])
+                if spec.is_empty():
+                    continue
+                var at := to_minimap(prop[1], centre)
+                if at.distance_to(size / 2) > RADIUS - 4:
+                    continue
+                var region: Rect2 = spec[1]
+                _view.draw_texture_rect_region(map_panel.sheet(spec[0]), Rect2(at - Vector2(region.size.x / 2.0, region.size.y) * shrink, region.size * shrink), region)
+    # The clearing's own seeded trees and rocks.
+    var art := preload("res://scripts/visual/world_art.gd")
+    for entry in [["tree", hud.get_parent().layout.get("trees", [])], ["rock", hud.get_parent().layout.get("rocks", [])]]:
+        var spec: Array = art.PROPS[entry[0]]
+        for spot in entry[1]:
+            var at := to_minimap(spot.get_center() + Vector2(0, spot.size.y / 2.0) if spot is Rect2 else spot, centre)
+            if at.distance_to(size / 2) <= RADIUS - 4:
+                var region: Rect2 = spec[1]
+                _view.draw_texture_rect_region(spec[0], Rect2(at - Vector2(region.size.x / 2.0, region.size.y * 0.75) * shrink, region.size * shrink), region)
     var world: Node = hud.get_parent()
     var known: Array = me.progression.get("spots", [])
     for spot in REGION.SPOTS:
