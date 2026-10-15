@@ -58,6 +58,11 @@ const MAP := preload("res://scripts/world/world_map.gd")
 const PLACE_REACH := 200.0
 ## Placed buildings' nodes by building ID (presentation and collision, rebuilt from the state).
 var _placed: Dictionary = {}
+## M5b: citizens walking around their homes (presentation on every peer) and the redraw timer of
+## the fields' crops.
+var _walkers: Dictionary = {}
+var _field_redraw := 0.0
+const SPRITES := preload("res://scripts/visual/sprite_library.gd")
 ## This world's deposits (positions/amounts depend on the seed).
 var sites: Dictionary = DEPOSITS
 var state: Dictionary = initial_state()
@@ -113,7 +118,7 @@ static func valid_state(value: Variant, players: Dictionary, table: Dictionary =
     if not _whole(value.get("essence_offered")) or (not value.founded and value.essence_offered != 0):
         return false
     # M5a: the nation's tiers and buildings (their costs are spent from the stock below).
-    if not NATION.valid(value.get("nation"), value.founded):
+    if not NATION.valid(value.get("nation"), value.founded, value):
         return false
     if not value.get("refills") is Dictionary or not value.get("refill_left") is Dictionary:
         return false
@@ -274,10 +279,103 @@ func demolish(id: String) -> bool:
     for index in range(state.nation.buildings.size()):
         if state.nation.buildings[index].id == id:
             state.nation.buildings.remove_at(index)
+            state.nation.fields.erase(id)
+            # Its residents move to another free home, or leave the nation.
+            for citizen in state.nation.citizens.duplicate():
+                if citizen.home == id:
+                    state.nation.citizens.erase(citizen)
+                    var home := NATION.free_home(state.nation, state)
+                    if not home.is_empty():
+                        citizen.home = home
+                        state.nation.citizens.append(citizen)
             _sync_placed()
             queue_redraw()
             return true
     return false
+
+## --- M5b: citizens, food and fields (host)
+func population() -> int:
+    return state.nation.citizens.size()
+
+func food() -> int:
+    return int(state.nation.food)
+
+## The field a character stands at ("" if none).
+func nearest_field(actor: Node2D) -> String:
+    for entry in state.nation.buildings:
+        if entry.kind == "field" and NATION.footprint("field", Vector2i(entry.tile[0], entry.tile[1])).grow(NATION.FIELD_REACH - 16.0).has_point(actor.global_position):
+            return entry.id
+    return ""
+
+## A field's crop and how far it has grown (0..1; -1 when empty).
+func field_growth(id: String) -> float:
+    var plot: Dictionary = state.nation.fields.get(id, {})
+    return -1.0 if plot.is_empty() else clampf(float(plot.age) / float(NATION.CROPS[plot.crop][1]), 0.0, 1.0)
+
+func plant(actor: Node2D, id: String, crop: String) -> bool:
+    if not AUTHORITY.can_mutate(self) or not NATION.CROPS.has(crop) or NATION.building(state.nation, id).get("kind", "") != "field" or state.nation.fields.has(id):
+        return false
+    if actor != null and nearest_field(actor) != id:
+        return false
+    state.nation.fields[id] = {"crop": crop, "age": 0.0}
+    _redraw_fields()
+    return true
+
+## Harvest a ripe field: its food goes to the nation's store.
+func harvest_field(actor: Node2D, id: String) -> int:
+    if not AUTHORITY.can_mutate(self) or field_growth(id) < 1.0 or (actor != null and nearest_field(actor) != id):
+        return 0
+    var amount: int = int(NATION.CROPS[state.nation.fields[id].crop][2])
+    amount = mini(amount, NATION.MAX_FOOD - food())
+    state.nation.fields.erase(id)
+    state.nation.food = food() + amount
+    state.nation.grown = int(state.nation.grown) + amount
+    _redraw_fields()
+    return amount
+
+func _tick_nation(delta: float) -> void:
+    if not state.founded:
+        return
+    var nation: Dictionary = state.nation
+    for id in nation.fields:
+        var plot: Dictionary = nation.fields[id]
+        plot.age = minf(float(NATION.CROPS[plot.crop][1]), float(plot.age) + delta)
+    # Newcomers: a free home and a day's food for everyone, them included.
+    nation.arrival = float(nation.arrival) + delta
+    if nation.arrival >= NATION.ARRIVAL_SECONDS:
+        nation.arrival = 0.0
+        var home := NATION.free_home(nation, state)
+        if not home.is_empty() and food() >= (population() + 1) * NATION.FOOD_PER_DAY and population() < NATION.MAX_CITIZENS:
+            var number: int = int(nation.next_citizen)
+            var name: String = NATION.NAMES[(number * 7 + hash(String(nation.name))) % NATION.NAMES.size()]
+            nation.citizens.append({"id": "c_%d" % number, "name": name, "home": home, "look": number % NATION.LOOKS})
+            nation.next_citizen = number + 1
+            _announce("%s moved into your %s." % [name, NATION.tier_name(tier()).to_lower()])
+            get_node("/root/GameSession").queue_save()
+    # Each day everyone eats; too many hungry days and someone leaves.
+    nation.day = float(nation.day) + delta
+    if nation.day >= NATION.DAY_SECONDS:
+        nation.day = float(nation.day) - NATION.DAY_SECONDS
+        var need: int = population() * NATION.FOOD_PER_DAY
+        var eaten: int = mini(need, food())
+        nation.food = food() - eaten
+        nation.eaten = int(nation.eaten) + eaten
+        if eaten < need:
+            nation.hunger = int(nation.hunger) + 1
+            if int(nation.hunger) >= NATION.HUNGRY_DAYS and population() > 0:
+                var gone: Dictionary = nation.citizens.pop_back()
+                nation.hunger = NATION.HUNGRY_DAYS - 1
+                _announce("%s left: there was not enough food." % gone.name)
+            else:
+                _announce("Your citizens are hungry — grow food in your fields.")
+        else:
+            nation.hunger = 0
+        get_node("/root/GameSession").queue_save()
+
+func _announce(message: String) -> void:
+    var session := get_node("/root/GameSession")
+    for actor in get_tree().get_nodes_in_group("player"):
+        session.notify_character(actor.character_id, message)
 
 ## The placed building whose footprint holds a world position ("" if none).
 func building_at(world: Vector2) -> String:
@@ -326,13 +424,21 @@ func _sync_placed() -> void:
         body.name = "Building_%s" % id
         body.position = NATION.foot(tile)
         body.set_meta("building", entry.kind)
-        var shape := CollisionShape2D.new()
-        var box := RectangleShape2D.new()
-        box.size = spec[2]
-        shape.shape = box
-        shape.position = Vector2(0, -spec[2].y / 2.0)
-        body.add_child(shape)
-        if String(spec[1]).is_empty():
+        if not entry.kind in NATION.WALKABLE:
+            var shape := CollisionShape2D.new()
+            var box := RectangleShape2D.new()
+            box.size = spec[2]
+            shape.shape = box
+            shape.position = Vector2(0, -spec[2].y / 2.0)
+            body.add_child(shape)
+        if entry.kind == "field":
+            # Fields lie flat: sorted from their top edge, so anyone standing on them is drawn above.
+            body.position.y -= spec[2].y
+            var crops := Node2D.new()
+            crops.name = "Crops"
+            crops.draw.connect(_draw_field.bind(crops, id))
+            body.add_child(crops)
+        elif String(spec[1]).is_empty():
             var flag := Node2D.new()
             flag.name = "Flag"
             flag.draw.connect(_draw_banner.bind(flag))
@@ -349,6 +455,100 @@ func _sync_placed() -> void:
             body.add_child(sprite)
         get_parent().add_child.call_deferred(body)
         _placed[id] = body
+
+## Soil with furrows; the crop's sprouts grow and turn their colour when ripe.
+func _draw_field(canvas: Node2D, id: String) -> void:
+    var size: Vector2 = NATION.BUILDINGS.field[2]
+    var area := Rect2(Vector2(-size.x / 2.0, 0), size)
+    canvas.draw_rect(area, Color("6e4a2f"))
+    canvas.draw_rect(area, Color("4f3420"), false, 1.0)
+    for row in range(4):
+        canvas.draw_line(Vector2(area.position.x + 2, 4 + row * 8), Vector2(area.end.x - 2, 4 + row * 8), Color("5a3b25"), 2.0)
+    var growth := field_growth(id)
+    if growth < 0.0:
+        return
+    var crop: String = state.nation.fields[id].crop
+    var ripe: Color = NATION.CROPS[crop][3]
+    var green := Color("5fae3c")
+    for row in range(4):
+        for column in range(5):
+            var at := Vector2(area.position.x + 4 + column * 6, 5 + row * 8)
+            var height := 1.0 + growth * 4.0
+            canvas.draw_line(at, at - Vector2(0, height), green, 1.0)
+            if growth >= 1.0:
+                canvas.draw_circle(at - Vector2(0, height), 1.6 if crop == "wheat" else 2.0, ripe)
+            elif growth > 0.4:
+                canvas.draw_circle(at - Vector2(0, height), 1.0, green.lightened(0.2))
+
+func _redraw_fields() -> void:
+    for node in _placed.values():
+        if is_instance_valid(node) and node.has_node("Crops"):
+            node.get_node("Crops").queue_redraw()
+
+## Citizens wander near their homes (every peer; positions are not replicated).
+func _process(delta: float) -> void:
+    _field_redraw -= delta
+    if _field_redraw <= 0.0:
+        _field_redraw = 1.0
+        _redraw_fields()
+    var wanted := {}
+    for citizen in state.nation.citizens:
+        wanted[citizen.id] = citizen
+    for id in _walkers.keys():
+        if not wanted.has(id):
+            if is_instance_valid(_walkers[id]):
+                _walkers[id].queue_free()
+            _walkers.erase(id)
+    for id in wanted:
+        var citizen: Dictionary = wanted[id]
+        var home := _home_position(citizen.home)
+        var walker: Node2D = _walkers.get(id)
+        if not is_instance_valid(walker):
+            walker = Node2D.new()
+            walker.name = "Citizen_%s" % id
+            walker.add_to_group("citizens")
+            walker.set_meta("target", home)
+            walker.set_meta("rest", 0.0)
+            var spread: int = hash(id)
+            walker.position = home + Vector2(float(spread % 61) - 30.0, 8.0 + float((spread / 61) % 25))
+            var body := SPRITES.make("citizen_%d" % (int(citizen.look) + 1))
+            body.name = "Body"
+            walker.add_child(body)
+            var label := Label.new()
+            label.text = citizen.name
+            label.add_theme_font_size_override("font_size", 6)
+            label.position = Vector2(-20, -24)
+            label.size = Vector2(40, 8)
+            label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+            label.modulate = Color(1, 1, 1, 0.75)
+            walker.add_child(label)
+            get_parent().add_child.call_deferred(walker)
+            _walkers[id] = walker
+            continue
+        if not walker.is_inside_tree():
+            continue
+        var target: Vector2 = walker.get_meta("target")
+        var rest: float = walker.get_meta("rest") - delta
+        var body: AnimatedSprite2D = walker.get_node("Body")
+        if rest > 0.0:
+            walker.set_meta("rest", rest)
+            SPRITES.play(body, "idle_down")
+        elif walker.position.distance_to(target) < 2.0:
+            # Pick the next spot near home (deterministic per citizen and moment).
+            var seed_value: int = hash("%s:%d" % [id, int(Time.get_ticks_msec() / 1000)])
+            var offset := Vector2(float(seed_value % 97) - 48.0, float((seed_value / 97) % 61) - 20.0)
+            walker.set_meta("target", home + offset)
+            walker.set_meta("rest", 1.5 + float(seed_value % 30) / 10.0)
+        else:
+            var step: Vector2 = (target - walker.position).limit_length(18.0 * delta)
+            walker.position += step
+            SPRITES.play(body, "walk_" + SPRITES.direction_name(step.normalized()))
+
+func _home_position(home: String) -> Vector2:
+    if home == NATION.CAMP_HUT:
+        return HUT_SITE + Vector2(0, 16)
+    var entry: Dictionary = NATION.building(state.nation, home)
+    return NATION.foot(Vector2i(entry.tile[0], entry.tile[1])) + Vector2(0, 6) if not entry.is_empty() else SITE
 
 ## A pole with the nation's flag in its colour, emblem drawn small.
 func _draw_banner(canvas: Node2D) -> void:
@@ -531,6 +731,17 @@ func transact(actor: Node2D, operation: String, id: String) -> bool:
             if not state.founded or not can_reach_point(actor, id) or not demolish(id):
                 return false
             message = "Building torn down (its materials are lost)."
+        "plant":
+            # M5b: "field_id:crop".
+            var pick := id.split(":")
+            if pick.size() != 2 or not plant(actor, pick[0], pick[1]):
+                return false
+            message = "%s planted. Come back when they are ripe." % NATION.CROPS[pick[1]][0]
+        "harvest":
+            var gained := harvest_field(actor, id)
+            if gained <= 0:
+                return false
+            message = "Harvested %d food for the nation's store (%d stored)." % [gained, food()]
         "rank":
             var problem := NATION.tier_problem(state.nation, state) if state.founded else "Found the camp first."
             if not problem.is_empty() or not can_reach(actor, SITE, 55):
@@ -608,6 +819,7 @@ func _physics_process(delta: float) -> void:
     if not AUTHORITY.can_mutate(self):
         return
     _refill(delta)
+    _tick_nation(delta)
     if not state.shrine:
         return
     # Resting at the shrine doubles recovery once the character's normal regeneration delay has passed.

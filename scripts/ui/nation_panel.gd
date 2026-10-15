@@ -83,7 +83,7 @@ func _init(owner_hud: CanvasLayer) -> void:
         emblem.pressed.connect(func(): _send("banner", "%d,%d" % [int(_nation().color), index]))
         _emblems.append(emblem)
     # Tier.
-    _tier = hud._label("", FRAME.position + Vector2(16, 86), Vector2(FRAME.size.x - 130, 40), window, 9)
+    _tier = hud._label("", FRAME.position + Vector2(16, 84), Vector2(FRAME.size.x - 130, 46), window, 9)
     _rank = hud._button("Rank up", FRAME.position + Vector2(FRAME.size.x - 108, 90), Vector2(96, 26), window)
     _rank.pressed.connect(func(): _send("rank", "next"))
     # Buildings.
@@ -159,7 +159,9 @@ func _refresh() -> void:
         button.disabled = not founder
     var problem := NATION.tier_problem(nation, camp().state)
     var next: int = int(nation.tier) + 1
-    _tier.text = "%s with %d buildings · stock %d wood, %d stone, %d essence\n%s" % [NATION.tier_name(int(nation.tier)), nation.buildings.size(), camp().state.wood, camp().state.stone, camp().state.essence,
+    var hungry: String = " · HUNGRY" if int(nation.hunger) > 0 else ""
+    _tier.text = "%s with %d buildings · stock %d wood, %d stone, %d essence\nPopulation %d / %d homes · food %d (%d a day)%s · next newcomer in %d s\n%s" % [NATION.tier_name(int(nation.tier)), nation.buildings.size(), camp().state.wood, camp().state.stone, camp().state.essence,
+        nation.citizens.size(), NATION.housing(nation, camp().state), int(nation.food), nation.citizens.size() * NATION.FOOD_PER_DAY, hungry, int(ceil(NATION.ARRIVAL_SECONDS - float(nation.arrival))),
         ("Next: %s (%s) — ready! Rank up at the camp flag." % [NATION.TIERS[next][0], NATION.cost_text(NATION.TIERS[next][2])]) if problem.is_empty() else problem]
     _rank.disabled = not problem.is_empty() or not camp().can_reach(hud.player, camp().SITE, 55)
     for kind in _build_buttons:

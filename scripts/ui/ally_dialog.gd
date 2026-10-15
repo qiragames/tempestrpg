@@ -29,6 +29,25 @@ func _ready() -> void:
     _close.pressed.connect(close_dialog)
     hide()
 
+## M5b: a field's choices — plant a crop, wait, or harvest.
+func _talk_field(camp_node: Node2D, field: String) -> void:
+    var NATION := preload("res://scripts/nation/nation_catalogue.gd")
+    var send := func(operation: String, id: String):
+        session.request_action("camp", {"operation": operation, "id": id})
+    var growth: float = camp_node.field_growth(field)
+    if growth < 0.0:
+        var options: Array = []
+        for crop in NATION.CROPS:
+            var spec: Array = NATION.CROPS[crop]
+            options.append(["Plant %s (ripe in %d min, %d food)" % [spec[0].to_lower(), int(spec[1] / 60.0), spec[2]], send.bind("plant", "%s:%s" % [field, crop])])
+        options.append(["Leave it fallow.", func(): pass])
+        hud.dialog_panel.open("Field", "Bare soil, ready for seed. Citizens eat %d food a day each." % NATION.FOOD_PER_DAY, options)
+    elif growth >= 1.0:
+        session.request_action("camp", {"operation": "harvest", "id": field})
+    else:
+        var crop: String = camp_node.state.nation.fields[field].crop
+        session.notify_character(hud.player.character_id, "%s growing: %d%%." % [NATION.CROPS[crop][0], int(growth * 100.0)])
+
 ## M4.7: what a realm person says and offers (requests go to the host, which decides).
 func _talk_realm(person: String) -> void:
     var REALM := preload("res://scripts/realm/realm_catalogue.gd")
@@ -71,6 +90,13 @@ func open_nearest() -> void:
         var fallen: String = party.revivable_near(hud.player)
         if not fallen.is_empty():
             session.request_action("party", {"operation": "revive", "id": fallen})
+            return
+    # M5b: F at one of your fields plants or harvests.
+    var camp_node = hud.get_parent().get("camp")
+    if camp_node != null and camp_node.state.founded:
+        var field: String = camp_node.nearest_field(hud.player)
+        if not field.is_empty():
+            _talk_field(camp_node, field)
             return
     # M4.7: the Ki Realm's people, the wish altar and the orbs.
     var realm = hud.get_parent().get("realm")

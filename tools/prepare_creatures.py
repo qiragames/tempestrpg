@@ -48,6 +48,9 @@ NPCS = {
     # Ki Realm (M4.7): the secret hermit (Sakura Vale), the realm's guide home, mentors, the announcer.
     "secret_hermit": "OldMan3", "realm_guide": "OldMan3", "turtle_sage": "Master", "spire_sage": "CaveLion",
     "guardian": "MaskFrog", "canyon_hermit": "Caveman2", "mountain_master": "Tengu", "announcer": "Villager5",
+    # M5b: citizens of your nation.
+    "citizen_1": "Villager2", "citizen_2": "Villager3", "citizen_3": "Villager4", "citizen_4": "Villager6",
+    "citizen_5": "Boy", "citizen_6": "Cavegirl",
 }
 
 

@@ -924,6 +924,44 @@ func _run() -> void:
     showcase.position = nation_camp.SITE + Vector2(0, 50)
     await _wait(0.4)
     await _shot("village", "Tempest Federation, now a village: freely placed houses, a well and the blue star banner around the camp")
+    _log("## 23. Citizens, fields and food (M5b)")
+    var field_ids: Array = []
+    for _i in range(3):
+        var done := false
+        for ring in range(4, 12):
+            if done:
+                break
+            for dy in range(-ring, ring + 1):
+                if done:
+                    break
+                for dx in range(-ring, ring + 1):
+                    if maxi(absi(dx), absi(dy)) == ring and nation_camp.place(null, "field", centre + Vector2i(dx, dy)):
+                        field_ids.append(nation_camp.state.nation.buildings[-1].id)
+                        done = true
+                        break
+    _check(field_ids.size() == 3, "Three fields placed")
+    var crops: Array = ["wheat", "carrot", "pumpkin"]
+    for index in range(field_ids.size()):
+        nation_camp.plant(null, field_ids[index], crops[index])
+    nation_camp._tick_nation(nation_data.CROPS.wheat[1])
+    _check(nation_camp.harvest_field(null, field_ids[0]) > 0, "Wheat harvested")
+    nation_camp.plant(null, field_ids[0], "wheat")
+    nation_camp._tick_nation(60.0)
+    var field_entry: Dictionary = nation_data.building(nation_camp.state.nation, field_ids[0])
+    showcase.position = nation_data.footprint("field", Vector2i(field_entry.tile[0], field_entry.tile[1])).get_center() + Vector2(0, 26)
+    # Food for newcomers, then a few arrive.
+    nation_camp.state.nation.food = int(nation_camp.state.nation.food) + 30
+    nation_camp.state.nation.grown = int(nation_camp.state.nation.grown) + 30
+    for _i in range(6):
+        nation_camp._tick_nation(nation_data.ARRIVAL_SECONDS)
+    _check(nation_camp.population() >= 4, "Citizens moved into the homes")
+    showcase.position = nation_camp.SITE + Vector2(-40, -30)
+    await _wait(3.0)
+    await _shot("citizens_fields", "Citizens walk about the village; fields of wheat, carrots and pumpkins grow (F to plant and harvest)")
+    hud_nation.nation_panel.open()
+    await _wait(0.3)
+    await _shot("population", "The nation window: population and homes, the food store and what it eats a day, the next newcomer")
+    hud_nation.nation_panel.close_panel()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

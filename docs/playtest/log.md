@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.1 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.0 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -299,7 +299,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (640x360)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Rare Spirit Amulet
+- [x] The chest gave an Uncommon-or-better item: Rare Scale Mail
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (640x360)
@@ -576,6 +576,18 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 ![Tempest Federation, now a village: freely placed houses, a well and the blue star banner around the camp](101_village.png)
 *Tempest Federation, now a village: freely placed houses, a well and the blue star banner around the camp* (640x360)
 
+## 23. Citizens, fields and food (M5b)
+- [x] Three fields placed
+- [x] Wheat harvested
+- [x] Citizens moved into the homes
+
+![Citizens walk about the village; fields of wheat, carrots and pumpkins grow (F to plant and harvest)](102_citizens_fields.png)
+*Citizens walk about the village; fields of wheat, carrots and pumpkins grow (F to plant and harvest)* (640x360)
+
+
+![The nation window: population and homes, the food store and what it eats a day, the next newcomer](103_population.png)
+*The nation window: population and homes, the food store and what it eats a day, the next newcomer* (640x360)
+
 
 ## System messages seen
 
@@ -635,7 +647,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +1500 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Epic Travel Boots.
+- Trial reward: Rare Spirit Amulet.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +21 XP (defeat).
@@ -652,12 +664,12 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Rare Spirit Amulet.
-- +38 Zeni (chest).
+- Chest opened: Rare Scale Mail.
+- +22 Zeni (chest).
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 
 The bot retreated 1 time(s) to let Magicules recover.
 XP assistance for skill points: 550 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 101 screenshots.**
+**Result: 0 failed checks, 103 screenshots.**

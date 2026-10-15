@@ -13,6 +13,13 @@ GODOT = os.environ.get("GODOT_BIN", "godot")
 processes = []
 checks = 0
 
+def settled(camp):
+    """The camp without the nation's running clocks (M5b: the day and the next newcomer keep ticking on the host)."""
+    camp = json.loads(json.dumps(camp))
+    for key in ("day", "arrival"):
+        camp.get("nation", {}).pop(key, None)
+    return camp
+
 def check(ok, message):
     global checks
     checks += 1
@@ -77,7 +84,7 @@ try:
             check(result["menu_local"], "Camp menu keeps shared simulation running")
             state = result["camp"]
             check(all(state[k] == v for k, v in expected.items()), f"{phase}: concurrent repeated actions resolve once and balance shared resources")
-        check(results[0]["camp"] == results[1]["camp"], "Clients observe identical shared camp state")
+        check(settled(results[0]["camp"]) == settled(results[1]["camp"]), "Clients observe identical shared camp state")
     for i, (proc, _) in enumerate(clients):
         finish(proc, f"guest_{i}")
     finish(host, "host")
@@ -86,9 +93,9 @@ try:
     (WORK / "phase").unlink()
     udp_port = port()
     host, report = start("reload_host", mode="server", port=udp_port, save=save, reload="yes")
-    check(wait(report, "ready")["camp"] == saved["camp"], "Host restart restores complete camp state")
+    check(settled(wait(report, "ready")["camp"]) == settled(saved["camp"]), "Host restart restores complete camp state")
     guest, guest_report = start("resumed", mode="client", port=udp_port, identity=WORK / "identity_0.json", reload="yes")
-    check(wait(guest_report, "restored")["camp"] == saved["camp"], "Returning guest receives restored camp state")
+    check(settled(wait(guest_report, "restored")["camp"]) == settled(saved["camp"]), "Returning guest receives restored camp state")
     check(guest.wait(timeout=8) == 0, "Returning client exits successfully")
     finish(host, "reload_host")
     # Owned worker jobs survive an actual host restart midway through gathering.

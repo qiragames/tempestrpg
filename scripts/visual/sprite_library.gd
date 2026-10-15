@@ -46,6 +46,13 @@ const FOUR := {
     "canyon_hermit": {"walk": "res://assets/game/sprites/canyon_hermit/canyon_hermit_walk.png"},
     "mountain_master": {"walk": "res://assets/game/sprites/mountain_master/mountain_master_walk.png"},
     "announcer": {"walk": "res://assets/game/sprites/announcer/announcer_walk.png"},
+    # M5b citizens.
+    "citizen_1": {"walk": "res://assets/game/sprites/citizen_1/citizen_1_walk.png"},
+    "citizen_2": {"walk": "res://assets/game/sprites/citizen_2/citizen_2_walk.png"},
+    "citizen_3": {"walk": "res://assets/game/sprites/citizen_3/citizen_3_walk.png"},
+    "citizen_4": {"walk": "res://assets/game/sprites/citizen_4/citizen_4_walk.png"},
+    "citizen_5": {"walk": "res://assets/game/sprites/citizen_5/citizen_5_walk.png"},
+    "citizen_6": {"walk": "res://assets/game/sprites/citizen_6/citizen_6_walk.png"},
     "frost_bear": {"walk": "res://assets/game/sprites/frost_bear/frost_bear_walk.png"},
     "snow_wisp": {"walk": "res://assets/game/sprites/snow_wisp/snow_wisp_walk.png"},
     "dune_viper": {"walk": "res://assets/game/sprites/dune_viper/dune_viper_walk.png"},

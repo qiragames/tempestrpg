@@ -69,4 +69,6 @@ Ki Realm (M4.7), same four-direction format:
 | `demon_king` | Character/DemonRed | The canyon's boss and the tournament's final bout |
 | `secret_hermit`, `realm_guide`, `turtle_sage`, `spire_sage`, `guardian`, `canyon_hermit`, `mountain_master`, `announcer` | Character/OldMan3 (both), Master, CaveLion, MaskFrog, Caveman2, Tengu, Villager5 | The hermit in Sakura Vale, the guide, the mentors and the tournament's announcer |
 
+Citizens (M5b): `citizen_1` … `citizen_6` from Character/Villager2, Villager3, Villager4, Villager6, Boy and Cavegirl (same four-direction format).
+
 Licences and credits: see `CREDITS.md` at the repository root and the licence files next to each pack in `assets/source/packs/`.

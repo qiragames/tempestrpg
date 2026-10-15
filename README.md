@@ -4,16 +4,16 @@ A Godot **4.6.3** / GDScript prototype for a top-down pixel-art Isekai RPG.
 
 ## Screenshots
 
-Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 101 captures are in `docs/playtest/` with `docs/playtest/log.md`.
+Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 103 captures are in `docs/playtest/` with `docs/playtest/log.md`.
 
 <table>
+<tr><td align="center"><img src="docs/playtest/102_citizens_fields.png" width="400" alt="Citizens and fields in your village"><br><sub>Citizens and fields in your village</sub></td><td align="center"><img src="docs/playtest/103_population.png" width="400" alt="Population, homes and food (N)"><br><sub>Population, homes and food (N)</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/99_nation_window.png" width="400" alt="The nation window (N): name, banner, tier, buildings"><br><sub>The nation window (N): name, banner, tier, buildings</sub></td><td align="center"><img src="docs/playtest/100_build_mode.png" width="400" alt="Build mode: place buildings freely in your ring"><br><sub>Build mode: place buildings freely in your ring</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/90_realm_hermit.png" width="400" alt="The secret hermit in Sakura Vale"><br><sub>The secret hermit in Sakura Vale</sub></td><td align="center"><img src="docs/playtest/91_dome_city.png" width="400" alt="Dome City in the hidden Ki Realm"><br><sub>Dome City in the hidden Ki Realm</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/94_kaio_surge.png" width="400" alt="Kaio Surge transformation (X)"><br><sub>Kaio Surge transformation (X)</sub></td><td align="center"><img src="docs/playtest/95_turtle_wave.png" width="400" alt="Turtle Wave: a long ki beam"><br><sub>Turtle Wave: a long ki beam</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/98_tournament.png" width="400" alt="The World Martial Grounds tournament"><br><sub>The World Martial Grounds tournament</sub></td><td align="center"><img src="docs/playtest/97_realm_map.png" width="400" alt="Inside the realm the map shows only the realm"><br><sub>Inside the realm the map shows only the realm</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/88_party_frames.png" width="400" alt="In a party: frames and minimap marker"><br><sub>In a party: frames and minimap marker</sub></td><td align="center"><img src="docs/playtest/89_party_window.png" width="400" alt="The party window (P)"><br><sub>The party window (P)</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/77_harbour_map.png" width="400" alt="Harbours: travel by map"><br><sub>Harbours: travel by map</sub></td><td align="center"><img src="docs/playtest/84_own_ship.png" width="400" alt="Your own ship docked at Cinderport"><br><sub>Your own ship docked at Cinderport</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/83_world_map_full.png" width="400" alt="The world: home continent, ferry lands, towns and harbours"><br><sub>The world: home continent, ferry lands, towns and harbours</sub></td><td align="center"><img src="docs/playtest/75_shop_buy.png" width="400" alt="A town merchant's shop (Zeni)"><br><sub>A town merchant's shop (Zeni)</sub></td></tr>
 </table>
 
 ## The world
@@ -25,10 +25,12 @@ The First Clearing is the start of an archipelago of about 10 × 11 screens (M4.
 - Press **N** once your camp is founded. The founder **names the nation** and picks its **banner** (eight colours, six emblems); the name shows in the HUD inside your settlement and on the world map, the banner on every banner pole you build.
 - **Build freely:** pick a building and a ghost follows the mouse on the tile grid — green fits, red tells you why not (water, rock, trees, other buildings, deposits, someone standing there, outside the ring). Left click builds from the camp's shared stock, right click or Esc stops. **Demolish** tears a building down (its materials are lost).
 - **Camp → village → town:** a village needs the Goblin Hut and Storehouse, four placed buildings (two houses and a well) and 30 wood + 20 stone; a town needs ten buildings, a Town Hall and a Watchtower, and 60 wood + 50 stone + 5 essence. Each tier widens the ring you can build in and unlocks buildings (Large House, Watchtower, Town Hall; the Lodge for towns). Rank up in the nation window at the camp flag.
-- Citizens, housing, farming, roles and the first siege follow in M5b–M5d.
-- Saves: schema **v27**.
+- **Citizens (M5b):** homes come from the Goblin Hut (2), straw huts (1), houses (2), the Town Hall (2), large houses (4) and lodges (6). While a home is free and the store holds a day's food for everyone (newcomer included), a new citizen arrives every 90 s and walks about near their home. Tearing down a house sends its residents to another free home, or away. A town needs **6 citizens**.
+- **Food (M5b):** place **fields** (4 wood, you can walk on them) and press **F** on one to plant **wheat** (2 min, 4 food), **carrots** (4 min, 9) or **pumpkins** (8 min, 20); F again when ripe harvests into the nation's food store. Every 5 minutes each citizen eats 1 food; after two hungry days a citizen leaves (and another each hungry day after). The nation window shows population, homes, food and the next newcomer.
+- Citizen roles (farmers who tend the fields, workers, crafters, guards, merchants and caravans) and the first siege follow in M5c–M5d.
+- Saves: schema **v28**.
 
-Tests: `tests/nation.gd` (34).
+Tests: `tests/nation.gd` (34), `tests/citizens.gd` (24).
 
 ## The Ki Realm (M4.7)
 
@@ -198,6 +200,7 @@ source /workspace/.tempestrpg/env.sh
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/party.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/ki_realm.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/nation.gd
+"$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/citizens.gd
 "$GODOT_BIN" --headless --path . --fixed-fps 60 --script tests/balance_edges.gd
 python3 tests/network_integration.py
 python3 tests/network_settlement.py
@@ -207,7 +210,7 @@ python3 tests/network_worlds.py
 "$GODOT_BIN" --headless --path . --quit-after 120
 ```
 
-The checks validate import, 46 local gameplay/persistence/UI/visual suites (1330 checks including the bot balance probe) and 266 real multi-process networking checks (1596 total through M5a on Windows; use `python3` on Linux or `python` on Windows). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
+The checks validate import, 47 local gameplay/persistence/UI/visual suites (1354 checks including the bot balance probe) and 266 real multi-process networking checks (1620 total through M5b on Windows; use `python3` on Linux or `python` on Windows). These exercise movement/collision, enemy behavior, strike rules, spending failures, HUD state, delayed regeneration, depletion/recovery, invalid values, resource bounds, tier rewards, pickup proximity/overflow/obstruction, defeat, and restart. The final command runs the actual main scene for 120 frames. To play visually on a computer with a display, run `godot --path .` or use the editor; headless mode provides automated validation. A scripted visible Windows playtest is recorded in `docs/playtest/`; manual usability and real-network playtests remain pending. Networking was tested on loopback with one host plus seven simultaneous guests; real LAN/WAN connectivity and performance on your machines still need playtesting.
 
 ## Structure
 
