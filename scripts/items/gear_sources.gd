@@ -6,11 +6,11 @@ const GEAR := preload("res://scripts/items/gear_catalogue.gd")
 
 ## Chance a defeated creature drops gear, by tier [Easy, Standard, Elite].
 const DROP_CHANCE := [0.1, 0.2, 0.45]
-## Rarity weights [Common, Uncommon, Rare, Epic, Legendary].
-const DROP_RARITY := [[70, 25, 5, 0, 0], [50, 32, 14, 4, 0], [20, 35, 28, 13, 4]]
-const CHEST_RARITY := [0, 50, 35, 13, 2]
-const TRIAL_RARITY := [0, 0, 70, 30, 0]
-const FORGE_RARITY := [60, 30, 10, 0, 0]
+## Rarity weights [Common, Uncommon, Rare, Epic, Legendary, Mythic].
+const DROP_RARITY := [[70, 25, 5, 0, 0, 0], [50, 32, 14, 4, 0, 0], [200, 350, 280, 130, 37, 3]]
+const CHEST_RARITY := [0, 500, 350, 128, 20, 2]
+const TRIAL_RARITY := [0, 0, 70, 30, 0, 0]
+const FORGE_RARITY := [60, 30, 10, 0, 0, 0]
 const CHEST_REACH := 30.0
 const MAX_LOOT := 64
 ## Forge recipes: absorbed materials from the bag → a random item of a kind.
@@ -31,24 +31,39 @@ static func _weighted(rng: RandomNumberGenerator, weights: Array) -> int:
             return index
     return 0
 
-static func _base(rng: RandomNumberGenerator, slots: Array = []) -> String:
-    var pool: Array = GEAR.BASES.keys().filter(func(id): return slots.is_empty() or GEAR.BASES[id].slot in slots)
+## A base that fits: the slots asked for, a minimum rarity at or below the roll and an item level
+## near the source's level (up to LEVEL_REACH above; nothing far below once there is better).
+const LEVEL_REACH := 2
+const LEVEL_FLOOR := 8
+
+static func _base(rng: RandomNumberGenerator, slots: Array = [], rarity: int = 0, level: int = 1) -> String:
+    var fits := func(id: String, low: int) -> bool:
+        var spec: Dictionary = GEAR.BASES[id]
+        return (slots.is_empty() or spec.slot in slots) and int(spec.get("min_rarity", 0)) <= rarity and int(spec.get("level", 1)) <= level + LEVEL_REACH and int(spec.get("level", 1)) >= low
+    var pool: Array = GEAR.BASES.keys().filter(fits.bind(level - LEVEL_FLOOR))
+    if pool.is_empty():
+        pool = GEAR.BASES.keys().filter(fits.bind(0))
     return pool[rng.randi_range(0, pool.size() - 1)]
 
-## The gear a creature of this tier drops, or {} (no drop).
-static func roll_drop(difficulty: int, rng: RandomNumberGenerator) -> Dictionary:
+## A rolled item at a rarity from a base fitting that rarity and level.
+static func _item(rng: RandomNumberGenerator, weights: Array, level: int, slots: Array = []) -> Dictionary:
+    var rarity := _weighted(rng, weights)
+    return GEAR.roll(_base(rng, slots, rarity, level), rarity, rng)
+
+## The gear a creature of this tier (and level) drops, or {} (no drop).
+static func roll_drop(difficulty: int, rng: RandomNumberGenerator, level: int = 1) -> Dictionary:
     if rng.randf() >= DROP_CHANCE[difficulty]:
         return {}
-    return GEAR.roll(_base(rng), _weighted(rng, DROP_RARITY[difficulty]), rng)
+    return _item(rng, DROP_RARITY[difficulty], level)
 
-static func roll_chest(rng: RandomNumberGenerator) -> Dictionary:
-    return GEAR.roll(_base(rng), _weighted(rng, CHEST_RARITY), rng)
+static func roll_chest(rng: RandomNumberGenerator, level: int = 6) -> Dictionary:
+    return _item(rng, CHEST_RARITY, level)
 
-static func roll_trial(rng: RandomNumberGenerator) -> Dictionary:
-    return GEAR.roll(_base(rng), _weighted(rng, TRIAL_RARITY), rng)
+static func roll_trial(rng: RandomNumberGenerator, level: int = 6) -> Dictionary:
+    return _item(rng, TRIAL_RARITY, level)
 
-static func roll_forge(recipe: String, rng: RandomNumberGenerator) -> Dictionary:
-    return GEAR.roll(_base(rng, RECIPES[recipe].slots), _weighted(rng, FORGE_RARITY), rng)
+static func roll_forge(recipe: String, rng: RandomNumberGenerator, level: int = 4) -> Dictionary:
+    return _item(rng, FORGE_RARITY, level, RECIPES[recipe].slots)
 
 static func recipe_text(recipe: String) -> String:
     var parts: Array = []

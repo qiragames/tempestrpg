@@ -961,6 +961,25 @@ func _draw() -> void:
     if has_node("Health") and $Health.current > 0 and not exhaustion_active and form == FORMS.BASE:
         _draw_gear()
 
+## The weapon in hand (user feedback: the old coloured lines looked odd): the item's own icon,
+## held at the side the character faces (behind the body when facing away).
+var _weapon_icon: Texture2D
+var _weapon_icon_key := ""
+
+func _draw_weapon(item: Dictionary) -> void:
+    var key := "%s:%d" % [item.base, int(item.rarity)]
+    if key != _weapon_icon_key:
+        _weapon_icon_key = key
+        _weapon_icon = GEAR.icon_texture(item.base, int(item.rarity))
+    if _weapon_icon == null:
+        return
+    var side := 1.0 if facing.x >= -0.1 else -1.0
+    var size := Vector2(14, 14)
+    var at := Vector2(7.0 * side, 0.0) if absf(facing.x) > 0.3 else Vector2(8.0, 1.0)
+    draw_set_transform(at, 0.0, Vector2(side, 1.0))
+    draw_texture_rect(_weapon_icon, Rect2(-size / 2.0 - Vector2(0, 4), size), false)
+    draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
 ## Distinct, rarity-coloured looks per item base (placeholders until the sprite step).
 func _draw_gear() -> void:
     for slot in GEAR.SLOTS:
@@ -968,6 +987,9 @@ func _draw_gear() -> void:
         if item.is_empty():
             continue
         var color := Color(GEAR.RARITY_COLORS[int(item.rarity)])
+        if slot == "weapon":
+            _draw_weapon(item)
+            continue
         match GEAR.BASES[item.base].look:
             "hood":
                 draw_rect(Rect2(-6, -12, 12, 4), color.darkened(0.2))

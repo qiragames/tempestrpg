@@ -4,14 +4,16 @@ extends RefCounted
 ## (Epic and Legendary). Weapons follow in 17f, sources (drops, chests, crafting) in 17g.
 ## Starting numbers, tuned in step 24.
 const SLOTS := ["weapon", "head", "body", "hands", "feet", "accessory_1", "accessory_2"]
-const RARITIES := ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
-const RARITY_COLORS := ["9aa3a8", "6fcf7a", "5aa2ee", "b47cf0", "f0a34a"]
+## Item expansion (user request): a sixth rarity, Mythic, above Legendary.
+const RARITIES := ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic"]
+const RARITY_COLORS := ["9aa3a8", "6fcf7a", "5aa2ee", "b47cf0", "f0a34a", "ff4d6d"]
 ## Positive stat ranges grow with rarity; penalties (negative ranges) do not.
-const RARITY_SCALE := [1.0, 1.25, 1.5, 1.8, 2.2]
-const PASSIVE_COUNT := [0, 0, 1, 1, 2]
+const RARITY_SCALE := [1.0, 1.25, 1.5, 1.8, 2.2, 2.7]
+const PASSIVE_COUNT := [0, 0, 1, 1, 2, 3]
 const STATS := ["damage", "hp", "magicules", "regen", "speed", "strike", "defense"]
 const STAT_TEXT := {"damage": "%s weapon damage", "hp": "+%s max HP", "magicules": "+%s max Magicules", "regen": "+%s Magicules/s", "speed": "%s move speed", "strike": "+%s strike damage", "defense": "-%s damage taken per hit"}
-const BASES := {
+## The first twelve bases (17e/17f); every saved item made before the item expansion uses them.
+const CLASSIC := {
     "cloth_hood": {"slot": "head", "name": "Cloth Hood", "look": "hood", "stats": {"hp": [3, 6]}},
     "iron_helm": {"slot": "head", "name": "Iron Helm", "look": "helm", "stats": {"hp": [6, 10], "defense": [1, 2]}},
     "padded_vest": {"slot": "body", "name": "Padded Vest", "look": "vest", "stats": {"hp": [6, 12]}},
@@ -26,10 +28,37 @@ const BASES := {
     "field_scythe": {"slot": "weapon", "weapon": "scythe", "name": "Field Scythe", "look": "scythe", "stats": {"damage": [15, 20]}},
     "hunting_bow": {"slot": "weapon", "weapon": "bow", "name": "Hunting Bow", "look": "bow", "stats": {"damage": [9, 12]}},
 }
+## Every base: the classic twelve plus the generated catalogue (tools/generate_items.py, about
+## 800 weapons and armour pieces with elements, levels and a minimum rarity).
+const GENERATED := preload("res://scripts/items/item_bases.gd")
+static var BASES: Dictionary = _all_bases()
+
+static func _all_bases() -> Dictionary:
+    var all: Dictionary = {}
+    for id in CLASSIC:
+        all[id] = CLASSIC[id].merged({"level": 1, "min_rarity": 0, "element": ""})
+    all.merge(GENERATED.BASES)
+    return all
+
+## The icon of an item (generated bases: a cell of their group's atlas; classic: per rarity).
+static func icon_texture(base: String, rarity: int) -> Texture2D:
+    if not BASES.has(base):
+        return null
+    var spec: Dictionary = BASES[base]
+    if spec.get("look", "") == "icon":
+        var texture := AtlasTexture.new()
+        texture.atlas = load("res://assets/game/ui/items/%s.png" % spec.icon)
+        var cell: int = int(spec.cell)
+        texture.region = Rect2((cell % GENERATED.ATLAS_COLUMNS) * GENERATED.CELL, int(cell / GENERATED.ATLAS_COLUMNS) * GENERATED.CELL, GENERATED.CELL, GENERATED.CELL)
+        return texture
+    var path := "res://assets/game/ui/icons/gear/%s_%d.png" % [base, clampi(rarity, 0, 4)]
+    return load(path) if ResourceLoader.exists(path) else null
+
 ## Basic-attack behaviour per weapon type (unarmed: radius 16, 18 px ahead, 0.4 s).
 ##   sword  balanced arc          spear  long thrust hitting everything in a narrow line
 ##   scythe wide slow sweep       bow    ranged shot at the first creature in line of sight
 const WEAPONS := {
+    "dagger": {"name": "Dagger", "recovery": 0.3, "text": "quick short stab in front"},
     "sword": {"name": "Sword", "recovery": 0.45, "text": "balanced arc in front"},
     "spear": {"name": "Spear", "recovery": 0.55, "text": "long thrust through a line"},
     "scythe": {"name": "Scythe", "recovery": 0.75, "text": "wide sweep around the front"},
@@ -105,6 +134,8 @@ static func valid_item(item: Variant) -> bool:
     if not BASES.has(item.get("base")) or not (item.get("rarity") is int or item.get("rarity") is float) or item.rarity != floor(item.rarity) or item.rarity < 0 or item.rarity >= RARITIES.size():
         return false
     var rarity: int = int(item.rarity)
+    if rarity < int(BASES[item.base].get("min_rarity", 0)):
+        return false
     if not item.get("stats") is Dictionary or item.stats.size() != BASES[item.base].stats.size():
         return false
     for stat in BASES[item.base].stats:

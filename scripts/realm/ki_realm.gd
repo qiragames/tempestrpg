@@ -190,7 +190,7 @@ func wish(actor: Node2D, choice: String) -> bool:
         "item":
             var rng := RandomNumberGenerator.new()
             rng.randomize()
-            var item: Dictionary = actor.GEAR.roll(preload("res://scripts/items/gear_sources.gd")._base(rng), 4, rng)
+            var item: Dictionary = actor.GEAR.roll(preload("res://scripts/items/gear_sources.gd")._base(rng, [], 4, int(actor.progression.get("level", 15))), 4, rng)
             actor.add_item(item)
             _tell(actor, "The eternal dragon grants: %s!" % actor.GEAR.display_name(item))
         "zeni":

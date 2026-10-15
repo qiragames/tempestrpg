@@ -29,10 +29,10 @@ static func chest_zeni(rich: bool, rng: RandomNumberGenerator) -> int:
     return rng.randi_range(60, 120) if rich else rng.randi_range(20, 45)
 
 ## Gear price by rarity, raised by the merchant's region level.
-const RARITY_PRICE := [30, 80, 200, 500, 1200]
+const RARITY_PRICE := [30, 80, 200, 500, 1200, 3500]
 
 static func gear_price(item: Dictionary, level: int = 1) -> int:
-    return int(round(RARITY_PRICE[clampi(int(item.get("rarity", 0)), 0, 4)] * (1.0 + 0.04 * maxi(0, level - 1))))
+    return int(round(RARITY_PRICE[clampi(int(item.get("rarity", 0)), 0, RARITY_PRICE.size() - 1)] * (1.0 + 0.04 * maxi(0, level - 1))))
 
 ## Material values (what a merchant asks; selling gives SELL_SHARE).
 const MATERIAL_PRICE := {
@@ -158,15 +158,15 @@ static func town_merchant_position(entry: Array) -> Vector2:
     var town: Array = MAP.town(entry[4])
     return MAP.to_world(Vector2(town[3]) + STALL_OFFSET)
 
-## Rarity odds by merchant kind and level: [Common, Uncommon, Rare, Epic, Legendary].
+## Rarity odds by merchant kind and level: [Common, Uncommon, Rare, Epic, Legendary, Mythic].
 static func rarity_weights(kind: String, level: int) -> Array:
     if kind == "traveller":
-        return [0, 0, 20, 55, 25]
+        return [0, 0, 20, 54, 24, 2]
     if level >= 15:
-        return [5, 30, 40, 20, 5]
+        return [5, 30, 40, 20, 5, 0]
     if level >= 10:
-        return [15, 40, 33, 11, 1]
-    return [45, 38, 15, 2, 0]
+        return [15, 40, 33, 11, 1, 0]
+    return [45, 38, 15, 2, 0, 0]
 
 ## A fresh stock for one restock cycle: entries {"kind": "gear"|"good"|"material", "id",
 ## "item" (gear only), "price", "count"}.
@@ -176,7 +176,8 @@ static func roll_stock(entry: Array, rng: RandomNumberGenerator) -> Array:
     var stock: Array = []
     var gear_count: int = {"town": 4, "trader": 0, "smith": 6, "traveller": 4}[kind]
     for _i in range(gear_count):
-        var item: Dictionary = GEAR.roll(SOURCES._base(rng), SOURCES._weighted(rng, rarity_weights(kind, level)), rng)
+        var rarity: int = SOURCES._weighted(rng, rarity_weights(kind, level))
+        var item: Dictionary = GEAR.roll(SOURCES._base(rng, [], rarity, level + (4 if kind == "traveller" else 0)), rarity, rng)
         stock.append({"kind": "gear", "id": item.id, "item": item, "price": gear_price(item, level), "count": 1})
     # Tools (M4.5d): every town sells the tiers its level allows (fixed, not random).
     if kind == "town":

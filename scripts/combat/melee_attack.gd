@@ -18,7 +18,9 @@ const SPEAR_WIDTH := 10.0
 const SWORD_RADIUS := 20.0
 const SCYTHE_RADIUS := 30.0
 const BOW_RANGE := 200.0
-const BASIC_EFFECTS := [&"strike", &"sword", &"spear", &"scythe", &"bow"]
+const BASIC_EFFECTS := [&"strike", &"dagger", &"sword", &"spear", &"scythe", &"bow"]
+## Daggers (item expansion): a small, quick stab right in front.
+const DAGGER_RADIUS := 11.0
 const SKILL_EFFECTS := preload("res://scripts/skills/skill_effects.gd")
 ## The skill whose utility effects the current strike applies ("" for basic strikes).
 var _skill_id: String = ""
@@ -132,6 +134,12 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
         shaft.size = Vector2(SPEAR_LENGTH, SPEAR_WIDTH)
         query.shape = shaft
         query.transform = Transform2D(direction.angle(), global_position + direction * (SPEAR_LENGTH / 2.0 + 4.0))
+    elif effect == &"dagger":
+        var stab := CircleShape2D.new()
+        stab.radius = DAGGER_RADIUS
+        query.shape = stab
+        query.transform = Transform2D(0.0, global_position + direction * 15.0)
+        reach_dot = 0.5
     elif effect == &"sword":
         var arc := CircleShape2D.new()
         arc.radius = SWORD_RADIUS
@@ -213,6 +221,9 @@ func _draw() -> void:
         draw_line(direction * 4.0, direction * 10.0, tint, 1.0)
     elif flash_left > 0.0 and flash_effect == &"spear":
         draw_line(direction * 6.0, direction * (SPEAR_LENGTH + 4.0), tint, 2.0)
+    elif flash_left > 0.0 and flash_effect == &"dagger":
+        draw_line(direction * 6.0, direction * 22.0, tint, 2.0)
+        draw_arc(direction * 15.0, DAGGER_RADIUS * 0.7, direction.angle() - 0.6, direction.angle() + 0.6, 8, tint, 2.0)
     elif flash_left > 0.0 and flash_effect == &"sword":
         draw_arc(direction * 20.0, SWORD_RADIUS, direction.angle() - 1.1, direction.angle() + 1.1, 12, tint, 3.0)
     elif flash_left > 0.0 and flash_effect == &"scythe":

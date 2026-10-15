@@ -36,7 +36,7 @@ func _run() -> void:
                 drops[tier] += 1
                 best[tier] = maxi(best[tier], int(item.rarity))
     _check(abs(drops[0] / 3000.0 - 0.1) < 0.025 and abs(drops[1] / 3000.0 - 0.2) < 0.03 and abs(drops[2] / 3000.0 - 0.45) < 0.035, "Drop chances by tier are about 10%% / 20%% / 45%% (%s)" % [drops])
-    _check(best[0] <= 2 and best[1] <= 3 and best[2] == 4, "Easy creatures drop at most Rare, Standard at most Epic, Elite up to Legendary")
+    _check(best[0] <= 2 and best[1] <= 3 and best[2] >= 4, "Easy creatures drop at most Rare, Standard at most Epic, Elite up to Legendary (rarely Mythic)")
     var chest_ok := true
     var trial_ok := true
     var forge_ok := true

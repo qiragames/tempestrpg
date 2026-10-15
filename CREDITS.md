@@ -9,5 +9,9 @@ TempestRPG is a private project for the user and their friends. Third-party art 
 | Kyrise's Free 16x16 RPG Icon Pack V1.3 | Kyrise | **CC BY 4.0 — attribution required:** "Gear icons by Kyrise (https://kyrise.itch.io/)" | https://kyrise.itch.io/kyrises-free-16x16-rpg-icon-pack |
 | Fantasy UI Borders | Kenney (www.kenney.nl) | CC0 1.0 (no attribution required; credited with thanks) | https://kenney.nl/assets/fantasy-ui-borders |
 | 16x16 Weapon RPG Icons | Shade (merchant-shade) | Free for commercial and non-commercial games, modification allowed, no credit required | https://merchant-shade.itch.io/free-16x16-weapon-rpg-icons |
+| 496 pixel art icons for medieval/fantasy RPG | 7Soul1 (Henrique Lazarini) | CC0 1.0 (credited with thanks) | https://opengameart.org/content/496-pixel-art-icons-for-medievalfantasy-rpg |
+| Idylwild's Arsenal | Idylwild | CC0 1.0 (credited with thanks) | https://opengameart.org/content/idylwilds-arsenal |
+| Idylwild's Armory | Idylwild | CC0 1.0 (credited with thanks) | https://opengameart.org/content/idylwilds-armory |
+| Super Epic Weapons Fantasy Pack FREE | babysamurai | CC0 1.0 (credited with thanks) | https://opengameart.org/content/super-epic-weapons-fantasy-pack-free |
 
 All packs, including the required Kyrise credit, are listed in the game's Credits screen (title menu, step 22).

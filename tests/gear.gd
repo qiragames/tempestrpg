@@ -37,12 +37,12 @@ func _run() -> void:
     var kinds := {}
     for base in GEAR.BASES:
         kinds[GEAR.BASES[base].slot] = true
-    _check(GEAR.SLOTS.size() == 7 and kinds.keys().size() == 6 and GEAR.RARITIES.size() == 5, "Seven slots (weapon, head, body, hands, feet, two accessories), five rarities, bases for every slot kind")
+    _check(GEAR.SLOTS.size() == 7 and kinds.keys().size() == 6 and GEAR.RARITIES.size() == 6 and GEAR.BASES.size() > 700, "Seven slots (weapon, head, body, hands, feet, two accessories), six rarities (Mythic), hundreds of bases for every slot kind")
     var all_valid := true
     var shapes := true
     for base in GEAR.BASES:
-        for rarity in range(5):
-            for attempt in range(20):
+        for rarity in range(int(GEAR.BASES[base].get("min_rarity", 0)), GEAR.RARITIES.size()):
+            for attempt in range(20 if GEAR.CLASSIC.has(base) else 2):
                 var item: Dictionary = GEAR.roll(base, rarity, rng)
                 all_valid = all_valid and GEAR.valid_item(item)
                 shapes = shapes and item.passives.size() == GEAR.PASSIVE_COUNT[rarity] and (item.active.is_empty() == (rarity < 3))

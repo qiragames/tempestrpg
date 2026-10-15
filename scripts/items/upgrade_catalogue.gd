@@ -4,7 +4,7 @@ extends RefCounted
 ## one. Augments are permanent character upgrades in slots unlocked by level (1 at 5, 2 at 10,
 ## 3 at 15), installed at the camp's Essence Shrine for Zeni (the replaced one returns to the bag).
 ## Both are bag goods until used.
-const SOCKETS := [0, 0, 1, 1, 2]
+const SOCKETS := [0, 0, 1, 1, 2, 3]
 ## rune → [name, stat (gear stat) or passive ("lifesteal", "thorns"), value, price]
 const RUNES := {
     "rune_vigor": ["Rune of Vigor", "hp", 12.0, 260],
@@ -36,7 +36,7 @@ const INSTALL_COST := 100
 const SHRINE_REACH := 60.0
 
 static func sockets(rarity: int) -> int:
-    return SOCKETS[clampi(rarity, 0, 4)]
+    return SOCKETS[clampi(rarity, 0, SOCKETS.size() - 1)]
 
 static func augment_slots(level: int) -> int:
     var slots := 0

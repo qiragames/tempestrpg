@@ -19,6 +19,7 @@ const CREDITS := [
     ["Gear icons", "Gear icons by Kyrise (https://kyrise.itch.io/) · CC BY 4.0"],
     ["16x16 Weapon RPG Icons", "Shade (merchant-shade) · scythe and spear icons"],
     ["Fantasy UI Borders", "Kenney (www.kenney.nl) · CC0 · ornamented frames"],
+    ["Item icons", "7Soul1, Idylwild, babysamurai (OpenGameArt) · CC0 · weapons and armour"],
 ]
 ## Tests point this at a temporary folder.
 var worlds_dir: String = REGISTRY.DEFAULT_DIR

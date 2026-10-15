@@ -271,7 +271,7 @@ func _defeat() -> void:
         _drop_magicules.call_deferred(ranked)
         # One gear roll (17g); its item goes to the top damage dealer.
         if world != null and world.has_method("drop_gear"):
-            var item: Dictionary = world.SOURCES.roll_drop(difficulty, world.loot_rng)
+            var item: Dictionary = world.SOURCES.roll_drop(difficulty, world.loot_rng, level)
             if not item.is_empty():
                 world.drop_gear.call_deferred(item, position + Vector2(10, 6), "", ranked[0][0] if not ranked.is_empty() else "")
         var rewarded := false

@@ -163,8 +163,7 @@ static func icon(id: String) -> Texture2D:
 static func gear_icon(item: Dictionary) -> Texture2D:
     if item.is_empty():
         return null
-    var path := "res://assets/game/ui/icons/gear/%s_%d.png" % [item.base, clampi(int(item.rarity), 0, 4)]
-    return load(path) if ResourceLoader.exists(path) else null
+    return preload("res://scripts/items/gear_catalogue.gd").icon_texture(item.base, int(item.rarity))
 
 ## A menu entry in the title/pause reference style: gold capitals, a gold bar when focused or hovered.
 static func menu_entry(button: Button) -> void:
