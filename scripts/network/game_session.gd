@@ -51,6 +51,19 @@ var _upnp_thread: Thread
 ## The address friends use over the Internet ("" until UPnP found it).
 var public_address := ""
 var upnp_status := ""
+## --- Join codes (user request): hosting and joining through routers without opening ports.
+const CODES := preload("res://scripts/network/join_codes.gd")
+signal reply_code_ready(code: String)
+var code_mode := false
+var _rtc: WebRTCMultiplayerPeer
+var _invites: Dictionary = {}
+var _next_invite := 2
+## A joining friend's reply code (to send back to the host).
+var reply_code := ""
+## Minutes a friend waits for the host to paste their reply.
+const CODE_WAIT_MS := 600000
+## The extra channels the RPCs use (1: movement, unreliable ordered; 2: snapshots, reliable).
+const CODE_CHANNELS := [MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED, MultiplayerPeer.TRANSFER_MODE_RELIABLE]
 const WORLD_SCENE := "res://scenes/world/forest.tscn"
 
 func _ready() -> void:
@@ -96,6 +109,9 @@ func launch_pending() -> void:
         return
     var launch := pending_launch
     pending_launch = {}
+    if launch.mode == "join_code":
+        join_with_code(launch.code, identity_path, launch.get("race", RACES.DEFAULT))
+        return
     if launch.mode == "server":
         start_server(launch.get("port", DEFAULT_PORT), launch.path, launch.get("upnp", true))
         return
@@ -309,6 +325,102 @@ func _close_router_port() -> void:
     if _upnp != null:
         _upnp.delete_port_mapping(listen_port, "UDP")
         _upnp = null
+
+## Host: accept friends through join codes instead of a port (WebRTC; no router settings).
+func open_with_codes() -> Error:
+    if not active or replica_world or listening or not multiplayer.is_server():
+        return ERR_UNAVAILABLE
+    if CODES.connection() == null:
+        world._announce("Join codes need the WebRTC plugin (addons/webrtc_native).")
+        return ERR_UNAVAILABLE
+    _rtc = WebRTCMultiplayerPeer.new()
+    var error := _rtc.create_server(CODE_CHANNELS)
+    if error != OK:
+        return error
+    multiplayer.multiplayer_peer = _rtc
+    listening = true
+    code_mode = true
+    _invites.clear()
+    save_world()
+    world._announce("Open to friends with join codes: make one invite code per friend.")
+    return OK
+
+## Host: a new invite code for one friend ("" if full or unavailable). Takes a few seconds.
+func create_invite() -> String:
+    if not code_mode or owners.size() + _invites.size() >= MAX_PLAYERS:
+        return ""
+    var id := _next_invite
+    _next_invite += 1
+    var link := CODES.connection()
+    if link == null or _rtc.add_peer(link, id) != OK:
+        return ""
+    _invites[id] = link
+    link.create_offer()
+    await _gather(link)
+    return CODES.code_for(link, id)
+
+## Host: a friend's reply code completes their invite.
+func accept_reply(code: String) -> bool:
+    var data := CODES.decode(code)
+    if data.is_empty() or data.type != "answer" or not _invites.has(int(data.id)):
+        return false
+    CODES.apply(_invites[int(data.id)], data)
+    _invites.erase(int(data.id))
+    return true
+
+## Friend: join with the host's invite code; the reply code to send back comes after a moment
+## (also through `reply_code_ready`).
+func join_with_code(code: String, profile: String = "user://profiles/characters.json", race: String = RACES.DEFAULT) -> String:
+    var data := CODES.decode(code)
+    if active or not is_instance_valid(world) or data.is_empty() or data.type != "offer":
+        _fail("That is not a valid invite code.")
+        return ""
+    _rtc = WebRTCMultiplayerPeer.new()
+    if _rtc.create_client(int(data.id), CODE_CHANNELS) != OK:
+        _fail("Could not start a code connection.")
+        return ""
+    var link := CODES.connection()
+    if link == null or _rtc.add_peer(link, 1) != OK:
+        _fail("Join codes need the WebRTC plugin (addons/webrtc_native).")
+        return ""
+    identity_path = profile
+    join_race = race
+    joining_address = "code"
+    replica_world = true
+    multiplayer.multiplayer_peer = _rtc
+    active = true
+    code_mode = true
+    Engine.max_fps = 60
+    local_character_id = ""
+    _join_deadline = Time.get_ticks_msec() + CODE_WAIT_MS
+    world.get_local_player().local_controlled = false
+    for actor in world.get_children():
+        if actor.is_in_group("player"):
+            actor.configure_replica()
+        elif actor.is_in_group("enemies") or actor.is_in_group("magicule_pickups"):
+            actor.set_physics_process(false)
+            if actor.has_node("Health"):
+                actor.get_node("Health").set_process(false)
+    CODES.apply(link, data)
+    await _gather(link)
+    reply_code = CODES.code_for(link, int(data.id))
+    reply_code_ready.emit(reply_code)
+    return reply_code
+
+func _gather(link: WebRTCPeerConnection) -> void:
+    var waited := 0.0
+    while waited < CODES.GATHER_SECONDS and link.get_gathering_state() != WebRTCPeerConnection.GATHERING_STATE_COMPLETE:
+        await get_tree().create_timer(0.1, true, false, true).timeout
+        waited += 0.1
+
+## Whether a connected peer can take a snapshot right now (ENet or WebRTC).
+func _peer_ready(peer: int) -> bool:
+    var transport := multiplayer.multiplayer_peer
+    if transport is ENetMultiplayerPeer:
+        return transport.get_peer(peer).get_state() == ENetPacketPeer.STATE_CONNECTED
+    if transport is WebRTCMultiplayerPeer:
+        return transport.has_peer(peer) and transport.get_peer(peer).get("connected", false)
+    return true
 
 ## Start accepting guests in the running hosted world, without restarting it.
 func open_to_friends(port: int = DEFAULT_PORT) -> Error:
@@ -872,7 +984,7 @@ func _broadcast() -> void:
     # Several clients can disconnect in the same poll. Do not broadcast to ENet
     # peers whose channels have already closed but whose callback is still queued.
     for peer in multiplayer.get_peers():
-        if owners.has(peer) and multiplayer.multiplayer_peer.get_peer(peer).get_state() == ENetPacketPeer.STATE_CONNECTED:
+        if owners.has(peer) and _peer_ready(peer):
             _snapshot.rpc_id(peer, data, _revision)
 
 @rpc("authority", "call_remote", "reliable", 2)
@@ -962,6 +1074,12 @@ func stop_session(save: bool = true) -> void:
         _upnp_thread.wait_to_finish()
         _upnp_thread = null
     _close_router_port()
+    if _rtc != null:
+        _rtc.close()
+        _rtc = null
+    code_mode = false
+    _invites.clear()
+    reply_code = ""
     active = false
     listening = false
     world_meta = {}

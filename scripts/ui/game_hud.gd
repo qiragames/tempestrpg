@@ -47,6 +47,8 @@ var dialog_panel: Control
 var nation_panel: Control
 ## Citizens and trade window (M5c), see citizens_panel.gd.
 var citizens_panel: Control
+## Join codes (playing through routers), see invite_panel.gd.
+var invite_panel: Control
 var _zeni: Label
 var _close: Button
 var _log: RichTextLabel
@@ -104,6 +106,8 @@ func _ready() -> void:
     add_child(nation_panel)
     citizens_panel = load("res://scripts/ui/citizens_panel.gd").new(self)
     add_child(citizens_panel)
+    invite_panel = load("res://scripts/ui/invite_panel.gd").new(self)
+    add_child(invite_panel)
     _hook_pause_returns()
     get_parent().system_message.connect(fusion.show_message)
     _ally_dialog = load("res://scripts/ui/ally_dialog.gd").new()
@@ -112,7 +116,7 @@ func _ready() -> void:
     add_child(_camp_dialog)
 
 func menu_open() -> bool:
-    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible) or (is_instance_valid(harbour_panel) and harbour_panel.visible) or (is_instance_valid(party_panel) and party_panel.is_open()) or (is_instance_valid(dialog_panel) and dialog_panel.is_open()) or (is_instance_valid(nation_panel) and nation_panel.is_open()) or (is_instance_valid(citizens_panel) and citizens_panel.is_open())
+    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible) or (is_instance_valid(harbour_panel) and harbour_panel.visible) or (is_instance_valid(party_panel) and party_panel.is_open()) or (is_instance_valid(dialog_panel) and dialog_panel.is_open()) or (is_instance_valid(nation_panel) and nation_panel.is_open()) or (is_instance_valid(citizens_panel) and citizens_panel.is_open()) or (is_instance_valid(invite_panel) and invite_panel.is_open())
 
 func bind_player(actor: Node2D) -> void:
     if player == actor:
@@ -612,10 +616,10 @@ func _build_pause_panel() -> void:
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     _pause_menu = Panel.new()
     _pause_menu.position = Vector2(206, 62)
-    _pause_menu.size = Vector2(228, 240)
+    _pause_menu.size = Vector2(228, 264)
     _pause_menu.add_theme_stylebox_override("panel", UI.ornate())
     _pause_panel.add_child(_pause_menu)
-    var entries := [["resume", "RESUME"], ["bag", "INVENTORY & EQUIPMENT"], ["tree", "SKILL TREE"], ["fusion", "SKILL FUSION"], ["map", "WORLD MAP"], ["open", "OPEN TO FRIENDS"], ["save", "SAVE WORLD"], ["options", "OPTIONS"], ["quit", "SAVE & QUIT TO TITLE"]]
+    var entries := [["resume", "RESUME"], ["bag", "INVENTORY & EQUIPMENT"], ["tree", "SKILL TREE"], ["fusion", "SKILL FUSION"], ["map", "WORLD MAP"], ["open", "OPEN TO FRIENDS"], ["invite", "INVITE WITH A CODE"], ["save", "SAVE WORLD"], ["options", "OPTIONS"], ["quit", "SAVE & QUIT TO TITLE"]]
     for index in range(entries.size()):
         var button := _button(entries[index][1], Vector2(10, 8 + index * 25), Vector2(208, 24), _pause_menu)
         UI.menu_entry(button)
@@ -627,6 +631,10 @@ func _build_pause_panel() -> void:
     _pause_buttons.fusion.pressed.connect(_from_pause.bind(func(): fusion.open()))
     _pause_buttons.map.pressed.connect(_from_pause.bind(func(): world_map.open()))
     _pause_buttons.open.pressed.connect(func(): session.open_to_friends(); _refresh_pause())
+    _pause_buttons.invite.pressed.connect(func():
+        close_pause()
+        invite_panel.open_host()
+    )
     _pause_buttons.save.pressed.connect(func():
         var result: Error = session.save_world()
         get_parent()._announce("World saved." if result == OK else "Saving failed; the previous save is retained.")
@@ -758,12 +766,16 @@ func _refresh_pause() -> void:
         _pause_status.text = "Joined a friend's world. Leaving keeps your character on their save."
     elif not session.active:
         _pause_status.text = "Offline sandbox (not saved)."
+    elif session.code_mode:
+        _pause_status.text = "\"%s\" · open with join codes · %d/8 players
+Invite with a code: one code per friend." % [session.world_meta.get("name", "World"), session.owners.size()]
     elif session.listening:
         var addresses: Array = session.lan_addresses()
         _pause_status.text = "\"%s\" · open to friends on UDP %d · %d/8 players\nJoin with: %s" % [session.world_meta.get("name", "World"), session.listen_port, session.owners.size(), ", ".join(addresses) if not addresses.is_empty() else "your IP address"]
     else:
         _pause_status.text = "\"%s\" · %s · playing solo\nOpen to friends lets up to 7 friends join." % [session.world_meta.get("name", "World"), load("res://scripts/world/world_layout.gd").describe(session.world_meta)]
     _pause_buttons.open.disabled = not hosting or session.listening
+    _pause_buttons.invite.disabled = not hosting or (session.listening and not session.code_mode)
     _pause_buttons.open.text = "OPEN TO FRIENDS" if not session.listening else "OPEN TO FRIENDS (ON)"
     _pause_buttons.save.disabled = not hosting
     _pause_buttons.quit.text = "LEAVE TO TITLE" if session.replica_world else "SAVE & QUIT TO TITLE" if hosting else "QUIT TO TITLE"

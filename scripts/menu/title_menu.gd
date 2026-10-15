@@ -173,8 +173,8 @@ func _build_load() -> void:
 func _build_join() -> void:
     var panel := _panel("join")
     UI.heading(_label("JOIN A FRIEND", Vector2(14, 10), Vector2(272, 20), panel, 13))
-    _label("Your friend opens their world to friends (Esc → Open to friends) and tells you their address.", Vector2(14, 34), Vector2(272, 44), panel, 10)
-    _address_field = _field("e.g. 192.168.1.10", Vector2(14, 84), panel)
+    _label("Paste your friend's invite code (Esc → Invite with a code) — or their address if they opened their world by address.", Vector2(14, 34), Vector2(272, 44), panel, 10)
+    _address_field = _field("invite code or e.g. 192.168.1.10", Vector2(14, 84), panel)
     _label("Race for a new character (returning characters keep theirs)", Vector2(14, 118), Vector2(272, 14), panel, 9)
     _join_race = _race_picker(Vector2(14, 134), panel)
     _button("Join", Vector2(14, 170), Vector2(170, 32), panel, join_world)
@@ -290,7 +290,13 @@ func load_selected() -> void:
 func join_world() -> void:
     var address := _address_field.text.strip_edges()
     if address.is_empty():
-        _status.text = "Enter your friend's address first."
+        _status.text = "Enter your friend's invite code or address first."
+        return
+    if preload("res://scripts/network/join_codes.gd").is_code(address):
+        if preload("res://scripts/network/join_codes.gd").decode(address).is_empty():
+            _status.text = "That invite code is incomplete — copy it again."
+            return
+        _launch({"mode": "join_code", "code": address, "race": RACES.ORDER[_join_race.selected]})
         return
     _launch({"mode": "join", "address": address, "race": RACES.ORDER[_join_race.selected]})
 
