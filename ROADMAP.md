@@ -104,7 +104,20 @@ Requested by the user after 17e; exact order and scope to be confirmed with the 
 - Introduce settlement threats and a small defensive siege.
 - Exit goal: economy and diplomacy change the outcome of a playable conflict.
 
-### M6 — Armies and endgame · Planned, requires M5
+### M6 — Professions · In progress (M6a done 2026-10-15), requires M5
+
+- User decisions (Q&A 2026-10-15, plan in `docs/M4_PLAN.md` M6): Woodcutting, Mining, Fishing, Smithing and Alchemy, levels 1–50 by doing them; **soft gates** (anything can be tried, below the level slower and failing more, the success chance always shown); small perks (faster work, double-yield chance) and a milestone every 10 levels.
+- **M6a — professions core, Woodcutting and Mining: Done (Claude, 2026-10-15).** Every tree and boulder of the world is a resource node (13 woods, 9 ores, 5 gems, rare sap by region and prop kind); F works it, the HUD shows "F: Chop … · Woodcutting 3/10 · 46%"; three successful swings per log/ore; used-up nodes become stumps/rubble and grow back; Professions window (L); bags hold 100 units; schema v32.
+- Next: **M6b** fishing (about 40 fish with rarities by region and water, mythical sea creatures worth a fortune, a reel-in minigame, a fish log); **M6c** Smithing (bars, forged gear) and Alchemy (herbs, potions).
+- Exit goal: every profession has a 1–50 progression with region-gated resources worth gathering and selling.
+
+### M7 — Bosses and raids · Planned (user request 2026-10-15), requires M6
+
+- A huge regional boss in every major region, built for groups of two to five (a max-level player can solo a starter boss); at least one, better two, in the Ki Realm.
+- Smaller bosses in caves, on plateaus and in forests.
+- A higher character level cap.
+
+### M8 — Armies and endgame · Planned, requires M5
 
 - Introduce squad commands, evolved citizen units, and larger invasions.
 - Develop major ascensions, Ultimate Skills, and apex encounters.
@@ -190,6 +203,7 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-15: Claude Code completed M6a (professions core, Woodcutting and Mining) on `claude/professions` after the user's Q&A. New `scripts/professions/{profession_catalogue,resource_nodes}.gd`, `scripts/ui/professions_panel.gd`, `tests/professions.gd` (27); the owner's private mod menu (F10, draft release v0.8.0-dev) came first on `claude/items-expansion` (`tests/dev_tools.gd`, 19). Grass and forest now also have boulders (copper and tin for new miners); schema v32 (profession XP, 100-unit bags). Found while building: ore veins drew behind the rock sprite at the same foot (now half a pixel in front). 1493 local checks pass on Windows. Next: M6b fishing.
 - 2026-10-15: Claude Code added the item expansion on `claude/items-expansion` (user request after an SVE session: hundreds of weapons and armour with their own looks, names, rarities, VFX, elements, sets and uniques; Mythic rarity; daggers). Four CC0 icon packs downloaded (7Soul1, Idylwild ×2, babysamurai) and recorded; `tools/generate_items.py` → 849 bases. 50 local suites, 1429 checks pass on Windows. Next from the SVE list: HUD rounded corners and a smaller analysis box, detailed zoomable maps, a paper-doll equipment screen (user reference images), a node-based skill tree.
 - 2026-10-15: Claude Code added the HUD size option and a fully hideable controls line on `claude/release-server` (user request: the HUD was too big). Options → HUD size (65–100 %, default 75 %) scales the always-on HUD pieces toward their screen corners; F1 hides/shows the controls line; stretch mode `canvas_items` keeps small text sharp; playtest captures saved at 960×540. 1401 local + 280 network = 1681 checks pass on Windows; visual playtest 0 failed (106 captures; the timing-dependent mid-fight trial capture did not trigger). Release zip rebuilt.
 - 2026-10-15: Claude Code added join codes on `claude/release-server` (user choice: play through routers without settings or extra software). Official Godot WebRTC plugin 1.2.2 (Windows x86_64) downloaded with the user's approval; `scripts/network/join_codes.gd`, `scripts/ui/invite_panel.gd`, pause menu *Invite with a code*, codes accepted in Join a Friend, `tests/network_codes.py` (6). Found while building: WebRTC needs the RPCs' extra channels configured, and connection callbacks holding themselves kept the game from quitting (now weak references). 280 network checks pass.

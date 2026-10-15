@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 31
+const VERSION := 32
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -171,6 +171,9 @@ static func validate_player(state: Variant, id: String) -> bool:
     if not auras is Array or auras.any(func(id): return not id is String or not REALM.AURAS.has(id)) or auras.size() != _unique(auras):
         return false
     if not progression.get("aura") is String or (not progression.aura.is_empty() and not progression.aura in auras) or not progression.get("champion") is bool:
+        return false
+    # Professions (v32): experience per profession within the curve.
+    if not preload("res://scripts/professions/profession_catalogue.gd").valid(progression.get("professions")):
         return false
     var fishing: Variant = state.get("fishing", [])
     if not fishing is Array or not fishing.size() in [0, 2] or fishing.any(func(value): return not (value is float or value is int) or not is_finite(float(value)) or absf(float(value)) > 60.0):
@@ -771,6 +774,19 @@ static func migrate(data: Variant) -> Variant:
                 var tile := map.to_tile(Vector2(float(state.position[0]), float(state.position[1])))
                 if old_realm.has_point(tile):
                     state.position = [arrival.x, arrival.y]
+    # v32 (M6a): no profession experience yet; bags grow to 100 units.
+    if data.get("version") == 31:
+        if not data.get("players") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = 32
+        for state in data.players.values():
+            if not state is Dictionary or not state.get("progression") is Dictionary:
+                return null
+            if not state.progression.get("professions") is Dictionary:
+                state.progression["professions"] = preload("res://scripts/professions/profession_catalogue.gd").initial_state()
+            if state.get("inventory") is Dictionary and (state.inventory.get("capacity") is int or state.inventory.get("capacity") is float):
+                state.inventory["capacity"] = maxi(100, int(state.inventory.capacity))
     return data
 
 static func _unique(values: Array) -> int:

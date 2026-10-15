@@ -128,7 +128,7 @@ func _run() -> void:
     var specimen: Resource = load("res://data/specimens/forest_gnasher.tres")
     for _i in range(bag.capacity):
         bag.add_specimen(specimen)
-    _check(bag.total_units() == 20 and not bag.can_store() and not bag.add_specimen(specimen), "Storage capacity must be enforced")
+    _check(bag.total_units() == bag.capacity and not bag.can_store() and not bag.add_specimen(specimen), "Storage capacity must be enforced")
     second.position = player.position + Vector2(24, 0)
     await _frames(3)
     melee.attack(Vector2.RIGHT)
@@ -139,7 +139,7 @@ func _run() -> void:
     _check(absorption.attempt_absorb(), "Discarding one material must free room for analysis")
     bag.add_specimen(specimen)
     await _frames(75)
-    _check(not absorption.active and is_instance_valid(second) and bag.total_units() == 20, "Capacity filled during analysis must cancel without consuming the corpse or overflowing storage")
+    _check(not absorption.active and is_instance_valid(second) and bag.total_units() == bag.capacity, "Capacity filled during analysis must cancel without consuming the corpse or overflowing storage")
     bag.discard(&"gnasher_essence")
     absorption.attempt_absorb()
     await _frames(10)
@@ -149,7 +149,7 @@ func _run() -> void:
     _check(absorption.active and is_equal_approx(absorption.time_left, time_before), "Inventory must pause a pending analysis channel")
     hud.close_inventory()
     await _frames(75)
-    _check(not is_instance_valid(second) and bag.total_units() == 20 and book.all_skills().size() == 1, "Resuming must complete analysis, stack one essence, and preserve unique skill knowledge")
+    _check(not is_instance_valid(second) and bag.total_units() == bag.capacity and book.all_skills().size() == 1, "Resuming must complete analysis, stack one essence, and preserve unique skill knowledge")
 
     pool.try_spend(pool.current)
     await _frames(2)

@@ -50,6 +50,8 @@ var citizens_panel: Control
 ## Join codes (playing through routers), see invite_panel.gd.
 var invite_panel: Control
 var dev_panel: Control
+## Professions window (M6a, L), see professions_panel.gd.
+var professions_panel: Control
 var _zeni: Label
 var _close: Button
 var _log: RichTextLabel
@@ -111,6 +113,8 @@ func _ready() -> void:
     add_child(citizens_panel)
     invite_panel = load("res://scripts/ui/invite_panel.gd").new(self)
     add_child(invite_panel)
+    professions_panel = load("res://scripts/ui/professions_panel.gd").new(self)
+    add_child(professions_panel)
     # The owner's mod menu (F10), only in the dev build.
     if preload("res://scripts/dev/dev_tools.gd").available():
         dev_panel = load("res://scripts/ui/dev_panel.gd").new(self)
@@ -123,7 +127,7 @@ func _ready() -> void:
     add_child(_camp_dialog)
 
 func menu_open() -> bool:
-    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible) or (is_instance_valid(harbour_panel) and harbour_panel.visible) or (is_instance_valid(party_panel) and party_panel.is_open()) or (is_instance_valid(dialog_panel) and dialog_panel.is_open()) or (is_instance_valid(nation_panel) and nation_panel.is_open()) or (is_instance_valid(citizens_panel) and citizens_panel.is_open()) or (is_instance_valid(invite_panel) and invite_panel.is_open()) or (is_instance_valid(dev_panel) and dev_panel.is_open())
+    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible) or (is_instance_valid(harbour_panel) and harbour_panel.visible) or (is_instance_valid(party_panel) and party_panel.is_open()) or (is_instance_valid(dialog_panel) and dialog_panel.is_open()) or (is_instance_valid(nation_panel) and nation_panel.is_open()) or (is_instance_valid(citizens_panel) and citizens_panel.is_open()) or (is_instance_valid(invite_panel) and invite_panel.is_open()) or (is_instance_valid(dev_panel) and dev_panel.is_open()) or (is_instance_valid(professions_panel) and professions_panel.is_open())
 
 func bind_player(actor: Node2D) -> void:
     if player == actor:
@@ -353,6 +357,32 @@ func _activate_slot(index: int) -> void:
         else:
             player.get_node("MeleeAttack").attack_skill(player.facing, skill.id)
 
+## M6a: "F: Chop Oak Log · Woodcutting 3/1 · 78%" next to a tree or ore rock (the chance is
+## always shown), or what is being worked on.
+func _refresh_node_prompt() -> void:
+    var nodes: Node = get_parent().get("nodes")
+    if nodes == null:
+        return
+    if not has_node("NodePrompt"):
+        var prompt_label := _label("", Vector2(120, 292), Vector2(400, 16), self, 10)
+        prompt_label.name = "NodePrompt"
+        prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        prompt_label.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.05))
+        prompt_label.add_theme_constant_override("outline_size", 4)
+    var label: Label = get_node("NodePrompt")
+    var index := -1
+    if String(player.gather_id).begins_with("node:"):
+        index = int(String(player.gather_id).trim_prefix("node:"))
+    elif not menu_open() and player.get_node("Health").current > 0:
+        index = nodes.nearest(player)
+    if index < 0:
+        label.text = ""
+        return
+    var shown: Array = nodes.prompt(player, index)
+    var working := String(player.gather_id).begins_with("node:")
+    label.text = String(shown[0]).replace("F: Chop", "Chopping").replace("F: Mine", "Mining") if working else shown[0]
+    label.add_theme_color_override("font_color", professions_panel.chance_colour(shown[1]))
+
 func _process(_delta: float) -> void:
     _scale_new_elements()
     if _pause_panel.visible:
@@ -386,6 +416,7 @@ func _process(_delta: float) -> void:
             siege_label.add_theme_color_override("font_outline_color", Color(0.05, 0.02, 0.02))
             siege_label.add_theme_constant_override("outline_size", 4)
         get_node("SiegeBanner").text = siege_node.banner()
+    _refresh_node_prompt()
     var place: String = WORLD_MAP.place_name(player.global_position)
     # M5a: inside your settlement, its name (or tier).
     var camp: Node2D = get_parent().get("camp")
@@ -535,6 +566,10 @@ func _unhandled_input(event: InputEvent) -> void:
             get_parent()._announce("World saved." if result == OK else "Only the host can save; check the world path if saving failed.")
             get_viewport().set_input_as_handled()
             return
+    if event.is_action_pressed("professions") and not event.is_echo() and not menu_open():
+        professions_panel.open()
+        get_viewport().set_input_as_handled()
+        return
     if event.is_action_pressed("skill_tree") and not event.is_echo() and not _modal.visible and not fusion.visible:
         if skill_tree.visible:
             skill_tree.close()

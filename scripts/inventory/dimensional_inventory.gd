@@ -3,7 +3,8 @@ const AUTHORITY := preload("res://scripts/network/authority.gd")
 ## Session-local analyzed materials, with bounded stacks and stable item IDs.
 
 signal changed
-@export var capacity: int = 20
+## M6a: 100 units (gathering fills the bag quickly); older saves are raised by the v32 migration.
+@export var capacity: int = 100
 var _entries: Dictionary = {}
 
 func total_units() -> int:

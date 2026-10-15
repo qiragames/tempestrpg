@@ -1053,6 +1053,30 @@ func _run() -> void:
     await _wait(0.3)
     await _shot("map_zoom", "The world map zoomed in with the mouse wheel: the real trees, rocks and houses")
     hud_nation.world_map.close()
+    _log("## 27. Professions (M6a)")
+    var resource_nodes: Node = world.nodes
+    var ore_rock := -1
+    var plan: Array = world.terrain.planned_props()
+    for index in range(plan.size()):
+        if resource_nodes.info(index).get("resource") == "ore_iron":
+            ore_rock = index
+            break
+    _check(ore_rock >= 0, "The world has iron rocks")
+    if ore_rock >= 0:
+        showcase.global_position = resource_nodes.work_point(ore_rock) + Vector2(-14, 6)
+        world.terrain.ensure_props_at(showcase.global_position)
+        await _wait(0.3)
+        _check(String(hud_nation.get_node("NodePrompt").text).contains("%"), "The node prompt shows the chance")
+        await _shot("mining_prompt", "An iron rock with its ore vein; the prompt shows the profession level against the required level and your chance per swing")
+        _check(session.apply_action(showcase, "node", {"index": ore_rock}), "Mining the iron rock")
+        await _wait(0.45)
+        await _shot("mining", "Mining iron with the pickaxe: every successful swing counts, three give one ore (a miss still teaches a little)")
+        showcase.stop_gather()
+    hud_nation.professions_panel.open()
+    hud_nation.professions_panel._select("mining")
+    await _wait(0.2)
+    await _shot("professions", "The Professions window (L): level, XP, perks and milestones, and every ore with the level it needs and your chance")
+    hud_nation.professions_panel.close_panel()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

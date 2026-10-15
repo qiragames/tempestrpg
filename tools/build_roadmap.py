@@ -77,6 +77,8 @@ why = [
     "Connect adventure rewards and evolved allies to a functioning camp; complete the first playable slice.",
     "Test and polish the small playable slice before scaling the simulation and content.",
     "Give settlement growth external consequences through trade, factions, and conflict.",
+    "Give every character long-term goals outside combat: gathering, fishing and crafting with region-gated resources.",
+    "Give regions climactic group fights and smaller hidden bosses worth exploring for.",
     "Extend a proven economy and combat loop into squad warfare and endgame progression.",
 ]
 for index, (mid, title, status_text, body) in enumerate(milestones):
@@ -96,7 +98,7 @@ if expansion:
                       what=body.strip(), why="Expand the proven gear and exploration systems into original regions and travel.",
                       evidence="User decision 2026-10-14: the world map comes right after step 22 (before 23/24). Ferries and own ships need currency/quests first.",
                       x=300, y=max(node["y"] for node in nodes)+115, phase="M4.5"))
-if len(nodes) != 24 + len(m4_rows) + int(expansion is not None):
+if len(nodes) != 26 + len(m4_rows) + int(expansion is not None):
     raise ValueError("Milestone structure changed: review the graph mapping.")
 updated = re.search(r"Last updated: (.*)", source).group(1)
 template = (ROOT / "tools/roadmap.template.html").read_text(encoding="utf-8")

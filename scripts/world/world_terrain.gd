@@ -150,6 +150,8 @@ var props: Node2D
 var collision: StaticBody2D
 ## Chunk → spawned prop nodes.
 var _spawned: Dictionary = {}
+## Spawned prop holders by plan index (M6a: resource nodes redraw felled trees and broken rocks).
+var _by_index: Dictionary = {}
 var _stream_left := 0.0
 
 static func tile_set() -> TileSet:
@@ -398,6 +400,7 @@ func stream_props(extra: Array = []) -> void:
         if not near:
             for node in _spawned[chunk]:
                 if is_instance_valid(node):
+                    _by_index.erase(int(node.get_meta("index", -1)))
                     node.queue_free()
             _spawned.erase(chunk)
     for centre in centres:
@@ -407,9 +410,32 @@ func stream_props(extra: Array = []) -> void:
                 if _spawned.has(chunk):
                     continue
                 var nodes: Array = []
+                var resources: Node = get_parent().get("nodes") if get_parent() != null else null
                 for index in _chunks.get(chunk, []):
-                    nodes.append(_spawn_prop(_prop_cache[index][0], _prop_cache[index][1]))
+                    var holder := _spawn_prop(_prop_cache[index][0], _prop_cache[index][1])
+                    holder.set_meta("index", index)
+                    _by_index[index] = holder
+                    if resources != null:
+                        resources.decorate(holder, index)
+                    nodes.append(holder)
                 _spawned[chunk] = nodes
+
+## The spawned holder of a plan index, or null.
+func spawned_prop(index: int) -> Node2D:
+    var holder: Variant = _by_index.get(index)
+    return holder if is_instance_valid(holder) else null
+
+## Plan indices of props whose foot is within `radius` of a point (any chunk, spawned or not).
+func props_near(point: Vector2, radius: float) -> Array:
+    _plan_once()
+    var found: Array = []
+    var centre := chunk_of(point)
+    for dy in range(-1, 2):
+        for dx in range(-1, 2):
+            for index in _chunks.get(centre + Vector2i(dx, dy), []):
+                if Vector2(_prop_cache[index][1]).distance_to(point) <= radius:
+                    found.append(index)
+    return found
 
 ## Spawn the chunks around a world position right away (teleports, ferries, tests).
 func ensure_props_at(world: Vector2) -> void:
@@ -462,10 +488,10 @@ static func _scatter(kind: int, region: int, roll: float, pick: int) -> String:
     match kind:
         MAP.Ground.FOREST:
             if roll < 0.7:
-                return ["pine", "pine", "tree_big", "tree_round"][pick % 4]
+                return ["pine", "pine", "tree_big", "tree_round", "pine", "pine", "tree_big", "tree_round", "pine", "boulder"][pick % 10]
         MAP.Ground.GRASS:
             if roll < 0.1:
-                return ["tree_big", "tree_round", "bush", "bush"][pick % 4]
+                return ["tree_big", "tree_round", "bush", "bush", "boulder"][pick % 5]
         MAP.Ground.AUTUMN:
             if roll < 0.22:
                 return ["tree_autumn", "tree_autumn", "bush"][pick % 3]

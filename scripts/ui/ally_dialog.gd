@@ -147,6 +147,13 @@ func open_nearest() -> void:
     if not wild.is_empty():
         session.request_action("mount", {"operation": "tame", "id": wild})
         return
+    # M6a: F at a tree or ore rock of the world works it (professions).
+    var nodes = hud.get_parent().get("nodes")
+    if nodes != null and hud.player.fishing_bite_in == -INF:
+        var node: int = nodes.nearest(hud.player)
+        if node >= 0:
+            session.request_action("node", {"index": node})
+            return
     if hud.player.fishing_bite_in != -INF:
         session.request_action("fish", {"operation": "reel"})
         return

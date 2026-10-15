@@ -706,6 +706,12 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             rejected_requests += 1
             return false
         return world.camp.transact(actor, payload.operation, payload.id)
+    if action == "node":
+        # M6a: clients name a tree or ore rock (its prop plan index); the host checks reach and stock.
+        if payload.size() != 1 or not (payload.get("index") is int or payload.get("index") is float) or float(payload.index) != floor(float(payload.index)):
+            rejected_requests += 1
+            return false
+        return false if actor.input_blocked else actor.start_node(int(payload.index))
     if action == "recruit":
         if payload.size() != 1 or not payload.get("id") is String or payload.id.length() > 64:
             rejected_requests += 1
@@ -990,8 +996,11 @@ func _broadcast() -> void:
     for id in owners.values():
         var actor = world.player_by_id(id)
         if actor != null and not String(actor.gather_id).is_empty():
-            gathering[id] = [actor.gather_id, actor.gather_resource, [actor.gather_at.x, actor.gather_at.y], actor.gather_clock]
+            gathering[id] = [actor.gather_id, actor.gather_resource, [actor.gather_at.x, actor.gather_at.y], actor.gather_clock, actor.gather_period]
     data["gathering"] = gathering
+    # M6a: used-up trees and rocks (not saved).
+    if world.get("nodes") != null:
+        data["nodes"] = world.nodes.state()
     _revision += 1
     # Several clients can disconnect in the same poll. Do not broadcast to ENet
     # peers whose channels have already closed but whose callback is still queued.
@@ -1026,17 +1035,20 @@ func _snapshot(data: Dictionary, revision: int) -> void:
         CODEC.apply_player(world.player_by_id(id), data.players[id], world, true)
         var actor = world.player_by_id(id)
         var job: Variant = data.get("gathering", {}).get(id)
-        if job is Array and job.size() == 4:
+        if job is Array and job.size() in [4, 5]:
             actor.gather_id = String(job[0])
             actor.gather_resource = String(job[1])
             actor.gather_at = Vector2(float(job[2][0]), float(job[2][1]))
             actor.gather_clock = float(job[3])
+            actor.gather_period = float(job[4]) if job.size() == 5 else 0.55
         else:
             actor.gather_id = ""
     for actor in world.get_children():
         if actor.is_in_group("player") and not wanted.has(actor.character_id):
             world.remove_child(actor)
             actor.queue_free()
+    if world.get("nodes") != null:
+        world.nodes.apply(data.get("nodes", {}))
     var local = world.player_by_id(local_character_id)
     if local:
         world.bind_local_player(local)

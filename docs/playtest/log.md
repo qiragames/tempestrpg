@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.2 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.1 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -299,7 +299,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (960x540)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Uncommon Obsidian Cutter
+- [x] The chest gave an Uncommon-or-better item: Rare Mystic Talon
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (960x540)
@@ -619,6 +619,22 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 ![The world map zoomed in with the mouse wheel: the real trees, rocks and houses](109_map_zoom.png)
 *The world map zoomed in with the mouse wheel: the real trees, rocks and houses* (960x540)
 
+## 27. Professions (M6a)
+- [x] The world has iron rocks
+- [x] The node prompt shows the chance
+
+![An iron rock with its ore vein; the prompt shows the profession level against the required level and your chance per swing](110_mining_prompt.png)
+*An iron rock with its ore vein; the prompt shows the profession level against the required level and your chance per swing* (960x540)
+
+- [x] Mining the iron rock
+
+![Mining iron with the pickaxe: every successful swing counts, three give one ore (a miss still teaches a little)](111_mining.png)
+*Mining iron with the pickaxe: every successful swing counts, three give one ore (a miss still teaches a little)* (960x540)
+
+
+![The Professions window (L): level, XP, perks and milestones, and every ore with the level it needs and your chance](112_professions.png)
+*The Professions window (L): level, XP, perks and milestones, and every ore with the level it needs and your chance* (960x540)
+
 
 ## System messages seen
 
@@ -678,7 +694,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +1500 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Epic Guard's Bow.
+- Trial reward: Rare Mithril Amulet.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +21 XP (defeat).
@@ -695,8 +711,8 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Uncommon Obsidian Cutter.
-- +20 Zeni (chest).
+- Chest opened: Rare Mystic Talon.
+- +40 Zeni (chest).
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 - Your router did not answer (UPnP off?). Forward UDP 24560 to this PC by hand for friends outside your network.
@@ -704,4 +720,4 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 The bot retreated 0 time(s) to let Magicules recover.
 XP assistance for skill points: 550 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 109 screenshots.**
+**Result: 0 failed checks, 112 screenshots.**

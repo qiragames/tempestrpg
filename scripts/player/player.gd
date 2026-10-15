@@ -23,7 +23,7 @@ var exhaustion_active: bool = false
 var exhaustion_left: float = 0.0
 var remote_direction := Vector2.ZERO
 var last_input_msec: int = 0
-var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "race": "Slime", "quests": {}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": [], "zeni": 0, "ship": {"owned": false, "at": ""}, "ferry_pass_until": 0.0, "tools": {"axe": 0, "pickaxe": 0, "rod": 0}, "mounts": [], "mount": "", "augments": [], "auras": [], "aura": "", "bonus_points": 0, "champion": false}
+var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "race": "Slime", "quests": {}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": [], "zeni": 0, "ship": {"owned": false, "at": ""}, "ferry_pass_until": 0.0, "tools": {"axe": 0, "pickaxe": 0, "rod": 0}, "mounts": [], "mount": "", "augments": [], "auras": [], "aura": "", "bonus_points": 0, "champion": false, "professions": {"woodcutting": 0, "mining": 0, "fishing": 0, "smithing": 0, "alchemy": 0}}
 ## Current mimic form and the time until it can change again (host-owned, saved).
 ## Gear (17e): owned items and active cooldowns; equipped item IDs live in progression.equipment.
 var gear: Dictionary = {"items": [], "cooldowns": {}}
@@ -446,7 +446,45 @@ var gather_resource := ""
 var gather_at := Vector2.ZERO
 var gather_swings := 0
 var gather_clock := 0.0
+## Seconds per swing (M6a: professions make swings faster or, below the requirement, slower).
+var gather_period := 0.55
 var _last_phase := 0.0
+const PRO := preload("res://scripts/professions/profession_catalogue.gd")
+
+## Host: start working a resource node (a tree or ore rock of the world, M6a).
+func start_node(index: int) -> bool:
+    var nodes: Node = get_parent().get("nodes")
+    if nodes == null or not AUTHORITY.can_mutate(self) or $Health.current <= 0 or is_exhausted() or not nodes.intact(index):
+        return false
+    if global_position.distance_to(nodes.work_point(index)) > nodes.REACH + 6.0:
+        return false
+    var node: Dictionary = nodes.info(index)
+    gather_id = "node:%d" % index
+    gather_resource = "wood" if node.profession == "woodcutting" else "stone"
+    gather_at = node.foot + Vector2(0, -6)
+    gather_swings = 1
+    gather_period = nodes.swing_seconds(self, index)
+    gather_clock = gather_period
+    facing = (gather_at - global_position).normalized() if gather_at.distance_to(global_position) > 1.0 else facing
+    return true
+
+## Host: profession experience (M6a), with a message on each new level.
+func gain_profession_xp(profession: String, amount: int) -> void:
+    if amount <= 0 or not AUTHORITY.can_mutate(self) or not PRO.PROFESSIONS.has(profession):
+        return
+    if DEV.xp and DEV.applies(self):
+        amount *= DEV.XP_FACTOR
+    if not progression.get("professions") is Dictionary:
+        progression["professions"] = PRO.initial_state()
+    var before: int = PRO.level_for(int(progression.professions.get(profession, 0)))
+    progression.professions[profession] = mini(PRO.max_xp(), int(progression.professions.get(profession, 0)) + amount)
+    var after: int = PRO.level_for(int(progression.professions[profession]))
+    if after > before:
+        var text := "%s level %d!" % [PRO.PROFESSIONS[profession][0], after]
+        for milestone in PRO.MILESTONES[profession]:
+            if milestone[0] > before and milestone[0] <= after:
+                text += " Milestone: %s (%s)." % [milestone[1], milestone[2]]
+        session.notify_character(character_id, text)
 
 ## Host: start working a deposit (the camp checked reach and stock).
 func start_gather(id: String, resource: String, at: Vector2) -> bool:
@@ -457,6 +495,7 @@ func start_gather(id: String, resource: String, at: Vector2) -> bool:
     gather_resource = resource
     gather_at = at
     gather_swings = SWINGS[clampi(tier, 0, 3)]
+    gather_period = CHOP.SWING
     gather_clock = CHOP.SWING
     facing = (at - global_position).normalized() if at.distance_to(global_position) > 1.0 else facing
     return true
@@ -467,10 +506,23 @@ func stop_gather() -> void:
 
 ## The swing in progress (0..1), for drawing on every peer.
 func gather_phase() -> float:
-    return 1.0 - clampf(gather_clock / CHOP.SWING, 0.0, 1.0)
+    return 1.0 - clampf(gather_clock / maxf(0.05, gather_period), 0.0, 1.0)
 
 func _tick_gather(delta: float) -> void:
     if gather_id.is_empty():
+        return
+    if gather_id.begins_with("node:"):
+        var nodes: Node = get_parent().get("nodes")
+        var index := int(gather_id.trim_prefix("node:"))
+        if nodes == null or velocity.length() > 1.0 or $Health.current <= 0 or not nodes.intact(index) or global_position.distance_to(nodes.work_point(index)) > nodes.REACH + 10.0:
+            stop_gather()
+            return
+        gather_clock -= delta
+        if gather_clock <= 0.0:
+            gather_period = nodes.swing_seconds(self, index)
+            gather_clock = gather_period
+            if not nodes.strike(self, index, get_parent().loot_rng):
+                stop_gather()
         return
     var camp: Node = get_parent().get("camp")
     if camp == null or velocity.length() > 1.0 or $Health.current <= 0 or global_position.distance_to(gather_at) > 40.0 or int(camp.state.deposits.get(gather_id, 0)) <= 0:
@@ -482,8 +534,11 @@ func _tick_gather(delta: float) -> void:
         gather_clock = CHOP.SWING
         if gather_swings <= 0:
             var id := gather_id
+            var resource := gather_resource
             stop_gather()
-            camp.transact(self, "gather", id)
+            if camp.transact(self, "gather", id):
+                # M6a: the camp's deposits teach a little too.
+                gain_profession_xp("woodcutting" if resource == "wood" else "mining", 10)
 
 ## Every peer: the impact moment of each swing (shake, chips, sound).
 func _animate_gather() -> void:

@@ -28,6 +28,8 @@ var realm: Node2D
 var rivals: Node2D
 var siege: Node
 var respawner: Node
+## M6a: harvestable trees and ore rocks (professions).
+var nodes: Node
 ## Host-side randomness for gear drops, chests, trial rewards and the forge (17g).
 var loot_rng := RandomNumberGenerator.new()
 var chest_layer: Node2D
@@ -60,6 +62,8 @@ func _ready() -> void:
     add_child(rivals)
     siege = load("res://scripts/nation/siege.gd").new()
     add_child(siege)
+    nodes = load("res://scripts/professions/resource_nodes.gd").new(self)
+    add_child(nodes)
     trial = load("res://scripts/trials/proving_trial.gd").new()
     trial.name = "ProvingTrial"
     trial.y_sort_enabled = true
