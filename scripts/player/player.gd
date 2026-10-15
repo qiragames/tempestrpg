@@ -431,6 +431,70 @@ func _physics_process(_delta: float) -> void:
     move_and_slide()
     queue_redraw()
 
+## --- Chopping and mining (user request)
+const CHOP := preload("res://scripts/visual/chopping.gd")
+## Swings per deposit by tool tier (none, Basic, Fine, Master).
+const SWINGS := [5, 4, 3, 2]
+var gather_id := ""
+var gather_resource := ""
+var gather_at := Vector2.ZERO
+var gather_swings := 0
+var gather_clock := 0.0
+var _last_phase := 0.0
+
+## Host: start working a deposit (the camp checked reach and stock).
+func start_gather(id: String, resource: String, at: Vector2) -> bool:
+    if not AUTHORITY.can_mutate(self) or $Health.current <= 0 or is_exhausted():
+        return false
+    var tier: int = int(progression.get("tools", {}).get(CHOP.tool_for(resource), 0))
+    gather_id = id
+    gather_resource = resource
+    gather_at = at
+    gather_swings = SWINGS[clampi(tier, 0, 3)]
+    gather_clock = CHOP.SWING
+    facing = (at - global_position).normalized() if at.distance_to(global_position) > 1.0 else facing
+    return true
+
+func stop_gather() -> void:
+    gather_id = ""
+    gather_swings = 0
+
+## The swing in progress (0..1), for drawing on every peer.
+func gather_phase() -> float:
+    return 1.0 - clampf(gather_clock / CHOP.SWING, 0.0, 1.0)
+
+func _tick_gather(delta: float) -> void:
+    if gather_id.is_empty():
+        return
+    var camp: Node = get_parent().get("camp")
+    if camp == null or velocity.length() > 1.0 or $Health.current <= 0 or global_position.distance_to(gather_at) > 40.0 or int(camp.state.deposits.get(gather_id, 0)) <= 0:
+        stop_gather()
+        return
+    gather_clock -= delta
+    if gather_clock <= 0.0:
+        gather_swings -= 1
+        gather_clock = CHOP.SWING
+        if gather_swings <= 0:
+            var id := gather_id
+            stop_gather()
+            camp.transact(self, "gather", id)
+
+## Every peer: the impact moment of each swing (shake, chips, sound).
+func _animate_gather() -> void:
+    if gather_id.is_empty():
+        _last_phase = 0.0
+        return
+    var phase := gather_phase()
+    if _last_phase < CHOP.IMPACT and phase >= CHOP.IMPACT:
+        var camp: Node = get_parent().get("camp")
+        if camp != null:
+            camp.shake[gather_id] = 0.25
+        CHOP.impact(get_parent(), gather_at, gather_resource)
+        if has_node("/root/Audio"):
+            get_node("/root/Audio").play("gather", gather_at)
+    _last_phase = phase
+    queue_redraw()
+
 func current_speed() -> float:
     return maxf(10.0, move_speed + gear_bonus("speed")) * FORMS.FORMS[form].speed * mount_speed() * aura_speed()
 
@@ -896,6 +960,7 @@ func begin_exhaustion(seconds: float) -> void:
 
 func _process(delta: float) -> void:
     _animate(delta)
+    _animate_gather()
     if session.replica_world:
         return
     if death_left > 0.0 and $Health.current <= 0:
@@ -907,6 +972,7 @@ func _process(delta: float) -> void:
         _tick_consumables(delta)
     _tick_fishing(delta)
     _tick_aura(delta)
+    _tick_gather(delta)
     phoenix_left = maxf(0.0, phoenix_left - delta)
     for id in gear.cooldowns.keys():
         gear.cooldowns[id] = maxf(0.0, gear.cooldowns[id] - delta)
@@ -975,6 +1041,8 @@ func configure_replica() -> void:
 
 func _draw() -> void:
     _draw_body()
+    if not gather_id.is_empty() and has_node("Health") and $Health.current > 0:
+        CHOP.draw_tool(self, CHOP.tool_for(gather_resource), gather_phase(), facing)
     if has_node("Health") and $Health.current > 0 and not exhaustion_active and form == FORMS.BASE:
         _draw_gear()
 

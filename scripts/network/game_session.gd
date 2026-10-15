@@ -985,6 +985,13 @@ func _broadcast() -> void:
             connected[id] = data.players[id].duplicate(true)
             connected[id].erase("token_hash")
     data.players = connected
+    # Chopping and mining are shown on every peer (not saved).
+    var gathering := {}
+    for id in owners.values():
+        var actor = world.player_by_id(id)
+        if actor != null and not String(actor.gather_id).is_empty():
+            gathering[id] = [actor.gather_id, actor.gather_resource, [actor.gather_at.x, actor.gather_at.y], actor.gather_clock]
+    data["gathering"] = gathering
     _revision += 1
     # Several clients can disconnect in the same poll. Do not broadcast to ENet
     # peers whose channels have already closed but whose callback is still queued.
@@ -1017,6 +1024,15 @@ func _snapshot(data: Dictionary, revision: int) -> void:
     CODEC.apply_entities(world, data, true)
     for id in data.players:
         CODEC.apply_player(world.player_by_id(id), data.players[id], world, true)
+        var actor = world.player_by_id(id)
+        var job: Variant = data.get("gathering", {}).get(id)
+        if job is Array and job.size() == 4:
+            actor.gather_id = String(job[0])
+            actor.gather_resource = String(job[1])
+            actor.gather_at = Vector2(float(job[2][0]), float(job[2][1]))
+            actor.gather_clock = float(job[3])
+        else:
+            actor.gather_id = ""
     for actor in world.get_children():
         if actor.is_in_group("player") and not wanted.has(actor.character_id):
             world.remove_child(actor)

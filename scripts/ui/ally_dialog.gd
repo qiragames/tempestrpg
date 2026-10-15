@@ -117,6 +117,13 @@ func open_nearest() -> void:
         if not person.is_empty():
             _talk_realm(person)
             return
+    # User request: F at a tree or rock chops or mines it.
+    var camp_node_f = hud.get_parent().get("camp")
+    if camp_node_f != null:
+        var deposit: String = camp_node_f.nearest_deposit(hud.player)
+        if not deposit.is_empty():
+            session.request_action("camp", {"operation": "chop", "id": deposit})
+            return
     # F next to an unopened chest opens it (17g).
     var chest: String = hud.get_parent().nearest_chest(hud.player)
     if not chest.is_empty():

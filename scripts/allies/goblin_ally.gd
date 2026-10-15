@@ -43,6 +43,7 @@ func _ready() -> void:
 
 ## Runs on every peer; naming evolves the goblin's look into the armored Hobgoblin.
 func _process(delta: float) -> void:
+    _animate_chop()
     if not is_instance_valid(body_sprite):
         return
     var wanted := "hobgoblin" if race == "Hobgoblin" else "goblin"
@@ -209,7 +210,34 @@ func _physics_process(delta: float) -> void:
         velocity = global_position.direction_to(owner.global_position) * follow_speed
         move_and_slide()
 
+## Chopping/mining look while gathering at a deposit (every peer, from the replicated work).
+func _gathering_resource() -> String:
+    if work_role != "gather" or work_target.is_empty() or get_parent() == null or get_parent().get("camp") == null:
+        return ""
+    var camp: Node = get_parent().camp
+    if not camp.sites.has(work_target) or global_position.distance_to(camp.sites[work_target].position) > 14.0:
+        return ""
+    return String(camp.sites[work_target].resource)
+
+var _chop_last := 0.0
+
+func _animate_chop() -> void:
+    var resource := _gathering_resource()
+    if resource.is_empty():
+        return
+    var chop := preload("res://scripts/visual/chopping.gd")
+    var phase := fmod(Time.get_ticks_msec() / 1000.0, chop.SWING) / chop.SWING
+    if _chop_last < chop.IMPACT and phase >= chop.IMPACT:
+        get_parent().camp.shake[work_target] = 0.2
+        chop.impact(get_parent(), get_parent().camp.sites[work_target].position, resource)
+    _chop_last = phase
+    queue_redraw()
+
 func _draw() -> void:
+    var gathering := _gathering_resource()
+    if not gathering.is_empty():
+        var chop := preload("res://scripts/visual/chopping.gd")
+        chop.draw_tool(self, chop.tool_for(gathering), fmod(Time.get_ticks_msec() / 1000.0, chop.SWING) / chop.SWING, get_parent().camp.sites[work_target].position - global_position)
     if is_instance_valid(body_sprite):
         # Owner marker at the feet: cyan once it serves a character, sand while unclaimed.
         draw_circle(Vector2(0, 10), 2, Color("71e4d4") if not owner_id.is_empty() else Color("d7b16d"))

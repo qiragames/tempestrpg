@@ -58,6 +58,8 @@ const MAP := preload("res://scripts/world/world_map.gd")
 const PLACE_REACH := 200.0
 ## Placed buildings' nodes by building ID (presentation and collision, rebuilt from the state).
 var _placed: Dictionary = {}
+## Deposits shaking from a hit (seconds left; presentation on every peer).
+var shake: Dictionary = {}
 ## M5b: citizens walking around their homes (presentation on every peer) and the redraw timer of
 ## the fields' crops.
 var _walkers: Dictionary = {}
@@ -643,6 +645,12 @@ func _redraw_fields() -> void:
 
 ## Citizens wander near their homes (every peer; positions are not replicated).
 func _process(delta: float) -> void:
+    if not shake.is_empty():
+        for id in shake.keys():
+            shake[id] = float(shake[id]) - delta
+            if shake[id] <= 0.0:
+                shake.erase(id)
+        queue_redraw()
     if not _shots.is_empty():
         for shot in _shots:
             shot[2] -= delta
@@ -829,6 +837,11 @@ func transact(actor: Node2D, operation: String, id: String) -> bool:
             state.founded = true
             state.founder = actor.character_id
             message = "Camp founded."
+        "chop":
+            # User request: chop trees and mine rocks with a few swings instead of picking up piles.
+            if not sites.has(id) or state.deposits[id] <= 0 or not can_reach(actor, sites[id].position, 36) or not actor.has_method("start_gather"):
+                return false
+            return actor.start_gather(id, sites[id].resource, sites[id].position)
         "gather":
             if not sites.has(id) or state.deposits[id] <= 0 or not can_reach(actor, sites[id].position, 36):
                 return false
@@ -1029,13 +1042,25 @@ func _draw() -> void:
             node.get_node("Flag").queue_redraw()
     for id in sites:
         var point: Vector2 = sites[id].position
-        if state.deposits[id] == 0:
+        var wobble := Vector2(sin(Time.get_ticks_msec() / 25.0) * 1.5, 0) if float(shake.get(id, 0.0)) > 0.0 else Vector2.ZERO
+        if sites[id].resource == "wood":
+            if state.deposits[id] == 0:
+                # A stump with rings.
+                draw_circle(point + Vector2(0, 6), 5.0, Color("6b4a2b"))
+                draw_circle(point + Vector2(0, 6), 3.5, Color("b58a5a"))
+                draw_arc(point + Vector2(0, 6), 2.0, 0, TAU, 8, Color("8a6440"), 1.0)
+            else:
+                ART.draw_prop(self, "tree", point + Vector2(0, 10) + wobble)
+        elif state.deposits[id] == 0:
             ART.draw_prop(self, "pebbles", point + Vector2(0, 6))
-        elif sites[id].resource == "wood":
-            ART.draw_prop(self, "logs", point + Vector2(0, 8))
-            ART.draw_prop(self, "logs", point + Vector2(2, 1))
         else:
-            ART.draw_prop(self, "stones", point + Vector2(0, 7))
+            ART.draw_prop(self, "rock", point + Vector2(0, 8) + wobble)
+            # Region rocks carry ore: copper, iron or gold veins.
+            if not id in SEEDED_DEPOSITS:
+                var ore: Color = [Color("e0803a"), Color("c8d0d8"), Color("f0c840")][abs(hash(id)) % 3]
+                for k in range(4):
+                    var at := point + wobble + Vector2(-6 + (abs(hash(id + str(k))) % 12), -2 - (abs(hash(str(k) + id)) % 12))
+                    draw_rect(Rect2(at, Vector2(2, 2)), ore)
     if state.shrine:
         draw_arc(STRUCTURES.shrine_1.site, SHRINE_RANGE, 0, TAU, 32, Color(0.44, 0.89, 0.83, 0.25), 1)
 

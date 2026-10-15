@@ -26,7 +26,8 @@ func _ready() -> void:
     _gather.pressed.connect(func():
         var id: String = hud.get_parent().camp.nearest_deposit(hud.player)
         if not id.is_empty():
-            _request("gather", id)
+            _request("chop", id)
+            close_dialog()
     )
     _offer = hud._button("Offer essence", Vector2(272, 124), Vector2(124, 26), self)
     _offer.pressed.connect(func(): _request("offer", "gnasher_essence"))
