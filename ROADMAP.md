@@ -131,6 +131,11 @@ Requested by the user after 17e; exact order and scope to be confirmed with the 
 - **M9e — achievements and titles: Done (Claude, 2026-10-16).** 46 achievements in six categories (combat, story, quests, professions, fishing, journey); 34 give a title you can wear — e.g. Leviathan Catcher, Master Miner, Wyrmslayer, Moonwarden, Raid Legend, Wanderer. Titles show on your status card and above your head (friends see them too); Y opens the window with every achievement's progress; a gold banner announces each new one. Older characters unlock what their level, professions, fish log and quests already show.
 - Next: the M10 multiplayer change (user priority), then distinct gear tier looks, dungeon variety, trading, world events, Cooking/Enchanting/Tailoring, pets, controller support, armies; then release v1.0.
 
+### M11 — More to do in the world (user batch 2026-10-16) · In progress, requires M9
+
+- **M11a — distinct looks for the gear tiers: Done (Claude, 2026-10-16).** The ten tiers of levels 21–48 no longer only change the name: each recolours its art in its own palette — Stormtouched storm blue, Steppeforged gold, Windwrought teal, Gloomwrought violet, Duskforged ember, Jadecarved jade, Cloudforged silver — and the three highest also glow (Starforged and Celestial a glowing edge, Ascendant a brighter double glow). Bag, equipment window, item cards, the merchant and the weapon in your character's hand all show it. Tests: `tests/tier_looks.gd` (6).
+- Next: dungeon variety (traps, levers and puzzles, keys, heroic modes), player trading, world events, Cooking/Enchanting/Tailoring, pets, controller support, armies; then release v1.0.
+
 ### M10 — Invite-only multiplayer and your own characters · Done (Claude, 2026-10-16), requires N0
 
 - User decisions (2026-10-16): invite codes are the only way to play together — no Open to friends by address, no ports, no IP addresses, no LAN joining, no server provider; the world runs on the owner's computer. Every world is single player until the owner switches multiplayer on in the Esc menu. The owner decides whether guests may bring their own character; it stays one character (progress is written back into the guest's own world on every autosave and when they leave); map discoveries stay with each world.
@@ -222,6 +227,7 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-16: Claude Code gave the gear tiers their own looks (M11a) on `claude/m11-tier-looks`: `TierLooks` recolours a tier piece's atlas icon (palette strength, glow rings) once per base, `GearCatalogue.icon_texture` uses it, so every icon and the held weapon follow.
 - 2026-10-16: Claude Code made multiplayer invite-only with your own characters (M10) on `claude/m10-invite-only`: `GameSession.close_multiplayer`, `set_imports`, `_join_world(..., bring)`, `_sync_characters` (every autosave), `_request_sync` (leaving), `_character_sync` → `CharacterImport.write_back`; world meta `imports` (optional); debug-only CLI; new pause entries and join screen; `tests/network_import.py`.
 - 2026-10-16: Claude Code added achievements and titles (M9e) on `claude/m9e-achievements`: `Achievements` (catalogue, `record`, `progress`, `check`), counted through `QuestLog.on_event` (one hook for every game event) and every 0.5 s check, the `title` intent, `AchievementsPanel` (Y), titles drawn by the quest overlay, save checks, `tests/achievements.gd` (22).
 - 2026-10-16: Claude Code finished the story (M9d) on `claude/m9d-story`: chapters 3–7, `choice` steps (`QuestLog.choose`, the `choose` quest operation), staged NPCs (`QuestCatalogue.is_staged`, `dungeon:<id>` positions), `boss_eclipse_wyrm` (sprite assembled from DragonBlue's parts), two story uniques with the `moonwarden`/`sovereign` abilities, 24 side quests, v37, `tests/quests.gd` (44).

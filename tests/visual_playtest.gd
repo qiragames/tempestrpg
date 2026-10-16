@@ -1238,6 +1238,20 @@ func _run() -> void:
     await _wait(0.3)
     await _shot("achievements", "The achievements window (Y): categories, progress and the titles you can wear")
     hud_nation.achievements_panel.close_panel()
+    _log("## 35. Distinct looks for the gear tiers (M11)")
+    var tier_rng := RandomNumberGenerator.new()
+    tier_rng.seed = 11
+    var tier_gear := preload("res://scripts/items/gear_catalogue.gd")
+    for tier_level in [21, 24, 27, 30, 33, 36, 39, 42, 45, 48]:
+        var tier_item: Dictionary = tier_gear.roll("t%d_sword_080" % tier_level, 3, tier_rng)
+        tier_item["id"] = "item_tierlook_%02d" % tier_level
+        showcase.add_item(tier_item)
+    hud_nation.gear_panel.open()
+    hud_nation.gear_panel._hovered = "item_tierlook_48"
+    await _wait(0.4)
+    await _shot("tier_looks", "Gear tiers look different: one sword from each tier (21 storm blue to 48 Ascendant pink with a glow), the Ascendant one's card")
+    hud_nation.gear_panel._hovered = ""
+    hud_nation.gear_panel.close()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

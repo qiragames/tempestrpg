@@ -4,9 +4,10 @@ A Godot **4.6.3** / GDScript prototype for a top-down pixel-art Isekai RPG.
 
 ## Screenshots
 
-Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 134 captures are in `docs/playtest/` with `docs/playtest/log.md`.
+Current state of this branch, captured by the visible playtest (`tests/visual_playtest.gd`, 640 × 360). Updated with every roadmap step; all 135 captures are in `docs/playtest/` with `docs/playtest/log.md`.
 
 <table>
+<tr><td align="center"><img src="docs/playtest/135_tier_looks.png" width="400" alt="Each gear tier has its own look (21–48)"><br><sub>Each gear tier has its own look (21–48)</sub></td><td align="center"><img src="docs/playtest/52_pause_open.png" width="400" alt="Multiplayer by invite codes only (Esc menu)"><br><sub>Multiplayer by invite codes only (Esc menu)</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/133_title.png" width="400" alt="Titles: Leviathan Catcher above your head"><br><sub>Titles: Leviathan Catcher above your head</sub></td><td align="center"><img src="docs/playtest/134_achievements.png" width="400" alt="The achievements window (Y)"><br><sub>The achievements window (Y)</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/131_eclipse_wyrm.png" width="400" alt="The final raid boss: the Eclipse Wyrm"><br><sub>The final raid boss: the Eclipse Wyrm</sub></td><td align="center"><img src="docs/playtest/132_ending_choice.png" width="400" alt="The ending: Moonwarden or Eclipse Sovereign"><br><sub>The ending: Moonwarden or Eclipse Sovereign</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/127_quest_dialog.png" width="400" alt="Quest givers: dialogue with portraits"><br><sub>Quest givers: dialogue with portraits</sub></td><td align="center"><img src="docs/playtest/128_story_speech.png" width="400" alt="The story speaks: Lumi, the star-sprite"><br><sub>The story speaks: Lumi, the star-sprite</sub></td></tr>
@@ -20,7 +21,6 @@ Current state of this branch, captured by the visible playtest (`tests/visual_pl
 <tr><td align="center"><img src="docs/playtest/112_professions.png" width="400" alt="Professions (L): levels, perks and your chance per ore"><br><sub>Professions (L): levels, perks and your chance per ore</sub></td><td align="center"><img src="docs/playtest/110_mining_prompt.png" width="400" alt="Ore rocks with veins; the prompt shows your chance"><br><sub>Ore rocks with veins; the prompt shows your chance</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/42_equipment.png" width="400" alt="Equipment: the paper doll, slots, stats and item grid"><br><sub>Equipment: the paper doll, slots, stats and item grid</sub></td><td align="center"><img src="docs/playtest/97_realm_map.png" width="400" alt="The Ki Realm: a continent of its own"><br><sub>The Ki Realm: a continent of its own</sub></td></tr>
 <tr><td align="center"><img src="docs/playtest/108_chopping.png" width="400" alt="Chopping trees with an axe"><br><sub>Chopping trees with an axe</sub></td><td align="center"><img src="docs/playtest/109_map_zoom.png" width="400" alt="The world map zoomed in: real trees and houses"><br><sub>The world map zoomed in: real trees and houses</sub></td></tr>
-<tr><td align="center"><img src="docs/playtest/107_siege.png" width="400" alt="The siege: a monster horde marches on your village"><br><sub>The siege: a monster horde marches on your village</sub></td><td align="center"><img src="docs/playtest/106_world_map_nations.png" width="400" alt="Rival nations on the world map"><br><sub>Rival nations on the world map</sub></td></tr>
 </table>
 
 ## The world

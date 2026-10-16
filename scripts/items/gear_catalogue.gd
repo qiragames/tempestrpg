@@ -54,6 +54,9 @@ static func icon_texture(base: String, rarity: int) -> Texture2D:
         texture.atlas = load("res://assets/game/ui/items/%s.png" % spec.icon)
         var cell: int = int(spec.cell)
         texture.region = Rect2((cell % GENERATED.ATLAS_COLUMNS) * GENERATED.CELL, int(cell / GENERATED.ATLAS_COLUMNS) * GENERATED.CELL, GENERATED.CELL, GENERATED.CELL)
+        # M11: the high tiers (21-48) wear their own palette and, at the top, a glow.
+        if spec.has("tier"):
+            return preload("res://scripts/items/tier_looks.gd").texture(base, String(spec.tier), texture)
         return texture
     var path := "res://assets/game/ui/icons/gear/%s_%d.png" % [base, clampi(rarity, 0, 4)]
     return load(path) if ResourceLoader.exists(path) else null
