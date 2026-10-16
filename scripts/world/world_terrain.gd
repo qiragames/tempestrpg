@@ -105,7 +105,10 @@ const PROPS := {
     "desert_house": ["res://assets/game/world/desert.png", Rect2(96, 0, 64, 48), Vector2(56, 20)],
     "well": ["res://assets/game/world/desert.png", Rect2(0, 48, 32, 32), Vector2(24, 12)],
     "stall": ["res://assets/game/world/desert.png", Rect2(32, 160, 32, 32), Vector2(28, 10)],
-    "tower": ["res://assets/game/world/desert.png", Rect2(48, 0, 32, 80), Vector2(26, 18)],
+    # The whole tower (it was cut to 32 of its 48 px, user report).
+    "tower": ["res://assets/game/world/desert.png", Rect2(48, 0, 48, 80), Vector2(26, 18)],
+    # The nation's watchtower: a wooden lookout (Ninja Adventure TilesetTowers), fitting the village.
+    "lookout": ["res://assets/game/world/towers.png", Rect2(0, 0, 32, 32), Vector2(20, 12)],
     "wall": ["res://assets/game/world/desert.png", Rect2(272, 64, 48, 48), Vector2(48, 18)],
     "ferry_boat": ["res://assets/game/world/boat.png", Rect2(0, 0, 80, 32), Vector2.ZERO],
     # M7b: the Eastern Reaches' own plants (recoloured from nature.png, plus a mushroom and a paddy).

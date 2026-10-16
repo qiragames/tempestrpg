@@ -38,6 +38,7 @@ Licences and credits: see `CREDITS.md` at the repository root and the licence fi
 | `terrain_field.png` rows 15-23 | 80x144 added | Derived: forest patch → murky mud; snow patch → desert sand and volcanic ash (same 3x3 layout) | Mirewood mud, plateau rims on sand and ash |
 | `paths.png` | 160x672 | Derived: `terrain_floor.png` dirt corner set (rows 7-12) seven times, the grass fringe recoloured for sand, snow, blossom, mud, ash and autumn | Roads on every ground |
 | `relief_detail.png` | 192x192 | Ninja Adventure `TilesetReliefDetail.png` (copy) | Stairs where roads climb plateaus |
+| `towers.png` | 384x96 | Ninja Adventure `TilesetTowers.png` (copy) | The nation's watchtower (the wooden lookout, top left) |
 | `world_cache.bin` | ~1.8 MB | Built by `tools/build_world_cache.gd` from the world scripts (zstd, keyed by a hash of the sources) | Precomputed map, collisions, tile layers, prop plan, world-map picture |
 
 Used without preparation: `relief.png` (rock walls below plateaus, grey and brown), `nature.png` (snowy pines and trees, cherry blossoms, bamboo, snowy boulders), `house.png` (igloos, lodge, hall, shops, torii, tents and huts), `desert.png` (domed houses, flat-roofed house, palms, well, stall), `boat.png` (ferries).
