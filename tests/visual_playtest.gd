@@ -1223,6 +1223,19 @@ func _run() -> void:
     await _shot("ending_choice", "The ending: mend the moon (Moonwarden, a holy crescent) or keep its core's power (Eclipse Sovereign, a reaper that grows stronger at night)")
     hud_nation.dialog_panel.close()
     showcase.progression.quests.erase("main_7")
+    _log("## 34. Achievements and titles (M9e)")
+    showcase.progression.fish_log["leviathan"] = 1
+    world.quests.unlock(showcase)
+    _check(session.apply_action(showcase, "title", {"id": "leviathan"}), "Wearing the Leviathan Catcher title")
+    showcase.global_position = tour_map.to_world(Vector2(110, 150))
+    world.terrain.ensure_props_at(showcase.global_position)
+    await _wait(0.8)
+    await _shot("title", "A worn title (Leviathan Catcher) above the character and on the status card; new achievements announce themselves in a banner")
+    hud_nation.achievements_panel._category = "Fishing"
+    hud_nation.achievements_panel.open()
+    await _wait(0.3)
+    await _shot("achievements", "The achievements window (Y): categories, progress and the titles you can wear")
+    hud_nation.achievements_panel.close_panel()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

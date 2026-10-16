@@ -54,6 +54,8 @@ var dev_panel: Control
 var professions_panel: Control
 ## Quests (M9c, O), see quest_panel.gd.
 var quest_panel: Control
+## Achievements and titles (M9e, Y), see achievements_panel.gd.
+var achievements_panel: Control
 var _zeni: Label
 var _close: Button
 var _log: RichTextLabel
@@ -119,6 +121,8 @@ func _ready() -> void:
     add_child(professions_panel)
     quest_panel = load("res://scripts/ui/quest_panel.gd").new(self)
     add_child(quest_panel)
+    achievements_panel = load("res://scripts/ui/achievements_panel.gd").new(self)
+    add_child(achievements_panel)
     # The owner's mod menu (F10), only in the dev build.
     if preload("res://scripts/dev/dev_tools.gd").available():
         dev_panel = load("res://scripts/ui/dev_panel.gd").new(self)
@@ -131,7 +135,7 @@ func _ready() -> void:
     add_child(_camp_dialog)
 
 func menu_open() -> bool:
-    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible) or (is_instance_valid(harbour_panel) and harbour_panel.visible) or (is_instance_valid(party_panel) and party_panel.is_open()) or (is_instance_valid(dialog_panel) and dialog_panel.is_open()) or (is_instance_valid(nation_panel) and nation_panel.is_open()) or (is_instance_valid(citizens_panel) and citizens_panel.is_open()) or (is_instance_valid(invite_panel) and invite_panel.is_open()) or (is_instance_valid(dev_panel) and dev_panel.is_open()) or (is_instance_valid(professions_panel) and professions_panel.is_open()) or (is_instance_valid(quest_panel) and quest_panel.is_open())
+    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible) or (is_instance_valid(harbour_panel) and harbour_panel.visible) or (is_instance_valid(party_panel) and party_panel.is_open()) or (is_instance_valid(dialog_panel) and dialog_panel.is_open()) or (is_instance_valid(nation_panel) and nation_panel.is_open()) or (is_instance_valid(citizens_panel) and citizens_panel.is_open()) or (is_instance_valid(invite_panel) and invite_panel.is_open()) or (is_instance_valid(dev_panel) and dev_panel.is_open()) or (is_instance_valid(professions_panel) and professions_panel.is_open()) or (is_instance_valid(quest_panel) and quest_panel.is_open()) or (is_instance_valid(achievements_panel) and achievements_panel.is_open())
 
 func bind_player(actor: Node2D) -> void:
     if player == actor:
@@ -280,7 +284,8 @@ func _refresh_status() -> void:
     _xp_bar.max_value = maxi(1, next_xp - floor_xp)
     _xp_bar.value = _xp_bar.max_value if level >= LEVELING.LEVEL_CAP else clampi(int(player.progression.get("experience", 0)) - floor_xp, 0, next_xp - floor_xp)
     var mimic: bool = player.form != player.FORMS.BASE
-    _name.text = "%s%s" % [player.race(), " · %s form" % player.FORMS.FORMS[player.form].name if mimic else ""]
+    var worn: String = preload("res://scripts/progression/achievements.gd").worn_title(player)
+    _name.text = "%s%s%s" % [player.race(), " · %s form" % player.FORMS.FORMS[player.form].name if mimic else "", " · %s" % worn if not worn.is_empty() else ""]
     var body: String = player._body_id()
     if body != _portrait_id:
         _portrait_id = body
@@ -388,6 +393,9 @@ func _refresh_clock() -> void:
         tracker.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.05))
         tracker.add_theme_constant_override("outline_size", 3)
     get_node("Tracker").text = quest_panel.tracker_text() if is_instance_valid(quest_panel) and get_parent().get("quests") != null else ""
+    # Windows cover the clock and the tracked quest (they sit above the minimap's layer).
+    get_node("Clock").visible = not menu_open()
+    get_node("Tracker").visible = not menu_open()
 
 ## M7a: the raid boss bar (top centre) while this character is in a living boss's arena.
 func _refresh_boss_bar() -> void:
@@ -657,6 +665,10 @@ func _unhandled_input(event: InputEvent) -> void:
             get_parent()._announce("World saved." if result == OK else "Only the host can save; check the world path if saving failed.")
             get_viewport().set_input_as_handled()
             return
+    if event.is_action_pressed("achievements") and not event.is_echo() and not menu_open():
+        achievements_panel.open()
+        get_viewport().set_input_as_handled()
+        return
     if event.is_action_pressed("quests") and not event.is_echo() and not menu_open():
         quest_panel.open()
         get_viewport().set_input_as_handled()

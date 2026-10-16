@@ -10,6 +10,8 @@ const MAP := preload("res://scripts/world/world_map.gd")
 const AUTHORITY := preload("res://scripts/network/authority.gd")
 const SPRITES := preload("res://scripts/visual/sprite_library.gd")
 const DAY := preload("res://scripts/world/day_night.gd")
+## M9e: achievements count the same game events.
+const ACH := preload("res://scripts/progression/achievements.gd")
 
 var world: Node2D
 var _npcs: Dictionary = {}
@@ -191,6 +193,26 @@ func talk(actor: Node2D, npc: String) -> bool:
 func on_event(actor: Node, kind: String, data: Dictionary) -> void:
     if not AUTHORITY.can_mutate(actor) or not is_instance_valid(actor):
         return
+    ACH.record(actor, kind, data)
+    _quest_event(actor, kind, data)
+    unlock(actor)
+
+## Host: unlock new achievements (with a message for each).
+func unlock(actor: Node) -> void:
+    for id in ACH.check(actor):
+        var spec: Array = ACH.ACHIEVEMENTS[id]
+        session().notify_character(actor.character_id, "Achievement unlocked: %s!%s" % [spec[0], " New title: %s (Y)." % spec[3] if not String(spec[3]).is_empty() else ""])
+        session().queue_save()
+
+## Host: wear an unlocked achievement's title ("" takes it off).
+func wear_title(actor: Node, id: String) -> bool:
+    if not AUTHORITY.can_mutate(actor) or not (id.is_empty() or (ACH.has(actor, id) and not ACH.title_of(id).is_empty())):
+        return false
+    actor.progression["title"] = id
+    session().queue_save()
+    return true
+
+func _quest_event(actor: Node, kind: String, data: Dictionary) -> void:
     for id in quests_of(actor).keys():
         var step := current_step(actor, id)
         if step.is_empty() or step.type != kind:
@@ -235,6 +257,7 @@ func _complete(actor: Node, id: String) -> void:
     state["done"] = true
     if quest.kind == "bounty":
         state["again"] = world_time() + QUESTS.BOUNTY_SECONDS
+        ACH.record(actor, "bounty", {})
     _grant(actor, quest.get("reward", {}))
     session().notify_character(actor.character_id, "Quest complete: %s!" % quest.title)
 
@@ -299,6 +322,9 @@ func _process(delta: float) -> void:
             if entry(actor, "main_0").is_empty():
                 quests_of(actor)["main_0"] = {"s": 0, "c": 0, "done": false}
             _check_places(actor)
+            # M9e: lands visited; level, Zeni, professions and quests unlock achievements too.
+            ACH.record(actor, "region", {"region": MAP.region_name(actor.global_position)})
+            unlock(actor)
 
 ## "!" (something to take), "?" (something to hand in) above givers for this peer's character.
 func marker(actor: Node, npc: String) -> String:
@@ -331,6 +357,15 @@ func _draw_overlay() -> void:
         _overlay.draw_line(at + Vector2(-7, -4), at + Vector2(-7, 4), Color("6b4a2b"), 2.0)
         _overlay.draw_line(at + Vector2(7, -4), at + Vector2(7, 4), Color("6b4a2b"), 2.0)
         _draw_marker(at + Vector2(0, -22), marker(me, "board_" + town), font)
+    # M9e: worn titles above characters' heads.
+    for character in world.get_children():
+        if character is CharacterBody2D and character.is_in_group("player") and character.visible and character.global_position.distance_to(me.global_position) < 400.0:
+            var title := ACH.worn_title(character)
+            if not title.is_empty():
+                var width := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, 7).x
+                var spot: Vector2 = character.global_position + Vector2(-width / 2.0, -26)
+                _overlay.draw_string_outline(font, spot, title, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, 3, Color(0.05, 0.04, 0.02))
+                _overlay.draw_string(font, spot, title, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("ffe08a"))
     for id in _npcs:
         var npc: Node2D = _npcs[id]
         # The Court's people show themselves only to whoever has come to face them.

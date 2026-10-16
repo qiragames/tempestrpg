@@ -144,6 +144,29 @@ static func validate_player(state: Variant, id: String) -> bool:
         return false
     if not progression.get("quests") is Dictionary or not progression.get("equipment") is Dictionary:
         return false
+    # M9e: achievements (known ids: true), stats (counters and short lists of names) and the worn title.
+    var achievements_catalogue := preload("res://scripts/progression/achievements.gd")
+    if progression.has("achievements"):
+        if not progression.achievements is Dictionary:
+            return false
+        for achievement in progression.achievements:
+            if achievements_catalogue.ACHIEVEMENTS.has(String(achievement)) and not progression.achievements[achievement] is bool:
+                return false
+    if progression.has("stats"):
+        if not progression.stats is Dictionary:
+            return false
+        for stat in progression.stats:
+            var value: Variant = progression.stats[stat]
+            if String(stat) in achievements_catalogue.LISTS:
+                if not value is Array or value.size() > achievements_catalogue.LIST_LIMIT or not value.all(func(entry): return entry is String and entry.length() <= 48):
+                    return false
+            elif not _number(value, 0, 1e9, true):
+                return false
+    if progression.has("title"):
+        if not progression.title is String:
+            return false
+        if not progression.title.is_empty() and (achievements_catalogue.title_of(progression.title).is_empty() or not (progression.get("achievements") is Dictionary and bool(progression.achievements.get(progression.title, false)))):
+            return false
     # M9c: quest progress (entries of known quests: step within the quest, counts, flags).
     var quest_catalogue := preload("res://scripts/quests/quest_catalogue.gd")
     for quest_id in progression.quests:

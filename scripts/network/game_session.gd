@@ -706,6 +706,12 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             rejected_requests += 1
             return false
         return world.camp.transact(actor, payload.operation, payload.id)
+    if action == "title":
+        # M9e: wear an unlocked achievement's title ("" for none).
+        if payload.size() != 1 or not payload.get("id") is String or payload.id.length() > 48:
+            rejected_requests += 1
+            return false
+        return world.quests.wear_title(actor, payload.id)
     if action == "quest":
         # M9c: clients name a quest to take or someone to talk to; the host checks the rest.
         if payload.size() != 2 or not payload.get("operation") in ["accept", "talk", "choose"] or not payload.get("id") is String or payload.id.length() > 48:
