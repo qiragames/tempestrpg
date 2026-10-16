@@ -13,7 +13,7 @@ const REBINDABLE := [
     ["skill_1", "Skill 1"], ["skill_2", "Skill 2"], ["skill_3", "Skill 3"], ["skill_4", "Skill 4"],
     ["use_draught", "Draught"], ["use_tonic", "Tonic"], ["gear_active", "Gear active"], ["mount", "Ride"],
     ["inventory", "Bag"], ["skill_tree", "Skill tree"], ["world_map", "World map"], ["quests", "Quests"],
-    ["professions", "Professions"], ["party", "Party"], ["achievements", "Titles"], ["pets", "Pets"],
+    ["professions", "Professions"], ["party", "Party"], ["achievements", "Titles"], ["pets", "Pets"], ["army", "Army"],
 ]
 ## Gamepad: action → [buttons], and axes [action, axis, direction].
 const BUTTONS := {

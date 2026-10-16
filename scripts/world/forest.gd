@@ -33,6 +33,8 @@ var siege: Node
 var events: Node2D
 ## M11f: pets following their owners.
 var pets: Node2D
+## M11h: the nation's soldiers.
+var army: Node2D
 var respawner: Node
 ## M6a: harvestable trees and ore rocks (professions).
 var nodes: Node
@@ -84,6 +86,8 @@ func _ready() -> void:
     add_child(events)
     pets = load("res://scripts/pets/pet_followers.gd").new(self)
     add_child(pets)
+    army = load("res://scripts/nation/army.gd").new(self)
+    add_child(army)
     nodes = load("res://scripts/professions/resource_nodes.gd").new(self)
     add_child(nodes)
     trial = load("res://scripts/trials/proving_trial.gd").new()

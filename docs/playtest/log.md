@@ -299,7 +299,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (960x540)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Rare Ranger's Cap
+- [x] The chest gave an Uncommon-or-better item: Uncommon Bone Javelin
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (960x540)
@@ -801,6 +801,16 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 ![Options → Keys: every main action's key can be changed (saved on this computer); a gamepad works without setup](147_keys.png)
 *Options → Keys: every main action's key can be changed (saved on this computer); a gamepad works without setup* (960x540)
 
+## 42. Armies (M11h)
+- [x] Soldiers recruited in the village (2)
+
+![Armies: soldiers recruited in your village follow you and fight the creatures near them; they rise from Recruit to Veteran and Champion](148_army.png)
+*Armies: soldiers recruited in your village follow you and fight the creatures near them; they rise from Recruit to Veteran and Champion* (960x540)
+
+
+![The army window (C): recruit, give orders (follow, hold, charge) or send them home](149_army_window.png)
+*The army window (C): recruit, give orders (follow, hold, charge) or send them home* (960x540)
+
 
 ## System messages seen
 
@@ -862,7 +872,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +1500 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Epic Veteran's Signet.
+- Trial reward: Rare Militia Circlet.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +21 XP (defeat).
@@ -880,8 +890,8 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Rare Ranger's Cap.
-- +33 Zeni (chest).
+- Chest opened: Uncommon Bone Javelin.
+- +45 Zeni (chest).
 - World "Showcase World" loaded. Esc: pause menu — switch on Multiplayer to invite friends.
 - Multiplayer is on: Invite a Friend makes one code per friend.
 - Multiplayer is off: your world is single player again.
@@ -889,4 +899,4 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 The bot retreated 0 time(s) to let Magicules recover.
 XP assistance for skill points: 550 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 147 screenshots.**
+**Result: 0 failed checks, 149 screenshots.**

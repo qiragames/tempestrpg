@@ -912,6 +912,21 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             "sail":
                 return world.harbours.sail(actor, here, target)
         return false
+    if action == "army":
+        # M11h: recruit, command or send home your soldiers.
+        match payload.get("operation"):
+            "recruit", "dismiss":
+                if payload.size() != 1:
+                    rejected_requests += 1
+                    return false
+                return world.army.recruit(actor) if payload.operation == "recruit" else world.army.dismiss(actor)
+            "command":
+                if payload.size() != 2 or not payload.get("order") is String:
+                    rejected_requests += 1
+                    return false
+                return world.army.command(actor, payload.order)
+        rejected_requests += 1
+        return false
     if action == "pet":
         # M11f: hatch an egg or choose the pet that follows you.
         match payload.get("operation"):

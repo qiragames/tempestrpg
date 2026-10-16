@@ -126,6 +126,10 @@ func _next_wave() -> void:
     state.clock = WAVE_SECONDS
     var tier: int = clampi(camp().tier(), 1, HORDES.size() - 1)
     var size: int = 2 + tier * 2 + int(state.wave)
+    # M11h: larger invasions for a nation with an army.
+    var army: Node = world.get("army")
+    if army != null:
+        size += int(army.state().soldiers.size())
     var gate := _gate()
     for index in range(size):
         var pick: Array = HORDES[tier][(index + int(state.wave)) % HORDES[tier].size()]

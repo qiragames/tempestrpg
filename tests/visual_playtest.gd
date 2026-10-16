@@ -1365,6 +1365,27 @@ func _run() -> void:
     await _wait(0.3)
     await _shot("keys", "Options → Keys: every main action's key can be changed (saved on this computer); a gamepad works without setup")
     keys_host.queue_free()
+    _log("## 42. Armies (M11h)")
+    showcase.global_position = world.camp.SITE + Vector2(30, 40)
+    world.terrain.ensure_props_at(showcase.global_position)
+    showcase.progression["zeni"] = maxi(int(showcase.progression.get("zeni", 0)), 20000)
+    var recruited := 0
+    for _soldier in range(3):
+        if world.army.recruit(showcase):
+            recruited += 1
+    _check(recruited >= 1, "Soldiers recruited in the village (%d)" % recruited)
+    # On open ground outside the village (they catch up from afar).
+    showcase.global_position = tour_map.to_world(Vector2(118, 162))
+    world.terrain.ensure_props_at(showcase.global_position)
+    for _step in range(60):
+        world.army._physics_process(1.0 / 30.0)
+    await _wait(0.6)
+    await _shot("army", "Armies: soldiers recruited in your village follow you and fight the creatures near them; they rise from Recruit to Veteran and Champion")
+    hud_nation.army_panel.open()
+    await _wait(0.3)
+    await _shot("army_window", "The army window (C): recruit, give orders (follow, hold, charge) or send them home")
+    hud_nation.army_panel.close_panel()
+    world.army.dismiss(showcase)
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)
