@@ -2,12 +2,14 @@ extends Control
 ## A small talking window (M4.7): who speaks, what they say, and a few options to choose from.
 ## Each option runs its own callback (usually a request to the host) and closes the window.
 const UI := preload("res://scripts/ui/ui_style.gd")
-const FRAME := Rect2(130, 120, 380, 216)
+const FRAME := Rect2(105, 96, 430, 244)
 
 var hud: CanvasLayer
 var _title: Label
 var _text: Label
 var _options: VBoxContainer
+## M9c: the speaker's face (Ninja Adventure facesets), when there is one.
+var _face: TextureRect
 var _paused_before := false
 
 func _init(owner_hud: CanvasLayer) -> void:
@@ -29,10 +31,16 @@ func _init(owner_hud: CanvasLayer) -> void:
     frame.add_theme_stylebox_override("panel", UI.ornate())
     window.add_child(frame)
     _title = UI.heading(hud._label("", FRAME.position + Vector2(14, 10), Vector2(FRAME.size.x - 28, 20), window, 14))
-    _text = hud._label("", FRAME.position + Vector2(14, 34), Vector2(FRAME.size.x - 28, 44), window, 10)
+    _text = hud._label("", FRAME.position + Vector2(14, 34), Vector2(FRAME.size.x - 28, 76), window, 10)
     _text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _face = TextureRect.new()
+    _face.position = FRAME.position + Vector2(14, 36)
+    _face.size = Vector2(38, 38)
+    _face.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+    _face.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+    window.add_child(_face)
     _options = VBoxContainer.new()
-    _options.position = FRAME.position + Vector2(14, 82)
+    _options.position = FRAME.position + Vector2(14, 114)
     _options.custom_minimum_size = Vector2(FRAME.size.x - 28, 0)
     window.add_child(_options)
     hud._label("Esc: leave", FRAME.position + Vector2(14, FRAME.size.y - 20), Vector2(200, 14), window, 8).add_theme_color_override("font_color", UI.TEXT_DIM)
@@ -45,7 +53,7 @@ func is_open() -> bool:
     return window().visible
 
 ## options: [[label, callback (or null for a disabled line)], ...]
-func open(speaker: String, words: String, options: Array) -> void:
+func open(speaker: String, words: String, options: Array, face: Texture2D = null) -> void:
     if hud.menu_open():
         return
     _paused_before = get_tree().paused
@@ -56,6 +64,10 @@ func open(speaker: String, words: String, options: Array) -> void:
         get_tree().paused = true
     _title.text = speaker
     _text.text = words
+    _face.texture = face
+    _face.visible = face != null
+    _text.position.x = FRAME.position.x + (60.0 if face != null else 14.0)
+    _text.size.x = FRAME.size.x - (74.0 if face != null else 28.0)
     for child in _options.get_children():
         _options.remove_child(child)
         child.queue_free()

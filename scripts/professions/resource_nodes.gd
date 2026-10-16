@@ -145,6 +145,8 @@ func strike(actor: Node2D, index: int, rng: RandomNumberGenerator) -> bool:
         if bag.add_material("amber_sap", 1) == 1:
             note += " and Amber Sap!"
     actor.gain_profession_xp(profession, PRO.xp_reward(node.required))
+    if world.get("quests") != null:
+        world.quests.on_event(actor, "gather", {"resource": node.resource, "amount": added})
     actor.session.notify_character(id, note + ".")
     used[index] = int(used.get(index, 0)) + 1
     if int(used[index]) >= int(node.units) + extra_units(profession, level):

@@ -630,6 +630,8 @@ func craft(recipe_id: String) -> bool:
             return false
         made = "%d %s" % [added, TRADE.good_info(output)[0]]
         gain_profession_xp(profession, PRO.xp_reward(required) * 2)
+        if get_parent().get("quests") != null:
+            get_parent().quests.on_event(self, "craft", {"item": output, "amount": added})
     session.notify_character(character_id, "Made %s." % made)
     session.queue_save()
     return true
@@ -1077,6 +1079,8 @@ func _land_fish() -> bool:
     var first: bool = not progression.fish_log.has(fish)
     progression.fish_log[fish] = int(progression.fish_log.get(fish, 0)) + 1
     gain_profession_xp("fishing", FISHES.xp_for(fish))
+    if get_parent().get("quests") != null:
+        get_parent().quests.on_event(self, "catch", {"fish": fish})
     session.notify_character(character_id, "Caught a %s (%s)!%s" % [FISHES.FISH[fish][0], FISHES.RARITIES[rarity], " New in your fish log." if first else ""])
     if rarity >= 5 and get_parent() != null and get_parent().has_method("_announce"):
         get_parent()._announce("A mythical %s was landed!" % FISHES.FISH[fish][0])

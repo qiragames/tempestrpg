@@ -52,6 +52,8 @@ var invite_panel: Control
 var dev_panel: Control
 ## Professions window (M6a, L), see professions_panel.gd.
 var professions_panel: Control
+## Quests (M9c, O), see quest_panel.gd.
+var quest_panel: Control
 var _zeni: Label
 var _close: Button
 var _log: RichTextLabel
@@ -115,6 +117,8 @@ func _ready() -> void:
     add_child(invite_panel)
     professions_panel = load("res://scripts/ui/professions_panel.gd").new(self)
     add_child(professions_panel)
+    quest_panel = load("res://scripts/ui/quest_panel.gd").new(self)
+    add_child(quest_panel)
     # The owner's mod menu (F10), only in the dev build.
     if preload("res://scripts/dev/dev_tools.gd").available():
         dev_panel = load("res://scripts/ui/dev_panel.gd").new(self)
@@ -127,7 +131,7 @@ func _ready() -> void:
     add_child(_camp_dialog)
 
 func menu_open() -> bool:
-    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible) or (is_instance_valid(harbour_panel) and harbour_panel.visible) or (is_instance_valid(party_panel) and party_panel.is_open()) or (is_instance_valid(dialog_panel) and dialog_panel.is_open()) or (is_instance_valid(nation_panel) and nation_panel.is_open()) or (is_instance_valid(citizens_panel) and citizens_panel.is_open()) or (is_instance_valid(invite_panel) and invite_panel.is_open()) or (is_instance_valid(dev_panel) and dev_panel.is_open()) or (is_instance_valid(professions_panel) and professions_panel.is_open())
+    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible) or (is_instance_valid(harbour_panel) and harbour_panel.visible) or (is_instance_valid(party_panel) and party_panel.is_open()) or (is_instance_valid(dialog_panel) and dialog_panel.is_open()) or (is_instance_valid(nation_panel) and nation_panel.is_open()) or (is_instance_valid(citizens_panel) and citizens_panel.is_open()) or (is_instance_valid(invite_panel) and invite_panel.is_open()) or (is_instance_valid(dev_panel) and dev_panel.is_open()) or (is_instance_valid(professions_panel) and professions_panel.is_open()) or (is_instance_valid(quest_panel) and quest_panel.is_open())
 
 func bind_player(actor: Node2D) -> void:
     if player == actor:
@@ -228,13 +232,13 @@ func _build_status() -> void:
     $SystemVoice.add_theme_color_override("font_color", UI.CYAN)
     _outline($SystemVoice)
     # Analysis: the cyan box on the right.
-    # (User feedback: smaller.)
-    _backdrop(Rect2(486, 118, 150, 66), "assistant")
-    $Analysis.position = Vector2(491, 120)
+    # (User feedback: smaller.) Below the clock and the tracked quest (M9c).
+    _backdrop(Rect2(486, 152, 150, 66), "assistant")
+    $Analysis.position = Vector2(491, 154)
     $Analysis.size = Vector2(140, 50)
     $Analysis.add_theme_font_size_override("font_size", 8)
     UI.style_bar($AnalysisProgress, UI.CYAN)
-    $AnalysisProgress.position = Vector2(491, 174)
+    $AnalysisProgress.position = Vector2(491, 208)
     $AnalysisProgress.size = Vector2(140, $AnalysisProgress.size.y)
     # Minimap under the region name, top right (24a).
     minimap = load("res://scripts/ui/minimap.gd").new(self)
@@ -361,10 +365,11 @@ func _activate_slot(index: int) -> void:
 func _refresh_clock() -> void:
     if not is_instance_valid(minimap):
         return
-    if not minimap.has_node("Clock"):
-        var clock := _label("", Vector2(-30, 84), Vector2(140, 12), minimap, 8)
+    # On the HUD itself, right under the minimap (the minimap clips its own children).
+    if not has_node("Clock"):
+        var clock := _label("", minimap.position + Vector2(-116, 81), Vector2(200, 12), self, 8)
         clock.name = "Clock"
-        clock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        clock.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
         clock.add_theme_color_override("font_color", UI.GOLD_LIGHT)
         clock.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.05))
         clock.add_theme_constant_override("outline_size", 3)
@@ -373,7 +378,16 @@ func _refresh_clock() -> void:
     var sky: Node = get_parent().get("sky")
     var weather: String = sky.weather_id if sky != null else "clear"
     var symbol: String = "☾" if day_night.is_night(time) and weather == "clear" else String(day_night.WEATHER[weather][2])
-    minimap.get_node("Clock").text = "%s  %s %s" % [day_night.clock_text(time), symbol, day_night.WEATHER[weather][0]]
+    get_node("Clock").text = "%s  %s %s" % [day_night.clock_text(time), symbol, day_night.WEATHER[weather][0]]
+    # M9c: the tracked quest's objective.
+    if not has_node("Tracker"):
+        var tracker := _label("", minimap.position + Vector2(-116, 94), Vector2(200, 26), self, 8)
+        tracker.name = "Tracker"
+        tracker.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+        tracker.add_theme_color_override("font_color", Color("ffe9a8"))
+        tracker.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.05))
+        tracker.add_theme_constant_override("outline_size", 3)
+    get_node("Tracker").text = quest_panel.tracker_text() if is_instance_valid(quest_panel) and get_parent().get("quests") != null else ""
 
 ## M7a: the raid boss bar (top centre) while this character is in a living boss's arena.
 func _refresh_boss_bar() -> void:
@@ -643,6 +657,10 @@ func _unhandled_input(event: InputEvent) -> void:
             get_parent()._announce("World saved." if result == OK else "Only the host can save; check the world path if saving failed.")
             get_viewport().set_input_as_handled()
             return
+    if event.is_action_pressed("quests") and not event.is_echo() and not menu_open():
+        quest_panel.open()
+        get_viewport().set_input_as_handled()
+        return
     if event.is_action_pressed("professions") and not event.is_echo() and not menu_open():
         professions_panel.open()
         get_viewport().set_input_as_handled()

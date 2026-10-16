@@ -207,6 +207,8 @@ func _defeat() -> void:
         if not is_instance_valid(actor):
             continue
         var raid: bool = BOSS.is_raid(entity_id)
+        if world.get("quests") != null:
+            world.quests.on_event(actor, "boss", {"id": entity_id})
         actor.gain_experience(LEVELING.defeat_xp(level, Difficulty.ELITE) * (BOSS.XP_FACTOR if raid else 8), "boss")
         actor.gain_zeni(TRADE.zeni_for(level, Difficulty.ELITE) * (BOSS.ZENI_FACTOR if raid else 10), "boss")
         var item: Dictionary

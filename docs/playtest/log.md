@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 94.8 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.1 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -299,7 +299,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (960x540)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Uncommon Traveler's Blade
+- [x] The chest gave an Uncommon-or-better item: Uncommon Silvered Hood
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (960x540)
@@ -396,7 +396,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 16. Sound and effects (step 23)
 - Sounds played during this run: analysis ×3, build ×3, chest ×1, defeat ×7, evolve ×1, form ×2, gather ×12, hit ×13, hurt ×3, learned ×2, level_up ×3, magicules ×3, swing ×12, ui_accept ×16, ui_move ×13
-- Effects shown: aura ×3, boost ×4, claw ×7, hit_spark ×52, ring ×7, slash ×13, smoke ×12, sparkle ×4
+- Effects shown: aura ×3, boost ×4, claw ×7, hit_spark ×53, ring ×7, slash ×13, smoke ×12, sparkle ×4
 - [x] The run produced the "swing" cue
 - [x] The run produced the "hit" cue
 - [x] The run produced the "defeat" cue
@@ -694,6 +694,25 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 ![Gloom mist drifting over Gloomveil (creatures notice you later)](125_weather_gloom_mist.png)
 *Gloom mist drifting over Gloomveil (creatures notice you later)* (960x540)
 
+## 32. Quests: The Shattered Moon, quest givers and bounty boards
+- [x] Orrin offers the first chapter (!)
+
+![Orrin the astronomer in Brookhaven has the next chapter of the main story (!); Hilde and the bounty board wait nearby](126_quest_giver.png)
+*Orrin the astronomer in Brookhaven has the next chapter of the main story (!); Hilde and the bounty board wait nearby* (960x540)
+
+
+![Dialogue with portraits: Orrin asks for timber and ore to build a shard lens (Chapter 1: Thornwood's Hollow Heart)](127_quest_dialog.png)
+*Dialogue with portraits: Orrin asks for timber and ore to build a shard lens (Chapter 1: Thornwood's Hollow Heart)* (960x540)
+
+- [x] Chapter 1 accepted
+
+![The story speaks in a small box at the bottom (here Lumi, the star-sprite) — it never pauses the game](128_story_speech.png)
+*The story speaks in a small box at the bottom (here Lumi, the star-sprite) — it never pauses the game* (960x540)
+
+
+![The quest log (O): the main story first, side quests and bounties, each with its objective; the tracked one shows under the minimap](129_quest_log.png)
+*The quest log (O): the main story first, side quests and bounties, each with its objective; the tracked one shows under the minimap* (960x540)
+
 
 ## System messages seen
 
@@ -733,6 +752,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Gnasher Essence offered to the camp.
 - Storehouse built. Shared materials consumed.
 - Essence Shrine built. Shared materials consumed.
+- The Night the Sky Fell: Make camp before dark: reach the camp site in the clearing
 - +21 XP (defeat).
 - +9 Zeni (defeat).
 - Threat neutralized. Specimen retained.
@@ -753,7 +773,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +1500 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Rare Scarlet Scimitar.
+- Trial reward: Rare Cyclone Greathelm.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +21 XP (defeat).
@@ -766,12 +786,13 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Epic Scale Mail.
 - Equipped Legendary Copper Ring.
 - Barrier: 2 s of invulnerability.
+- The Night the Sky Fell: Live through your first night (from dusk until dawn)
 - Equipped Uncommon Iron Sword.
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Uncommon Traveler's Blade.
-- +43 Zeni (chest).
+- Chest opened: Uncommon Silvered Hood.
+- +31 Zeni (chest).
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 - Your router did not answer (UPnP off?). Forward UDP 24560 to this PC by hand for friends outside your network.
@@ -779,4 +800,4 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 The bot retreated 0 time(s) to let Magicules recover.
 XP assistance for skill points: 550 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 125 screenshots.**
+**Result: 0 failed checks, 129 screenshots.**

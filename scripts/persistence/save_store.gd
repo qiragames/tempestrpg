@@ -144,6 +144,17 @@ static func validate_player(state: Variant, id: String) -> bool:
         return false
     if not progression.get("quests") is Dictionary or not progression.get("equipment") is Dictionary:
         return false
+    # M9c: quest progress (entries of known quests: step within the quest, counts, flags).
+    var quest_catalogue := preload("res://scripts/quests/quest_catalogue.gd")
+    for quest_id in progression.quests:
+        var known_quest: Dictionary = quest_catalogue.quest(String(quest_id))
+        if known_quest.is_empty():
+            continue
+        var progress: Variant = progression.quests[quest_id]
+        if not progress is Dictionary or not _number(progress.get("s"), 0, known_quest.steps.size(), true) or not _number(progress.get("c"), 0, 1000000, true) or not progress.get("done") is bool:
+            return false
+        if progress.has("again") and not _number(progress.again, 0, 1e12):
+            return false
     # Zeni (v23): a whole number in the purse.
     if not _number(progression.get("zeni"), 0, TRADE.MAX_ZENI, true):
         return false

@@ -332,6 +332,9 @@ func _defeat() -> void:
         for entry in ranked:
             var actor: Node = world.player_by_id(entry[0]) if world != null and world.has_method("player_by_id") else null
             if is_instance_valid(actor):
+                # M9c: quests count defeats by kind and region.
+                if world.get("quests") != null:
+                    world.quests.on_event(actor, "kill", {"kind": kind, "region": _region(), "id": entity_id})
                 var factor: float = party.xp_factor(actor.character_id, global_position) if party != null else 1.0
                 actor.gain_experience(int(round(LEVELING.defeat_xp(level, difficulty) * factor * (DAY_NIGHT.NIGHT_XP if night() else 1.0))), "defeat")
                 var share: int = maxi(1, int(round(coins * float(entry[1]) / total_share)))

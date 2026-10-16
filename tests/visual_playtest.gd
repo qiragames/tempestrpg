@@ -1162,6 +1162,35 @@ func _run() -> void:
         await _wait(0.6)
         await _shot("weather_" + weather_shot[0], weather_shot[3])
     world.progression.world_time = saved_time
+    _log("## 32. Quests: The Shattered Moon, quest givers and bounty boards")
+    var quest_panel = hud_nation.quest_panel
+    quest_panel._queue.clear()
+    showcase.progression.quests["main_0"] = {"s": 4, "c": 0, "done": true}
+    quest_panel._seen["main_0"] = -1
+    showcase.global_position = preload("res://scripts/quests/quest_catalogue.gd").npc_position("orrin") + Vector2(0, 30)
+    world.terrain.ensure_props_at(showcase.global_position)
+    await _wait(0.6)
+    _check(world.quests.marker(showcase, "orrin") == "!", "Orrin offers the first chapter (!)")
+    await _shot("quest_giver", "Orrin the astronomer in Brookhaven has the next chapter of the main story (!); Hilde and the bounty board wait nearby")
+    quest_panel._offer("orrin", "main_1")
+    await _wait(0.3)
+    await _shot("quest_dialog", "Dialogue with portraits: Orrin asks for timber and ore to build a shard lens (Chapter 1: Thornwood's Hollow Heart)")
+    hud_nation.dialog_panel.close()
+    _check(session.apply_action(showcase, "quest", {"operation": "accept", "id": "main_1"}), "Chapter 1 accepted")
+    quest_panel.tracked = "main_1"
+    showcase.global_position = preload("res://scripts/quests/quest_catalogue.gd").npc_position("board_brookhaven") + Vector2(10, 0)
+    session.apply_action(showcase, "quest", {"operation": "accept", "id": "bounty_brookhaven_cull"})
+    session.apply_action(showcase, "quest", {"operation": "accept", "id": "bounty_brookhaven_hunt"})
+    await _wait(0.4)
+    quest_panel._queue.clear()
+    quest_panel._queue.append(["Lumi", "Orrin's lens will find the next shard. Thornwood first — stay close, castaway!"])
+    quest_panel._speech_left = 0.0
+    await _wait(0.4)
+    await _shot("story_speech", "The story speaks in a small box at the bottom (here Lumi, the star-sprite) — it never pauses the game")
+    quest_panel.open()
+    await _wait(0.3)
+    await _shot("quest_log", "The quest log (O): the main story first, side quests and bounties, each with its objective; the tracked one shows under the minimap")
+    quest_panel.close_panel()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

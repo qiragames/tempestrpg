@@ -77,7 +77,7 @@ func _run() -> void:
     await _frames(2)
     _check(sky.ambient.color.v < noon.v - 0.2 and sky._player_light.energy > noon_light + 0.3, "At night the world darkens and a soft light surrounds you")
     var hud: CanvasLayer = world.get_node("HUD")
-    _check(String(hud.minimap.get_node("Clock").text).begins_with("Day "), "The clock under the minimap (%s)" % hud.minimap.get_node("Clock").text)
+    _check(String(hud.get_node("Clock").text).begins_with("Day "), "The clock under the minimap (%s)" % hud.get_node("Clock").text)
     # Sandstorms slow walking; rain brings fish sooner.
     actor.global_position = MAP.to_world(Vector2(-150, 110))
     world.terrain.ensure_props_at(actor.global_position)

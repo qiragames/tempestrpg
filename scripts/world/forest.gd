@@ -36,6 +36,8 @@ var boss_fx: Node2D
 var dungeon_gates: Node2D
 ## Day, night and weather on screen.
 var sky: Node2D
+## M9c: quest givers, bounty boards and the quest rules.
+var quests: Node2D
 ## Host-side randomness for gear drops, chests, trial rewards and the forge (17g).
 var loot_rng := RandomNumberGenerator.new()
 var chest_layer: Node2D
@@ -115,6 +117,8 @@ func _ready() -> void:
     # Day, night and weather (and the darkness underground).
     sky = load("res://scripts/world/sky.gd").new(self)
     add_child(sky)
+    quests = load("res://scripts/quests/quest_log.gd").new(self)
+    add_child(quests)
     _add_obstacle(POND)
     # The clearing no longer ends at its edges: the archipelago surrounds it (world edges are
     # ocean and are closed by the terrain).

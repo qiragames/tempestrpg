@@ -91,6 +91,13 @@ func open_nearest() -> void:
         if not fallen.is_empty():
             session.request_action("party", {"operation": "revive", "id": fallen})
             return
+    # M9c: F at a quest giver or a bounty board.
+    var quest_log = hud.get_parent().get("quests")
+    if quest_log != null:
+        var npc: String = quest_log.nearest_npc(hud.player)
+        if not npc.is_empty():
+            hud.quest_panel.talk_to(npc)
+            return
     # M5b: F at one of your fields plants or harvests.
     var camp_node = hud.get_parent().get("camp")
     if camp_node != null and camp_node.state.founded:
