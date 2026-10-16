@@ -516,6 +516,18 @@ func _process(_delta: float) -> void:
             siege_label.add_theme_color_override("font_outline_color", Color(0.05, 0.02, 0.02))
             siege_label.add_theme_constant_override("outline_size", 4)
         get_node("SiegeBanner").text = siege_node.banner()
+    # M11d: a running world event.
+    var events_node: Node = get_parent().get("events")
+    if events_node != null:
+        if not has_node("EventBanner"):
+            var event_label := _label("", Vector2(120, 56), Vector2(400, 16), self, 10)
+            event_label.name = "EventBanner"
+            event_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+            event_label.add_theme_color_override("font_color", Color("ffd27a"))
+            event_label.add_theme_color_override("font_outline_color", Color(0.05, 0.03, 0.02))
+            event_label.add_theme_constant_override("outline_size", 4)
+        get_node("EventBanner").text = events_node.banner()
+        get_node("EventBanner").visible = not menu_open()
     _refresh_node_prompt()
     _refresh_boss_bar()
     _refresh_clock()

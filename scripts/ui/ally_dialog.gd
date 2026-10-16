@@ -154,6 +154,13 @@ func open_nearest() -> void:
     if not wild.is_empty():
         session.request_action("mount", {"operation": "tame", "id": wild})
         return
+    # M11d: F at a fallen meteorite collects it.
+    var events_node = hud.get_parent().get("events")
+    if events_node != null:
+        var meteorite: int = events_node.nearest_meteorite(hud.player)
+        if meteorite >= 0:
+            session.request_action("event", {"operation": "collect", "index": meteorite})
+            return
     # M11b: F at a lever pulls it; at a vault, a key opens it.
     var features = hud.get_parent().get("dungeon_features")
     if features != null:

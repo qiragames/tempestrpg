@@ -1303,6 +1303,31 @@ func _run() -> void:
         await _wait(0.2)
         world.remove_child(trader)
         trader.queue_free()
+    _log("## 38. World events (M11d)")
+    var world_events: Node = world.events
+    showcase.global_position = tour_map.to_world(Vector2(118, 160))
+    world.terrain.ensure_props_at(showcase.global_position)
+    await _wait(0.6)
+    _check(world_events.start("meteors", showcase), "A meteor shower starts")
+    var first_meteor: Array = world_events.state.meteors[0]
+    world_events.state.clock = world_events.DURATION.meteors - float(first_meteor[2]) + 1.2
+    showcase.global_position = Vector2(float(first_meteor[0]), float(first_meteor[1])) + Vector2(0, 40)
+    await _wait(0.1)
+    await _shot("meteor_shower", "World event: a meteor shower — red circles warn where meteors strike; landed ones leave meteorites to collect (F)")
+    world_events._clear()
+    showcase.global_position = tour_map.to_world(Vector2(110, 150)) + Vector2(0, 60)
+    world.terrain.ensure_props_at(showcase.global_position)
+    _check(world_events.start("invasion", showcase), "A town invasion starts")
+    for invader in world_events.creatures():
+        invader.set_physics_process(false)
+        invader.global_position = invader.global_position.lerp(world_events.at(), 0.55)
+    await _wait(0.6)
+    await _shot("invasion", "World event: Brookhaven is under attack — eight invaders march on the plaza; the banner counts them down")
+    world_events._clear()
+    _check(world_events.start("goblin", showcase), "A treasure goblin appears")
+    await _wait(0.8)
+    await _shot("treasure_goblin", "World event: a treasure goblin runs from everyone — catch it for a sack of Zeni and gear")
+    world_events._clear()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

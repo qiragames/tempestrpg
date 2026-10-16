@@ -6,7 +6,7 @@ const SKILLS := CATALOGUE.SKILLS
 const TREE := preload("res://scripts/skills/skill_tree.gd")
 const SPECIMEN := "res://data/specimens/forest_gnasher.tres"
 ## Saved enemy kind -> scene. Stable IDs only; never a client-supplied path.
-const ENEMY_SCENES := {"gnasher": "res://scenes/enemies/forest_gnasher.tscn", "thornback": "res://scenes/enemies/thornback_gnasher.tscn",
+const ENEMY_SCENES := {"gnasher": "res://scenes/enemies/forest_gnasher.tscn", "treasure_goblin": "res://scenes/enemies/forest_gnasher.tscn", "thornback": "res://scenes/enemies/thornback_gnasher.tscn",
     "frost_bear": "res://scenes/enemies/frost_bear.tscn", "snow_wisp": "res://scenes/enemies/snow_wisp.tscn", "dune_viper": "res://scenes/enemies/dune_viper.tscn", "sand_scuttler": "res://scenes/enemies/sand_scuttler.tscn", "bog_kappa": "res://scenes/enemies/bog_kappa.tscn", "mirecap": "res://scenes/enemies/mirecap.tscn", "bamboo_sprite": "res://scenes/enemies/bamboo_sprite.tscn", "paper_lantern": "res://scenes/enemies/paper_lantern.tscn", "amber_owl": "res://scenes/enemies/amber_owl.tscn", "burrow_mole": "res://scenes/enemies/burrow_mole.tscn", "ember_flame": "res://scenes/enemies/ember_flame.tscn", "salamander": "res://scenes/enemies/salamander.tscn",
     "raptor": "res://scenes/enemies/raptor.tscn", "tyrant_rex": "res://scenes/enemies/tyrant_rex.tscn", "gi_fighter": "res://scenes/enemies/gi_fighter.tscn", "monkey_brawler": "res://scenes/enemies/monkey_brawler.tscn", "android_scout": "res://scenes/enemies/android_scout.tscn", "bio_android": "res://scenes/enemies/bio_android.tscn", "android_tank": "res://scenes/enemies/android_tank.tscn", "demon_king": "res://scenes/enemies/demon_king.tscn",
     "storm_bat": "res://scenes/enemies/storm_bat.tscn", "gale_beast": "res://scenes/enemies/gale_beast.tscn", "cliff_lizard": "res://scenes/enemies/cliff_lizard.tscn", "thunder_eye": "res://scenes/enemies/thunder_eye.tscn", "dusk_spider": "res://scenes/enemies/dusk_spider.tscn", "fen_octopus": "res://scenes/enemies/fen_octopus.tscn", "shade_spirit": "res://scenes/enemies/shade_spirit.tscn", "fen_skull": "res://scenes/enemies/fen_skull.tscn", "crystal_cyclops": "res://scenes/enemies/crystal_cyclops.tscn", "sky_dragonling": "res://scenes/enemies/sky_dragonling.tscn", "peak_reptile": "res://scenes/enemies/peak_reptile.tscn", "frost_spirit": "res://scenes/enemies/frost_spirit.tscn"}
@@ -142,7 +142,7 @@ static func capture_entities(world: Node2D) -> Dictionary:
             piles.append(node.capture())
         elif node.is_in_group("allies"):
             allies.append({"id": node.entity_id, "position": vector(node.position), "owner": node.owner_id, "name": node.display_name, "race": node.race, "maximum_hp": node.maximum_hp, "power": node.power, "speed": node.follow_speed, "work": {"role": node.work_role, "target": node.work_target, "remaining": node.work_left}})
-    return {"enemies": enemies, "pickups": pickups, "allies": allies, "camp": world.camp.state.duplicate(true), "trial": world.trial.state.duplicate(true), "respawns": world.respawner.capture(), "loot": loot, "piles": piles, "trade": world.trade.capture(), "harbours": world.harbours.capture(), "party": world.party.capture(), "realm": world.realm.capture(), "siege": world.siege.capture(), "exchange": world.exchange.capture() if world.get("exchange") != null else {}}
+    return {"enemies": enemies, "pickups": pickups, "allies": allies, "camp": world.camp.state.duplicate(true), "trial": world.trial.state.duplicate(true), "respawns": world.respawner.capture(), "loot": loot, "piles": piles, "trade": world.trade.capture(), "harbours": world.harbours.capture(), "party": world.party.capture(), "realm": world.realm.capture(), "siege": world.siege.capture(), "exchange": world.exchange.capture() if world.get("exchange") != null else {}, "events": world.events.capture() if world.get("events") != null else {}}
 
 static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> void:
     world.camp.restore(data.camp)
@@ -156,6 +156,9 @@ static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> vo
     # M11c: open trades (snapshots only; never saved).
     if replica and data.get("exchange") is Dictionary and world.get("exchange") != null:
         world.exchange.restore(data.exchange)
+    # M11d: a running world event (snapshots only; never saved).
+    if replica and data.get("events") is Dictionary and world.get("events") != null:
+        world.events.restore(data.events)
     if data.get("realm") is Dictionary:
         world.realm.restore(data.realm, replica)
     if data.get("siege") is Dictionary:

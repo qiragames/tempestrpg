@@ -29,6 +29,8 @@ var realm: Node2D
 ## M5d: the rival nations (presentation) and the monster horde's siege.
 var rivals: Node2D
 var siege: Node
+## M11d: meteor showers, town invasions and treasure goblins.
+var events: Node2D
 var respawner: Node
 ## M6a: harvestable trees and ore rocks (professions).
 var nodes: Node
@@ -76,6 +78,8 @@ func _ready() -> void:
     add_child(rivals)
     siege = load("res://scripts/nation/siege.gd").new()
     add_child(siege)
+    events = load("res://scripts/world/world_events.gd").new(self)
+    add_child(events)
     nodes = load("res://scripts/professions/resource_nodes.gd").new(self)
     add_child(nodes)
     trial = load("res://scripts/trials/proving_trial.gd").new()

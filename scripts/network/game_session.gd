@@ -912,6 +912,12 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             "sail":
                 return world.harbours.sail(actor, here, target)
         return false
+    if action == "event":
+        # M11d: collecting a meteorite (the host checks the distance).
+        if payload.size() != 2 or payload.get("operation") != "collect" or not (payload.get("index") is int or payload.get("index") is float):
+            rejected_requests += 1
+            return false
+        return world.events.collect(actor, int(payload.index))
     if action == "exchange":
         # M11c: trading between players; the host checks distance, ownership and room.
         var operation: Variant = payload.get("operation")
@@ -1135,9 +1141,10 @@ func document() -> Dictionary:
 func persistent_document() -> Dictionary:
     var data := document()
     data.erase("trial")
-    # M11c: open trades end with the session.
+    # M11c: open trades end with the session (M11d: and so do world events and their creatures).
     data.erase("exchange")
-    data.enemies = data.enemies.filter(func(enemy): return not String(enemy.id).begins_with("trial_"))
+    data.erase("events")
+    data.enemies = data.enemies.filter(func(enemy): return not String(enemy.id).begins_with("trial_") and not String(enemy.id).begins_with("event_"))
     return data
 
 func save_world() -> Error:

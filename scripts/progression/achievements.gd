@@ -64,6 +64,9 @@ const ACHIEVEMENTS := {
     "level_10": ["Finding Your Feet", "Reach level 10", "Journey", "", "level", 10, ""],
     "level_25": ["Veteran", "Reach level 25", "Journey", "Veteran", "level", 25, ""],
     "level_50": ["Legend", "Reach level 50", "Journey", "Legend", "level", 50, ""],
+    "goblin_slayer": ["Goblin Slayer", "Catch a treasure goblin", "Journey", "Goblin Slayer", "stat", 1, "goblins"],
+    "town_defender": ["Town Defender", "Repel 5 town invasions", "Journey", "Town Defender", "stat", 5, "invasions"],
+    "stargazer": ["Stargazer", "Collect 10 meteorites", "Journey", "Stargazer", "stat", 10, "meteorites"],
     "tycoon": ["Tycoon", "Hold 100,000 Zeni", "Journey", "Tycoon", "zeni", 100000, ""],
     "wanderer": ["Wanderer", "Set foot in every land of the world", "Journey", "Wanderer", "set", 16, "regions"],
     "realm_walker": ["Realm Walker", "Find the hidden Ki Realm", "Journey", "Realm Walker", "has", 1, ["regions", "The Ki Realm"]],
@@ -130,6 +133,10 @@ static func record(actor: Node, kind: String, data: Dictionary) -> void:
             _count(actor, "fish")
         "bounty":
             _count(actor, "bounties")
+        "event":
+            var what := String(data.get("what", ""))
+            if what in ["goblin", "invasion", "meteorite"]:
+                _count(actor, what + "s")
         "region":
             var region := String(data.get("region", ""))
             if not region.is_empty() and not region in SKIP_REGIONS:

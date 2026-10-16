@@ -104,6 +104,8 @@ const SIDE := {
     "gnasher": {"idle": ["res://assets/game/sprites/gnasher/gnasher_idle.png", 32], "run": ["res://assets/game/sprites/gnasher/gnasher_run.png", 64], "death": ["res://assets/game/sprites/gnasher/gnasher_death.png", 64]},
     "thornback": {"idle": ["res://assets/game/sprites/thornback/thornback_idle.png", 32], "run": ["res://assets/game/sprites/thornback/thornback_run.png", 64], "death": ["res://assets/game/sprites/thornback/thornback_death.png", 64]},
     "goblin": {"idle": ["res://assets/game/sprites/ally_goblin/goblin_idle.png", 32], "run": ["res://assets/game/sprites/ally_goblin/goblin_run.png", 64]},
+    # M11d: the treasure goblin (world event) wears the goblin's art.
+    "treasure_goblin": {"idle": ["res://assets/game/sprites/ally_goblin/goblin_idle.png", 32], "run": ["res://assets/game/sprites/ally_goblin/goblin_run.png", 64]},
     "hobgoblin": {"idle": ["res://assets/game/sprites/hobgoblin/hobgoblin_idle.png", 32], "run": ["res://assets/game/sprites/hobgoblin/hobgoblin_run.png", 64]},
     # M7: raid boss sprites (Ninja Adventure bosses: one row of frames, front view).
     "giant_spirit": {"idle": ["res://assets/game/sprites/giant_spirit/giant_spirit_idle.png", 50], "run": ["res://assets/game/sprites/giant_spirit/giant_spirit_run.png", 50]},
