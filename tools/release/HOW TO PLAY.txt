@@ -4,23 +4,27 @@ TempestRPG - playing together
 Everyone: unzip and run TempestRPG.exe (no installation). Windows may warn about an unknown
 app the first time: "More info" -> "Run anyway". Allow it through the firewall when asked.
 
-EASIEST: JOIN CODES (no router settings, nothing to install)
-  Host:   start a world (Continue / New Game) -> Esc -> "Invite with a code" -> "New invite code"
+Every world is single player until its owner switches on multiplayer. Your world runs on your
+own computer: no server to rent, no ports to open, no IP addresses to type.
+
+PLAYING TOGETHER (invite codes)
+  Host:   in your world press Esc -> "MULTIPLAYER: OFF" (it switches on) -> "New invite code"
           -> "Copy code" and send it to ONE friend (Discord, chat...).
-  Friend: TempestRPG.exe -> "Join a Friend" -> paste the code -> "Join".
+  Friend: TempestRPG.exe -> "Join a Friend" -> paste the code -> choose a character -> "Join".
           The game shows a REPLY code -> copy it and send it back to the host.
-  Host:   paste the reply code -> "Let them in". Repeat with a new code for each friend.
+  Host:   paste the reply code -> "Let them in". Esc -> "Invite a Friend" makes a code for the
+          next friend (one code per friend, up to 8 players).
+  Esc -> "MULTIPLAYER: ON" switches it off again: friends leave, their characters stay saved.
   Codes contain your Internet address: share them only with friends. Some strict networks
-  (mobile hotspots, school/company networks) can block join codes.
+  (mobile hotspots, school/company networks) can block invite codes.
 
-SAME HOME NETWORK
-  Host: Esc -> "Open to friends". Friends: "Join a Friend" -> the 192.168... address shown.
-
-SERVER WINDOW (optional; the world runs while you are not playing; needs port sharing for
-friends outside your network: UDP 24560, e.g. FRITZ!Box -> Internet -> Permit Access)
-  1. Double-click "Start server.bat" (hosts your most recently played world).
-  2. You: TempestRPG.exe -> Join a Friend -> 127.0.0.1  (you play your own character)
-  3. Friends: Join a Friend -> the address the server window shows.
+YOUR OWN CHARACTER IN A FRIEND'S WORLD
+  The host decides: Esc -> "GUESTS: NEW CHARACTERS" / "GUESTS: OWN CHARACTERS OK".
+  When it is allowed, pick one of your own characters when joining: your level, skills, gear,
+  items, Zeni, professions, fish log, achievements and quests come along. It stays one
+  character: what you gain at your friend's is written back into your own world (on every
+  autosave and when you leave). The map you discovered stays with each world.
+  Otherwise you play a new character in their world (saved in their world for next time).
 
 HANDY
   Your saves are in %APPDATA%\TempestRPG (type it into the Explorer address bar).

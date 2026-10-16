@@ -2,6 +2,12 @@
 
 User requirement, 2026-10-12: friends connect to the user's machine, which hosts the game server. Persist each character and the shared world. Confirmed player limit: **8 total, including the host (1 host + 7 guests)**. Keep the limit configurable rather than scattering a hardcoded number through gameplay.
 
+## M10: invite codes only, your own characters (2026-10-16, user decision)
+
+Invite codes (WebRTC with public STUN, `join_codes.gd`) are the only way players connect. A world is single player (OfflineMultiplayerPeer) until its owner switches on Multiplayer (`open_with_codes`); `close_multiplayer` disconnects guests (their records saved, their own characters synced back first) and returns to OfflineMultiplayerPeer. ENet hosting/joining and the console server remain only for developer builds (`OS.is_debug_build()`), where the network integration tests use them.
+
+Own characters (`character_import.gd`): world meta `imports` (optional bool) allows guests to bring the `host` record of one of their own worlds. The guest sends its travelling parts (`RECORD_KEYS`: progression without `WORLD_PROGRESSION` — chests, spots, elites, ferry_pass_until, ship — plus gear, inventory, skills, slots, evidence, form, health, magicules) with `_join_world`; the host refuses when imports are off, merges into the guest's record for this world (kept: position, the world's own progression parts, token hash), validates with `validate_player` and stores it. The host sends every guest its travelling parts on each 15 s autosave (`_sync_characters`) and on request when the guest leaves (`_request_sync`); a guest who brought a character writes them into their own world (`write_back`: merged into its `host` record, validated, written with the usual .bak/atomic rename). A guest never plays the same character in two worlds at once (it is in the host's world while away).
+
 ## Current state and order
 
 N0 is implemented for desktop/LAN testing. The host owns simulation, admits seven guests, verifies per-world reconnect credentials, and saves/restores characters and world entities. The offline sandbox remains session-local; choose Host/Join with F8 to use persistent hosted play. Real processes verified host/client movement, shared claims, reconnect after host restart, forged identity rejection, eight-player capacity, and local UI without global pause. Internet connectivity, encrypted transport, visual playtesting, and high-latency/performance tuning remain unverified or unimplemented. M2 recruitment, naming/evolution and exhaustion are implemented.

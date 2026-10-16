@@ -53,6 +53,14 @@ var public_address := ""
 var upnp_status := ""
 ## --- Join codes (user request): hosting and joining through routers without opening ports.
 const CODES := preload("res://scripts/network/join_codes.gd")
+## M10 (user decision): invite codes are the only way to play together; a guest may bring their own
+## character when the world's owner allows it (world meta "imports"), see character_import.gd.
+const IMPORT := preload("res://scripts/network/character_import.gd")
+## Guest: the own world whose character was brought along ("" for a character of this world).
+var import_path := ""
+## Guest: waiting for the host's last copy of the character before leaving.
+var _leaving := false
+signal character_synced
 signal reply_code_ready(code: String)
 var code_mode := false
 var _rtc: WebRTCMultiplayerPeer
@@ -85,6 +93,10 @@ func _launch_arguments() -> void:
     for argument in OS.get_cmdline_user_args():
         var pair := argument.trim_prefix("--").split("=", true, 1)
         options[pair[0]] = pair[1] if pair.size() == 2 else ""
+    # M10: joining by address and the console server are gone from the game; developer builds
+    # (the editor, the network tests) keep them as a test harness.
+    if not OS.is_debug_build() and (options.has("server") or options.has("host") or options.has("join")):
+        return
     if options.has("server"):
         var path: String = options.get("save", "")
         if path.is_empty():
@@ -115,6 +127,7 @@ func launch_pending() -> void:
     var launch := pending_launch
     pending_launch = {}
     if launch.mode == "join_code":
+        import_path = String(launch.get("import", ""))
         join_with_code(launch.code, identity_path, launch.get("race", RACES.DEFAULT))
         return
     if launch.mode == "server":
@@ -127,6 +140,15 @@ func launch_pending() -> void:
 
 ## Leave the current world (saving when hosting) and return to the title menu.
 func quit_to_title() -> Error:
+    # A guest with their own character takes its latest state home first (briefly).
+    if active and replica_world and not import_path.is_empty() and not local_character_id.is_empty() and not _leaving:
+        _leaving = true
+        _request_sync.rpc_id(1)
+        var waited := 0.0
+        while waited < 2.0 and _leaving:
+            await get_tree().create_timer(0.1, true, false, true).timeout
+            waited += 0.1
+        _leaving = false
     if active and multiplayer.is_server():
         var error := save_world()
         if error != OK:
@@ -201,7 +223,7 @@ func start_host(port: int = DEFAULT_PORT, path: String = "user://worlds/forest.j
         stop_session(false)
         _fail("Could not save the hosted world; hosting stopped.")
         return saved
-    world._announce("Hosting for up to 8 players on UDP %d. F9 saves." % port if listening else "World \"%s\" loaded. Esc: pause menu, open to friends." % world_meta.name)
+    world._announce("Hosting for up to 8 players on UDP %d. F9 saves." % port if listening else "World \"%s\" loaded. Esc: pause menu — switch on Multiplayer to invite friends." % world_meta.name)
     character_assigned.emit("host")
     return OK
 
@@ -347,8 +369,63 @@ func open_with_codes() -> Error:
     code_mode = true
     _invites.clear()
     save_world()
-    world._announce("Open to friends with join codes: make one invite code per friend.")
+    world._announce("Multiplayer is on: Invite a Friend makes one code per friend.")
     return OK
+
+## Host: stop playing together — friends leave (their characters are saved here, and those who
+## brought their own get it back first), the world goes on single player.
+func close_multiplayer() -> Error:
+    if not active or replica_world or not code_mode or not multiplayer.is_server():
+        return ERR_UNAVAILABLE
+    _sync_characters()
+    for peer in owners.keys():
+        if peer != 1:
+            _peer_disconnected(peer)
+    if _rtc != null:
+        _rtc.close()
+        _rtc = null
+    multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
+    listening = false
+    code_mode = false
+    _invites.clear()
+    save_world()
+    world._announce("Multiplayer is off: your world is single player again.")
+    return OK
+
+## Host: whether guests may bring their own characters (saved with the world).
+func set_imports(allowed: bool) -> void:
+    if not active or replica_world or not multiplayer.is_server():
+        return
+    world_meta["imports"] = allowed
+    save_world()
+
+## Host: every guest gets the current state of their character (kept by those who brought their own).
+func _sync_characters() -> void:
+    for peer in owners:
+        var id: String = owners[peer]
+        if id == "host" or peer == 1 or not _peer_ready(peer):
+            continue
+        var actor = world.player_by_id(id)
+        if actor != null:
+            _character_sync.rpc_id(peer, IMPORT.carried(CODEC.capture_player(actor)))
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_sync() -> void:
+    var peer := multiplayer.get_remote_sender_id()
+    if active and multiplayer.is_server() and owners.has(peer) and owners[peer] != "host":
+        var actor = world.player_by_id(owners[peer])
+        if actor != null:
+            _character_sync.rpc_id(peer, IMPORT.carried(CODEC.capture_player(actor)))
+
+## Guest: the host's copy of this character; one brought from an own world is written back there.
+@rpc("authority", "call_remote", "reliable")
+func _character_sync(travelling: Dictionary) -> void:
+    _leaving = false
+    if import_path.is_empty() or not replica_world:
+        return
+    if IMPORT.write_back(import_path, travelling) != OK:
+        world._announce("Could not update your character in your own world; it is kept safe in your friend's world.")
+    character_synced.emit()
 
 ## Host: a new invite code for one friend ("" if full or unavailable). Takes a few seconds.
 func create_invite() -> String:
@@ -504,14 +581,22 @@ func _hello(id: String) -> void:
     if not profile.get("character", "") is String or not profile.get("credential", "") is String:
         _fail("Character profile fields are invalid.")
         return
-    _join_world.rpc_id(1, profile.get("character", ""), profile.get("credential", ""), join_race)
+    # M10: a character brought from one of this computer's own worlds.
+    var bring: Dictionary = IMPORT.load_carried(import_path) if not import_path.is_empty() else {}
+    if not import_path.is_empty() and bring.is_empty():
+        _fail("Your character's world could not be read.")
+        return
+    _join_world.rpc_id(1, profile.get("character", ""), profile.get("credential", ""), join_race, bring)
 
 @rpc("any_peer", "call_remote", "reliable")
-func _join_world(character: String, credential: String, race: String) -> void:
+func _join_world(character: String, credential: String, race: String, bring: Dictionary = {}) -> void:
     if not active or not multiplayer.is_server():
         return
     var peer := multiplayer.get_remote_sender_id()
     if owners.has(peer):
+        return
+    if not bring.is_empty() and not bool(world_meta.get("imports", false)):
+        _deny(peer, "This world's owner allows only new characters. Join again with a new character.")
         return
     if owners.size() >= MAX_PLAYERS:
         _deny(peer, "The eight-player session is full.")
@@ -553,12 +638,23 @@ func _join_world(character: String, credential: String, race: String) -> void:
     actor.network_controlled = true
     actor.position = Vector2(480 + (owners.size() - 1) * 20, 340)
     world.add_child(actor)
-    if records.has(character):
-        CODEC.apply_player(actor, records[character], world, false)
-    else:
-        actor.choose_race(race)
+    if not records.has(character):
+        actor.choose_race(String(bring.get("progression", {}).get("race", race)) if not bring.is_empty() else race)
         records[character] = CODEC.capture_player(actor)
         records[character]["token_hash"] = (world_id + credential).sha256_text()
+    if not bring.is_empty():
+        # Their own character: what travels replaces this world's copy; the world's parts stay.
+        var brought: Dictionary = IMPORT.merged(records[character], bring)
+        brought["id"] = character
+        brought.erase("token_hash")
+        if not STORE.validate_player(brought, character):
+            world.remove_child(actor)
+            actor.queue_free()
+            _deny(peer, "Your character could not be brought into this world.")
+            return
+        brought["token_hash"] = records[character].token_hash
+        records[character] = brought
+    CODEC.apply_player(actor, records[character], world, false)
     owners[peer] = character
     _wire_remote(actor)
     player_joined.emit(actor)
@@ -1243,6 +1339,7 @@ func _process(delta: float) -> void:
         _broadcast()
     if _save_time >= 15.0:
         _save_time = 0.0
+        _sync_characters()
         if save_world() != OK:
             world._announce("Autosave failed. Use F9 to retry; the previous save is retained.")
 
@@ -1259,6 +1356,8 @@ func stop_session(save: bool = true) -> void:
     code_mode = false
     _invites.clear()
     reply_code = ""
+    import_path = ""
+    _leaving = false
     active = false
     listening = false
     world_meta = {}

@@ -50,9 +50,15 @@ func _run() -> void:
     var menu = await _menu()
     menu._show("load")
     _check(menu._world_list.item_count == 0 and menu._play.disabled and menu._status.text.contains("No saved worlds"), "Load list starts empty with a hint")
+    menu.refresh_join_characters()
     menu._show("join")
     menu.join_world()
-    _check(menu._status.text.contains("address") and session.pending_launch.is_empty(), "Join needs an address")
+    _check(menu._status.text.contains("invite code") and session.pending_launch.is_empty(), "Join needs an invite code")
+    menu._address_field.text = "192.168.1.10"
+    menu.join_world()
+    _check(menu._status.text.contains("invite code") and session.pending_launch.is_empty(), "M10: an address is not accepted (invite codes only)")
+    _check(menu._join_character.item_count == 1, "With no own worlds, only a new character can join")
+    menu._address_field.text = ""
     # Create a world: solo, saved, no port opened.
     menu._show("new")
     menu._name_field.text = "Test World"
@@ -70,16 +76,23 @@ func _run() -> void:
     var world = current_scene
     var hud = world.get_node("HUD")
     hud.open_pause()
-    _check(paused and hud._pause_panel.visible and hud._pause_status.text.contains("playing solo") and not hud._pause_buttons.open.disabled, "Solo pause freezes the world and offers Open to friends")
+    _check(paused and hud._pause_panel.visible and hud._pause_status.text.contains("single player") and not hud._pause_buttons.multiplayer.disabled and hud._pause_buttons.multiplayer.text == "MULTIPLAYER: OFF" and hud._pause_buttons.invite.disabled, "Solo pause freezes the world and offers the Multiplayer switch")
+    _check(not hud._pause_buttons.has("open"), "M10: no Open to friends (address) entry")
+    hud._pause_buttons.guests.pressed.emit()
+    _check(bool(session.world_meta.imports) and hud._pause_buttons.guests.text == "GUESTS: OWN CHARACTERS OK" and STORE.load_world(path).data.meta.imports == true and STORE.valid_meta(STORE.load_world(path).data.meta), "Guests may bring their own characters (saved with the world)")
+    hud._pause_buttons.guests.pressed.emit()
+    _check(not bool(session.world_meta.imports) and hud._pause_buttons.guests.text == "GUESTS: NEW CHARACTERS", "...and back to new characters only")
     hud.close_pause()
     _check(not paused and not hud._pause_panel.visible, "Resume continues the world")
     world.get_local_player().position = Vector2(300, 200)
-    # Open to friends without restarting.
-    var port := 30000 + randi() % 20000
-    _check(session.open_to_friends(port) == OK and session.listening and session.multiplayer.multiplayer_peer is ENetMultiplayerPeer and session.world_id == world_id, "Open to friends starts listening in the same world")
-    _check(session.open_to_friends(port) == ERR_UNAVAILABLE, "Opening twice is refused")
+    # M10: multiplayer by invite codes, switched on and off in the running world.
+    _check(session.open_with_codes() == OK and session.code_mode and session.multiplayer.multiplayer_peer is WebRTCMultiplayerPeer and session.world_id == world_id, "Multiplayer switches on in the same world (invite codes)")
+    _check(session.open_with_codes() == ERR_UNAVAILABLE, "Switching on twice is refused")
     hud.open_pause()
-    _check(paused and hud._pause_status.text.contains("open to friends on UDP %d" % port) and hud._pause_buttons.open.disabled, "Pause shows the open port; nobody joined yet, so the world still freezes")
+    _check(paused and hud._pause_status.text.contains("multiplayer") and hud._pause_buttons.multiplayer.text == "MULTIPLAYER: ON" and not hud._pause_buttons.invite.disabled, "Pause shows multiplayer on and offers Invite a Friend; nobody joined yet, so the world still freezes")
+    hud.close_pause()
+    _check(session.close_multiplayer() == OK and not session.code_mode and session.multiplayer.multiplayer_peer is OfflineMultiplayerPeer and session.active, "Multiplayer switches off again: single player, same world")
+    hud.open_pause()
     _check(hud._pause_buttons.quit.text == "SAVE & QUIT TO TITLE", "Host leaves with Save & quit")
     # A write failure must preserve the live world and its pause menu for a retry.
     var blocked_path := dir.path_join("not_a_directory")

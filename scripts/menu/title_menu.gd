@@ -31,6 +31,9 @@ var _new_race: OptionButton
 var _join_race: OptionButton
 var _seed_field: LineEdit
 var _address_field: LineEdit
+## M10: join with a new character or one of your own worlds' characters.
+var _join_character: OptionButton
+var _own_characters: Array = []
 var _world_list: ItemList
 var _play: Button
 var _worlds: Array = []
@@ -129,7 +132,7 @@ func _build_main() -> void:
         ["new", "NEW GAME", func(): _show("new")],
         ["continue", "CONTINUE", continue_last],
         ["load", "LOAD GAME", func(): _show("load")],
-        ["join", "JOIN A FRIEND", func(): _show("join")],
+        ["join", "JOIN A FRIEND", func(): refresh_join_characters(); _show("join")],
         ["settings", "SETTINGS", func(): _show("settings")],
         ["credits", "CREDITS", func(): _show("credits")],
         ["quit", "QUIT", func(): get_tree().quit()],
@@ -174,10 +177,15 @@ func _build_load() -> void:
 func _build_join() -> void:
     var panel := _panel("join")
     UI.heading(_label("JOIN A FRIEND", Vector2(14, 10), Vector2(272, 20), panel, 13))
-    _label("Paste your friend's invite code (Esc → Invite with a code) — or their address if they opened their world by address.", Vector2(14, 34), Vector2(272, 44), panel, 10)
-    _address_field = _field("invite code or e.g. 192.168.1.10", Vector2(14, 84), panel)
-    _label("Race for a new character (returning characters keep theirs)", Vector2(14, 118), Vector2(272, 14), panel, 9)
-    _join_race = _race_picker(Vector2(14, 134), panel)
+    _label("Paste your friend's invite code (they make it in Esc → Invite a Friend).", Vector2(14, 34), Vector2(272, 30), panel, 10)
+    _address_field = _field("invite code (TRPG1-…)", Vector2(14, 64), panel)
+    _label("Character: a new one for their world, or one of yours (if they allow it)", Vector2(14, 96), Vector2(272, 14), panel, 9)
+    _join_character = OptionButton.new()
+    _join_character.position = Vector2(14, 110)
+    _join_character.size = Vector2(272, 22)
+    _join_character.add_theme_font_size_override("font_size", 9)
+    panel.add_child(_join_character)
+    _join_race = _race_picker(Vector2(14, 138), panel)
     _button("Join", Vector2(14, 170), Vector2(170, 32), panel, join_world)
     _button("Back", Vector2(190, 170), Vector2(96, 32), panel, func(): _show("main"))
     _first_focus["join"] = _address_field
@@ -288,18 +296,29 @@ func load_selected() -> void:
         return
     _launch({"mode": "host", "path": _worlds[_world_list.get_selected_items()[0]].path, "listen": false})
 
+## The join screen's character choices: a new character, then this computer's own characters.
+func refresh_join_characters() -> void:
+    _own_characters = preload("res://scripts/network/character_import.gd").own_characters(worlds_dir)
+    _join_character.clear()
+    _join_character.add_item("New character (race below)")
+    for entry in _own_characters:
+        _join_character.add_item("%s, level %d — from \"%s\"" % [entry.race, entry.level, entry.world])
+    _join_character.select(0)
+
 func join_world() -> void:
-    var address := _address_field.text.strip_edges()
-    if address.is_empty():
-        _status.text = "Enter your friend's invite code or address first."
+    var code := _address_field.text.strip_edges()
+    if code.is_empty():
+        _status.text = "Paste your friend's invite code first."
         return
-    if preload("res://scripts/network/join_codes.gd").is_code(address):
-        if preload("res://scripts/network/join_codes.gd").decode(address).is_empty():
-            _status.text = "That invite code is incomplete — copy it again."
-            return
-        _launch({"mode": "join_code", "code": address, "race": RACES.ORDER[_join_race.selected]})
+    var codes := preload("res://scripts/network/join_codes.gd")
+    if not codes.is_code(code) or codes.decode(code).is_empty():
+        _status.text = "That is not a complete invite code — ask your friend for it again (Esc → Invite a Friend)."
         return
-    _launch({"mode": "join", "address": address, "race": RACES.ORDER[_join_race.selected]})
+    var request := {"mode": "join_code", "code": code, "race": RACES.ORDER[_join_race.selected]}
+    var choice: int = _join_character.selected if _join_character != null else 0
+    if choice > 0 and choice - 1 < _own_characters.size():
+        request["import"] = _own_characters[choice - 1].path
+    _launch(request)
 
 func _launch(request: Dictionary) -> void:
     session.pending_launch = request

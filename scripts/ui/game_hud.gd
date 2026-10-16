@@ -831,12 +831,12 @@ func _build_pause_panel() -> void:
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     _pause_menu = Panel.new()
     _pause_menu.position = Vector2(206, 62)
-    _pause_menu.size = Vector2(228, 264)
+    _pause_menu.size = Vector2(228, 266)
     _pause_menu.add_theme_stylebox_override("panel", UI.ornate())
     _pause_panel.add_child(_pause_menu)
-    var entries := [["resume", "RESUME"], ["bag", "INVENTORY & EQUIPMENT"], ["tree", "SKILL TREE"], ["fusion", "SKILL FUSION"], ["map", "WORLD MAP"], ["open", "OPEN TO FRIENDS"], ["invite", "INVITE WITH A CODE"], ["save", "SAVE WORLD"], ["options", "OPTIONS"], ["quit", "SAVE & QUIT TO TITLE"]]
+    var entries := [["resume", "RESUME"], ["bag", "INVENTORY & EQUIPMENT"], ["tree", "SKILL TREE"], ["fusion", "SKILL FUSION"], ["map", "WORLD MAP"], ["multiplayer", "MULTIPLAYER: OFF"], ["invite", "INVITE A FRIEND"], ["guests", "GUESTS: NEW CHARACTERS"], ["save", "SAVE WORLD"], ["options", "OPTIONS"], ["quit", "SAVE & QUIT TO TITLE"]]
     for index in range(entries.size()):
-        var button := _button(entries[index][1], Vector2(10, 8 + index * 25), Vector2(208, 24), _pause_menu)
+        var button := _button(entries[index][1], Vector2(10, 7 + index * 23), Vector2(208, 22), _pause_menu)
         UI.menu_entry(button)
         _pause_buttons[entries[index][0]] = button
     _pause_panel.add_child(MARKER.new(_pause_buttons.values()))
@@ -845,10 +845,23 @@ func _build_pause_panel() -> void:
     _pause_buttons.tree.pressed.connect(_from_pause.bind(func(): skill_tree.open()))
     _pause_buttons.fusion.pressed.connect(_from_pause.bind(func(): fusion.open()))
     _pause_buttons.map.pressed.connect(_from_pause.bind(func(): world_map.open()))
-    _pause_buttons.open.pressed.connect(func(): session.open_to_friends(); _refresh_pause())
+    # M10 (user decision): invite codes are the only way to play together. The switch opens the
+    # world to codes (and makes the first invite) or takes it back to single player.
+    _pause_buttons.multiplayer.pressed.connect(func():
+        if session.code_mode:
+            session.close_multiplayer()
+            _refresh_pause()
+        else:
+            close_pause()
+            invite_panel.open_host()
+    )
     _pause_buttons.invite.pressed.connect(func():
         close_pause()
         invite_panel.open_host()
+    )
+    _pause_buttons.guests.pressed.connect(func():
+        session.set_imports(not bool(session.world_meta.get("imports", false)))
+        _refresh_pause()
     )
     _pause_buttons.save.pressed.connect(func():
         var result: Error = session.save_world()
@@ -983,16 +996,15 @@ func _refresh_pause() -> void:
     elif not session.active:
         _pause_status.text = "Offline sandbox (not saved)."
     elif session.code_mode:
-        _pause_status.text = "\"%s\" · open with join codes · %d/8 players
-Invite with a code: one code per friend." % [session.world_meta.get("name", "World"), session.owners.size()]
-    elif session.listening:
-        var addresses: Array = session.lan_addresses()
-        _pause_status.text = "\"%s\" · open to friends on UDP %d · %d/8 players\nJoin with: %s" % [session.world_meta.get("name", "World"), session.listen_port, session.owners.size(), ", ".join(addresses) if not addresses.is_empty() else "your IP address"]
+        _pause_status.text = "\"%s\" · multiplayer · %d/8 players\nInvite a Friend makes one code per friend." % [session.world_meta.get("name", "World"), session.owners.size()]
     else:
-        _pause_status.text = "\"%s\" · %s · playing solo\nOpen to friends lets up to 7 friends join." % [session.world_meta.get("name", "World"), load("res://scripts/world/world_layout.gd").describe(session.world_meta)]
-    _pause_buttons.open.disabled = not hosting or session.listening
-    _pause_buttons.invite.disabled = not hosting or (session.listening and not session.code_mode)
-    _pause_buttons.open.text = "OPEN TO FRIENDS" if not session.listening else "OPEN TO FRIENDS (ON)"
+        _pause_status.text = "\"%s\" · %s · single player\nSwitch on Multiplayer to invite up to 7 friends with codes." % [session.world_meta.get("name", "World"), load("res://scripts/world/world_layout.gd").describe(session.world_meta)]
+    var imports: bool = bool(session.world_meta.get("imports", false))
+    _pause_buttons.multiplayer.disabled = not hosting or (session.listening and not session.code_mode)
+    _pause_buttons.multiplayer.text = "MULTIPLAYER: ON" if session.code_mode else "MULTIPLAYER: OFF"
+    _pause_buttons.invite.disabled = not hosting or not session.code_mode
+    _pause_buttons.guests.disabled = not hosting
+    _pause_buttons.guests.text = "GUESTS: OWN CHARACTERS OK" if imports else "GUESTS: NEW CHARACTERS"
     _pause_buttons.save.disabled = not hosting
     _pause_buttons.quit.text = "LEAVE TO TITLE" if session.replica_world else "SAVE & QUIT TO TITLE" if hosting else "QUIT TO TITLE"
     # Character and world card.

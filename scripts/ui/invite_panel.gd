@@ -88,9 +88,6 @@ func _show() -> void:
 ## Host: open the window (switching the world to join codes if it is not open to friends yet).
 func open_host() -> void:
     var session: Node = hud.session
-    if session.listening and not session.code_mode:
-        session.world._announce("Your world is already open by address. Save & quit and load it again to use join codes.")
-        return
     if not session.code_mode and session.open_with_codes() != OK:
         return
     _title.text = "INVITE FRIENDS WITH A CODE"

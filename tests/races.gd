@@ -207,9 +207,10 @@ func _run() -> void:
     _check(session.pending_launch.get("race") == "Demon", "New World passes the chosen race to the host")
     session.pending_launch = {}
     menu._join_race.select(1)
-    menu._address_field.text = "127.0.0.1"
+    menu.refresh_join_characters()
+    menu._address_field.text = preload("res://scripts/network/join_codes.gd").encode({"type": "offer", "sdp": "test", "candidates": [], "id": 2})
     menu.join_world()
-    _check(session.pending_launch.get("race") == "Human" and session.pending_launch.get("mode") == "join", "Join passes the chosen race for a new character")
+    _check(session.pending_launch.get("race") == "Human" and session.pending_launch.get("mode") == "join_code" and not session.pending_launch.has("import"), "Join (invite code) passes the chosen race for a new character")
     session.pending_launch = {}
     await _frames()
     for file in DirAccess.get_files_at(dir):

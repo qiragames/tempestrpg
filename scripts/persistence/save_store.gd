@@ -246,7 +246,10 @@ static func validate_player(state: Variant, id: String) -> bool:
     return true
 
 static func valid_meta(meta: Variant) -> bool:
-    if not meta is Dictionary or meta.size() != 5 or not meta.get("name") is String or not meta.get("seeded") is bool:
+    # M10: "imports" (guests may bring their own characters) is optional.
+    if not meta is Dictionary or meta.size() != (6 if meta.has("imports") else 5) or not meta.get("name") is String or not meta.get("seeded") is bool:
+        return false
+    if meta.has("imports") and not meta.imports is bool:
         return false
     var name: String = meta.name
     if name.strip_edges().is_empty() or name.length() > 32 or name != name.strip_edges():
