@@ -141,7 +141,7 @@ Requested by the user after 17e; exact order and scope to be confirmed with the 
 - **M11f — pets: Done (Claude, 2026-10-16).** Ten animal companions (cat, ginger cat, dog, golden pup, hamster, parrot, lion cub, frog, chick and the rare racoon), each with a small bonus (+XP, +Zeni, +defence, +speed or +strike). Mysterious Eggs drop now and then from creatures (more from elites and bosses; a treasure goblin always carries one) and hatch a pet you do not have yet. The pets window (V) chooses which follows you; every player sees each other's pets trotting along. Achievements A Friend for the Road and Beast Friend. Tests: `tests/pets.gd` (20).
 - **M11g — controller support and key rebinding: Done (Claude, 2026-10-16).** Any standard gamepad works without setup: left stick or d-pad move, A strike, X interact, Y absorb, LB/RB/LT/RT skills 1–4, Start/B pause and back, Back the bag, the right stick click the map, the left stick click mimic form (menus use the built-in gamepad navigation). Options → Keys lists every main action with its key; click one and press a new key (clashes show red); the choices are saved on this computer and apply at start. Tests: `tests/input_setup.gd` (11).
 - **M11h — armies: Done (Claude, 2026-10-16).** Your nation trains soldiers: inside the village a character recruits them for Zeni (two per nation tier, up to ten). They follow their recruiter and fight the creatures near them; the army window (C) gives orders — follow me, hold here, charge — or sends them home. Soldiers rise from Recruit to Veteran and Champion with their defeats (more health and damage, a different tint); a fallen soldier recovers at the camp after two minutes. Sieges on the village grow with the army. Soldiers are saved with the world and every player sees them. Tests: `tests/army.gd` (18).
-- Next: release v1.0 (user decision: when the list is done).
+- **Release v1.0.0 (2026-10-16, user decision: when the list is done):** GitHub release `v1.0.0` from `claude/m11h-armies`, `TempestRPG-windows.zip` (the game, the WebRTC library for invite codes, HOW TO PLAY). Version 1.0.0 in the project and the exe.
 
 ### M10 — Invite-only multiplayer and your own characters · Done (Claude, 2026-10-16), requires N0
 
@@ -234,6 +234,7 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-16: Claude Code published release v1.0.0 (all of the user's list done: M9–M11).
 - 2026-10-16: Claude Code added armies (M11h) on `claude/m11h-armies`: `Army` (world node; soldiers in the world progression `army`, host simulation, bodies on every peer), the `army` intent, `ArmyPanel` (C), siege waves grow with the army.
 - 2026-10-16: Claude Code added controller support and key rebinding (M11g) on `claude/m11g-controller`: `InputSetup` (gamepad events added at start, `rebind`, `clashes`), `KeyCatcher`, the keys list in `Settings` (`keys` section of settings.cfg).
 - 2026-10-16: Claude Code added pets (M11f) on `claude/m11f-pets`: `PetCatalogue`, `PetFollowers` (world node: followers on every peer, eggs, hatching, choosing), the `pet` intent, `PetsPanel` (V), pet bonuses in `gear_bonus`/`gain_experience`/`gain_zeni`, save checks; kill events now carry the creature's difficulty.
