@@ -51,6 +51,63 @@ const POTIONS := {
 ## Potions that share the draught/tonic cooldown (the rest are elixirs with their own timers).
 const COOLDOWN_EFFECTS := ["heal", "tonic", "full"]
 
+## --- M11e: Cooking, Enchanting and Tailoring.
+## Meals, same shape as POTIONS ("fish_*" is any fish). "wisdom" gives more XP from everything.
+const FOODS := {
+    "food_grilled_fish": ["Grilled Fish", 1, 30, "heal", 60, 5.0, {"fish_*": 1}, "Restores 60 HP over 5 s."],
+    "food_herb_bread": ["Herb Bread", 6, 45, "heal", 100, 5.0, {"herb_mint": 2, "herb_sunbloom": 1}, "Restores 100 HP over 5 s."],
+    "food_fisherman_stew": ["Fisherman's Stew", 12, 120, "iron", 5, 600.0, {"fish_*": 2, "herb_sunbloom": 1}, "+5 defence for 10 minutes."],
+    "food_ember_skewer": ["Ember Skewer", 20, 220, "might", 15, 600.0, {"salamander_scale": 1, "fish_*": 1, "herb_ambercap": 1}, "+15% damage for 10 minutes."],
+    "food_sakura_rice_ball": ["Sakura Rice Ball", 26, 260, "speed", 20, 600.0, {"herb_sakura": 2, "fish_*": 1}, "+20% movement speed for 10 minutes."],
+    "food_scholars_soup": ["Scholar's Soup", 32, 400, "wisdom", 20, 900.0, {"herb_steppe_sage": 2, "fish_*": 2}, "+20% XP from everything for 15 minutes."],
+    "food_moonlit_feast": ["Moonlit Feast", 40, 900, "wisdom", 35, 900.0, {"herb_moonbloom": 1, "herb_jade_lotus": 1, "fish_*": 3}, "+35% XP from everything for 15 minutes."],
+    "food_dragon_banquet": ["Dragon Banquet", 46, 1600, "full", 0, 0.0, {"herb_dragon_blossom": 1, "fish_*": 3, "ember_core": 1}, "Instantly restores all HP and Magicules."],
+}
+## Runes inscribed by Enchanting: rune → [level, ingredients].
+const ENCHANTS := {
+    "rune_vigor": [1, {"gem_*": 1, "gnasher_essence": 2}],
+    "rune_focus": [6, {"gem_*": 1, "wisp_mote": 2}],
+    "rune_swift": [12, {"gem_*": 1, "owl_feather": 2}],
+    "rune_might": [18, {"gem_*": 1, "ember_core": 1, "thornback_quill": 2}],
+    "rune_ward": [24, {"gem_*": 2, "kappa_shell": 2}],
+    "rune_flow": [30, {"gem_*": 2, "mirecap_spore": 2}],
+    "rune_leech": [38, {"gem_ruby": 1, "viper_scale": 3, "herb_nightshade": 2}],
+    "rune_thorns": [44, {"gem_emerald": 2, "thornback_quill": 4, "bar_adamantite": 1}],
+}
+## Tailoring materials → [name, Tailoring level, gear level band].
+const CLOTHS := {
+    "bamboo_fiber": ["Bamboo Weave", 1, [1, 6]],
+    "frost_pelt": ["Frost Pelt", 8, [5, 11]],
+    "viper_scale": ["Viperscale", 14, [9, 16]],
+    "owl_feather": ["Featherdown", 20, [14, 22]],
+    "salamander_scale": ["Salamander Hide", 28, [20, 32]],
+    "kappa_shell": ["Kappa Shell", 36, [28, 40]],
+    "lantern_paper": ["Spirit Silk", 44, [36, 48]],
+}
+## Pieces Tailoring sews: [name, materials, extra (a herb for dye, any)].
+const TAILOR := {"head": ["Hood", 2], "body": ["Robe", 4], "hands": ["Gloves", 2], "feet": ["Boots", 2]}
+
+static func is_food(id: String) -> bool:
+    return FOODS.has(id)
+
+## A meal's or potion's row (POTIONS shape).
+static func consumable(id: String) -> Array:
+    return FOODS[id] if FOODS.has(id) else POTIONS.get(id, [])
+
+## A light-armour base of a slot inside a cloth's level band (the high bands' pieces have a rarity
+## floor; the sewn piece is then at least that rare, see Player.craft).
+static func tailor_base(slot: String, cloth: String, _rarity: int, rng: RandomNumberGenerator) -> String:
+    var band: Array = CLOTHS[cloth][2]
+    var pool: Array = []
+    for id in GEAR.BASES:
+        var spec: Dictionary = GEAR.BASES[id]
+        if spec.slot != slot or spec.has("unique") or spec.has("set"):
+            continue
+        var level: int = int(spec.get("level", 1))
+        if level >= band[0] and level <= band[1]:
+            pool.append(id)
+    return pool[rng.randi_range(0, pool.size() - 1)] if not pool.is_empty() else ""
+
 static func is_bar(id: String) -> bool:
     return BARS.has(id)
 
@@ -62,11 +119,13 @@ static func is_potion(id: String) -> bool:
 
 ## Bag goods of this catalogue (herbs are profession resources, see ProfessionCatalogue).
 static func is_good(id: String) -> bool:
-    return is_bar(id) or is_potion(id)
+    return is_bar(id) or is_potion(id) or is_food(id)
 
 static func good_info(id: String) -> Array:
     if is_bar(id):
         return [BARS[id][0], "Bars", "Smelted metal for forging gear (Smithing %d)." % BARS[id][1]]
+    if is_food(id):
+        return [FOODS[id][0], "Meals", FOODS[id][7] + " Eat it from the bag."]
     return [POTIONS[id][0], "Potions", POTIONS[id][7] + " Use it from the bag."]
 
 static func price(id: String) -> int:
@@ -74,6 +133,8 @@ static func price(id: String) -> int:
         return BARS[id][2]
     if POTIONS.has(id):
         return POTIONS[id][2]
+    if FOODS.has(id):
+        return FOODS[id][2]
     return 0
 
 ## Every recipe of a profession: {id: [name, level, ingredients {id or "log_*"/"gem_*": count}]}.
@@ -93,10 +154,21 @@ static func recipes(profession: String) -> Dictionary:
     elif profession == "alchemy":
         for potion in POTIONS:
             all["brew:" + potion] = ["Brew " + POTIONS[potion][0], int(POTIONS[potion][1]), POTIONS[potion][6]]
+    elif profession == "cooking":
+        for food in FOODS:
+            all["cook:" + food] = ["Cook " + FOODS[food][0], int(FOODS[food][1]), FOODS[food][6]]
+    elif profession == "enchanting":
+        var upgrades := preload("res://scripts/items/upgrade_catalogue.gd")
+        for rune in ENCHANTS:
+            all["enchant:" + rune] = ["Inscribe " + upgrades.RUNES[rune][0], int(ENCHANTS[rune][0]), ENCHANTS[rune][1]]
+    elif profession == "tailoring":
+        for cloth in CLOTHS:
+            for slot in TAILOR:
+                all["tailor:%s:%s" % [cloth, slot]] = ["%s %s" % [CLOTHS[cloth][0], TAILOR[slot][0]], int(CLOTHS[cloth][1]) + 2, {cloth: int(TAILOR[slot][1])}]
     return all
 
 static func recipe(id: String) -> Array:
-    for profession in ["smithing", "alchemy"]:
+    for profession in ["smithing", "alchemy", "cooking", "enchanting", "tailoring"]:
         var all := recipes(profession)
         if all.has(id):
             return [profession] + all[id]

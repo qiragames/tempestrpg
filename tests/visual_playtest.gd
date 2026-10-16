@@ -1328,6 +1328,21 @@ func _run() -> void:
     await _wait(0.8)
     await _shot("treasure_goblin", "World event: a treasure goblin runs from everyone — catch it for a sack of Zeni and gear")
     world_events._clear()
+    _log("## 39. Cooking, Enchanting and Tailoring (M11e)")
+    showcase.global_position = world.trade.merchant_position("merchant_brookhaven") + Vector2(-14, 0)
+    world.terrain.ensure_props_at(showcase.global_position)
+    showcase.get_node("Inventory").add_material("trout", 4)
+    showcase.get_node("Inventory").add_material("herb_sunbloom", 2)
+    hud_nation.professions_panel.open()
+    hud_nation.professions_panel._selected = "cooking"
+    hud_nation.professions_panel.refresh()
+    await _wait(0.3)
+    await _shot("cooking", "Cooking (new): meals from fish and herbs — heals and long buffs, Scholar's Soup and the Moonlit Feast give more XP")
+    hud_nation.professions_panel._selected = "tailoring"
+    hud_nation.professions_panel.refresh()
+    await _wait(0.3)
+    await _shot("tailoring", "Tailoring (new): light armour sewn from pelts, scales, feathers, shells and spirit silk; Enchanting inscribes the runes for your sockets")
+    hud_nation.professions_panel.close_panel()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

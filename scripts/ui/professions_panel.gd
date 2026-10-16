@@ -19,6 +19,10 @@ var _milestones: Label
 var _list: VBoxContainer
 var _paused_before := false
 
+## M6c / M11e: professions that craft, and their button's word.
+const CRAFTS := ["smithing", "alchemy", "cooking", "enchanting", "tailoring"]
+const CRAFT_VERB := {"smithing": "Smelt", "alchemy": "Brew", "cooking": "Cook", "enchanting": "Inscribe", "tailoring": "Sew"}
+
 func _init(owner_hud: CanvasLayer) -> void:
     hud = owner_hud
     name = "ProfessionsPanel"
@@ -35,15 +39,21 @@ func _init(owner_hud: CanvasLayer) -> void:
     UI.heading(hud._label("PROFESSIONS", FRAME.position + Vector2(14, 10), Vector2(300, 20), self, 14))
     var close: Button = hud._button("Close", FRAME.position + Vector2(FRAME.size.x - 92, 8), Vector2(80, 24), self)
     close.pressed.connect(close_panel)
+    # M11e: eight professions share the row.
+    var tab_width: float = (FRAME.size.x - 28.0 - 3.0 * (PRO.ORDER.size() - 1)) / PRO.ORDER.size()
     var x := 14.0
     for id in PRO.ORDER:
-        var tab: Button = hud._button("", FRAME.position + Vector2(x, 36), Vector2(104, 34), self)
-        tab.add_theme_font_size_override("font_size", 9)
+        var tab: Button = hud._button("", FRAME.position + Vector2(x, 36), Vector2(tab_width, 34), self)
+        tab.add_theme_font_size_override("font_size", 8)
+        tab.clip_text = true
         tab.pressed.connect(func(): _select(id))
         tab.set_meta("id", id)
         _tabs.append(tab)
-        x += 107.0
-    _header = hud._label("", FRAME.position + Vector2(14, 76), Vector2(FRAME.size.x - 28, 16), self, 11)
+        x += tab_width + 3.0
+    _header = hud._label("", FRAME.position + Vector2(14, 76), Vector2(FRAME.size.x - 28, 16), self, 10)
+    _header.autowrap_mode = TextServer.AUTOWRAP_OFF
+    _header.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+    _header.clip_text = true
     _bar = ProgressBar.new()
     _bar.position = FRAME.position + Vector2(14, 94)
     _bar.size = Vector2(FRAME.size.x - 28, 8)
@@ -150,14 +160,14 @@ func refresh() -> void:
             fish_line.custom_minimum_size = Vector2(FRAME.size.x - 44, 13)
             fish_line.add_theme_color_override("font_color", FISHES.RARITY_COLOURS[row[3]] if caught > 0 else FISHES.RARITY_COLOURS[row[3]].darkened(0.35))
         return
-    if _selected in ["smithing", "alchemy"]:
+    if _selected in CRAFTS:
         _craft_rows(_selected, level)
     for row in rows:
         var chance := PRO.chance(level, row[1])
         var line: Label = hud._label("%-22s needs Lv %2d · your chance %d%%%s" % [row[0], row[1], int(round(chance * 100.0)), "   (%s)" % row[2] if row.size() > 2 and not String(row[2]).is_empty() else ""], Vector2.ZERO, Vector2(FRAME.size.x - 44, 13), _list, 8)
         line.custom_minimum_size = Vector2(FRAME.size.x - 44, 13)
         line.add_theme_color_override("font_color", chance_colour(chance))
-    if rows.is_empty() and not _selected in ["smithing", "alchemy"]:
+    if rows.is_empty() and not _selected in CRAFTS:
         hud._label("Nothing here yet.", Vector2.ZERO, Vector2(FRAME.size.x - 44, 13), _list, 8).add_theme_color_override("font_color", UI.TEXT_DIM)
 
 ## Name of an ingredient ("log_*"/"gem_*" are any log or gem).
@@ -166,6 +176,8 @@ static func ingredient_name(id: String) -> String:
         return "any log"
     if id == "gem_*":
         return "any gem"
+    if id == "fish_*":
+        return "any fish"
     if TRADE.is_good(id):
         return TRADE.good_info(id)[0]
     return id.replace("_", " ").capitalize()
@@ -206,16 +218,30 @@ func _row(text: String, colour: Color, button_text: String, enabled: bool, actio
 func _craft_rows(profession: String, level: int) -> void:
     var station: String = hud.player.craft_station(profession)
     var where := {"town": "in a town", "forge": "at the camp's Forge", "shrine": "at the camp's Essence Shrine"}
-    var head: Label = hud._label("Crafting %s · a failed try loses the ingredients" % where[station] if not station.is_empty() else "Go to a town or the camp's %s to craft." % ("Forge" if profession == "smithing" else "Essence Shrine"), Vector2.ZERO, Vector2(FRAME.size.x - 44, 13), _list, 8)
+    var head: Label = hud._label("Crafting %s · a failed try loses the ingredients" % where[station] if not station.is_empty() else "Go to a town or the camp's %s to craft." % ("Forge" if profession in ["smithing", "tailoring"] else "Essence Shrine"), Vector2.ZERO, Vector2(FRAME.size.x - 44, 13), _list, 8)
     head.custom_minimum_size = Vector2(FRAME.size.x - 44, 13)
     head.add_theme_color_override("font_color", UI.GOLD_LIGHT if not station.is_empty() else Color("ff9a7a"))
     var recipes: Dictionary = CRAFT.recipes(profession)
     for id in recipes:
-        if id.begins_with("forge:"):
+        if id.begins_with("forge:") or id.begins_with("tailor:"):
             continue
         var recipe: Array = recipes[id]
         var chance := PRO.chance(level, recipe[1])
-        _row("%s · Lv %d · %d%% · %s" % [recipe[0], recipe[1], int(round(chance * 100.0)), _needs_text(recipe[2])], chance_colour(chance), "Smelt" if profession == "smithing" else "Brew", not station.is_empty() and _can_make(recipe[2]), _craft.bind(id))
+        _row("%s · Lv %d · %d%% · %s" % [recipe[0], recipe[1], int(round(chance * 100.0)), _needs_text(recipe[2])], chance_colour(chance), CRAFT_VERB[profession], not station.is_empty() and _can_make(recipe[2]), _craft.bind(id))
+    if profession == "tailoring":
+        # M11e: one row per cloth with a picker for the piece.
+        for cloth in CRAFT.CLOTHS:
+            var cloth_required: int = int(CRAFT.CLOTHS[cloth][1]) + 2
+            var cloth_chance := PRO.chance(level, cloth_required)
+            var piece_picker := OptionButton.new()
+            piece_picker.add_theme_font_size_override("font_size", 8)
+            piece_picker.custom_minimum_size = Vector2(96, 15)
+            for slot in CRAFT.TAILOR:
+                piece_picker.add_item("%s (%d)" % [CRAFT.TAILOR[slot][0], CRAFT.TAILOR[slot][1]])
+                piece_picker.set_item_metadata(piece_picker.item_count - 1, slot)
+            var cloth_band: Array = CRAFT.CLOTHS[cloth][2]
+            _row("Sew %s (item Lv %d-%d) · Lv %d · %d%% · you have %d %s" % [CRAFT.CLOTHS[cloth][0], cloth_band[0], cloth_band[1], cloth_required, int(round(cloth_chance * 100.0)), hud.player.ingredient_count(cloth), ingredient_name(cloth)], chance_colour(cloth_chance), "Sew", not station.is_empty() and hud.player.ingredient_count(cloth) >= 2, func(): _craft("tailor:%s:%s" % [cloth, piece_picker.get_item_metadata(piece_picker.selected)]), piece_picker)
+        return
     if profession != "smithing":
         return
     # Forging: one row per bar with a picker for what to make.

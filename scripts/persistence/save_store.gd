@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 37
+const VERSION := 38
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -907,6 +907,18 @@ static func migrate(data: Variant) -> Variant:
         data.version = 37
         if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == "boss_eclipse_wyrm"):
             data.enemies.append(fresh_boss("boss_eclipse_wyrm"))
+    # v38 (M11e): Cooking, Enchanting and Tailoring start at 0 for every character.
+    if data.get("version") == 37:
+        if not data.get("players") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = 38
+        for id in data.players:
+            var state: Variant = data.players[id]
+            if state is Dictionary and state.get("progression") is Dictionary and state.progression.get("professions") is Dictionary:
+                for profession in ["cooking", "enchanting", "tailoring"]:
+                    if not state.progression.professions.has(profession):
+                        state.progression.professions[profession] = 0
     return data
 
 ## Saved enemy entry for a raid boss at full health in its arena (v33 and new worlds).

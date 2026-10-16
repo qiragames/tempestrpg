@@ -23,7 +23,7 @@ var exhaustion_active: bool = false
 var exhaustion_left: float = 0.0
 var remote_direction := Vector2.ZERO
 var last_input_msec: int = 0
-var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "race": "Slime", "quests": {}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": [], "zeni": 0, "ship": {"owned": false, "at": ""}, "ferry_pass_until": 0.0, "tools": {"axe": 0, "pickaxe": 0, "rod": 0}, "mounts": [], "mount": "", "augments": [], "auras": [], "aura": "", "bonus_points": 0, "champion": false, "professions": {"woodcutting": 0, "mining": 0, "fishing": 0, "smithing": 0, "alchemy": 0}, "fish_log": {}}
+var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "race": "Slime", "quests": {}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": [], "zeni": 0, "ship": {"owned": false, "at": ""}, "ferry_pass_until": 0.0, "tools": {"axe": 0, "pickaxe": 0, "rod": 0}, "mounts": [], "mount": "", "augments": [], "auras": [], "aura": "", "bonus_points": 0, "champion": false, "professions": {"woodcutting": 0, "mining": 0, "fishing": 0, "smithing": 0, "alchemy": 0, "cooking": 0, "enchanting": 0, "tailoring": 0}, "fish_log": {}}
 ## Current mimic form and the time until it can change again (host-owned, saved).
 ## Gear (17e): owned items and active cooldowns; equipped item IDs live in progression.equipment.
 var gear: Dictionary = {"items": [], "cooldowns": {}}
@@ -160,14 +160,15 @@ var _tonic_rate := 8.0
 
 ## Host: drink a crafted potion or elixir (M6c).
 func _drink(id: String) -> bool:
-    var potion: Array = CRAFT.POTIONS[id]
+    # M11e: meals work like potions (Cooking 30: they last 50% longer instead of Alchemy).
+    var potion: Array = CRAFT.consumable(id)
     var effect: String = potion[3]
     if effect in CRAFT.COOLDOWN_EFFECTS and consumable_cooldown > 0.0:
         session.notify_character(character_id, "Wait %.0f s before the next potion." % ceilf(consumable_cooldown))
         return false
     $Inventory.discard(StringName(id), 1)
     # Alchemy 30 (Potent): potions last 50% longer.
-    var seconds: float = float(potion[5]) * (1.5 if PRO.level_of(progression, "alchemy") >= 30 else 1.0)
+    var seconds: float = float(potion[5]) * (1.5 if PRO.level_of(progression, "cooking" if CRAFT.is_food(id) else "alchemy") >= 30 else 1.0)
     match effect:
         "heal":
             consumable_cooldown = TRADE.CONSUMABLE_COOLDOWN
@@ -203,7 +204,7 @@ func _tick_elixirs(delta: float) -> void:
 func use_good(id: String) -> bool:
     if not AUTHORITY.can_mutate(self) or $Health.current <= 0 or $Inventory.count_of(id) <= 0:
         return false
-    if CRAFT.is_potion(id):
+    if CRAFT.is_potion(id) or CRAFT.is_food(id):
         return _drink(id)
     if TRADE.CONSUMABLES.has(id):
         if consumable_cooldown > 0.0:
@@ -464,6 +465,9 @@ func gain_experience(amount: int, reason: String) -> void:
         return
     if DEV.xp and DEV.applies(self):
         amount *= DEV.XP_FACTOR
+    # M11e: Scholar's Soup and the Moonlit Feast ("wisdom").
+    if elixirs.has("wisdom"):
+        amount = int(round(amount * (1.0 + elixir("wisdom") / 100.0)))
     var gained: int = LEVELING.grant(self, amount)
     if is_instance_valid(session.world):
         var text := "+%d XP (%s)." % [amount, reason]
@@ -534,7 +538,7 @@ func craft_station(profession: String) -> String:
     var camp: Node = get_parent().get("camp") if get_parent() != null else null
     if camp == null:
         return ""
-    var key := "forge" if profession == "smithing" else "shrine"
+    var key := "forge" if profession in ["smithing", "tailoring"] else "shrine"
     var site: Vector2 = camp.STRUCTURES["%s_1" % key].site
     if bool(camp.state.get(key, false)) and global_position.distance_to(site) <= 80.0:
         return key
@@ -542,6 +546,12 @@ func craft_station(profession: String) -> String:
 
 ## How many of an ingredient this character has ("log_*"/"gem_*" count any log or gem).
 func ingredient_count(id: String) -> int:
+    # M11e: "fish_*" is any fish.
+    if id == "fish_*":
+        var fish_total := 0
+        for fish in FISHES.FISH:
+            fish_total += $Inventory.count_of(fish)
+        return fish_total
     if id == "log_*" or id == "gem_*":
         var total := 0
         for other in (PRO.WOODS if id == "log_*" else PRO.GEMS):
@@ -550,6 +560,18 @@ func ingredient_count(id: String) -> int:
     return $Inventory.count_of(id)
 
 func _take_ingredient(id: String, count: int) -> void:
+    if id == "fish_*":
+        # The cheapest fish first.
+        var fishes: Array = FISHES.FISH.keys()
+        fishes.sort_custom(func(a, b): return int(FISHES.FISH[a][1]) < int(FISHES.FISH[b][1]))
+        for fish in fishes:
+            var take_fish: int = mini(count, $Inventory.count_of(fish))
+            if take_fish > 0:
+                $Inventory.discard(StringName(fish), take_fish)
+                count -= take_fish
+            if count <= 0:
+                return
+        return
     if id == "log_*" or id == "gem_*":
         # Cheapest first.
         var kinds: Array = (PRO.WOODS if id == "log_*" else PRO.GEMS).keys()
@@ -573,14 +595,14 @@ func craft(recipe_id: String) -> bool:
         return false
     var profession: String = recipe[0]
     if craft_station(profession).is_empty():
-        session.notify_character(character_id, "%s needs %s or a town." % [PRO.PROFESSIONS[profession][0], "the camp's Forge" if profession == "smithing" else "the camp's Essence Shrine"])
+        session.notify_character(character_id, "%s needs %s or a town." % [PRO.PROFESSIONS[profession][0], "the camp's Forge" if profession in ["smithing", "tailoring"] else "the camp's Essence Shrine"])
         return false
     var needs: Dictionary = recipe[3]
     for id in needs:
         if ingredient_count(id) < int(needs[id]):
             session.notify_character(character_id, "Missing ingredients for %s." % recipe[1])
             return false
-    var forging := recipe_id.begins_with("forge:")
+    var forging := recipe_id.begins_with("forge:") or recipe_id.begins_with("tailor:")
     if forging and gear.items.size() >= GEAR.MAX_ITEMS:
         session.notify_character(character_id, "Your gear bag is full.")
         return false
@@ -610,17 +632,26 @@ func craft(recipe_id: String) -> bool:
             if roll <= 0.0:
                 rarity = index
                 break
-        var base: String = CRAFT.forge_base(parts[2], parts[1], rarity, rng)
+        var base: String = CRAFT.tailor_base(parts[2], parts[1], rarity, rng) if recipe_id.begins_with("tailor:") else CRAFT.forge_base(parts[2], parts[1], rarity, rng)
         if base.is_empty():
             return false
+        rarity = maxi(rarity, int(GEAR.BASES[base].get("min_rarity", 0)))
         var item: Dictionary = GEAR.roll(base, rarity, rng)
         add_item(item)
         made = "%s %s" % [GEAR.RARITIES[rarity], GEAR.display_name(item)]
+        # M11e: Double Stitch (Tailoring 40).
+        if profession == "tailoring" and level >= 40 and rng.randf() < 0.1 and gear.items.size() < GEAR.MAX_ITEMS:
+            var twin: Dictionary = GEAR.roll(base, rarity, rng)
+            if add_item(twin):
+                made += " and a second one"
         gain_profession_xp(profession, PRO.xp_reward(required) * 3)
     else:
         var output: String = recipe_id.split(":")[1]
         # Double Smelt / Double Brew (40) and the level's double chance.
         var count := 2 if rng.randf() < PRO.double_chance(level) else 1
+        # M11e: Steady Script (Enchanting 30).
+        if profession == "enchanting" and level >= 30 and count == 1 and rng.randf() < 0.2:
+            count = 2
         # Master Alchemist (50): elixirs brew twice.
         if profession == "alchemy" and level >= 50 and (output.begins_with("elixir_") or output == "senzu_bean"):
             count = 2

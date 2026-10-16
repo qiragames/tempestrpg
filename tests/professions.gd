@@ -111,7 +111,7 @@ func _run() -> void:
         state_entry.progression.erase("professions")
         state_entry.inventory.capacity = 20
     var migrated: Variant = STORE.migrate(old)
-    _check(migrated is Dictionary and int(migrated.version) == STORE.VERSION and migrated.players.host.progression.professions.size() == 5 and int(migrated.players.host.inventory.capacity) == 100, "v31 saves get professions and bigger bags")
+    _check(migrated is Dictionary and int(migrated.version) == STORE.VERSION and migrated.players.host.progression.professions.size() == PRO.ORDER.size() and int(migrated.players.host.inventory.capacity) == 100, "v31 saves get professions and bigger bags")
     # The window (L): levels, chances per wood and ore.
     var hud: CanvasLayer = null
     for child in world.get_children():

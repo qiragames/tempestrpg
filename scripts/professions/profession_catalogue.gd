@@ -14,8 +14,12 @@ const PROFESSIONS := {
     "fishing": ["Fishing", "Catch fish with a rod at lakes and the sea."],
     "smithing": ["Smithing", "Smelt ores into bars and forge gear (camp Forge or any town)."],
     "alchemy": ["Alchemy", "Brew potions from herbs, fish and creature materials (camp Shrine or any town)."],
+    # M11e (user request): three more crafts.
+    "cooking": ["Cooking", "Cook fish and herbs into meals that heal and give long buffs (camp Shrine or any town)."],
+    "enchanting": ["Enchanting", "Inscribe runes for your gear's sockets from gems and creature materials (camp Shrine or any town)."],
+    "tailoring": ["Tailoring", "Sew light armour from pelts, scales, feathers and shells (camp Forge or any town)."],
 }
-const ORDER := ["woodcutting", "mining", "fishing", "smithing", "alchemy"]
+const ORDER := ["woodcutting", "mining", "fishing", "smithing", "alchemy", "cooking", "enchanting", "tailoring"]
 
 ## Milestones every 10 levels: [level, name, description]. Effects are applied by the rules below.
 const MILESTONES := {
@@ -24,6 +28,10 @@ const MILESTONES := {
     "fishing": [[10, "Steady Hands", "+5% catch chance"], [20, "Patient", "Bites come 25% sooner"], [30, "Lure Lore", "Rare fish chance ×1.5"], [40, "Sea Legend", "Mythical creature chance ×2"], [50, "Master Angler", "Golden rod, +10% catch chance"]],
     "smithing": [[10, "Sure Hand", "+5% success chance"], [20, "Thrifty", "20% chance to keep a bar"], [30, "Fine Temper", "Forged gear one rarity step better more often"], [40, "Double Smelt", "+10% double-bar chance"], [50, "Master Smith", "Forged gear can be Mythic"]],
     "alchemy": [[10, "Sure Hand", "+5% success chance"], [20, "Thrifty", "20% chance to keep an ingredient"], [30, "Potent", "Potions last 50% longer"], [40, "Double Brew", "+10% double-potion chance"], [50, "Master Alchemist", "Elixirs brew twice"]],
+    # M11e.
+    "cooking": [[10, "Sure Hand", "+5% success chance"], [20, "Thrifty", "20% chance to keep the ingredients"], [30, "Hearty", "Meals last 50% longer"], [40, "Second Helping", "+10% double-meal chance"], [50, "Master Chef", "The title, and the finest cooking"]],
+    "enchanting": [[10, "Sure Hand", "+5% success chance"], [20, "Thrifty", "20% chance to keep the ingredients"], [30, "Steady Script", "20% chance to inscribe a second rune"], [40, "Twin Runes", "+10% double-rune chance"], [50, "Master Enchanter", "The title, and the finest runes"]],
+    "tailoring": [[10, "Sure Hand", "+5% success chance"], [20, "Thrifty", "20% chance to keep the materials"], [30, "Fine Stitching", "Sewn gear one rarity step better more often"], [40, "Double Stitch", "10% chance to sew a second piece"], [50, "Master Tailor", "Sewn gear can be Mythic"]],
 }
 
 static func xp_for(level: int) -> int:
