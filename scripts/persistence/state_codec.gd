@@ -142,7 +142,7 @@ static func capture_entities(world: Node2D) -> Dictionary:
             piles.append(node.capture())
         elif node.is_in_group("allies"):
             allies.append({"id": node.entity_id, "position": vector(node.position), "owner": node.owner_id, "name": node.display_name, "race": node.race, "maximum_hp": node.maximum_hp, "power": node.power, "speed": node.follow_speed, "work": {"role": node.work_role, "target": node.work_target, "remaining": node.work_left}})
-    return {"enemies": enemies, "pickups": pickups, "allies": allies, "camp": world.camp.state.duplicate(true), "trial": world.trial.state.duplicate(true), "respawns": world.respawner.capture(), "loot": loot, "piles": piles, "trade": world.trade.capture(), "harbours": world.harbours.capture(), "party": world.party.capture(), "realm": world.realm.capture(), "siege": world.siege.capture()}
+    return {"enemies": enemies, "pickups": pickups, "allies": allies, "camp": world.camp.state.duplicate(true), "trial": world.trial.state.duplicate(true), "respawns": world.respawner.capture(), "loot": loot, "piles": piles, "trade": world.trade.capture(), "harbours": world.harbours.capture(), "party": world.party.capture(), "realm": world.realm.capture(), "siege": world.siege.capture(), "exchange": world.exchange.capture() if world.get("exchange") != null else {}}
 
 static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> void:
     world.camp.restore(data.camp)
@@ -153,6 +153,9 @@ static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> vo
         world.harbours.restore(data.harbours)
     if data.get("party") is Dictionary:
         world.party.restore(data.party)
+    # M11c: open trades (snapshots only; never saved).
+    if replica and data.get("exchange") is Dictionary and world.get("exchange") != null:
+        world.exchange.restore(data.exchange)
     if data.get("realm") is Dictionary:
         world.realm.restore(data.realm, replica)
     if data.get("siege") is Dictionary:

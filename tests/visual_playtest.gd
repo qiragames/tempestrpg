@@ -1279,6 +1279,30 @@ func _run() -> void:
     await _wait(0.4)
     await _shot("dungeon_lever", "A lever pulled down in the first hall; the locked vault nearby opens with the dungeon's key (the Keeper of the second hall may drop it)")
     features_node.state("frostfang_cavern")["levers"] = [false, false]
+    _log("## 37. Trading between players (M11c)")
+    var trader = load("res://scenes/player/player.tscn").instantiate()
+    trader.character_id = "friend"
+    trader.local_controlled = false
+    world.add_child(trader)
+    trader.choose_race("Human")
+    if trader != null:
+        showcase.global_position = tour_map.to_world(Vector2(110, 150))
+        trader.global_position = showcase.global_position + Vector2(24, 0)
+        world.terrain.ensure_props_at(showcase.global_position)
+        trader.get_node("Inventory").add_material("herb_moonbloom", 3)
+        trader.progression["zeni"] = 2500
+        _check(world.exchange.request(trader, showcase.character_id) and world.exchange.accept(showcase), "The friend asks to trade and it is accepted")
+        world.exchange.offer(showcase, {"gear": ["item_tierlook_42"], "goods": {}, "zeni": 0})
+        world.exchange.offer(trader, {"gear": [], "goods": {"herb_moonbloom": 3}, "zeni": 2000})
+        world.exchange.mark_ready(trader, true)
+        hud_nation.quest_panel._queue.clear()
+        hud_nation.dialog_panel.close()
+        await _wait(0.6)
+        await _shot("trading", "Trading with a friend: your things on the left, your offer (a Starforged sword) in the middle, theirs (3 Moonblooms and 2,000 Zeni, ready) on the right")
+        world.exchange.cancel(showcase)
+        await _wait(0.2)
+        world.remove_child(trader)
+        trader.queue_free()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

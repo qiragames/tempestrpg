@@ -912,6 +912,32 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             "sail":
                 return world.harbours.sail(actor, here, target)
         return false
+    if action == "exchange":
+        # M11c: trading between players; the host checks distance, ownership and room.
+        var operation: Variant = payload.get("operation")
+        match operation:
+            "request":
+                if payload.size() != 2 or not payload.get("who") is String or payload.who.length() > 64:
+                    rejected_requests += 1
+                    return false
+                return world.exchange.request(actor, payload.who)
+            "accept", "decline", "cancel":
+                if payload.size() != 1:
+                    rejected_requests += 1
+                    return false
+                return world.exchange.accept(actor) if operation == "accept" else (world.exchange.decline(actor) if operation == "decline" else world.exchange.cancel(actor))
+            "offer":
+                if payload.size() != 2 or not payload.get("offer") is Dictionary:
+                    rejected_requests += 1
+                    return false
+                return world.exchange.offer(actor, payload.offer)
+            "ready":
+                if payload.size() != 2 or not payload.get("value") is bool:
+                    rejected_requests += 1
+                    return false
+                return world.exchange.mark_ready(actor, payload.value)
+        rejected_requests += 1
+        return false
     if action == "party":
         # M4.6: invitations, membership and revives; the host checks the rest.
         var party_operation: Variant = payload.get("operation")
@@ -1109,6 +1135,8 @@ func document() -> Dictionary:
 func persistent_document() -> Dictionary:
     var data := document()
     data.erase("trial")
+    # M11c: open trades end with the session.
+    data.erase("exchange")
     data.enemies = data.enemies.filter(func(enemy): return not String(enemy.id).begins_with("trial_"))
     return data
 

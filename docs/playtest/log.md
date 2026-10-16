@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.1 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.0 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -299,7 +299,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (960x540)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Uncommon Traveler's Recurve
+- [x] The chest gave an Uncommon-or-better item: Uncommon Warden's Helm
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (960x540)
@@ -334,7 +334,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *Playable races, left to right: Slime, Human, Demon (placeholder looks)* (960x540)
 
 ## 15. The archipelago (M4.5a)
-- [x] Walking east follows the road out of the clearing: x 1168
+- [x] Walking east follows the road out of the clearing: x 1169
 
 ![The east road continues beyond the clearing towards the Harrowmere bridge](56_road_east.png)
 *The east road continues beyond the clearing towards the Harrowmere bridge* (960x540)
@@ -756,6 +756,12 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 ![A lever pulled down in the first hall; the locked vault nearby opens with the dungeon's key (the Keeper of the second hall may drop it)](138_dungeon_lever.png)
 *A lever pulled down in the first hall; the locked vault nearby opens with the dungeon's key (the Keeper of the second hall may drop it)* (960x540)
 
+## 37. Trading between players (M11c)
+- [x] The friend asks to trade and it is accepted
+
+![Trading with a friend: your things on the left, your offer (a Starforged sword) in the middle, theirs (3 Moonblooms and 2,000 Zeni, ready) on the right](139_trading.png)
+*Trading with a friend: your things on the left, your offer (a Starforged sword) in the middle, theirs (3 Moonblooms and 2,000 Zeni, ready) on the right* (960x540)
+
 
 ## System messages seen
 
@@ -817,7 +823,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +1500 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Rare Abyssal Coat.
+- Trial reward: Epic Glacier Torc.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +21 XP (defeat).
@@ -835,8 +841,8 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Uncommon Traveler's Recurve.
-- +38 Zeni (chest).
+- Chest opened: Uncommon Warden's Helm.
+- +45 Zeni (chest).
 - World "Showcase World" loaded. Esc: pause menu — switch on Multiplayer to invite friends.
 - Multiplayer is on: Invite a Friend makes one code per friend.
 - Multiplayer is off: your world is single player again.
@@ -844,4 +850,4 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 The bot retreated 0 time(s) to let Magicules recover.
 XP assistance for skill points: 550 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 138 screenshots.**
+**Result: 0 failed checks, 139 screenshots.**

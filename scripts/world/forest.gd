@@ -22,6 +22,8 @@ var trade: Node2D
 var harbours: Node2D
 ## Parties (M4.6).
 var party: Node
+## M11c: trades between players.
+var exchange: Node
 ## The Ki Realm: its people, wish orbs and tournament (M4.7).
 var realm: Node2D
 ## M5d: the rival nations (presentation) and the monster horde's siege.
@@ -66,6 +68,8 @@ func _ready() -> void:
     add_child(load("res://scripts/travel/wild_mounts.gd").new())
     party = load("res://scripts/party/world_party.gd").new()
     add_child(party)
+    exchange = load("res://scripts/trade/exchange.gd").new()
+    add_child(exchange)
     realm = load("res://scripts/realm/ki_realm.gd").new()
     add_child(realm)
     rivals = load("res://scripts/nation/rival_nations.gd").new()

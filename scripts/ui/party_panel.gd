@@ -137,6 +137,8 @@ func _refresh() -> void:
             elif leading:
                 var kick: Button = _fit(hud._button("Remove", Vector2.ZERO, Vector2(110, 20), row), 110)
                 kick.pressed.connect(_send.bind("kick", id))
+            if id != me:
+                row.add_child(_trade_button(id))
             _list.add_child(row)
     var others: Array = []
     for actor in get_tree().get_nodes_in_group("player"):
@@ -150,9 +152,22 @@ func _refresh() -> void:
         var invite_button: Button = _fit(hud._button("Invite", Vector2.ZERO, Vector2(110, 20), row), 110)
         invite_button.disabled = mine.size() >= node.MAX_SIZE or (mine.size() > 1 and not leading)
         invite_button.pressed.connect(_send.bind("invite", id))
+        row.add_child(_trade_button(id))
         _list.add_child(row)
     if others.is_empty() and mine.size() <= 1:
         _fit(hud._label("Nobody else is online. Open your world to friends (Esc).", Vector2.ZERO, Vector2(300, 18), _list, 10), 290)
+
+## M11c: a Trade button for another character (they must stand near you).
+func _trade_button(id: String) -> Button:
+    var button := Button.new()
+    button.text = "Trade"
+    button.custom_minimum_size = Vector2(60, 20)
+    button.add_theme_font_size_override("font_size", 9)
+    button.pressed.connect(func():
+        hud.session.request_action("exchange", {"operation": "request", "who": id})
+        close()
+    )
+    return button
 
 func _process(_delta: float) -> void:
     _frames.queue_redraw()
