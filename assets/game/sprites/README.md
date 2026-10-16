@@ -73,4 +73,6 @@ Citizens (M5b): `citizen_1` … `citizen_6` from Character/Villager2, Villager3,
 
 Quest givers (M9c): `npc_<id>` hold `npc_<id>_walk.png` (four-direction walk sheet, same format) and `npc_<id>_face.png` (38 × 38 portrait), copied unchanged from Actor/Character: orrin OldMan, maren Knight, vex Vampire, regent SorcererBlack, hilde Woman, rowan OldMan2, nessa Villager2, alric Monk, ulla Eskimo, steward Sultan, bram Villager3, moss Shaman, kaito Samurai, ignis Flam, temur NinjaYellow, morwen SorcererOrange, lin Monk2, inspector Inspector, princess Princess, hunter Hunter. `npc_lumi/npc_lumi_face.png` is Character/Spirit's Faceset tinted gold (Lumi, the star-sprite; portrait only).
 
+`eclipse_wyrm` (M9d): `eclipse_wyrm_idle.png` and `eclipse_wyrm_run.png`, four 124 × 118 frames each, assembled from Boss/DragonBlue's Head, Wing (mirrored for the left), Body1, Body2 and BodyEnd with a small wing flap; the boss tint makes it violet.
+
 Licences and credits: see `CREDITS.md` at the repository root and the licence files next to each pack in `assets/source/packs/`.

@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 36
+const VERSION := 37
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -154,6 +154,8 @@ static func validate_player(state: Variant, id: String) -> bool:
         if not progress is Dictionary or not _number(progress.get("s"), 0, known_quest.steps.size(), true) or not _number(progress.get("c"), 0, 1000000, true) or not progress.get("done") is bool:
             return false
         if progress.has("again") and not _number(progress.again, 0, 1e12):
+            return false
+        if progress.has("pick") and not progress.pick in ["moonwarden", "sovereign"]:
             return false
     # Zeni (v23): a whole number in the purse.
     if not _number(progression.get("zeni"), 0, TRADE.MAX_ZENI, true):
@@ -871,6 +873,14 @@ static func migrate(data: Variant) -> Variant:
         for entry in REGION.night_creatures():
             if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == entry[0]):
                 data.enemies.append(REGION.fresh_enemy(entry).merged({"credit": {}, "group_scaled": false, "status": ""}))
+    # v37 (M9d): the Eclipse Wyrm, the story's final boss, waits beneath the Sage Spire.
+    if data.get("version") == 36:
+        if not data.get("enemies") is Array:
+            return null
+        data = data.duplicate(true)
+        data.version = 37
+        if not data.enemies.any(func(enemy): return enemy is Dictionary and enemy.get("id") == "boss_eclipse_wyrm"):
+            data.enemies.append(fresh_boss("boss_eclipse_wyrm"))
     return data
 
 ## Saved enemy entry for a raid boss at full health in its arena (v33 and new worlds).

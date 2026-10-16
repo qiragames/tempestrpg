@@ -1,6 +1,7 @@
 extends SceneTree
-## Quests (M9c): the main story's opening (Prologue to Chapter 2), side quests from givers, bounty
-## boards; every quest's targets exist; progress from game events; hand-ins and rewards; saves.
+## Quests (M9c, M9d): the main story (Prologue to Chapter 7 and its ending), side quests from givers,
+## bounty boards; every quest's targets exist; progress from game events; hand-ins and rewards;
+## the Court's staged characters; the ending choice; saves.
 const QUESTS := preload("res://scripts/quests/quest_catalogue.gd")
 const LOG := preload("res://scripts/quests/quest_log.gd")
 const MAP := preload("res://scripts/world/world_map.gd")
@@ -60,12 +61,29 @@ func _run() -> void:
                 "catch":
                     if not String(step.fish).is_empty() and not fishes.FISH.has(step.fish):
                         problems.append("%s fish %s" % [id, step.fish])
+                "choice":
+                    for option in step.options:
+                        if not preload("res://scripts/items/gear_catalogue.gd").BASES.has(option[2].get("unique", "")):
+                            problems.append("%s ending %s" % [id, option[1]])
+        if quest.get("reward", {}).has("unique") and not preload("res://scripts/items/gear_catalogue.gd").BASES.has(quest.reward.unique):
+            problems.append("%s unique" % id)
     _check(problems.is_empty(), "Every quest names real givers, items, creatures, bosses, dungeons and fish %s" % [problems])
     var npcs_ok := true
     for npc in QUESTS.NPCS:
         var at: Vector2i = MAP.to_tile(QUESTS.npc_position(npc))
         npcs_ok = npcs_ok and not MAP.solid(at.x, at.y)
-    _check(npcs_ok and QUESTS.QUESTS.keys().filter(func(id): return QUESTS.QUESTS[id].kind == "side").size() >= 15, "Quest givers stand on open ground; fifteen or more side quests")
+    var sides: int = QUESTS.QUESTS.keys().filter(func(id): return QUESTS.QUESTS[id].kind == "side").size()
+    _check(npcs_ok and sides + 8 >= 40, "Quest givers stand on open ground; about forty quests besides the bounties (%d side)" % sides)
+    var chain := true
+    var last_level := 0
+    for chapter in range(8):
+        var main: Dictionary = QUESTS.quest("main_%d" % chapter)
+        chain = chain and not main.is_empty() and int(main.level) >= last_level and (chapter == 0 or main.requires == ["main_%d" % (chapter - 1)])
+        last_level = int(main.get("level", 99))
+    _check(chain and last_level == 40 and QUESTS.quest("main_7").steps.any(func(step): return step.type == "boss" and step.id == "boss_eclipse_wyrm"), "Prologue and seven chapters in level order, ending with the Eclipse Wyrm")
+    _check(preload("res://scripts/bosses/boss_catalogue.gd").is_raid("boss_eclipse_wyrm") and preload("res://scripts/world/world_map.gd").in_realm(preload("res://scripts/bosses/boss_catalogue.gd").centre("boss_eclipse_wyrm")), "The Eclipse Wyrm is a raid boss in the Ki Realm")
+    var wyrm_boss := preload("res://scripts/bosses/boss_catalogue.gd")
+    _check(QUESTS.npc_position("regent_spire").distance_to(wyrm_boss.centre("boss_eclipse_wyrm")) > wyrm_boss.radius("boss_eclipse_wyrm") + 40.0, "The Pale Regent waits outside the Wyrm's arena")
     _check(QUESTS.BOARD_TOWNS.all(func(town): return QUESTS.bounties(town).size() >= 2), "Every town's board has bounties")
     # A world.
     var session: Node = root.get_node("GameSession")
@@ -141,12 +159,31 @@ func _run() -> void:
     _check(LOG.finished(actor, "bounty_brookhaven_cull") and not log.available(actor, "bounty_brookhaven_cull"), "Bounty claimed; gone from the board for now")
     world.progression.world_time += QUESTS.BOUNTY_SECONDS + 1.0
     _check(log.available(actor, "bounty_brookhaven_cull"), "A day later the bounty is back")
+    # The Court's people show only when you are due to face them.
+    actor.global_position = QUESTS.npc_position("regent") + Vector2(10, 0)
+    _check(log.nearest_npc(actor) != "regent" and not log.talk(actor, "regent"), "The Pale Regent is not there before your story takes you to him")
+    LOG.quests_of(actor)["main_4"] = {"s": 4, "c": 0, "done": false}
+    _check(log.nearest_npc(actor) == "regent" and log.talk(actor, "regent") and int(LOG.entry(actor, "main_4").s) == 5, "...and is, when it does (Ember Depths)")
+    # The ending: Lumi asks; the choice gives its weapon.
+    LOG.quests_of(actor)["main_7"] = {"s": 3, "c": 0, "done": false}
+    log.on_event(actor, "boss", {"id": "boss_eclipse_wyrm"})
+    _check(LOG.choice_pending(actor) == "main_7", "After the Eclipse Wyrm, the ending waits for a decision")
+    _check(not session.apply_action(actor, "quest", {"operation": "choose", "id": "rule_everything"}), "Only the offered endings can be chosen")
+    var items_before: int = actor.gear.items.size()
+    _check(session.apply_action(actor, "quest", {"operation": "choose", "id": "moonwarden"}) and LOG.finished(actor, "main_7") and String(LOG.entry(actor, "main_7").pick) == "moonwarden", "Choosing Moonwarden finishes the story")
+    _check(actor.gear.items.any(func(item): return item.base == "story_moonwarden_crescent" and int(item.rarity) == 5) and actor.gear.items.size() >= items_before + 2, "The Moonwarden's Crescent (Mythic) and the final gear reward")
+    _check(not session.apply_action(actor, "quest", {"operation": "choose", "id": "sovereign"}), "The choice is made once")
+    var sets := preload("res://scripts/items/set_catalogue.gd")
+    _check(sets.ABILITIES.has("moonwarden") and sets.ABILITIES.has("sovereign"), "Both endings' weapons have their own abilities")
     # The UI: tracker and log.
     var hud: CanvasLayer = world.get_node("HUD")
     await _frames(3)
     hud.quest_panel.tracked = ""
+    actor.global_position = board + Vector2(10, 0)
     session.apply_action(actor, "quest", {"operation": "accept", "id": "bounty_brookhaven_cull"})
-    _check(String(hud.quest_panel.tracker_text()).contains("Cull the Wilds"), "The tracker shows the active quest's objective")
+    _check(String(hud.quest_panel.tracker_text()).contains("The Tidebound Isles"), "The tracker follows the main story by default")
+    hud.quest_panel.tracked = "bounty_brookhaven_cull"
+    _check(String(hud.quest_panel.tracker_text()).contains("Cull the Wilds"), "...or the quest you track")
     # The story's lines: a speech box that never pauses or blocks other windows.
     _check(not hud.quest_panel._queue.is_empty() or hud.quest_panel.speech.visible, "Finished steps queue the story's lines")
     _check(not hud.dialog_panel.is_open() and not paused, "Story lines neither pause the game nor open a dialogue")
@@ -163,6 +200,9 @@ func _run() -> void:
     var bad: Dictionary = raw.duplicate(true)
     bad.players.host.progression.quests.main_2 = {"s": 99, "c": 0, "done": false}
     _check(not STORE.validate(bad), "Impossible quest steps are rejected")
+    var bad_pick: Dictionary = raw.duplicate(true)
+    bad_pick.players.host.progression.quests.main_7.pick = "emperor"
+    _check(bool(raw.players.host.progression.quests.main_7.done) and not STORE.validate(bad_pick), "The ending is saved; unknown endings are rejected")
     world.queue_free()
     await _frames()
     session.stop_session(false)

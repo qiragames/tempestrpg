@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.1 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.2 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -299,7 +299,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (960x540)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Uncommon Silvered Hood
+- [x] The chest gave an Uncommon-or-better item: Epic Leather Gloves
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (960x540)
@@ -713,6 +713,20 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 ![The quest log (O): the main story first, side quests and bounties, each with its objective; the tracked one shows under the minimap](129_quest_log.png)
 *The quest log (O): the main story first, side quests and bounties, each with its objective; the tracked one shows under the minimap* (960x540)
 
+## 33. The Shattered Moon's finale (M9d)
+- [x] The Pale Regent waits beneath the Sage Spire
+
+![Chapter 7: the Pale Regent waits beneath the Sage Spire in the Ki Realm (he only shows to those the story brings here)](130_pale_regent.png)
+*Chapter 7: the Pale Regent waits beneath the Sage Spire in the Ki Realm (he only shows to those the story brings here)* (960x540)
+
+
+![The final raid boss: the Eclipse Wyrm (the Pale Regent unbound), level 50, in its arena below the Sage Spire](131_eclipse_wyrm.png)
+*The final raid boss: the Eclipse Wyrm (the Pale Regent unbound), level 50, in its arena below the Sage Spire* (960x540)
+
+
+![The ending: mend the moon (Moonwarden, a holy crescent) or keep its core's power (Eclipse Sovereign, a reaper that grows stronger at night)](132_ending_choice.png)
+*The ending: mend the moon (Moonwarden, a holy crescent) or keep its core's power (Eclipse Sovereign, a reaper that grows stronger at night)* (960x540)
+
 
 ## System messages seen
 
@@ -773,7 +787,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +1500 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Rare Cyclone Greathelm.
+- Trial reward: Rare Sun Grim.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +21 XP (defeat).
@@ -791,8 +805,8 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Uncommon Silvered Hood.
-- +31 Zeni (chest).
+- Chest opened: Epic Leather Gloves.
+- +45 Zeni (chest).
 - World "Showcase World" loaded. Esc: pause menu, open to friends.
 - Open to friends on UDP 24560. They join with: 192.168.178.27, 192.168.56.1
 - Your router did not answer (UPnP off?). Forward UDP 24560 to this PC by hand for friends outside your network.
@@ -800,4 +814,4 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 The bot retreated 0 time(s) to let Magicules recover.
 XP assistance for skill points: 550 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 129 screenshots.**
+**Result: 0 failed checks, 132 screenshots.**

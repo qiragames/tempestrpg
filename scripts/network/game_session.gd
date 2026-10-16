@@ -708,9 +708,11 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
         return world.camp.transact(actor, payload.operation, payload.id)
     if action == "quest":
         # M9c: clients name a quest to take or someone to talk to; the host checks the rest.
-        if payload.size() != 2 or not payload.get("operation") in ["accept", "talk"] or not payload.get("id") is String or payload.id.length() > 48:
+        if payload.size() != 2 or not payload.get("operation") in ["accept", "talk", "choose"] or not payload.get("id") is String or payload.id.length() > 48:
             rejected_requests += 1
             return false
+        if payload.operation == "choose":
+            return world.quests.choose(actor, payload.id)
         return world.quests.accept(actor, payload.id) if payload.operation == "accept" else world.quests.talk(actor, payload.id)
     if action == "dungeon":
         # M7c: clients name the cave; the host checks the distance.

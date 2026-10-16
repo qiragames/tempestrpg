@@ -16,10 +16,13 @@ extends RefCounted
 ##   catch  {fish, count}          — land fish ("" = any)
 ##   gather {resource, count}      — gather logs, ores or herbs ("" = any)
 ##   craft  {item, count}          — craft (smelt, forge, brew) something ("" = anything)
+##   choice {npc, options}         — decide (M9d: the story's ending); options [[label, key, reward, say]]
 const MAP := preload("res://scripts/world/world_map.gd")
 
-## Story characters and quest givers: [name, sprite, town ("" = fixed tile), tile offset from the
-## town's plaza (or the tile itself)].
+## Story characters and quest givers: [name, sprite, town ("" = fixed tile, "dungeon:<id>" = that
+## dungeon's deepest chamber), tile offset from the town's plaza (or the tile itself), staged].
+## Staged characters (the Court's) only show — and can only be spoken to — while one of your
+## quests waits for you to talk to them.
 const NPCS := {
     "orrin": ["Orrin the Astronomer", "npc_orrin", "brookhaven", Vector2(-3, 1.5)],
     "hilde": ["Hilde the Baker", "npc_hilde", "brookhaven", Vector2(-1, 3)],
@@ -27,7 +30,10 @@ const NPCS := {
     "nessa": ["Nessa the Fisher", "npc_nessa", "mirrorwick", Vector2(-2, 1)],
     "maren": ["Captain Maren", "npc_maren", "harrowmere", Vector2(-3, 1.5)],
     "alric": ["Brother Alric", "npc_alric", "harrowmere", Vector2(-1, 3)],
-    "vex": ["Vex of the Eclipse Court", "npc_vex", "", Vector2(246, 70)],
+    "vex": ["Vex of the Eclipse Court", "npc_vex", "", Vector2(246, 70), true],
+    "vex_grotto": ["Vex of the Eclipse Court", "npc_vex", "dungeon:jade_grotto", Vector2(2, 2), true],
+    "regent": ["The Pale Regent", "npc_regent", "dungeon:ember_depths", Vector2(0, 2), true],
+    "regent_spire": ["The Pale Regent", "npc_regent", "", Vector2(-760, -94), true],
     "ulla": ["Chief Ulla", "npc_ulla", "rimeholm", Vector2(-3, 1.5)],
     "steward": ["The Sultan's Steward", "npc_steward", "dunemarch", Vector2(-3, 1.5)],
     "bram": ["Farmer Bram", "npc_bram", "amberhold", Vector2(-3, 1.5)],
@@ -37,6 +43,10 @@ const NPCS := {
     "temur": ["Khan Temur", "npc_temur", "galehaven", Vector2(-3, 1.5)],
     "morwen": ["Morwen of Witchwood", "npc_morwen", "gloomhollow", Vector2(-3, 1.5)],
     "lin": ["Sage Lin", "npc_lin", "highwind", Vector2(-3, 1.5)],
+    # M9d: more quest givers.
+    "inspector": ["Inspector Holt", "npc_inspector", "saltwick", Vector2(-2, 1)],
+    "princess": ["Princess Sora", "npc_princess", "hanamura", Vector2(-1, 3)],
+    "hunter": ["Huntress Kesh", "npc_hunter", "galehaven", Vector2(-1, 3)],
 }
 ## Lumi travels with you (no place of its own); "talk" steps with Lumi complete when its words are read.
 const LUMI := "lumi"
@@ -82,6 +92,64 @@ const QUESTS := {
             {"type": "talk", "npc": "orrin", "text": "Bring the second Moonshard to Orrin", "say": [["Orrin the Astronomer", "Three with the Regent, two with us. The race has truly begun. Rest a while — the road beyond the sea is long, and the frost clans and the desert will not wait."]]},
         ],
         "reward": {"xp": 6000, "zeni": 1500, "gear": 3}},
+    "main_3": {"title": "Frost and Dust", "kind": "main", "giver": "orrin", "level": 12, "requires": ["main_2"],
+        "intro": [["Orrin the Astronomer", "Two shards fell far apart: one into the ice above Rimeholm, one into the southern sands. Lumi trembles whenever I point the lens at either. Go north first — the frost clans know every cave."]],
+        "steps": [
+            {"type": "talk", "npc": "ulla", "text": "Ask Chief Ulla in Rimeholm about the cold light", "say": [["Chief Ulla", "A blue fire burns inside Frostfang Cavern since the sky broke. The cyclops there has grown fat on it. Take the east path past Glacierwatch."]]},
+            {"type": "dungeon", "id": "frostfang_cavern", "text": "Climb down into Frostfang Cavern (east of Rimeholm)"},
+            {"type": "boss", "id": "dungeon_frostfang_cavern", "text": "Defeat Frostfang, the Ice Cyclops", "say": [["Lumi", "The third shard! It's so cold it burns... Now the desert. I can hear the other one singing under the sand."]]},
+            {"type": "talk", "npc": "steward", "text": "Travel to Dunemarch and speak with the Sultan's Steward", "say": [["The Sultan's Steward", "A falling star? Yes — it fell where the Dune Stalker hunts. Our riders will not go there. The Sultan would be... grateful."]]},
+            {"type": "boss", "id": "elite_dune_stalker", "text": "Hunt the Dune Stalker in the southern sands", "say": [["Lumi", "Four! It was in its belly the whole time. Ugh. Let's never do that again."]]},
+            {"type": "talk", "npc": "orrin", "text": "Bring both Moonshards to Orrin", "say": [["Orrin the Astronomer", "Four shards. Four! And the Court has three... Their ships were seen sailing for the Emberreach Isles. Whatever they search for there, we must reach it first."]]},
+        ],
+        "reward": {"xp": 30000, "zeni": 3000, "gear": 3}},
+    "main_4": {"title": "The Tidebound Isles", "kind": "main", "giver": "orrin", "level": 15, "requires": ["main_3"],
+        "intro": [["Orrin the Astronomer", "Forgemaster Ignis of Cinderport is an old friend and a grumpy one. If the Court is digging in his isles, he will know where. Take ship from the harbour — and keep Lumi close."]],
+        "steps": [
+            {"type": "talk", "npc": "ignis", "text": "Sail to Cinderport and find Forgemaster Ignis", "say": [["Forgemaster Ignis", "Masked fools have been carting lava salamanders into the Ember Depths for a week. My forge has gone cold from the fear in the air. Clear the isles and I'll show you the way down."]]},
+            {"type": "kill", "kind": "", "region": "Emberreach Isles", "count": 10, "text": "Clear the Court's beasts from the Emberreach Isles (10)"},
+            {"type": "dungeon", "id": "ember_depths", "text": "Go down into the Ember Depths"},
+            {"type": "boss", "id": "dungeon_ember_depths", "text": "Defeat Magmaw, the Lava Wyrm", "say": [["Lumi", "The fifth shard is right there in the lava — wait. Someone's coming. I can't... I can't see..."]]},
+            {"type": "talk", "npc": "regent", "text": "Face the pale figure in the deepest chamber", "say": [["The Pale Regent", "So this is the castaway Vex warned me about. You fight well for someone without a past. The shard is mine, as is the little star's light. Sleep, sprite."], ["Lumi", "...so... dim... I'm still here. Just... tired. Don't let him... have the rest..."]]},
+            {"type": "talk", "npc": "orrin", "text": "Bring the dimmed Lumi back to Orrin", "say": [["Orrin the Astronomer", "He drank her light. The Regent holds four shards now, and we hold four. But the star-readers of the Goldwind Steppe once rekindled a fallen star — so the old charts say. Go east."]]},
+        ],
+        "reward": {"xp": 50000, "zeni": 5000, "gear": 3}},
+    "main_5": {"title": "Where the Wind Turns Gold", "kind": "main", "giver": "orrin", "level": 22, "requires": ["main_4"],
+        "intro": [["Orrin the Astronomer", "The ferry to the Eastern Reaches leaves from the far harbours. Find Khan Temur in Galehaven: his clans still keep the star-readers' songs."]],
+        "steps": [
+            {"type": "talk", "npc": "temur", "text": "Take the ferry east and find Khan Temur in Galehaven", "say": [["Khan Temur", "A dimmed star-sprite... The readers sing to such stars on the steppe at night. But the storm spirits answer the Court now. Silence them, and the readers will sing."]]},
+            {"type": "kill", "kind": "", "region": "Goldwind Steppe", "count": 12, "text": "Silence the storm spirits of the Goldwind Steppe (12)"},
+            {"type": "night", "text": "Spend a night on the steppe while the star-readers sing", "say": [["Lumi", "...warm. I can feel the stars again! I'm back — and I'm SO angry. There's a shard south of here, in the purple dark. The Regent left it with someone."]]},
+            {"type": "talk", "npc": "morwen", "text": "Go south into Gloomveil and find Morwen in Gloomhollow", "say": [["Morwen of Witchwood", "The Bone Abbot keeps the Regent's shard in his catacombs, under the dusk that never lifts. I hate that monk. Kill him and I'll call it even."]]},
+            {"type": "dungeon", "id": "gloom_catacombs", "text": "Go down into the Gloom Catacombs"},
+            {"type": "boss", "id": "dungeon_gloom_catacombs", "text": "Defeat the Bone Abbot", "say": [["Lumi", "The sixth shard — and it's one of HIS. Five for us now, and three for him. Sage Lin of Jadehaven knows the old observatory... that's where the last one points."]]},
+            {"type": "talk", "npc": "lin", "text": "Bring the shards to Sage Lin in Jadehaven", "say": [["Sage Lin", "Five shards in a castaway's pack, and a star-sprite angry enough to light a city. Rest. The Jade Observatory has been silent for a hundred years — and now its lens moves at night."]]},
+        ],
+        "reward": {"xp": 90000, "zeni": 9000, "gear": 4}},
+    "main_6": {"title": "The Jade Observatory", "kind": "main", "giver": "lin", "level": 34, "requires": ["main_5"],
+        "intro": [["Sage Lin", "The observatory's lens points down into the Jade Grotto. Something there pulls at the sky. Go carefully: the Court will be waiting."]],
+        "steps": [
+            {"type": "kill", "kind": "", "region": "Jade Terraces", "count": 12, "text": "Fight your way across the Jade Terraces (12)"},
+            {"type": "dungeon", "id": "jade_grotto", "text": "Go down into the Jade Grotto"},
+            {"type": "boss", "id": "dungeon_jade_grotto", "text": "Defeat the Jade Spirit Guardian", "say": [["Lumi", "It was guarding... nothing. The shard is gone. Someone took it — just now."]]},
+            {"type": "talk", "npc": "vex_grotto", "text": "Confront Vex in the grotto's heart", "say": [["Vex of the Eclipse Court", "Sorry, castaway. The last shard is already on its way to the Regent. Want to know a secret? The moon's broken core never fell to the world — it fell into the hidden realm, onto the Sage Spire. That's where he's going."], ["Lumi", "He let us go again. He wants us there. Let's not disappoint him."]]},
+            {"type": "talk", "npc": "lin", "text": "Tell Sage Lin what Vex said", "say": [["Sage Lin", "The Ki Realm... Few ever find the way: a hermit in Sakura Vale asks a single question. Answer truly, and he opens the path. You will need to be strong."]]},
+        ],
+        "reward": {"xp": 110000, "zeni": 12000, "gear": 4}},
+    "main_7": {"title": "The Pale Regent", "kind": "main", "giver": "lin", "level": 40, "requires": ["main_6"],
+        "intro": [["Sage Lin", "Go. Whatever you find on that spire, remember: you chose to walk this road, memories or not."]],
+        "steps": [
+            {"type": "reach", "tile": Vector2(-894, 66), "radius": 12, "text": "Find the way into the hidden Ki Realm (the hermit in Sakura Vale)", "say": [["Lumi", "This place hums with power. The core is close — up there, on the spire."]]},
+            {"type": "reach", "tile": Vector2(-760, -95), "radius": 6, "text": "Climb to the foot of the Sage Spire"},
+            {"type": "talk", "npc": "regent_spire", "text": "Face the Pale Regent beneath the Sage Spire", "say": [["The Pale Regent", "Ten years I chased the pieces of a broken sky. With the core and my four shards, I will be the night itself. Watch, castaway."], ["Lumi", "He's... changing! That's not a man any more!"]]},
+            {"type": "boss", "id": "boss_eclipse_wyrm", "text": "Defeat the Eclipse Wyrm", "say": [["Lumi", "It's over. His shards are scattered on the stones — all seven, and the core between them. It's warm. It's waiting for someone to decide."]]},
+            {"type": "choice", "npc": "lumi", "text": "Decide what becomes of the moon's core (open the quest log, O, if you closed it)",
+                "options": [
+                    ["Mend the moon: give the shards back to the sky (Moonwarden)", "moonwarden", {"unique": "story_moonwarden_crescent"}, [["Lumi", "Then let's give them back. ...I'll go with them, you know. Someone has to hold the pieces together. Don't look like that — every night, look up. I'll be the bright bit."], ["Lumi", "Thank you, Moonwarden. For all of it."]]],
+                    ["Keep the core's power for yourself (Eclipse Sovereign)", "sovereign", {"unique": "story_eclipse_reaper"}, [["Lumi", "...You'd keep it? I understand. Someone has to be stronger than the dark — maybe that's you. Just... promise you'll remember who you were before."], ["Lumi", "The night is yours now, Sovereign. Try to be kind with it."]]],
+                ]},
+        ],
+        "reward": {"xp": 150000, "zeni": 30000, "gear": 5}},
     # --- Side quests (one time each).
     "side_bread": {"title": "Bread for the Lantern Festival", "kind": "side", "giver": "hilde", "level": 2, "requires": [],
         "intro": [["Hilde the Baker", "The Lantern Festival is in three days and I've no mint for the honey bread! Bushes all around the clearing have it — just pick it, dear."]],
@@ -151,10 +219,107 @@ const QUESTS := {
         "intro": [["Sage Lin", "When the mist lies on the paddies, the mist carp rise. The old ones say seeing one brings a good harvest."]],
         "steps": [{"type": "catch", "fish": "mist_carp", "count": 1, "text": "Catch a Mist Carp (only in fog or mist)"}, {"type": "talk", "npc": "lin", "text": "Show Sage Lin the Mist Carp", "say": [["Sage Lin", "A fine omen. May your harvest — whatever you sow — be full."]]}],
         "reward": {"xp": 30000, "zeni": 8000, "pro": {"fishing": 6000}}},
+    # M9d: more side quests (about forty in all).
+    "side_oven": {"title": "A New Oven Door", "kind": "side", "giver": "hilde", "level": 5, "requires": ["side_larder"],
+        "intro": [["Hilde the Baker", "My oven door finally fell off. Two bronze bars would make a new one — the smith's furnace is in every town."]],
+        "steps": [{"type": "craft", "item": "bar_bronze", "count": 2, "text": "Smelt 2 Bronze Bars (Smithing, in a town)"}, {"type": "bring", "item": "bar_bronze", "count": 2, "text": "Bring Hilde 2 Bronze Bars", "say": [["Hilde the Baker", "Shiny! The bread will rise like the sun now."]]}],
+        "reward": {"xp": 900, "zeni": 300, "pro": {"smithing": 600}}},
+    "side_smugglers": {"title": "The Smugglers' Beasts", "kind": "side", "giver": "inspector", "level": 7, "requires": [],
+        "intro": [["Inspector Holt", "Smugglers keep beasts on the isle to scare off honest folk. Thin them out and report to Captain Maren — she owes me a favour."]],
+        "steps": [{"type": "kill", "kind": "", "region": "Verdant Isle", "count": 6, "text": "Defeat 6 creatures on Verdant Isle"}, {"type": "talk", "npc": "maren", "text": "Report to Captain Maren in Harrowmere", "say": [["Captain Maren", "Holt sent you? Then the smugglers will have a quiet month. Good."]]}],
+        "reward": {"xp": 1200, "zeni": 400}},
+    "side_herring": {"title": "Evidence in the Nets", "kind": "side", "giver": "inspector", "level": 8, "requires": ["side_smugglers"],
+        "intro": [["Inspector Holt", "The smugglers hide letters inside herring and toss them in the harbour. Catch me three Harrow Herring — let's read their mail."]],
+        "steps": [{"type": "catch", "fish": "harrow_herring", "count": 3, "text": "Catch 3 Harrow Herring"}, {"type": "talk", "npc": "inspector", "text": "Bring the catch to Inspector Holt", "say": [["Inspector Holt", "\"Meet at the keep at midnight.\" Hm. Masks again. I don't like this at all."]]}],
+        "reward": {"xp": 1500, "zeni": 500, "pro": {"fishing": 800}}},
+    "side_crater": {"title": "Embers in the Crater", "kind": "side", "giver": "rowan", "level": 11, "requires": ["side_quills"],
+        "intro": [["Old Rowan", "The crater beasts have been creeping toward the forest. One spark and Thornwood burns. Push them back."]],
+        "steps": [{"type": "kill", "kind": "", "region": "Cinder Crater", "count": 6, "text": "Defeat 6 creatures in Cinder Crater"}, {"type": "talk", "npc": "rowan", "text": "Return to Old Rowan", "say": [["Old Rowan", "The wind smells of pine again, not smoke. Thank you."]]}],
+        "reward": {"xp": 2500, "zeni": 700, "gear": 2}},
+    "side_wisps": {"title": "Lights for the Long Winter", "kind": "side", "giver": "ulla", "level": 12, "requires": ["side_furs"],
+        "intro": [["Chief Ulla", "Snow wisp motes glow for a whole winter. Four of them and the children won't be afraid of the dark."]],
+        "steps": [{"type": "bring", "item": "wisp_mote", "count": 4, "text": "Bring Chief Ulla 4 Wisp Motes (absorb snow wisps)", "say": [["Chief Ulla", "Look at them glow. The longhouse will be bright all winter."]]}],
+        "reward": {"xp": 2600, "zeni": 800}},
+    "side_ice_fishing": {"title": "Ice Fishing", "kind": "side", "giver": "ulla", "level": 13, "requires": [],
+        "intro": [["Chief Ulla", "Cut a hole in the ice, drop a line, wait. Two Glacier Cod feed a family for a week."]],
+        "steps": [{"type": "catch", "fish": "glacier_cod", "count": 2, "text": "Catch 2 Glacier Cod in Frostpeak"}, {"type": "talk", "npc": "ulla", "text": "Bring the cod to Chief Ulla", "say": [["Chief Ulla", "Fat ones! You have frost in your blood after all."]]}],
+        "reward": {"xp": 2800, "zeni": 900, "pro": {"fishing": 1500}}},
+    "side_snowmane": {"title": "The Ghost of the Glacier", "kind": "side", "giver": "ulla", "level": 15, "requires": ["side_wisps"],
+        "intro": [["Chief Ulla", "A white bear walks the glacier like a ghost — Snowmane. It took three of our hunters. End it."]],
+        "steps": [{"type": "boss", "id": "elite_snowmane", "text": "Defeat Snowmane on the glacier"}, {"type": "talk", "npc": "ulla", "text": "Return to Chief Ulla", "say": [["Chief Ulla", "The hunters can rest. Rimeholm names you a friend of the clans."]]}],
+        "reward": {"xp": 5000, "zeni": 1800, "gear": 3}},
+    "side_shells": {"title": "Shells for the Bazaar", "kind": "side", "giver": "steward", "level": 9, "requires": [],
+        "intro": [["The Sultan's Steward", "Scuttler shells polish into the finest bowls in the bazaar. Four, if you please."]],
+        "steps": [{"type": "bring", "item": "scuttler_shell", "count": 4, "text": "Bring the Steward 4 Scuttler Shells (absorb sand scuttlers)", "say": [["The Sultan's Steward", "Excellent. The Sultan's table will shine."]]}],
+        "reward": {"xp": 1800, "zeni": 900}},
+    "side_moles": {"title": "Moles Under the Fields", "kind": "side", "giver": "bram", "level": 12, "requires": [],
+        "intro": [["Farmer Bram", "Burrow moles! My pumpkins fall into holes overnight. Five of them, that's all I ask."]],
+        "steps": [{"type": "kill", "kind": "burrow_mole", "region": "", "count": 5, "text": "Defeat 5 Burrow Moles"}, {"type": "talk", "npc": "bram", "text": "Tell Farmer Bram", "say": [["Farmer Bram", "My pumpkins thank you. So does my back."]]}],
+        "reward": {"xp": 2600, "zeni": 800}},
+    "side_ambercap": {"title": "The Harvest Tonic", "kind": "side", "giver": "bram", "level": 14, "requires": ["side_orchard"],
+        "intro": [["Farmer Bram", "My wife swears by ambercap tonic for the harvest weeks. Five caps from the autumn bushes."]],
+        "steps": [{"type": "bring", "item": "herb_ambercap", "count": 5, "text": "Bring Farmer Bram 5 Ambercap", "say": [["Farmer Bram", "That's the harvest saved twice over!"]]}],
+        "reward": {"xp": 3200, "zeni": 1000, "pro": {"alchemy": 1200}}},
+    "side_kappa": {"title": "Kappa in the Reeds", "kind": "side", "giver": "moss", "level": 16, "requires": [],
+        "intro": [["Mother Moss", "Bog kappa pull fishermen into the water. Five of them, child, and the reeds will be quiet."]],
+        "steps": [{"type": "kill", "kind": "bog_kappa", "region": "", "count": 5, "text": "Defeat 5 Bog Kappa"}, {"type": "talk", "npc": "moss", "text": "Return to Mother Moss", "say": [["Mother Moss", "Hm-hm. The fishermen will sing your name. Badly."]]}],
+        "reward": {"xp": 4000, "zeni": 1200}},
+    "side_fen_witch": {"title": "The Other Witch", "kind": "side", "giver": "moss", "level": 19, "requires": ["side_brew"],
+        "intro": [["Mother Moss", "There's a witch in the fen who grows mirecaps in children's beds. Not a nice witch. Not like me."]],
+        "steps": [{"type": "boss", "id": "elite_fen_witch", "text": "Defeat the Fen Witch"}, {"type": "talk", "npc": "moss", "text": "Return to Mother Moss", "say": [["Mother Moss", "One witch in this marsh is plenty. Take this — and wipe your boots."]]}],
+        "reward": {"xp": 7000, "zeni": 2400, "gear": 3}},
+    "side_lanterns": {"title": "Paper Lanterns", "kind": "side", "giver": "princess", "level": 15, "requires": [],
+        "intro": [["Princess Sora", "The lantern festival needs new lanterns, and the best paper comes from the lantern spirits themselves. Four sheets?"]],
+        "steps": [{"type": "bring", "item": "lantern_paper", "count": 4, "text": "Bring Princess Sora 4 Lantern Paper (absorb paper lanterns)", "say": [["Princess Sora", "They'll float over the river like a second sky."]]}],
+        "reward": {"xp": 4000, "zeni": 1300}},
+    "side_koi": {"title": "Koi for the Palace Pond", "kind": "side", "giver": "princess", "level": 16, "requires": ["side_lanterns"],
+        "intro": [["Princess Sora", "The palace pond has lost its koi to a heron. Two koi would make my father smile again."]],
+        "steps": [{"type": "catch", "fish": "koi", "count": 2, "text": "Catch 2 Koi in Sakura Vale"}, {"type": "talk", "npc": "princess", "text": "Bring the koi to Princess Sora", "say": [["Princess Sora", "Look at them shine! Father will be so pleased."]]}],
+        "reward": {"xp": 4500, "zeni": 1500, "pro": {"fishing": 2000}}},
+    "side_tea": {"title": "Blossom Tea", "kind": "side", "giver": "kaito", "level": 15, "requires": [],
+        "intro": [["Sensei Kaito", "A swordsman's mind should be clear as blossom tea. Bring me five sakura petals and we will drink."]],
+        "steps": [{"type": "bring", "item": "herb_sakura", "count": 5, "text": "Bring Sensei Kaito 5 Sakura Petals", "say": [["Sensei Kaito", "Sit. Breathe. Now — the tea."]]}],
+        "reward": {"xp": 3800, "zeni": 1100, "pro": {"alchemy": 1500}}},
+    "side_salamander": {"title": "Salamander Scales", "kind": "side", "giver": "ignis", "level": 18, "requires": [],
+        "intro": [["Forgemaster Ignis", "Salamander scales make a quench that never cracks a blade. Three, and quickly — the forge waits for no one."]],
+        "steps": [{"type": "bring", "item": "salamander_scale", "count": 3, "text": "Bring Forgemaster Ignis 3 Salamander Scales", "say": [["Forgemaster Ignis", "Ha! Listen to that hiss. Perfect."]]}],
+        "reward": {"xp": 5500, "zeni": 1800}},
+    "side_steel": {"title": "Steel for the Harbour", "kind": "side", "giver": "ignis", "level": 16, "requires": ["side_fuel"],
+        "intro": [["Forgemaster Ignis", "The harbour chains are rusting through. Smelt three steel bars and I'll forge new ones."]],
+        "steps": [{"type": "craft", "item": "bar_steel", "count": 3, "text": "Smelt 3 Steel Bars (Smithing 15)"}, {"type": "bring", "item": "bar_steel", "count": 3, "text": "Bring Forgemaster Ignis 3 Steel Bars", "say": [["Forgemaster Ignis", "Good grain. You'll make a smith yet."]]}],
+        "reward": {"xp": 5000, "zeni": 1600, "pro": {"smithing": 3000}}},
+    "side_gale": {"title": "The Gale Beasts", "kind": "side", "giver": "hunter", "level": 23, "requires": [],
+        "intro": [["Huntress Kesh", "Gale beasts run down our horses in packs. Six pelts on the wall and the packs will think twice."]],
+        "steps": [{"type": "kill", "kind": "gale_beast", "region": "", "count": 6, "text": "Defeat 6 Gale Beasts"}, {"type": "talk", "npc": "hunter", "text": "Return to Huntress Kesh", "say": [["Huntress Kesh", "Good hunting. You move like a steppe rider."]]}],
+        "reward": {"xp": 9000, "zeni": 3000}},
+    "side_sturgeon": {"title": "The Old Sturgeon", "kind": "side", "giver": "hunter", "level": 25, "requires": ["side_gale"],
+        "intro": [["Huntress Kesh", "My father fished the steppe rivers for a sturgeon as long as a horse. He never caught one. Will you?"]],
+        "steps": [{"type": "catch", "fish": "steppe_sturgeon", "count": 1, "text": "Catch a Steppe Sturgeon"}, {"type": "talk", "npc": "hunter", "text": "Show Huntress Kesh the sturgeon", "say": [["Huntress Kesh", "...It's real. He'd have laughed for a week. Thank you."]]}],
+        "reward": {"xp": 10000, "zeni": 3500, "pro": {"fishing": 4000}}},
+    "side_shades": {"title": "Shades in the Dusk", "kind": "side", "giver": "morwen", "level": 30, "requires": [],
+        "intro": [["Morwen of Witchwood", "Shade spirits whisper outside my window all night. Six of them gone and I might sleep."]],
+        "steps": [{"type": "kill", "kind": "shade_spirit", "region": "", "count": 6, "text": "Defeat 6 Shade Spirits"}, {"type": "talk", "npc": "morwen", "text": "Return to Morwen", "say": [["Morwen of Witchwood", "Quiet at last. Don't expect me to say thank you."]]}],
+        "reward": {"xp": 14000, "zeni": 4500}},
+    "side_nightweaver": {"title": "The Web Queen", "kind": "side", "giver": "morwen", "level": 32, "requires": ["side_nightshade"],
+        "intro": [["Morwen of Witchwood", "Nightweaver has webbed the whole east wood. My herbs, my paths, my cat. Cut her down."]],
+        "steps": [{"type": "boss", "id": "elite_nightweaver", "text": "Defeat Nightweaver"}, {"type": "talk", "npc": "morwen", "text": "Return to Morwen", "say": [["Morwen of Witchwood", "The cat came home. Fine. You're welcome in my hut. Wipe your feet."]]}],
+        "reward": {"xp": 20000, "zeni": 6000, "gear": 4}},
+    "side_lotus": {"title": "Jade Lotus", "kind": "side", "giver": "lin", "level": 36, "requires": [],
+        "intro": [["Sage Lin", "The jade lotus opens only for the patient. Bring me four and I will brew a tea for clear thoughts."]],
+        "steps": [{"type": "bring", "item": "herb_jade_lotus", "count": 4, "text": "Bring Sage Lin 4 Jade Lotus", "say": [["Sage Lin", "Patience, rewarded. Sit with me a while."]]}],
+        "reward": {"xp": 18000, "zeni": 6000, "pro": {"alchemy": 5000}}},
+    "side_cloud_serpent": {"title": "The Cloud Serpent", "kind": "side", "giver": "lin", "level": 38, "requires": ["side_mist_carp"],
+        "intro": [["Sage Lin", "The Cloud Serpent was a spirit of good rain. Now it brings only storms. Free it — by defeating it."]],
+        "steps": [{"type": "boss", "id": "elite_cloud_serpent", "text": "Defeat the Cloud Serpent"}, {"type": "talk", "npc": "lin", "text": "Return to Sage Lin", "say": [["Sage Lin", "Listen — soft rain on the terraces. It is at peace."]]}],
+        "reward": {"xp": 30000, "zeni": 9000, "gear": 4}},
 }
 
 static func is_main(id: String) -> bool:
     return id.begins_with("main_")
+
+## Court characters show only while a quest waits for you to speak to them.
+static func is_staged(id: String) -> bool:
+    return NPCS.has(id) and NPCS[id].size() > 4 and bool(NPCS[id][4])
 
 ## Bounties of a town's board (repeatable): generated from the town's region.
 static func bounties(town: String) -> Array:
@@ -227,6 +392,9 @@ static func npc_position(id: String) -> Vector2:
     var spec: Array = NPCS[id]
     if String(spec[2]).is_empty():
         return MAP.to_world(spec[3]) + Vector2(8, 8)
+    if String(spec[2]).begins_with("dungeon:"):
+        var chamber: Array = preload("res://scripts/dungeons/dungeon_catalogue.gd").rooms(String(spec[2]).trim_prefix("dungeon:"))[3]
+        return MAP.to_world(Vector2(chamber[0]) + spec[3]) + Vector2(8, 8)
     return MAP.to_world(Vector2(MAP.town(spec[2])[3]) + spec[3]) + Vector2(8, 8)
 
 ## Quests a giver offers (in catalogue order; the main story first).

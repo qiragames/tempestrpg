@@ -120,7 +120,14 @@ func weapon_ability() -> String:
 func ability_damage(target: Node2D, value: int) -> int:
     if weapon_ability() == "executioner" and target.has_node("Health") and target.get_node("Health").current < target.get_node("Health").maximum * 0.3:
         return value * 2
+    # M9d: the Eclipse Sovereign's reaper hits far harder at night.
+    if weapon_ability() == "sovereign" and _is_night():
+        return int(round(value * SETS.SOVEREIGN_NIGHT))
     return value
+
+func _is_night() -> bool:
+    var world: Node = get_parent().get_parent()
+    return world != null and world.get("progression") != null and preload("res://scripts/world/day_night.gd").is_night(float(world.progression.get("world_time", 0.0)))
 
 func _creatures_near(at: Vector2, reach: float, skip: Array) -> Array:
     return get_tree().get_nodes_in_group("enemies").filter(func(node): return not node in skip and not node.is_queued_for_deletion() and not (node.has_method("dormant") and node.dormant()) and node.get_node("Health").current > 0 and node.global_position.distance_to(at) <= reach)
@@ -176,6 +183,20 @@ func _unique_hit(target: Node2D, dealt: int, already: Array) -> void:
         "eclipse":
             if killed:
                 owner.get_node("Health").heal(int(round(owner.get_node("Health").maximum * 0.15)))
+        "sovereign":
+            if killed and _is_night():
+                owner.get_node("Health").heal(int(round(owner.get_node("Health").maximum * 0.1)))
+        "moonwarden":
+            if _unique_hits % 4 == 0:
+                for creature in _creatures_near(at, 44.0, [target]):
+                    creature.get_node("Health").take_damage(maxi(1, int(dealt * 0.75)), owner, true)
+                var heal: int = maxi(1, int(round(owner.get_node("Health").maximum * 0.03)))
+                owner.get_node("Health").heal(heal)
+                var party: Node = owner.get_parent().get("party")
+                for mate in get_tree().get_nodes_in_group("player"):
+                    if mate != owner and party != null and party.same_party(owner.character_id, mate.character_id) and mate.global_position.distance_to(owner.global_position) <= 96.0:
+                        mate.get_node("Health").heal(heal)
+                _burst(at + Vector2(0, -6), "sparkle", Color(0.85, 0.92, 1.0), 1.8)
 
 func _burst(at: Vector2, id: String, colour: Color, size: float) -> void:
     var effect := EFFECTS.spawn(get_parent().get_parent(), id, at)

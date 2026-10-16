@@ -1191,6 +1191,38 @@ func _run() -> void:
     await _wait(0.3)
     await _shot("quest_log", "The quest log (O): the main story first, side quests and bounties, each with its objective; the tracked one shows under the minimap")
     quest_panel.close_panel()
+    _log("## 33. The Shattered Moon's finale (M9d)")
+    var quest_catalogue := preload("res://scripts/quests/quest_catalogue.gd")
+    for chapter in range(1, 7):
+        showcase.progression.quests["main_%d" % chapter] = {"s": quest_catalogue.quest("main_%d" % chapter).steps.size(), "c": 0, "done": true}
+        quest_panel._seen["main_%d" % chapter] = -1
+    showcase.progression.quests["main_7"] = {"s": 2, "c": 0, "done": false}
+    quest_panel._seen["main_7"] = 2
+    quest_panel.tracked = "main_7"
+    quest_panel._queue.clear()
+    quest_panel._speech_left = 0.0
+    quest_panel.speech.hide()
+    showcase.global_position = quest_catalogue.npc_position("regent_spire") + Vector2(-30, -12)
+    world.terrain.ensure_props_at(showcase.global_position)
+    await _wait(0.8)
+    _check(world.quests.nearest_npc(showcase).is_empty() or world.quests.waiting_for(showcase, "regent_spire"), "The Pale Regent waits beneath the Sage Spire")
+    await _shot("pale_regent", "Chapter 7: the Pale Regent waits beneath the Sage Spire in the Ki Realm (he only shows to those the story brings here)")
+    showcase.progression.quests["main_7"] = {"s": 3, "c": 0, "done": false}
+    quest_panel._seen["main_7"] = 3
+    showcase.global_position = preload("res://scripts/bosses/boss_catalogue.gd").centre("boss_eclipse_wyrm") + Vector2(0, 80)
+    world.terrain.ensure_props_at(showcase.global_position)
+    await _wait(1.2)
+    await _shot("eclipse_wyrm", "The final raid boss: the Eclipse Wyrm (the Pale Regent unbound), level 50, in its arena below the Sage Spire")
+    showcase.progression.quests["main_7"] = {"s": 4, "c": 0, "done": false}
+    quest_panel._seen["main_7"] = 4
+    quest_panel._queue.clear()
+    quest_panel._speech_left = 0.0
+    quest_panel._choice_offered.clear()
+    quest_panel.open_choice()
+    await _wait(0.3)
+    await _shot("ending_choice", "The ending: mend the moon (Moonwarden, a holy crescent) or keep its core's power (Eclipse Sovereign, a reaper that grows stronger at night)")
+    hud_nation.dialog_panel.close()
+    showcase.progression.quests.erase("main_7")
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

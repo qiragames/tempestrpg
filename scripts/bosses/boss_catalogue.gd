@@ -26,6 +26,8 @@ const RAID := {
     "boss_gloomtide": ["Gloomtide", "Kraken of Gloomveil", "squid_red", Vector2(975, 233), 10, 33, Color(0.9, 0.8, 1.0), ["rain", "ring", "slam", "charge"], ["boss_gloom_tentacle", "boss_ink_mantle"]],
     "boss_skylord": ["The Jade Tengu", "Lord of the Jade Terraces", "tengu_blue", Vector2(1347, -4), 10, 40, Color(0.9, 0.95, 1.0), ["charge", "rain", "ring", "slam"], ["boss_skylord_fan", "boss_peak_crown"]],
     "boss_rex_prime": ["Tyrant Rex Prime", "Apex of Raptor Gulch", "tyrant_rex", Vector2(-1150, -15), 12, 47, Color(1.0, 0.8, 0.7), ["slam", "charge", "rain", "ring"], ["boss_apex_fang", "boss_rex_hide"]],
+    # M9d: the main story's final boss at the foot of the Sage Spire (the Pale Regent unbound).
+    "boss_eclipse_wyrm": ["The Eclipse Wyrm", "The Pale Regent Unbound", "eclipse_wyrm", Vector2(-760, -76), 11, 50, Color(0.72, 0.62, 0.95), ["rain", "ring", "charge", "slam"], ["boss_wyrm_scale", "boss_wyrmfang"]],
     "boss_majin": ["Majin Overlord", "The Demon at the Canyon's End", "demon_cyclops", Vector2(-760, 220), 12, 50, Color(1.0, 0.65, 0.9), ["slam", "charge", "rain", "ring"], ["boss_majin_halo", "boss_overlord_edge"]],
 }
 

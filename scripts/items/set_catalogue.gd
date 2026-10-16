@@ -33,10 +33,14 @@ const ABILITIES := {
     "warden": ["Warden", "-4 damage taken per hit"],
     "berserker": ["Berserker", "+5 strike damage"],
     "phoenix": ["Phoenix", "Once every 2 minutes, a lethal hit leaves you at 1 HP instead"],
+    # M9d: the story's two endings.
+    "moonwarden": ["Moonwarden", "Every fourth hit calls moonlight: it strikes the creatures around the target and heals you and your party nearby for 3% of your health"],
+    "sovereign": ["Eclipse Sovereign", "+35% damage at night; killing blows at night restore 10% of your health"],
 }
 ## Live stats some armour abilities give.
 const ABILITY_STATS := {"windwalker": {"speed": 12}, "warden": {"defense": 4}, "berserker": {"strike": 5}}
 const PHOENIX_COOLDOWN := 120.0
+const SOVEREIGN_NIGHT := 1.35
 
 ## Pieces of each set among equipped items.
 static func counts(items: Array, bases: Dictionary) -> Dictionary:

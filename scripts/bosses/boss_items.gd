@@ -34,6 +34,12 @@ const UNIQUES := {
     "boss_rex_hide": ["Rex Hide", "body", "", "body", 84, "phoenix", "", 45, 5],
     "boss_majin_halo": ["Majin Halo", "accessory", "", "ring", 25, "eclipse", "shadow", 50, 5],
     "boss_overlord_edge": ["Overlord's Edge", "weapon", "sword", "sword", 117, "eclipse", "shadow", 50, 5],
+    # M9d: the Eclipse Wyrm, the story's final boss.
+    "boss_wyrm_scale": ["Eclipse Wyrm Scale", "body", "", "body", 84, "warden", "shadow", 50, 5],
+    "boss_wyrmfang": ["Wyrmfang", "weapon", "spear", "spear", 94, "eclipse", "shadow", 50, 5],
+    # M9d: the story's ending rewards (never dropped; given by the ending choice).
+    "story_moonwarden_crescent": ["Moonwarden's Crescent", "weapon", "scythe", "scythe", 78, "moonwarden", "holy", 50, 5],
+    "story_eclipse_reaper": ["Eclipse Sovereign's Reaper", "weapon", "scythe", "scythe", 77, "sovereign", "shadow", 50, 5],
 }
 
 ## Common-rarity stat ranges of the best item-expansion uniques (level 18-20), per type.

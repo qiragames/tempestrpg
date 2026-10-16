@@ -26,6 +26,8 @@ var _speech_face: TextureRect
 var _speech_name: Label
 var _speech_text: Label
 var _speech_left := 0.0
+## M9d: the ending choice opens by itself once (later from the quest log's Decide button).
+var _choice_offered: Dictionary = {}
 
 func _init(owner_hud: CanvasLayer) -> void:
     hud = owner_hud
@@ -183,6 +185,26 @@ static func _lumi_face() -> Texture2D:
     var path := "res://assets/game/sprites/npc_lumi/npc_lumi_face.png"
     return load(path) if ResourceLoader.exists(path) else null
 
+## --- The story's ending (M9d): Lumi asks what becomes of the moon's core.
+func open_choice() -> void:
+    var me: Node = hud.player
+    var id := LOG.choice_pending(me)
+    if id.is_empty() or hud.menu_open():
+        return
+    _choice_offered[id] = true
+    var options: Array = []
+    for option in LOG.current_step(me, id).options:
+        options.append([option[0], _choose.bind(id, option[1])])
+    options.append(["Not yet — let me think.", func(): pass])
+    hud.dialog_panel.open("Lumi", "The Regent's shards lie on the stones, and the moon's core glows between them. What should become of it?", options, _lumi_face())
+
+func _choose(id: String, key: String) -> void:
+    hud.session.request_action("quest", {"operation": "choose", "id": key})
+    for option in QUESTS.quest(id).steps[QUESTS.quest(id).steps.size() - 1].get("options", []):
+        if option[1] == key:
+            for line in option[3]:
+                _queue.append(line)
+
 ## --- Tracking.
 func tracked_quest() -> String:
     var me: Node = hud.player
@@ -207,6 +229,9 @@ func _process(delta: float) -> void:
         return
     _watch()
     _show_queue(delta)
+    var pending := LOG.choice_pending(hud.player)
+    if not pending.is_empty() and not _choice_offered.has(pending) and _queue.is_empty() and _speech_left <= 0.0 and not hud.menu_open():
+        open_choice()
 
 ## --- The log.
 func is_open() -> bool:
@@ -254,13 +279,20 @@ func refresh() -> void:
         label.autowrap_mode = TextServer.AUTOWRAP_OFF
         label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
         label.add_theme_color_override("font_color", UI.GOLD_LIGHT if QUESTS.is_main(id) else UI.TEXT)
-        var track: Button = hud._button("Tracked" if tracked_quest() == id else "Track", Vector2.ZERO, Vector2(64, 20), row)
+        var deciding: bool = LOG.current_step(me, id).get("type") == "choice"
+        var track: Button = hud._button("Decide" if deciding else ("Tracked" if tracked_quest() == id else "Track"), Vector2.ZERO, Vector2(64, 20), row)
         track.custom_minimum_size = Vector2(64, 20)
         track.add_theme_font_size_override("font_size", 8)
-        track.pressed.connect(func():
-            tracked = id
-            refresh()
-        )
+        if deciding:
+            track.pressed.connect(func():
+                close_panel()
+                open_choice()
+            )
+        else:
+            track.pressed.connect(func():
+                tracked = id
+                refresh()
+            )
     if ids.is_empty():
         hud._label("No active quests. Look for ! above people in the towns, or a town's bounty board.", Vector2.ZERO, Vector2(FRAME.size.x - 44, 14), _list, 9).add_theme_color_override("font_color", UI.TEXT_DIM)
 

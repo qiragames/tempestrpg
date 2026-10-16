@@ -115,6 +115,8 @@ const SIDE := {
     "tengu_blue": {"idle": ["res://assets/game/sprites/tengu_blue/tengu_blue_idle.png", 68], "run": ["res://assets/game/sprites/tengu_blue/tengu_blue_run.png", 82]},
     "blue_samurai": {"idle": ["res://assets/game/sprites/blue_samurai/blue_samurai_idle.png", 48], "run": ["res://assets/game/sprites/blue_samurai/blue_samurai_run.png", 48]},
     "squid_red": {"idle": ["res://assets/game/sprites/squid_red/squid_red_idle.png", 79], "run": ["res://assets/game/sprites/squid_red/squid_red_run.png", 79]},
+    # M9d: the Eclipse Wyrm, assembled from Boss/DragonBlue's parts (head, wings, body, tail).
+    "eclipse_wyrm": {"idle": ["res://assets/game/sprites/eclipse_wyrm/eclipse_wyrm_idle.png", 124], "run": ["res://assets/game/sprites/eclipse_wyrm/eclipse_wyrm_run.png", 124]},
     "demon_cyclops": {"idle": ["res://assets/game/sprites/demon_cyclops/demon_cyclops_idle.png", 50], "run": ["res://assets/game/sprites/demon_cyclops/demon_cyclops_run.png", 50]},
 }
 const SPEEDS := {"idle": 4.0, "walk": 8.0, "run": 10.0, "attack": 1.0, "dead": 1.0, "death": 10.0}

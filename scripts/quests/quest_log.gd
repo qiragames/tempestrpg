@@ -105,7 +105,7 @@ func nearest_npc(actor: Node2D) -> String:
     for town in QUESTS.BOARD_TOWNS:
         places.append("board_" + town)
     for id in places:
-        if id == "vex" and current_step(actor, "main_2").get("npc", "") != "vex":
+        if QUESTS.is_staged(id) and not waiting_for(actor, id):
             continue
         var at: Vector2 = QUESTS.npc_position(id)
         var gap := actor.global_position.distance_to(at)
@@ -113,6 +113,38 @@ func nearest_npc(actor: Node2D) -> String:
             best = id
             distance = gap
     return best
+
+## Whether one of a character's quests waits for them to talk to someone (staged characters show
+## only then).
+static func waiting_for(actor: Node, npc: String) -> bool:
+    for id in quests_of(actor):
+        if active(actor, id) and current_step(actor, id).get("type") == "talk" and current_step(actor, id).get("npc") == npc:
+            return true
+    return false
+
+## The quest waiting for a decision ("" if none) — M9d, the story's ending.
+static func choice_pending(actor: Node) -> String:
+    for id in quests_of(actor):
+        if active(actor, id) and current_step(actor, id).get("type") == "choice":
+            return id
+    return ""
+
+## Host: decide (an option's key) for the quest waiting on a choice.
+func choose(actor: Node2D, key: String) -> bool:
+    if not AUTHORITY.can_mutate(actor):
+        return false
+    var id := choice_pending(actor)
+    if id.is_empty():
+        return false
+    for option in current_step(actor, id).options:
+        if option[1] == key:
+            var state := entry(actor, id)
+            state["pick"] = key
+            _grant(actor, option[2])
+            _advance(actor, id)
+            session().queue_save()
+            return true
+    return false
 
 ## Host: take a quest at its giver.
 func accept(actor: Node2D, id: String) -> bool:
@@ -203,7 +235,11 @@ func _complete(actor: Node, id: String) -> void:
     state["done"] = true
     if quest.kind == "bounty":
         state["again"] = world_time() + QUESTS.BOUNTY_SECONDS
-    var reward: Dictionary = quest.get("reward", {})
+    _grant(actor, quest.get("reward", {}))
+    session().notify_character(actor.character_id, "Quest complete: %s!" % quest.title)
+
+## Rewards: XP, Zeni, items, profession XP, a random piece of gear of a rarity, a unique.
+func _grant(actor: Node, reward: Dictionary) -> void:
     if int(reward.get("xp", 0)) > 0:
         actor.gain_experience(int(reward.xp), "quest")
     if int(reward.get("zeni", 0)) > 0:
@@ -220,7 +256,12 @@ func _complete(actor: Node, id: String) -> void:
         var item: Dictionary = gear.roll(sources._base(rng, [], rarity, int(actor.progression.get("level", 1))), rarity, rng)
         if not actor.add_item(item):
             world.drop_gear(item, actor.global_position + Vector2(0, 12), "", actor.character_id)
-    session().notify_character(actor.character_id, "Quest complete: %s!" % quest.title)
+    if reward.has("unique"):
+        var gear := preload("res://scripts/items/gear_catalogue.gd")
+        var base: Dictionary = gear.BASES[reward.unique]
+        var item: Dictionary = gear.roll(reward.unique, int(base.get("min_rarity", 5)), world.loot_rng)
+        if not actor.add_item(item):
+            world.drop_gear(item, actor.global_position + Vector2(0, 12), "", actor.character_id)
 
 ## Host: places, the camp and nights (checked twice a second).
 func _check_places(actor: Node2D) -> void:
@@ -292,8 +333,8 @@ func _draw_overlay() -> void:
         _draw_marker(at + Vector2(0, -22), marker(me, "board_" + town), font)
     for id in _npcs:
         var npc: Node2D = _npcs[id]
-        # Vex shows himself only to whoever has come to face him.
-        npc.visible = id != "vex" or current_step(me, "main_2").get("npc", "") == "vex"
+        # The Court's people show themselves only to whoever has come to face them.
+        npc.visible = not QUESTS.is_staged(id) or waiting_for(me, id)
         if npc.visible and npc.position.distance_to(me.global_position) < 700.0:
             _draw_marker(npc.position + Vector2(0, -22), marker(me, id), font)
 
