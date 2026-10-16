@@ -27,6 +27,16 @@ const DUNGEONS := {
 const ORDER := ["thornwood_hollow", "frostfang_cavern", "ember_depths", "gloom_catacombs", "jade_grotto"]
 ## How close (px) a character must stand to a cave mouth or the way out to use it (F).
 const GATE_REACH := 30.0
+## M11b: Heroic mode — creatures and the end boss this many levels higher. Each peer's copy of
+## which dungeons are heroic follows the world's progression (DungeonFeatures).
+const HEROIC_LEVELS := 8
+static var heroic: Dictionary = {}
+
+static func heroic_bonus(id: String) -> int:
+    return HEROIC_LEVELS if bool(heroic.get(id, false)) else 0
+
+static func boss_level(id: String) -> int:
+    return int(DUNGEONS[id][7]) + heroic_bonus(id)
 
 static func origin(id: String) -> Vector2:
     return Vector2(CENTRE_X, STRIP.position.y + 6 + BAND * ORDER.find(id))
@@ -89,7 +99,7 @@ static func all_creatures() -> Array:
 static func creature_level(creature_id: String) -> int:
     for entry in all_creatures():
         if entry[0] == creature_id:
-            return entry[4]
+            return int(entry[4]) + heroic_bonus(String(creature_id).trim_prefix("dg_").rsplit("_", true, 2)[0])
     return -1
 
 static func in_strip(tile: Vector2i) -> bool:

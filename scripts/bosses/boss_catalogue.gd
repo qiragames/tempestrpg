@@ -120,6 +120,9 @@ static func radius(id: String) -> float:
     return float(entry(id)[4]) * 16.0
 
 static func level(id: String) -> int:
+    # M11b: a heroic dungeon's end boss is stronger.
+    if DUNGEON_BOSSES.has(id):
+        return preload("res://scripts/dungeons/dungeon_catalogue.gd").boss_level(id.trim_prefix("dungeon_"))
     return int(entry(id)[5])
 
 static func display_name(id: String) -> String:

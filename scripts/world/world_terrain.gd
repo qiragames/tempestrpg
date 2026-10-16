@@ -365,6 +365,9 @@ func _fill() -> void:
                 open_sea = true
                 if feature[1] != CORNER_LAYOUT[15] + Vector2i(0, SHORE_SAND[1]):
                     _land(x, y, cell)
+                # M11b: the rope bridges over the chasms (they were skipped here).
+                if map.bridge[MAP.tile_index(x, y)] == 1:
+                    bridges.set_cell(cell, Source.WATER, BRIDGE_TILE)
                 continue
             if not feature.is_empty() and not open_sea:
                 features.set_cell(cell, feature[0], feature[1])

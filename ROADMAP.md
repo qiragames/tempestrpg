@@ -134,7 +134,8 @@ Requested by the user after 17e; exact order and scope to be confirmed with the 
 ### M11 — More to do in the world (user batch 2026-10-16) · In progress, requires M9
 
 - **M11a — distinct looks for the gear tiers: Done (Claude, 2026-10-16).** The ten tiers of levels 21–48 no longer only change the name: each recolours its art in its own palette — Stormtouched storm blue, Steppeforged gold, Windwrought teal, Gloomwrought violet, Duskforged ember, Jadecarved jade, Cloudforged silver — and the three highest also glow (Starforged and Celestial a glowing edge, Ascendant a brighter double glow). Bag, equipment window, item cards, the merchant and the weapon in your character's hand all show it. Tests: `tests/tier_looks.gd` (6).
-- Next: dungeon variety (traps, levers and puzzles, keys, heroic modes), player trading, world events, Cooking/Enchanting/Tailoring, pets, controller support, armies; then release v1.0.
+- **M11b — dungeon variety: Done (Claude, 2026-10-16).** Every dungeon now has spike traps on its rope bridges (they warn, then strike: 10% of your health, 15% on Heroic), a sealed door before the boss chamber that opens when the levers in both halls are pulled, and a locked vault in the first hall opened with the dungeon's key (the Keeper, the elite of the second hall, drops it half the time; Epic gear and Zeni, Legendary on Heroic). Whoever enters an empty dungeon chooses Normal or **Heroic** (creatures and boss eight levels stronger, a Legendary piece from the boss; achievements Heroic Delver and The Heroic). An empty dungeon resets after a minute. Found while building: the rope bridges over the chasms were never drawn (only their ends) — now they are. Tests: `tests/dungeon_features.gd` (23).
+- Next: player trading, world events, Cooking/Enchanting/Tailoring, pets, controller support, armies; then release v1.0.
 
 ### M10 — Invite-only multiplayer and your own characters · Done (Claude, 2026-10-16), requires N0
 
@@ -227,6 +228,7 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-16: Claude Code added dungeon variety (M11b) on `claude/m11b-dungeons`: `DungeonFeatures` (world node; state in world progression `dungeons`, synced statics `DungeonCatalogue.heroic`, door StaticBody2Ds, traps on the shared clock), `dungeon` intent operations lever/vault and `heroic` on enter, keys as bag goods, heroic levels in `DungeonCatalogue.creature_level`/`BossCatalogue.level`.
 - 2026-10-16: Claude Code gave the gear tiers their own looks (M11a) on `claude/m11-tier-looks`: `TierLooks` recolours a tier piece's atlas icon (palette strength, glow rings) once per base, `GearCatalogue.icon_texture` uses it, so every icon and the held weapon follow.
 - 2026-10-16: Claude Code made multiplayer invite-only with your own characters (M10) on `claude/m10-invite-only`: `GameSession.close_multiplayer`, `set_imports`, `_join_world(..., bring)`, `_sync_characters` (every autosave), `_request_sync` (leaving), `_character_sync` → `CharacterImport.write_back`; world meta `imports` (optional); debug-only CLI; new pause entries and join screen; `tests/network_import.py`.
 - 2026-10-16: Claude Code added achievements and titles (M9e) on `claude/m9e-achievements`: `Achievements` (catalogue, `record`, `progress`, `check`), counted through `QuestLog.on_event` (one hook for every game event) and every 0.5 s check, the `title` intent, `AchievementsPanel` (Y), titles drawn by the quest overlay, save checks, `tests/achievements.gd` (22).

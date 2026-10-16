@@ -29,6 +29,8 @@ const ACHIEVEMENTS := {
     "raid_all": ["Raid Legend", "Help defeat every raid boss", "Combat", "Raid Legend", "set", 16, "raids"],
     "delver": ["Delver", "Defeat a dungeon's end boss", "Combat", "", "set", 1, "dungeons"],
     "dungeon_master": ["Dungeon Master", "Defeat all five dungeons' end bosses", "Combat", "Dungeon Master", "set", 5, "dungeons"],
+    "heroic_first": ["Heroic Delver", "Defeat a dungeon's end boss on Heroic", "Combat", "", "set", 1, "heroic"],
+    "heroic_all": ["The Heroic", "Defeat all five end bosses on Heroic", "Combat", "the Heroic", "set", 5, "heroic"],
     "wyrmslayer": ["Wyrmslayer", "Defeat the Eclipse Wyrm", "Combat", "Wyrmslayer", "has", 1, ["raids", "boss_eclipse_wyrm"]],
     "castaway": ["Washed Ashore", "Finish the Prologue", "Story", "the Castaway", "quest", 1, "main_0"],
     "first_shard": ["The First Shard", "Finish Chapter 1", "Story", "", "quest", 1, "main_1"],
@@ -67,7 +69,7 @@ const ACHIEVEMENTS := {
     "realm_walker": ["Realm Walker", "Find the hidden Ki Realm", "Journey", "Realm Walker", "has", 1, ["regions", "The Ki Realm"]],
 }
 ## Lists characters collect (sets) and the most entries a list may hold.
-const LISTS := ["elites", "raids", "dungeons", "regions"]
+const LISTS := ["elites", "raids", "dungeons", "regions", "heroic"]
 const LIST_LIMIT := 64
 ## Regions that count for the Wanderer (the sea and the underground do not).
 const SKIP_REGIONS := ["The Sapphire Sea", "The Underdeep"]
@@ -118,6 +120,8 @@ static func record(actor: Node, kind: String, data: Dictionary) -> void:
                 _add(actor, "elites", id)
             elif BOSSES.is_boss(id):
                 _add(actor, "dungeons", id)
+                if DUNGEONS.heroic_bonus(id.trim_prefix("dungeon_")) > 0:
+                    _add(actor, "heroic", id)
         "gather":
             _count(actor, "gathered", maxi(1, int(data.get("amount", 1))))
         "craft":

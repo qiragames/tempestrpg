@@ -1252,6 +1252,33 @@ func _run() -> void:
     await _shot("tier_looks", "Gear tiers look different: one sword from each tier (21 storm blue to 48 Ascendant pink with a glow), the Ascendant one's card")
     hud_nation.gear_panel._hovered = ""
     hud_nation.gear_panel.close()
+    _log("## 36. Dungeon variety (M11b)")
+    var features_node: Node = world.dungeon_features
+    var features_script := preload("res://scripts/dungeons/dungeon_features.gd")
+    var trap_spot: Array = features_script.traps("frostfang_cavern")[1]
+    showcase.global_position = trap_spot[0] + Vector2(0, -40)
+    world.terrain.ensure_props_at(showcase.global_position)
+    await _wait(1.0)
+    var warn_time := 0.0
+    for step in range(60):
+        if features_script.trap_phase(step * 0.05, 1) == 2:
+            warn_time = step * 0.05
+            break
+    var saved_clock: float = world.progression.world_time
+    world.progression.world_time = warn_time
+    await _wait(0.05)
+    await _shot("dungeon_traps", "Spike traps on a rope bridge in Frostfang Cavern: the plates warn, then the spikes stand up red (10% of your health, 15% on Heroic)")
+    world.progression.world_time = saved_clock
+    showcase.global_position = features_script.door_position("frostfang_cavern") + Vector2(0, -30)
+    world.terrain.ensure_props_at(showcase.global_position)
+    await _wait(1.2)
+    await _shot("dungeon_door", "The boss chamber's sealed door: pull the levers in both halls to open it")
+    showcase.global_position = features_script.lever_position("frostfang_cavern", 0) + Vector2(12, 4)
+    world.terrain.ensure_props_at(showcase.global_position)
+    _check(session.apply_action(showcase, "dungeon", {"operation": "lever", "id": "frostfang_cavern", "index": 0}), "Pulling a lever in the first hall")
+    await _wait(0.4)
+    await _shot("dungeon_lever", "A lever pulled down in the first hall; the locked vault nearby opens with the dungeon's key (the Keeper of the second hall may drop it)")
+    features_node.state("frostfang_cavern")["levers"] = [false, false]
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

@@ -818,10 +818,24 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
         return world.quests.accept(actor, payload.id) if payload.operation == "accept" else world.quests.talk(actor, payload.id)
     if action == "dungeon":
         # M7c: clients name the cave; the host checks the distance.
-        if payload.size() != 2 or not payload.get("operation") in ["enter", "leave"] or not payload.get("id") is String or payload.id.length() > 32:
+        # M11b: levers, the vault and the mode (Heroic) chosen at the cave mouth.
+        if payload.size() < 2 or payload.size() > 3 or not payload.get("operation") in ["enter", "leave", "lever", "vault"] or not payload.get("id") is String or payload.id.length() > 32:
             rejected_requests += 1
             return false
-        return world.dungeon_gates.enter(actor, payload.id) if payload.operation == "enter" else world.dungeon_gates.leave(actor, payload.id)
+        match payload.operation:
+            "enter":
+                if payload.size() == 3 and not payload.get("heroic") is bool:
+                    rejected_requests += 1
+                    return false
+                return world.dungeon_gates.enter(actor, payload.id, bool(payload.get("heroic", false)))
+            "leave":
+                return world.dungeon_gates.leave(actor, payload.id)
+            "lever":
+                if payload.size() != 3 or not (payload.get("index") is int or payload.get("index") is float):
+                    rejected_requests += 1
+                    return false
+                return world.dungeon_features.pull(actor, payload.id, int(payload.index))
+        return world.dungeon_features.open_vault(actor, payload.id)
     if action == "craft":
         # M6c: clients name a recipe; the host checks the station, ingredients and bag.
         if payload.size() != 1 or not payload.get("id") is String or payload.id.length() > 64:

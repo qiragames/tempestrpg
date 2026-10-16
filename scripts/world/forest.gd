@@ -34,6 +34,8 @@ var nodes: Node
 var boss_fx: Node2D
 ## M7c: dungeon cave mouths and ways out.
 var dungeon_gates: Node2D
+## M11b: traps, levers, doors, vaults and Heroic mode in the dungeons.
+var dungeon_features: Node2D
 ## Day, night and weather on screen.
 var sky: Node2D
 ## M9c: quest givers, bounty boards and the quest rules.
@@ -114,6 +116,8 @@ func _ready() -> void:
     # M7c: cave mouths, the ways out, and the Underdeep's darkness.
     dungeon_gates = load("res://scripts/dungeons/dungeon_gates.gd").new()
     add_child(dungeon_gates)
+    dungeon_features = load("res://scripts/dungeons/dungeon_features.gd").new(self)
+    add_child(dungeon_features)
     # Day, night and weather (and the darkness underground).
     sky = load("res://scripts/world/sky.gd").new(self)
     add_child(sky)

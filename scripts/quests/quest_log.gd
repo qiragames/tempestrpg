@@ -194,6 +194,8 @@ func on_event(actor: Node, kind: String, data: Dictionary) -> void:
     if not AUTHORITY.can_mutate(actor) or not is_instance_valid(actor):
         return
     ACH.record(actor, kind, data)
+    if world.get("dungeon_features") != null:
+        world.dungeon_features.on_event(actor, kind, data)
     _quest_event(actor, kind, data)
     unlock(actor)
 

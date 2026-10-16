@@ -34,7 +34,7 @@ func _run() -> void:
             problems.append(id + " category")
         match String(spec[4]):
             "set":
-                var most := {"raids": bosses.RAID.size(), "elites": bosses.ELITES.size(), "dungeons": bosses.DUNGEON_BOSSES.size(), "regions": regions}
+                var most := {"raids": bosses.RAID.size(), "elites": bosses.ELITES.size(), "dungeons": bosses.DUNGEON_BOSSES.size(), "regions": regions, "heroic": bosses.DUNGEON_BOSSES.size()}
                 if int(spec[5]) > int(most.get(spec[6], 0)):
                     problems.append(id + " unreachable")
             "fish":

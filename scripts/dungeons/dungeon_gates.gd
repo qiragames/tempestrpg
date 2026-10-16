@@ -26,14 +26,19 @@ func nearest(actor: Node2D) -> Array:
             return ["leave", id]
     return []
 
-func enter(actor: Node2D, id: String) -> bool:
+func enter(actor: Node2D, id: String, heroic: bool = false) -> bool:
     if not AUTHORITY.can_mutate(actor) or not DUNGEONS.DUNGEONS.has(id) or actor.global_position.distance_to(mouth_position(id)) > DUNGEONS.GATE_REACH + 4.0:
         return false
+    # M11b: whoever enters an empty dungeon chooses its mode; others join the mode it is in.
+    var features: Node = get_parent().get("dungeon_features")
+    if features != null:
+        features.choose_mode(id, heroic)
     _move(actor, exit_position(id) + Vector2(0, 26))
     if get_parent().get("quests") != null:
         get_parent().quests.on_event(actor, "dungeon", {"id": id})
     var spec: Array = DUNGEONS.DUNGEONS[id]
-    actor.session.notify_character(actor.character_id, "You climb down into %s (levels %d-%d). %s waits in the deepest chamber." % [spec[0], spec[3][0], spec[3][1], spec[5]])
+    var bonus: int = DUNGEONS.heroic_bonus(id)
+    actor.session.notify_character(actor.character_id, "You climb down into %s%s (levels %d-%d). %s waits in the deepest chamber behind a sealed door: pull the levers in both halls." % [spec[0], " — HEROIC" if bonus > 0 else "", int(spec[3][0]) + bonus, int(spec[3][1]) + bonus, spec[5]])
     return true
 
 func leave(actor: Node2D, id: String) -> bool:

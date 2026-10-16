@@ -154,11 +154,30 @@ func open_nearest() -> void:
     if not wild.is_empty():
         session.request_action("mount", {"operation": "tame", "id": wild})
         return
-    # M7c: F at a cave mouth goes in; at the way out, back up.
+    # M11b: F at a lever pulls it; at a vault, a key opens it.
+    var features = hud.get_parent().get("dungeon_features")
+    if features != null:
+        var spot: Array = features.nearest(hud.player)
+        if not spot.is_empty():
+            if spot[0] == "lever":
+                session.request_action("dungeon", {"operation": "lever", "id": spot[1], "index": spot[2]})
+            else:
+                session.request_action("dungeon", {"operation": "vault", "id": spot[1]})
+            return
+    # M7c: F at a cave mouth goes in (M11b: an empty dungeon asks Normal or Heroic); at the way
+    # out, back up.
     var gates = hud.get_parent().get("dungeon_gates")
     if gates != null:
         var gate: Array = gates.nearest(hud.player)
         if not gate.is_empty():
+            if gate[0] == "enter" and features != null and features.inside(gate[1]).is_empty():
+                var dungeons := preload("res://scripts/dungeons/dungeon_catalogue.gd")
+                var spec: Array = dungeons.DUNGEONS[gate[1]]
+                hud.dialog_panel.open(spec[0], "Levels %d-%d. %s waits in the deepest chamber.\nHeroic: creatures and boss %d levels stronger, a Legendary piece from the boss, harder traps." % [spec[3][0], spec[3][1], spec[5], dungeons.HEROIC_LEVELS], [
+                    ["Enter", func(): session.request_action("dungeon", {"operation": "enter", "id": gate[1], "heroic": false})],
+                    ["Enter on Heroic", func(): session.request_action("dungeon", {"operation": "enter", "id": gate[1], "heroic": true})],
+                    ["Not now", func(): pass]])
+                return
             session.request_action("dungeon", {"operation": gate[0], "id": gate[1]})
             return
     # M6a: F at a tree or ore rock of the world works it (professions).
