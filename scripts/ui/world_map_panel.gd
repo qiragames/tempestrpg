@@ -401,11 +401,9 @@ func _draw_map() -> void:
         if child is CharacterBody2D and child.has_method("race") and child != hud.player and _shown(Vector2(MAP.to_tile(child.global_position))):
             var party: Node = hud.get_parent().get("party")
             var mate: bool = party != null and party.same_party(hud.player.character_id, child.character_id)
-            _canvas.draw_rect(Rect2(to_map(child.global_position).round() - Vector2(1.5, 1.5) if mate else to_map(child.global_position).round() - Vector2(1, 1), Vector2(4, 4) if mate else Vector2(3, 3)), Color("ff8adf") if mate else Color.WHITE)
-    var me := to_map(hud.player.global_position).round()
-    if fmod(_time, 0.8) < 0.55:
-        _canvas.draw_circle(me, 3.5, Color(0.03, 0.04, 0.06))
-        _canvas.draw_circle(me, 2.5, UI.CYAN)
+            UI.draw_arrow(_canvas, to_map(child.global_position).round(), child.facing, 5.0 if mate else 4.5, Color("ff8adf") if mate else Color(0.92, 0.94, 1.0))
+    # You: an arrow showing where you face, with a soft pulse.
+    UI.draw_arrow(_canvas, to_map(hud.player.global_position).round(), hud.player.facing, 7.0, UI.CYAN, true)
 
 func open() -> void:
     if hud.menu_open():

@@ -127,9 +127,8 @@ func _draw_view() -> void:
                 var at := to_minimap(node.global_position, centre)
                 if at.distance_to(size / 2) > RADIUS - 4:
                     at = size / 2 + (at - size / 2).normalized() * (RADIUS - 4)
-                _view.draw_circle(at.round(), 3.0, Color(0.02, 0.03, 0.06, 0.9))
-                _view.draw_circle(at.round(), 2.0, Color("ff8adf"))
+                UI.draw_arrow(_view, at.round(), node.facing, 3.5, Color("ff8adf"))
             else:
-                _dot(to_minimap(node.global_position, centre), Color.WHITE)
-    _view.draw_circle(size / 2, 2.5, Color(0.02, 0.03, 0.06))
-    _view.draw_circle(size / 2, 1.8, UI.CYAN)
+                UI.draw_arrow(_view, to_minimap(node.global_position, centre).round(), node.facing, 3.0, Color(0.92, 0.94, 1.0))
+    # You: the arrow points where you face.
+    UI.draw_arrow(_view, size / 2, me.facing, 5.5, UI.CYAN, true)

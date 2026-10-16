@@ -205,3 +205,26 @@ static func menu_entry(button: Button) -> void:
 static func heading(label: Label) -> Label:
     label.add_theme_color_override("font_color", GOLD_LIGHT)
     return label
+
+## A map marker (user request: an arrow that shows where a character faces, like a mouse pointer
+## but modern): a notched navigation arrow with a dark outline, a two-tone body and, for yourself,
+## a soft pulsing ring. `facing` is the character's facing direction.
+static func draw_arrow(canvas: CanvasItem, at: Vector2, facing: Vector2, size: float, colour: Color, ring: bool = false) -> void:
+    var direction: Vector2 = facing.normalized() if facing.length() > 0.1 else Vector2.UP
+    var side: Vector2 = direction.orthogonal()
+    var tip: Vector2 = at + direction * size
+    var left: Vector2 = at - direction * size * 0.75 + side * size * 0.7
+    var right: Vector2 = at - direction * size * 0.75 - side * size * 0.7
+    var notch: Vector2 = at - direction * size * 0.3
+    if ring:
+        var pulse: float = fmod(Time.get_ticks_msec() / 1000.0, 1.4) / 1.4
+        canvas.draw_arc(at, size * (1.1 + pulse * 0.9), 0.0, TAU, 24, Color(colour, 0.55 * (1.0 - pulse)), 1.0, true)
+    # Outline: the same shape, a pixel larger.
+    var grow: float = 1.2
+    var outline := PackedVector2Array([at + (tip - at) * grow + direction * 0.6, at + (left - at) * grow, notch - direction * 0.8, at + (right - at) * grow])
+    canvas.draw_colored_polygon(outline, Color(0.02, 0.03, 0.06, 0.95))
+    # Two-tone body: the lit half and the shaded half.
+    canvas.draw_colored_polygon(PackedVector2Array([tip, left, notch]), colour.lightened(0.25))
+    canvas.draw_colored_polygon(PackedVector2Array([tip, notch, right]), colour.darkened(0.2))
+    canvas.draw_line(tip, notch, Color(1, 1, 1, 0.55), 1.0, true)
+

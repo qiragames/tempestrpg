@@ -299,7 +299,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (960x540)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Epic Sacred Arbalest
+- [x] The chest gave an Uncommon-or-better item: Rare Crimson Warbow
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (960x540)
@@ -396,7 +396,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 16. Sound and effects (step 23)
 - Sounds played during this run: analysis ×3, build ×3, chest ×1, defeat ×7, evolve ×1, form ×2, gather ×12, hit ×13, hurt ×3, learned ×2, level_up ×3, magicules ×3, swing ×12, ui_accept ×16, ui_move ×13
-- Effects shown: aura ×3, boost ×4, claw ×7, hit_spark ×53, ring ×7, slash ×13, smoke ×12, sparkle ×4
+- Effects shown: aura ×3, boost ×4, claw ×7, hit_spark ×54, ring ×7, slash ×13, smoke ×12, sparkle ×4
 - [x] The run produced the "swing" cue
 - [x] The run produced the "hit" cue
 - [x] The run produced the "defeat" cue
@@ -814,6 +814,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## System messages seen
 
+- A Mysterious Egg! Use it from your bag to hatch a pet.
 - Achievement unlocked: First Blood!
 - +21 XP (defeat).
 - +9 Zeni (defeat).
@@ -872,7 +873,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +1500 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Epic Hunter's Ring.
+- Trial reward: Rare Silvered Hood.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +21 XP (defeat).
@@ -890,8 +891,8 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Epic Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Epic Sacred Arbalest.
-- +38 Zeni (chest).
+- Chest opened: Rare Crimson Warbow.
+- +41 Zeni (chest).
 - World "Showcase World" loaded. Esc: pause menu — switch on Multiplayer to invite friends.
 - Multiplayer is on: Invite a Friend makes one code per friend.
 - Multiplayer is off: your world is single player again.

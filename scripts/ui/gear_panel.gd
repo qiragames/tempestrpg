@@ -284,8 +284,7 @@ func refresh() -> void:
     get_node("Sets").text = "\n".join(set_lines)
     _doll.queue_redraw()
 
-## The character, large, with the worn pieces drawn on: helmet, armour, gloves, boots, weapon in
-## hand, jewellery at the neck.
+## The character, large (the worn pieces show in the slots around it).
 func _draw_doll() -> void:
     var player = hud.player
     var frames: SpriteFrames = SPRITES.frames(player._body_id())
@@ -294,29 +293,8 @@ func _draw_doll() -> void:
     var rect := Rect2(Vector2(_doll.size.x / 2.0 - 48, 66), Vector2(96, 96))
     _doll.draw_circle(Vector2(_doll.size.x / 2.0, 172), 50, Color(0.12, 0.14, 0.2, 0.6))
     _doll.draw_texture_rect(body, rect, false)
-    var equipment: Dictionary = player.progression.get("equipment", {})
-    var parts := {"body": [Vector2(0, 14), 32.0], "feet": [Vector2(0, 38), 22.0], "hands": [Vector2(-22, 16), 16.0], "head": [Vector2(0, -20), 32.0],
-        "accessory_1": [Vector2(-6, 2), 11.0], "accessory_2": [Vector2(6, 2), 11.0], "weapon": [Vector2(34, 6), 38.0]}
-    var centre := rect.get_center()
-    for slot in ["feet", "body", "hands", "accessory_1", "accessory_2", "head", "weapon"]:
-        var item: Dictionary = player.item_by_id(equipment.get(slot, ""))
-        if item.is_empty():
-            continue
-        var icon := UI.gear_icon(item)
-        if icon == null:
-            continue
-        var size: float = parts[slot][1]
-        var at: Vector2 = centre + parts[slot][0] - Vector2(size, size) / 2.0
-        if slot == "hands":
-            # Both hands.
-            _doll.draw_texture_rect(icon, Rect2(at, Vector2(size, size)), false)
-            _doll.draw_texture_rect(icon, Rect2(centre + Vector2(22, 16) - Vector2(size, size) / 2.0, Vector2(size, size)), false)
-            continue
-        if int(item.rarity) >= 3:
-            var element: String = String(GEAR.BASES[item.base].get("element", ""))
-            var glow: Color = preload("res://scripts/items/element_catalogue.gd").color(element) if not element.is_empty() else Color(GEAR.RARITY_COLORS[int(item.rarity)])
-            _doll.draw_circle(at + Vector2(size, size) / 2.0, size * 0.55, Color(glow, 0.18))
-        _doll.draw_texture_rect(icon, Rect2(at, Vector2(size, size)), false)
+    # User request: the worn pieces are not pasted onto the character (the art has no wearable
+    # layers); the slots around it show them.
 
 func _process(_delta: float) -> void:
     if visible:

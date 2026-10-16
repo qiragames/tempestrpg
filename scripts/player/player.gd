@@ -1488,47 +1488,11 @@ func _draw_gear() -> void:
     if is_instance_valid(_weapon_fx) and item_by_id(progression.get("equipment", {}).get("weapon", "")).is_empty():
         _update_weapon_fx({})
         _weapon_icon_key = ""
-    for slot in GEAR.SLOTS:
-        var item: Dictionary = item_by_id(progression.get("equipment", {}).get(slot, ""))
-        if item.is_empty():
-            continue
-        var color := Color(GEAR.RARITY_COLORS[int(item.rarity)])
-        if slot == "weapon":
-            _draw_weapon(item)
-            continue
-        match GEAR.BASES[item.base].look:
-            "hood":
-                draw_rect(Rect2(-6, -12, 12, 4), color.darkened(0.2))
-            "helm":
-                draw_rect(Rect2(-6, -13, 12, 4), color)
-                draw_rect(Rect2(-1, -15, 2, 2), color.lightened(0.3))
-            "vest":
-                draw_rect(Rect2(-5, 2, 10, 4), color.darkened(0.15))
-            "mail":
-                draw_rect(Rect2(-6, 1, 12, 5), color)
-                draw_rect(Rect2(-4, 2, 8, 1), color.lightened(0.4))
-            "gloves":
-                draw_rect(Rect2(-8, 3, 2, 2), color)
-                draw_rect(Rect2(6, 3, 2, 2), color)
-            "boots":
-                draw_rect(Rect2(-5, 7, 3, 2), color)
-                draw_rect(Rect2(2, 7, 3, 2), color)
-            "ring":
-                draw_circle(Vector2(7, 4), 1.2, color)
-            "amulet":
-                draw_rect(Rect2(-1, 0, 2, 2), color)
-            "sword":
-                draw_line(Vector2(9, 4), Vector2(9, -8), color, 2.0)
-                draw_rect(Rect2(7, 2, 5, 1), color.darkened(0.3))
-            "spear":
-                draw_line(Vector2(10, 8), Vector2(10, -14), color.darkened(0.3), 1.0)
-                draw_rect(Rect2(9, -17, 3, 4), color)
-            "scythe":
-                draw_line(Vector2(10, 8), Vector2(10, -12), color.darkened(0.3), 1.0)
-                draw_arc(Vector2(5, -12), 5.0, -PI, 0.0, 6, color, 2.0)
-            "bow":
-                draw_arc(Vector2(8, -1), 7.0, -1.4, 1.4, 8, color, 1.5)
-                draw_line(Vector2(9, -8), Vector2(9, 6), Color(0.9, 0.9, 0.85, 0.7), 1.0)
+    # User request: no coloured bars for worn armour and jewellery (they looked odd); the weapon
+    # in hand is the only gear drawn on the character.
+    var weapon: Dictionary = item_by_id(progression.get("equipment", {}).get("weapon", ""))
+    if not weapon.is_empty():
+        _draw_weapon(weapon)
 
 func _draw_body() -> void:
     # The animated body replaces these placeholder shapes; they remain only as a fallback.
