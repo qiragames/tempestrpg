@@ -83,10 +83,12 @@ static func bag_item(id: String) -> bool:
     return preload("res://scripts/skills/skill_catalogue.gd").MATERIALS.has(id) or is_good(id)
 
 static func is_good(id: String) -> bool:
-    return preload("res://scripts/dungeons/dungeon_features.gd").is_key(id) or CONSUMABLES.has(id) or scroll_skill(id) in COMMON_SCROLLS + RARE_SCROLLS or not TRAVEL.ticket_harbour(id).is_empty() or TRAVEL.is_fish(id) or UPGRADES.is_rune(id) or UPGRADES.is_augment(id) or REALM.is_orb(id) or PRO.is_resource(id) or CRAFT.is_good(id)
+    return id == "pet_egg" or preload("res://scripts/dungeons/dungeon_features.gd").is_key(id) or CONSUMABLES.has(id) or scroll_skill(id) in COMMON_SCROLLS + RARE_SCROLLS or not TRAVEL.ticket_harbour(id).is_empty() or TRAVEL.is_fish(id) or UPGRADES.is_rune(id) or UPGRADES.is_augment(id) or REALM.is_orb(id) or PRO.is_resource(id) or CRAFT.is_good(id)
 
 ## [name, category, description] of a good.
 static func good_info(id: String) -> Array:
+    if id == "pet_egg":
+        return ["Mysterious Egg", "Pets", "Something moves inside. Use it to hatch a pet you do not have yet (V: pets)."]
     var features := preload("res://scripts/dungeons/dungeon_features.gd")
     if features.is_key(id):
         return [features.key_name(id), "Keys", "Opens the locked vault in the first hall of its dungeon (F at the vault)."]

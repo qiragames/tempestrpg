@@ -75,4 +75,6 @@ Quest givers (M9c): `npc_<id>` hold `npc_<id>_walk.png` (four-direction walk she
 
 `eclipse_wyrm` (M9d): `eclipse_wyrm_idle.png` and `eclipse_wyrm_run.png`, four 124 × 118 frames each, assembled from Boss/DragonBlue's Head, Wing (mirrored for the left), Body1, Body2 and BodyEnd with a small wing flap; the boss tint makes it violet.
 
+Pets (M11f): `pets/pet_<id>.png` (two side-view frames of 16 × 16) and `pet_<id>_face.png` (38 × 38), copied unchanged from Actor/Animal: cat Cat, ginger_cat CatOrange, dog Dog, golden_pup DogYellow, hamster Hamster, parrot Parrot (red), lion_cub LionCub, frog Frog, chick Chicken (cute), racoon Racoon.
+
 Licences and credits: see `CREDITS.md` at the repository root and the licence files next to each pack in `assets/source/packs/`.

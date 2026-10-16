@@ -198,6 +198,8 @@ func on_event(actor: Node, kind: String, data: Dictionary) -> void:
         world.dungeon_features.on_event(actor, kind, data)
     if world.get("events") != null:
         world.events.on_event(actor, kind, data)
+    if world.get("pets") != null:
+        world.pets.on_event(actor, kind, data)
     _quest_event(actor, kind, data)
     unlock(actor)
 

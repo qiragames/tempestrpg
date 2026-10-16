@@ -144,6 +144,9 @@ static func validate_player(state: Variant, id: String) -> bool:
         return false
     if not progression.get("quests") is Dictionary or not progression.get("equipment") is Dictionary:
         return false
+    # M11f: pets (known, owned once) and the one following.
+    if not preload("res://scripts/pets/pet_catalogue.gd").valid(progression):
+        return false
     # M9e: achievements (known ids: true), stats (counters and short lists of names) and the worn title.
     var achievements_catalogue := preload("res://scripts/progression/achievements.gd")
     if progression.has("achievements"):

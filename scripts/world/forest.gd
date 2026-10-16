@@ -31,6 +31,8 @@ var rivals: Node2D
 var siege: Node
 ## M11d: meteor showers, town invasions and treasure goblins.
 var events: Node2D
+## M11f: pets following their owners.
+var pets: Node2D
 var respawner: Node
 ## M6a: harvestable trees and ore rocks (professions).
 var nodes: Node
@@ -80,6 +82,8 @@ func _ready() -> void:
     add_child(siege)
     events = load("res://scripts/world/world_events.gd").new(self)
     add_child(events)
+    pets = load("res://scripts/pets/pet_followers.gd").new(self)
+    add_child(pets)
     nodes = load("res://scripts/professions/resource_nodes.gd").new(self)
     add_child(nodes)
     trial = load("res://scripts/trials/proving_trial.gd").new()

@@ -129,6 +129,10 @@ func gain_zeni(amount: int, reason: String) -> void:
         return
     if DEV.zeni and DEV.applies(self):
         amount *= DEV.ZENI_FACTOR
+    # M11f: a pet's Zeni bonus.
+    var pet_zeni: float = preload("res://scripts/pets/pet_catalogue.gd").bonus(progression, "zeni")
+    if pet_zeni > 0.0:
+        amount = int(round(amount * (1.0 + pet_zeni / 100.0)))
     progression["zeni"] = mini(TRADE.MAX_ZENI, zeni() + amount)
     if reason in ["defeat", "chest", "pile"]:
         session.notify_character(character_id, "+%d Zeni (%s)." % [amount, reason])
@@ -220,6 +224,9 @@ func use_good(id: String) -> bool:
             _tonic_left = TRADE.CONSUMABLE_SECONDS
         session.notify_character(character_id, "%s: +40 over 5 s." % TRADE.CONSUMABLES[id][0])
         return true
+    # M11f: a Mysterious Egg hatches a pet.
+    if id == "pet_egg":
+        return get_parent().pets.use_egg(self) if get_parent() != null and get_parent().get("pets") != null else false
     if UPGRADES.is_rune(id):
         return socket_rune(id)
     if UPGRADES.is_augment(id):
@@ -468,6 +475,10 @@ func gain_experience(amount: int, reason: String) -> void:
     # M11e: Scholar's Soup and the Moonlit Feast ("wisdom").
     if elixirs.has("wisdom"):
         amount = int(round(amount * (1.0 + elixir("wisdom") / 100.0)))
+    # M11f: a pet's XP bonus.
+    var pet_xp: float = preload("res://scripts/pets/pet_catalogue.gd").bonus(progression, "xp")
+    if pet_xp > 0.0:
+        amount = int(round(amount * (1.0 + pet_xp / 100.0)))
     var gained: int = LEVELING.grant(self, amount)
     if is_instance_valid(session.world):
         var text := "+%d XP (%s)." % [amount, reason]
@@ -822,6 +833,8 @@ func gear_bonus(stat: String) -> float:
     # M6c: the Iron Skin elixir adds defence.
     if stat == "defense":
         total += elixir("iron")
+    # M11f: the following pet.
+    total += preload("res://scripts/pets/pet_catalogue.gd").bonus(progression, stat)
     # Augments count like gear (their maxima are applied when installed).
     return total + augment_bonus(stat)
 

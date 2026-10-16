@@ -70,6 +70,8 @@ const ACHIEVEMENTS := {
     "goblin_slayer": ["Goblin Slayer", "Catch a treasure goblin", "Journey", "Goblin Slayer", "stat", 1, "goblins"],
     "town_defender": ["Town Defender", "Repel 5 town invasions", "Journey", "Town Defender", "stat", 5, "invasions"],
     "stargazer": ["Stargazer", "Collect 10 meteorites", "Journey", "Stargazer", "stat", 10, "meteorites"],
+    "pet_first": ["A Friend for the Road", "Hatch your first pet", "Journey", "", "pets", 1, ""],
+    "beast_friend": ["Beast Friend", "Hatch every pet", "Journey", "Beast Friend", "pets", 10, ""],
     "tycoon": ["Tycoon", "Hold 100,000 Zeni", "Journey", "Tycoon", "zeni", 100000, ""],
     "wanderer": ["Wanderer", "Set foot in every land of the world", "Journey", "Wanderer", "set", 16, "regions"],
     "realm_walker": ["Realm Walker", "Find the hidden Ki Realm", "Journey", "Realm Walker", "has", 1, ["regions", "The Ki Realm"]],
@@ -186,6 +188,8 @@ static func progress(actor: Node, id: String) -> Array:
             return [1 if story is Dictionary and String(story.get("pick", "")) == what else 0, 1]
         "zeni":
             return [int(actor.progression.get("zeni", 0)), target]
+        "pets":
+            return [actor.progression.get("pets", []).size() if actor.progression.get("pets") is Array else 0, target]
     return [0, 1]
 
 ## Host: unlock everything a character has earned; returns the newly unlocked ids.

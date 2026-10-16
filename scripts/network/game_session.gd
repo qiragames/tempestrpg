@@ -912,6 +912,21 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             "sail":
                 return world.harbours.sail(actor, here, target)
         return false
+    if action == "pet":
+        # M11f: hatch an egg or choose the pet that follows you.
+        match payload.get("operation"):
+            "hatch":
+                if payload.size() != 1:
+                    rejected_requests += 1
+                    return false
+                return world.pets.use_egg(actor)
+            "choose":
+                if payload.size() != 2 or not payload.get("id") is String or payload.id.length() > 32:
+                    rejected_requests += 1
+                    return false
+                return world.pets.choose(actor, payload.id)
+        rejected_requests += 1
+        return false
     if action == "event":
         # M11d: collecting a meteorite (the host checks the distance).
         if payload.size() != 2 or payload.get("operation") != "collect" or not (payload.get("index") is int or payload.get("index") is float):
