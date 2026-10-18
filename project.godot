@@ -124,6 +124,22 @@ skill_4={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"physical_keycode":52)]
 }
+skill_5={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":53)]
+}
+skill_6={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":54)]
+}
+skill_7={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":55)]
+}
+skill_8={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":56)]
+}
 
 gear_active={
 "deadzone": 0.2,

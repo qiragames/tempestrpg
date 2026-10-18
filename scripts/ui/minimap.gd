@@ -31,9 +31,15 @@ func _init(owner_hud: CanvasLayer) -> void:
     ring.size = size
     ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
     ring.draw.connect(func():
-        ring.draw_arc(size / 2, RADIUS - 1, 0, TAU, 48, UI.GOLD_DARK, 3.0)
-        ring.draw_arc(size / 2, RADIUS - 1, 0, TAU, 48, UI.GOLD, 1.0)
-        ring.draw_colored_polygon(PackedVector2Array([size / 2 + Vector2(0, -RADIUS - 3), size / 2 + Vector2(3, -RADIUS + 2), size / 2 + Vector2(-3, -RADIUS + 2)]), UI.GOLD_LIGHT)
+        # M13b: the pack's navy rim with a dark outline and gold studs at the four points.
+        ring.draw_arc(size / 2, RADIUS, 0, TAU, 64, UI.NAVY_DARK, 5.0)
+        ring.draw_arc(size / 2, RADIUS, 0, TAU, 64, UI.PANEL, 3.0)
+        ring.draw_arc(size / 2, RADIUS - 1, 0, TAU, 64, Color(UI.TEXT_DIM, 0.6), 1.0)
+        for angle in [0.0, PI / 2, PI, PI * 1.5]:
+            var stud: Vector2 = (size / 2 + Vector2.RIGHT.rotated(angle) * RADIUS).round()
+            ring.draw_rect(Rect2(stud - Vector2(2, 2), Vector2(4, 4)), UI.NAVY_DARK)
+            ring.draw_rect(Rect2(stud - Vector2(1, 1), Vector2(2, 2)), UI.GOLD_LIGHT)
+        ring.draw_colored_polygon(PackedVector2Array([size / 2 + Vector2(0, -RADIUS - 4), size / 2 + Vector2(3, -RADIUS + 1), size / 2 + Vector2(-3, -RADIUS + 1)]), UI.GOLD_LIGHT)
     )
     # The ring sits outside the clip (drawn by a sibling above this node, see `ring_node`).
     ring.name = "Ring"

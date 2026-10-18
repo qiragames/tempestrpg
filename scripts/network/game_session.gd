@@ -1122,7 +1122,7 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             return actor.get_node("MeleeAttack").attack(actor.facing)
         "absorb":
             return actor.get_node("Absorption").attempt_absorb()
-        "skill_1", "skill_2", "skill_3", "skill_4":
+        "skill_1", "skill_2", "skill_3", "skill_4", "skill_5", "skill_6", "skill_7", "skill_8":
             var skill: Resource = actor.get_node("SkillBook").skill_at_slot(int(action.right(1)) - 1)
             return actor.get_node("MeleeAttack").attack_skill(actor.facing, skill.id) if skill else false
     rejected_requests += 1

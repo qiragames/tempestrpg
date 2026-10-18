@@ -172,7 +172,7 @@ func _run() -> void:
     var data: Dictionary = CODEC.capture_entities(world)
     data.merge({"version": STORE.VERSION, "world_id": "trial_world", "players": {"host": CODEC.capture_player(actor)}, "progression": world.progression.duplicate(true)})
     data.erase("trial")
-    _check(STORE.VERSION >= 10 and STORE.validate(data) and data.players.host.slots.size() == 4 and data.players.host.analysis.focus == 20.0, "v10 save keeps four slots and the armed focus")
+    _check(STORE.VERSION >= 10 and STORE.validate(data) and data.players.host.slots.size() == 8 and data.players.host.analysis.focus == 20.0, "v10 save keeps its slots (eight since v39) and the armed focus")
     var restored = _guest("restored", Vector2(600, 600), false)
     CODEC.apply_player(restored, JSON.parse_string(JSON.stringify(data.players.host)), world, false)
     _check(restored.get_node("Absorption").focus_left == 20.0 and restored.get_node("SkillBook")._slots.has(&"predator_focus"), "Reload restores focus timer and the Predator Focus slot")
@@ -196,7 +196,7 @@ func _run() -> void:
     legacy.players.host.skill_ids.erase("predator_focus")
     legacy.players.host.skill_evidence.trials = []
     var migrated: Dictionary = STORE.migrate(legacy)
-    _check(STORE.validate(migrated) and migrated.players.host.slots.size() == 4 and migrated.players.host.analysis.focus == 0.0, "v9 characters gain an empty fourth slot and no focus")
+    _check(STORE.validate(migrated) and migrated.players.host.slots.size() == 8 and migrated.players.host.analysis.focus == 0.0, "v9 characters gain empty slots (eight since v39) and no focus")
     var overview: Array = book.describe()
     _check(overview.any(func(entry): return entry.id == "predator_focus" and entry.known) and not overview.any(func(entry): return entry.tier == "Ultimate"), "Overview lists the known Unique; no Ultimate is obtainable")
     print("Trial and Unique checks: %d passed, %d failed" % [checks - failures, failures])

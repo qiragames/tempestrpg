@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 38
+const VERSION := 39
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -95,7 +95,7 @@ static func validate_player(state: Variant, id: String) -> bool:
         return false
     var known = state.get("skill_ids")
     var slots = state.get("slots")
-    if not known is Array or known.size() > CODEC.SKILLS.size() or not slots is Array or slots.size() != 4:
+    if not known is Array or known.size() > CODEC.SKILLS.size() or not slots is Array or slots.size() != 8:
         return false
     var seen: Dictionary = {}
     for skill in known:
@@ -932,6 +932,16 @@ static func migrate(data: Variant) -> Variant:
                 for profession in ["cooking", "enchanting", "tailoring"]:
                     if not state.progression.professions.has(profession):
                         state.progression.professions[profession] = 0
+    # v39 (M13b): the hotbar has eight slots; the four saved ones keep their places.
+    if data.get("version") == 38:
+        if not data.get("players") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = 39
+        for id in data.players:
+            var state: Variant = data.players[id]
+            if state is Dictionary and state.get("slots") is Array and state.slots.size() == 4:
+                state.slots.append_array(["", "", "", ""])
     return data
 
 ## Saved enemy entry for a raid boss at full health in its arena (v33 and new worlds).

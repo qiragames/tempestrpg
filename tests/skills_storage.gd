@@ -75,7 +75,7 @@ func _run() -> void:
     _activate_learned(player)
     await _frames(1)
     _check(book.skill_at_slot(0).id == &"rending_bite" and not hud._slots[0].disabled, "The activated skill equips to the first hotbar slot")
-    _check(hud._slots[0].text.contains("Rending Bite") and hud._log.text.contains("acquired"), "HUD must show the learned skill and acquisition event")
+    _check(hud._slots[0].tooltip_text.contains("Rending Bite") and hud._slots[0].icon != null and hud._log.text.contains("acquired"), "HUD must show the learned skill (icon, name in the tooltip) and acquisition event")
 
     second.position = Vector2(504, 340)
     await _frames(3)

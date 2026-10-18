@@ -110,7 +110,7 @@ func _run() -> void:
     _check(hud.menu_open() and not hud._modal.visible, "The equipment window is modal")
     hud.gear_panel.close()
     # --- Hotbar
-    _check(hud._slots[0].text == "Empty" and hud._slots[0].disabled, "Empty hotbar slots read Empty and are disabled")
+    _check(hud._slots.size() == 8 and hud._slots[0].text == "" and hud._slots[0].disabled, "Eight hotbar slots; empty ones are blank and disabled")
     world.queue_free()
     await _frames()
     print("UI style checks: %d passed, %d failed" % [checks - failures, failures])

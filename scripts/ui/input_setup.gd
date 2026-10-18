@@ -11,6 +11,7 @@ const REBINDABLE := [
     ["move_up", "Move up"], ["move_down", "Move down"], ["move_left", "Move left"], ["move_right", "Move right"],
     ["attack", "Strike"], ["absorb", "Absorb"], ["interact", "Interact / talk"], ["transform", "Mimic form"],
     ["skill_1", "Skill 1"], ["skill_2", "Skill 2"], ["skill_3", "Skill 3"], ["skill_4", "Skill 4"],
+    ["skill_5", "Skill 5"], ["skill_6", "Skill 6"], ["skill_7", "Skill 7"], ["skill_8", "Skill 8"],
     ["use_draught", "Draught"], ["use_tonic", "Tonic"], ["gear_active", "Gear active"], ["mount", "Ride"],
     ["inventory", "Bag"], ["skill_tree", "Skill tree"], ["world_map", "World map"], ["quests", "Quests"],
     ["professions", "Professions"], ["party", "Party"], ["achievements", "Titles"], ["pets", "Pets"], ["army", "Army"],

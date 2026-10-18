@@ -1,7 +1,7 @@
-# Class skill icons (M12c)
+# Skill icons (M12c, M13b)
 
 16x16 icons cut from the free edition of Clockwork Raven's **Raven Fantasy Icons**
 (https://clockworkraven.itch.io/raven-fantasy-icons). Licence (author's page): usable in any project
 and modifiable, not to be redistributed or sold as assets; the free edition covers personal use, which
 the author defines as games released for free with no microtransactions or paid ads. If TempestRPG is
-ever sold, buy a paid copy first. One file per class skill (`<skill id>.png`), shown on the hotbar.
+ever sold, buy a paid copy first. One file per skill (`<skill id>.png`: the 14 class skills since M12c, every other skill since M13b), shown on the hotbar.

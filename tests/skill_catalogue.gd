@@ -86,7 +86,7 @@ func _run() -> void:
     _check(book.record_analysis(&"forest_gnasher").is_empty() and book.evidence.analyzed == ["forest_gnasher"] and book.known_ids().size() == 1, "Repeated analysis is idempotent")
     var overview: Array = book.describe()
     _check(overview.size() == CATALOGUE.RULES.size() and overview[0].known and overview[0].requirements[0].met, "Read-only overview reports known skills and met requirements")
-    _check(not book.assign_slot(5, &"rending_bite") and not book.assign_slot(-1, &"rending_bite"), "Out-of-range slots rejected")
+    _check(not book.assign_slot(8, &"rending_bite") and not book.assign_slot(-1, &"rending_bite"), "Out-of-range slots rejected (eight slots since v39)")
     _check(not book.assign_slot(1, &"storm"), "Unknown skills cannot be equipped")
     _check(book.assign_slot(2, &"rending_bite") and book.skill_at_slot(0) == null and book.skill_at_slot(2).id == &"rending_bite", "Equipping moves a skill instead of duplicating it")
     _check(not book.assign_slot(2, &"rending_bite"), "Re-equipping the same slot is a no-op")

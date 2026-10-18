@@ -46,6 +46,11 @@ func _init(owner_hud: CanvasLayer) -> void:
         var tab: Button = hud._button("", FRAME.position + Vector2(x, 36), Vector2(tab_width, 34), self)
         tab.add_theme_font_size_override("font_size", 8)
         tab.clip_text = true
+        # M13b: the profession's icon over its level; the name is the tooltip.
+        tab.icon = load("res://assets/game/ui/icons/professions/%s.png" % id)
+        tab.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        tab.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+        tab.tooltip_text = PRO.PROFESSIONS[id][0]
         tab.pressed.connect(func(): _select(id))
         tab.set_meta("id", id)
         _tabs.append(tab)
@@ -127,7 +132,7 @@ func refresh() -> void:
     var progression: Dictionary = hud.player.progression
     for tab in _tabs:
         var id: String = tab.get_meta("id")
-        tab.text = "%s\nLv %d" % [PRO.PROFESSIONS[id][0], PRO.level_of(progression, id)]
+        tab.text = "Lv %d" % PRO.level_of(progression, id)
         tab.modulate = Color(1, 1, 1) if id == _selected else Color(0.7, 0.7, 0.7)
     var xp: int = int(progression.get("professions", {}).get(_selected, 0))
     var level := PRO.level_for(xp)

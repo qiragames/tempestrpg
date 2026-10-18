@@ -349,12 +349,16 @@ func _label(text: String, position: Vector2, size: Vector2, parent: Node, font_s
     return label
 
 func _build_hotbar() -> void:
+    # M13b: eight icon slots (keys 1-8); the name is in the tooltip.
     _backdrop(Rect2(176, 294, 304, 46))
-    for index in range(4):
-        var button := _button("Empty", Vector2(182 + index * 74, 302), Vector2(70, 34), self)
+    for index in range(8):
+        var button := _button("", Vector2(181 + index * 37, 302), Vector2(34, 34), self)
         button.add_theme_font_size_override("font_size", 8)
         button.focus_mode = Control.FOCUS_NONE
         button.clip_text = true
+        button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+        button.alignment = HORIZONTAL_ALIGNMENT_CENTER
         button.pressed.connect(_activate_slot.bind(index))
         for state in ["normal", "hover", "pressed", "disabled"]:
             button.add_theme_stylebox_override(state, UI.round_slot({"normal": "slot", "hover": "slot_hover", "pressed": "slot_pressed", "disabled": "slot_disabled"}[state]))
@@ -362,7 +366,7 @@ func _build_hotbar() -> void:
         # Key badge above the slot, like the reference.
         var badge := Label.new()
         badge.text = str(index + 1)
-        badge.position = Vector2(182 + index * 74 + 29, 288)
+        badge.position = Vector2(181 + index * 37 + 11, 288)
         badge.size = Vector2(12, 12)
         badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
         badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -414,6 +418,24 @@ func _refresh_clock() -> void:
     var weather: String = sky.weather_id if sky != null else "clear"
     var symbol: String = "☾" if day_night.is_night(time) and weather == "clear" else String(day_night.WEATHER[weather][2])
     get_node("Clock").text = "%s  %s %s" % [day_night.clock_text(time), symbol, day_night.WEATHER[weather][0]]
+    # M13b: the pack's sky face for the hour, beside the minimap.
+    if not has_node("ClockFace"):
+        var face := TextureRect.new()
+        face.name = "ClockFace"
+        face.position = minimap.position + Vector2(-20, 58)
+        face.size = Vector2(24, 24)
+        face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+        face.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+        face.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        add_child(face)
+        # Beside the minimap, under every window.
+        move_child(face, minimap.get_index() + 1)
+    var hour: float = day_night.hour(time)
+    var phase := "midnight" if hour < 5.0 else ("dawn" if hour < 8.0 else ("day" if hour < 17.0 else ("dusk" if hour < 19.0 else ("evening" if hour < 21.0 else "night"))))
+    var face_node: TextureRect = get_node("ClockFace")
+    if face_node.get_meta("phase", "") != phase:
+        face_node.set_meta("phase", phase)
+        face_node.texture = load("res://assets/game/ui/pixel/clock_%s.png" % phase)
     # M9c: the tracked quest's objective.
     if not has_node("Tracker"):
         var tracker := _label("", minimap.position + Vector2(-116, 94), Vector2(200, 26), self, 8)
@@ -427,6 +449,8 @@ func _refresh_clock() -> void:
     get_node("Tracker").text = quest_panel.tracker_text() if is_instance_valid(quest_panel) and get_parent().get("quests") != null else ""
     # Windows cover the clock and the tracked quest (they sit above the minimap's layer).
     get_node("Clock").visible = not menu_open()
+    if has_node("ClockFace"):
+        get_node("ClockFace").visible = not menu_open()
     get_node("Tracker").visible = not menu_open()
 
 ## M7a: the raid boss bar (top centre) while this character is in a living boss's arena.
@@ -596,15 +620,19 @@ func _process(_delta: float) -> void:
         var skill: Resource = player.get_node("SkillBook").skill_at_slot(index)
         var button := _slots[index]
         if skill == null:
-            button.text = "Empty"
+            button.text = ""
             button.icon = null
+            button.tooltip_text = "Empty slot"
             button.disabled = true
             continue
         button.icon = UI.skill_icon(String(skill.id))
         var cooldown: float = player.get_node("MeleeAttack").cooldown_left
-        button.text = "%s\n%s" % [skill.display_name, "%.1fs" % cooldown if cooldown > 0.0 else "%.0f Magicules" % skill.magicule_cost]
+        # M13b: under the icon the cooldown, else the Magicule cost; the name is in the tooltip.
+        button.text = "%.1fs" % cooldown if cooldown > 0.0 else "%.0f" % skill.magicule_cost
+        if button.icon == null:
+            button.text = skill.display_name.left(5) + "\n" + button.text
         var effect_text: String = SKILL_EFFECTS.describe(String(skill.id))
-        button.tooltip_text = "%s · %s\n%d damage · %.1fs cooldown%s" % [skill.tier, skill.display_name, skill.damage, skill.cooldown, "\n" + effect_text.left(1).to_upper() + effect_text.substr(1) if effect_text != "" else ""]
+        button.tooltip_text = "%s · %s\n%d damage · %.0f Magicules · %.1fs cooldown%s" % [skill.tier, skill.display_name, skill.damage, skill.magicule_cost, skill.cooldown, "\n" + effect_text.left(1).to_upper() + effect_text.substr(1) if effect_text != "" else ""]
         button.disabled = player.is_exhausted() or get_tree().paused or player.input_blocked or (session.replica_world and not session.active) or player.get_node("Health").current <= 0 or cooldown > 0.0 or player.get_node("Magicules").current < skill.magicule_cost
 
 func record_event(message: String) -> void:
@@ -900,6 +928,10 @@ func _build_pause_panel() -> void:
     for index in range(entries.size()):
         var button := _button(entries[index][1], Vector2(10, 7 + index * 23), Vector2(208, 22), _pause_menu)
         UI.menu_entry(button)
+        # M13b: an icon per entry (Raven Fantasy Icons), the entries in a left-aligned column.
+        button.icon = load("res://assets/game/ui/icons/menu/%s.png" % entries[index][0])
+        button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+        button.add_theme_constant_override("h_separation", 6)
         _pause_buttons[entries[index][0]] = button
     _pause_panel.add_child(MARKER.new(_pause_buttons.values()))
     _pause_buttons.resume.pressed.connect(close_pause)

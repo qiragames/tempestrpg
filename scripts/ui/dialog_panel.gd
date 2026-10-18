@@ -31,7 +31,15 @@ func _init(owner_hud: CanvasLayer) -> void:
     frame.add_theme_stylebox_override("panel", UI.ornate())
     window.add_child(frame)
     _title = UI.heading(hud._label("", FRAME.position + Vector2(14, 10), Vector2(FRAME.size.x - 28, 20), window, 14))
+    # M13b: the words on a parchment page.
+    var page := Panel.new()
+    page.position = FRAME.position + Vector2(10, 32)
+    page.size = Vector2(FRAME.size.x - 20, 80)
+    page.add_theme_stylebox_override("panel", UI.piece("paper", 4.0))
+    page.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    window.add_child(page)
     _text = hud._label("", FRAME.position + Vector2(14, 34), Vector2(FRAME.size.x - 28, 76), window, 10)
+    _text.add_theme_color_override("font_color", UI.PAPER_INK)
     _text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     _face = TextureRect.new()
     _face.position = FRAME.position + Vector2(14, 36)

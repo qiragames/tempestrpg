@@ -47,6 +47,13 @@ func _init(owner_hud: CanvasLayer) -> void:
     close.pressed.connect(close_panel)
     _summary = hud._label("", FRAME.position + Vector2(14, 34), Vector2(FRAME.size.x - 28, 14), self, 9)
     _summary.add_theme_color_override("font_color", UI.GOLD_LIGHT)
+    # M13b: the quests are written on a parchment page.
+    var page := Panel.new()
+    page.position = FRAME.position + Vector2(10, 49)
+    page.size = Vector2(FRAME.size.x - 20, FRAME.size.y - 72)
+    page.add_theme_stylebox_override("panel", UI.piece("paper", 4.0))
+    page.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    add_child(page)
     var scroll := ScrollContainer.new()
     scroll.position = FRAME.position + Vector2(14, 52)
     scroll.size = Vector2(FRAME.size.x - 28, FRAME.size.y - 78)
@@ -62,7 +69,7 @@ func _init(owner_hud: CanvasLayer) -> void:
     speech.position = Vector2(150, 242)
     speech.size = Vector2(340, 58)
     speech.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    speech.add_theme_stylebox_override("panel", UI.ornate())
+    speech.add_theme_stylebox_override("panel", UI.piece("paper", 6.0, 0.97))
     _speech_face = TextureRect.new()
     _speech_face.position = Vector2(6, 6)
     _speech_face.size = Vector2(46, 46)
@@ -71,8 +78,9 @@ func _init(owner_hud: CanvasLayer) -> void:
     _speech_face.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
     speech.add_child(_speech_face)
     _speech_name = hud._label("", Vector2(58, 5), Vector2(274, 12), speech, 9)
-    _speech_name.add_theme_color_override("font_color", UI.GOLD_LIGHT)
+    _speech_name.add_theme_color_override("font_color", UI.PAPER_RED)
     _speech_text = hud._label("", Vector2(58, 18), Vector2(274, 36), speech, 8)
+    _speech_text.add_theme_color_override("font_color", UI.PAPER_INK)
     _speech_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     speech.hide()
     hud.add_child.call_deferred(speech)
@@ -278,7 +286,7 @@ func refresh() -> void:
         label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
         label.autowrap_mode = TextServer.AUTOWRAP_OFF
         label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-        label.add_theme_color_override("font_color", UI.GOLD_LIGHT if QUESTS.is_main(id) else UI.TEXT)
+        label.add_theme_color_override("font_color", UI.PAPER_RED if QUESTS.is_main(id) else UI.PAPER_INK)
         var deciding: bool = LOG.current_step(me, id).get("type") == "choice"
         var track: Button = hud._button("Decide" if deciding else ("Tracked" if tracked_quest() == id else "Track"), Vector2.ZERO, Vector2(64, 20), row)
         track.custom_minimum_size = Vector2(64, 20)
@@ -294,7 +302,7 @@ func refresh() -> void:
                 refresh()
             )
     if ids.is_empty():
-        hud._label("No active quests. Look for ! above people in the towns, or a town's bounty board.", Vector2.ZERO, Vector2(FRAME.size.x - 44, 14), _list, 9).add_theme_color_override("font_color", UI.TEXT_DIM)
+        hud._label("No active quests. Look for ! above people in the towns, or a town's bounty board.", Vector2.ZERO, Vector2(FRAME.size.x - 44, 14), _list, 9).add_theme_color_override("font_color", UI.PAPER_DIM)
 
 func _unhandled_input(event: InputEvent) -> void:
     if not visible:

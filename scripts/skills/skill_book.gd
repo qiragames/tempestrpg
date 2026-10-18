@@ -8,8 +8,9 @@ const CLASS_SKILLS := preload("res://scripts/skills/class_skills.gd")
 
 signal learned(skill: Resource)
 var _known: Dictionary = {}
-const SLOT_COUNT := 4
-var _slots: Array[StringName] = [&"", &"", &"", &""]
+## M13b: eight hotbar slots (keys 1-8; four before v39).
+const SLOT_COUNT := 8
+var _slots: Array[StringName] = [&"", &"", &"", &"", &"", &"", &"", &""]
 var evidence: Dictionary = CATALOGUE.empty_evidence()
 
 ## Host-side: record a completed analysis and grant whatever it unlocks. Returns new skills.

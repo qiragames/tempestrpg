@@ -175,7 +175,7 @@ func _run() -> void:
     if migrated is Dictionary:
         var ids: Array = migrated.players.host.skill_ids.duplicate()
         ids.sort()
-        _check(ids == ["piercing_fang", "predator_focus"] and migrated.players.host.slots == ["", "", "piercing_fang", "predator_focus"] and migrated.players.host.progression.skill_points == legacy.players.host.progression.skill_points + 1, "Migration keeps the Extra as fused, frees its parts' slots and refunds the Extra's own activation point")
+        _check(ids == ["piercing_fang", "predator_focus"] and migrated.players.host.slots == ["", "", "piercing_fang", "predator_focus", "", "", "", ""] and migrated.players.host.progression.skill_points == legacy.players.host.progression.skill_points + 1, "Migration keeps the Extra as fused, frees its parts' slots and refunds the Extra's own activation point")
     world.queue_free()
     await _frames()
     for file in DirAccess.get_files_at(dir):
