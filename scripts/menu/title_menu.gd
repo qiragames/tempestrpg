@@ -20,6 +20,8 @@ const CREDITS := [
     ["16x16 Weapon RPG Icons", "Shade (merchant-shade) · scythe and spear icons"],
     ["Fantasy UI Borders", "Kenney (www.kenney.nl) · CC0 · ornamented frames"],
     ["Item icons", "7Soul1, Idylwild, babysamurai (OpenGameArt) · CC0 · weapons and armour"],
+    ["UI assets pack", "Dogobongocat (dogobongocat.itch.io) · CC0 · panels, slots, bars; Toasty font"],
+    ["m5x7 and m3x6", "Fonts by Daniel Linssen (managore.itch.io)"],
 ]
 ## Tests point this at a temporary folder.
 var worlds_dir: String = REGISTRY.DEFAULT_DIR
@@ -197,14 +199,21 @@ func _build_settings() -> void:
 
 func _build_credits() -> void:
     var panel := _panel("credits")
-    UI.heading(_label("CREDITS", Vector2(14, 10), Vector2(272, 20), panel, 13))
-    var y := 34
+    UI.heading(_label("CREDITS", Vector2(14, 10), Vector2(180, 20), panel, 13))
+    # M13: one scrolling list in the pixel fonts (pack names in gold).
+    var list := RichTextLabel.new()
+    list.name = "CreditList"
+    list.bbcode_enabled = true
+    list.scroll_active = true
+    list.position = Vector2(14, 34)
+    list.size = Vector2(272, 184)
+    list.add_theme_font_size_override("normal_font_size", 9)
+    var text := ""
     for entry in CREDITS:
-        UI.heading(_label(entry[0], Vector2(14, y), Vector2(272, 14), panel, 10))
-        var line := _label(entry[1], Vector2(14, y + 12), Vector2(272, 14), panel, 9)
-        y += 25
-        line.name = entry[0].replace(" ", "")
-    _first_focus["credits"] = _button("Back", Vector2(14, 182), Vector2(96, 24), panel, func(): _show("main"))
+        text += "[color=#%s]%s[/color]\n%s\n" % [UI.GOLD_LIGHT.to_html(false), entry[0], entry[1]]
+    list.text = text
+    panel.add_child(list)
+    _first_focus["credits"] = _button("Back", Vector2(198, 8), Vector2(88, 22), panel, func(): _show("main"))
 
 ## Slime, Human or Demon with a one-line summary of its racial ability.
 func _race_picker(at: Vector2, parent: Node) -> OptionButton:

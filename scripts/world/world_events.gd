@@ -352,4 +352,4 @@ func _draw() -> void:
             draw_circle(spot, 10.0, Color(0.15, 0.1, 0.12, 0.7))
             draw_circle(spot, 5.0, Color(0.55, 0.45, 0.85))
             draw_circle(spot, 2.5 + sin(Time.get_ticks_msec() / 200.0) * 0.8, Color(0.9, 0.8, 1.0))
-            draw_string(font, spot + Vector2(-22, -12), "Meteorite", HORIZONTAL_ALIGNMENT_CENTER, 44, 7, Color(0.9, 0.85, 1.0, 0.9))
+            draw_string(font, spot + Vector2(-22, -12), "Meteorite", HORIZONTAL_ALIGNMENT_CENTER, 44, 8, Color(0.9, 0.85, 1.0, 0.9))

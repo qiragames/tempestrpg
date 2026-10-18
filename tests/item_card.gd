@@ -34,7 +34,7 @@ func _run() -> void:
     await _frames(2)
     var gold := Color(GEAR.RARITY_COLORS[4])
     var name_label: Label = card.find_child("Name", true, false)
-    _check(card.get_theme_stylebox("panel").border_color == gold and name_label.get_theme_color("font_color") == gold and name_label.text == "Field Scythe", "The card and the name take the rarity colour")
+    _check(card.get_theme_stylebox("panel").accent == gold and name_label.get_theme_color("font_color") == gold and name_label.text == "Field Scythe", "The card and the name take the rarity colour")
     _check(card.find_child("RarityBadge", true, false).text == "LEGENDARY" and card.find_child("TypeBadge", true, false).text == "SCYTHE", "Rarity and type badges")
     _check((card.find_child("Icon", true, false) as TextureRect).texture == UI.gear_icon(scythe), "The item's own icon sits in the rarity frame")
     var expected_dps := roundi(float(scythe.stats.damage) / GEAR.WEAPONS.scythe.recovery)

@@ -286,13 +286,13 @@ func _draw() -> void:
         var down: bool = bool(stored.levers[index])
         draw_line(at, at + (Vector2(6, -6) if down else Vector2(-6, -10)), Color("b58a5a"), 2.0)
         draw_circle(at + (Vector2(6, -6) if down else Vector2(-6, -10)), 2.5, Color("d04040") if not down else Color("40c060"))
-        draw_string(font, at + Vector2(-16, -16), "Lever", HORIZONTAL_ALIGNMENT_CENTER, 32, 7, Color(1, 0.9, 0.7, 0.9))
+        draw_string(font, at + Vector2(-16, -16), "Lever", HORIZONTAL_ALIGNMENT_CENTER, 32, 8, Color(1, 0.9, 0.7, 0.9))
     # The vault.
     var vault := vault_position(here)
     draw_rect(Rect2(vault + Vector2(-9, -8), Vector2(18, 13)), Color("6a5030"))
     draw_rect(Rect2(vault + Vector2(-9, -8), Vector2(18, 4)), Color("8a6a40"))
     draw_rect(Rect2(vault + Vector2(-2, -3), Vector2(4, 5)), Color("e0c060"))
-    draw_string(font, vault + Vector2(-20, -12), "Locked vault", HORIZONTAL_ALIGNMENT_CENTER, 40, 7, Color(1, 0.9, 0.7, 0.9))
+    draw_string(font, vault + Vector2(-20, -12), "Locked vault", HORIZONTAL_ALIGNMENT_CENTER, 40, 8, Color(1, 0.9, 0.7, 0.9))
     # The sealed door (iron bars) until both levers are down.
     if not door_open(here):
         var door := door_position(here)
@@ -302,6 +302,6 @@ func _draw() -> void:
         while bar < width / 2.0:
             draw_line(door + Vector2(bar, -10), door + Vector2(bar, 4), Color("8a8a96"), 2.0)
             bar += 6.0
-        draw_string(font, door + Vector2(-40, -14), "Sealed: pull both levers", HORIZONTAL_ALIGNMENT_CENTER, 80, 7, Color(1, 0.8, 0.6, 0.95))
+        draw_string(font, door + Vector2(-40, -14), "Sealed: pull both levers", HORIZONTAL_ALIGNMENT_CENTER, 80, 8, Color(1, 0.8, 0.6, 0.95))
     if heroic(here):
         draw_string(font, me.global_position + Vector2(-30, -40), "HEROIC", HORIZONTAL_ALIGNMENT_CENTER, 60, 8, Color(1, 0.45, 0.35, 0.9))

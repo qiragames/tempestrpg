@@ -215,4 +215,4 @@ func _draw() -> void:
         draw_rect(Rect2(at + Vector2(-7, -8), Vector2(14, 9)), Color("6a4a2a"))
         draw_rect(Rect2(at + Vector2(-7, -8), Vector2(14, 3)), Color("8a6a40"))
         draw_rect(Rect2(at + Vector2(-1.5, -6), Vector2(3, 4)), Color("e0c060"))
-        draw_string(font, at + Vector2(-20, -12), "Storage", HORIZONTAL_ALIGNMENT_CENTER, 40, 7, Color(1, 0.92, 0.7, 0.95))
+        draw_string(font, at + Vector2(-20, -12), "Storage", HORIZONTAL_ALIGNMENT_CENTER, 40, 8, Color(1, 0.92, 0.7, 0.95))

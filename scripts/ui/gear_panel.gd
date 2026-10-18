@@ -48,8 +48,7 @@ class GearCell extends Panel:
         rarity = item_rarity
         var style := UI.round_slot("slot")
         if rarity >= 0:
-            style.border_color = Color(GEAR.RARITY_COLORS[rarity])
-            style.set_border_width_all(2 if rarity >= 3 else 1)
+            style.accent = Color(GEAR.RARITY_COLORS[rarity])
         add_theme_stylebox_override("panel", style)
         queue_redraw()
 
@@ -150,7 +149,7 @@ func _init(owner_hud: CanvasLayer) -> void:
     stats_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(stats_box)
     hud._label("GEAR SCORE", ORIGIN + Vector2(294, 44), Vector2(100, 12), self, 8).add_theme_color_override("font_color", UI.TEXT_DIM)
-    _score = UI.heading(hud._label("0", ORIGIN + Vector2(294, 54), Vector2(110, 24), self, 18))
+    _score = UI.heading(hud._label("0", ORIGIN + Vector2(294, 57), Vector2(110, 20), self, 18))
     _stats = hud._label("", ORIGIN + Vector2(400, 43), Vector2(182, 98), self, 7)
     # M12a: attributes under the gear score, a + for each while points are left.
     for index in range(ATTRIBUTES.KEYS.size()):

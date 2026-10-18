@@ -135,8 +135,8 @@ func _draw() -> void:
         return
     var font := ThemeDB.fallback_font
     var at := position_in_world()
-    draw_string_outline(font, at + Vector2(-30, -22), "Old Master", HORIZONTAL_ALIGNMENT_CENTER, 60, 7, 3, Color(0.05, 0.04, 0.02))
-    draw_string(font, at + Vector2(-30, -22), "Old Master", HORIZONTAL_ALIGNMENT_CENTER, 60, 7, Color("ffe08a"))
+    draw_string_outline(font, at + Vector2(-30, -22), "Old Master", HORIZONTAL_ALIGNMENT_CENTER, 60, 8, 3, Color(0.05, 0.04, 0.02))
+    draw_string(font, at + Vector2(-30, -22), "Old Master", HORIZONTAL_ALIGNMENT_CENTER, 60, 8, Color("ffe08a"))
     if CLASSES.chosen(me.progression).main.is_empty():
         var bob := sin(Time.get_ticks_msec() / 250.0) * 1.5
         draw_string_outline(font, at + Vector2(-3, -30 + bob), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, 4, Color(0.05, 0.04, 0.02))

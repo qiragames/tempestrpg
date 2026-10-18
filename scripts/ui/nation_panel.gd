@@ -116,7 +116,9 @@ func _init(owner_hud: CanvasLayer) -> void:
     _hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     _hint.add_theme_color_override("font_color", UI.GOLD_LIGHT)
     _hint.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.05))
-    _hint.add_theme_constant_override("outline_size", 4)
+    _hint.add_theme_color_override("font_shadow_color", Color(0.02, 0.03, 0.05, 0.95))
+    _hint.add_theme_constant_override("shadow_offset_x", 1)
+    _hint.add_theme_constant_override("shadow_offset_y", 1)
     _hint.hide()
 
 func window() -> Control:

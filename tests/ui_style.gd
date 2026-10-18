@@ -30,12 +30,13 @@ func _run() -> void:
     var hud: CanvasLayer = world.get_node("HUD")
     var actor = world.get_local_player()
     # --- Theme
-    _check(UI.installed and UI.theme() == UI.theme() and ThemeDB.get_default_theme().get_stylebox("panel", "Panel").border_color == UI.GOLD, "One shared theme is installed for every interface")
+    _check(UI.installed and UI.theme() == UI.theme() and ThemeDB.get_default_theme().get_stylebox("panel", "Panel").get_script() == UI.PIXEL_BOX and ThemeDB.get_default_theme().default_font == UI.font("body"), "One shared theme (pixel frames, pixel font) is installed for every interface")
     var frame = UI.theme().get_stylebox("panel", "Panel")
-    _check(frame.border_color == UI.GOLD and frame.bg_color.a > 0.9 and frame.texture != null and UI.ornate("assistant").border_color == UI.CYAN and UI.ornate("card", Color.RED).border_color == Color.RED, "Panels are dark with ornamented gold frames; analysis uses cyan; cards take the rarity colour")
+    _check(frame.texture != null and frame.tint.a > 0.9 and UI.ornate("hud").tint.a < 0.9 and UI.ornate("assistant").tint.g > UI.ornate("assistant").tint.r and UI.ornate("card", Color.RED).accent == Color.RED, "Windows use the navy pixel frame (HUD blocks see-through); analysis is tinted teal; cards take the rarity colour")
+    _check(UI.font("body").fixed_size == 16 and UI.font("small").fixed_size == 16 and UI.font("head").fixed_size == 14, "The pixel fonts are drawn at their native sizes")
     var button := Button.new()
     hud.add_child(button)
-    _check(button.get_theme_stylebox("hover").border_color == UI.GOLD_LIGHT and button.get_theme_stylebox("focus").border_color == UI.CYAN, "Buttons highlight in gold on hover and show a cyan keyboard focus")
+    _check(button.get_theme_stylebox("hover").tint.r > button.get_theme_stylebox("normal").tint.r and button.get_theme_stylebox("focus").border_color == UI.CYAN, "Buttons light up on hover and show a cyan keyboard focus")
     button.queue_free()
     # --- Status card
     actor.get_node("Health").take_damage(30)
@@ -46,7 +47,7 @@ func _run() -> void:
     _check(hud._hp_bar.value == actor.get_node("Health").current and hud._hp_bar.max_value == actor.get_node("Health").maximum and hud.get_node("Health").text.contains("70"), "The HP bar and its text follow the character's health")
     _check(is_equal_approx(hud.get_node("MagiculeBar").value, actor.get_node("Magicules").current) and hud.get_node("MagiculeBar").value < actor.get_node("Magicules").maximum, "The Magicule bar follows the character's Magicules")
     _check(hud._xp_bar.max_value == LEVELING.xp_for_level(2) - LEVELING.xp_for_level(1) and hud._xp_bar.value == 30 - LEVELING.xp_for_level(1), "The XP bar shows progress towards the next level")
-    _check(hud._hp_bar.size.y == 11 and hud.get_node("MagiculeBar").size.y == 11 and hud._xp_bar.size.y == 5, "Bars keep their slim sizes (no text-height inflation)")
+    _check(hud._hp_bar.size.y == 12 and hud.get_node("MagiculeBar").size.y == 12 and hud._xp_bar.size.y == 6, "Bars keep the pack's bar sizes (no text-height inflation)")
     _check(hud._portrait.texture == load("res://scripts/visual/sprite_library.gd").frames("slime").get_frame_texture("idle_down", 0) and hud._name.text == "Slime", "The portrait and name show the character's race")
     actor.get_node("SkillBook").record_analysis(&"forest_gnasher")
     actor.form_cooldown = 0.0

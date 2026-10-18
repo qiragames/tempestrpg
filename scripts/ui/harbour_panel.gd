@@ -208,8 +208,8 @@ func _draw_map() -> void:
         var color: Color = UI.CYAN if entry[0] == here else (UI.GOLD_LIGHT if entry[0] == destination else Color("9fe8ff"))
         _canvas.draw_circle(at, 4.5, Color(0.03, 0.04, 0.06))
         _canvas.draw_circle(at, 3.0, color)
-        _canvas.draw_string_outline(font, at + Vector2(5, 3), entry[1].trim_suffix(" Harbour"), HORIZONTAL_ALIGNMENT_LEFT, -1, 7, 3, Color(0.03, 0.04, 0.06))
-        _canvas.draw_string(font, at + Vector2(5, 3), entry[1].trim_suffix(" Harbour"), HORIZONTAL_ALIGNMENT_LEFT, -1, 7, color)
+        _canvas.draw_string_outline(font, at + Vector2(5, 3), entry[1].trim_suffix(" Harbour"), HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.03, 0.04, 0.06))
+        _canvas.draw_string(font, at + Vector2(5, 3), entry[1].trim_suffix(" Harbour"), HORIZONTAL_ALIGNMENT_LEFT, -1, 8, color)
     if not destination.is_empty():
         _canvas.draw_dashed_line(_to_map(MAP.harbour(here)[2]), _to_map(MAP.harbour(destination)[2]), UI.GOLD_LIGHT, 1.0, 4.0)
     if not _voyage.is_empty():

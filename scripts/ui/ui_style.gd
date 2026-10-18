@@ -1,22 +1,26 @@
 extends RefCounted
-## Shared interface look (step 21), after the user's HUD reference: dark panels with gold trim,
-## cyan for analysis/assistant accents, red/blue/gold bars. Built in code so every panel, the HUD
-## and later menus share one Theme. The prepared Ninja Adventure pixel font is not used: its glyphs
-## break at the 8-11 px sizes this 640x360 interface needs, so the engine font stays for text.
+## Shared interface look. M13 (user choice 2026-10-18, mockup docs/ui_overhaul/): a pixel UI from
+## the Dogobongocat UI pack (CC0) — navy panels, parchment, gold-cornered slots, plates and bars —
+## with three pixel fonts kept at their native size so they stay sharp at every window scale:
+## m5x7 for text, m3x6 for small labels (Daniel Linssen, free) and Toasty for headings
+## (Dogobongocat). Built in code so every panel, the HUD and the menus share one Theme.
 const GEAR := preload("res://scripts/items/gear_catalogue.gd")
+const PIXEL_BOX := preload("res://scripts/ui/pixel_box.gd")
 
-const INK := Color("0f131b")
-const PANEL := Color(0.07, 0.09, 0.12, 0.94)
-const GOLD := Color("c49a52")
-const GOLD_DARK := Color("6b5532")
-const GOLD_LIGHT := Color("f0d38c")
+const INK := Color("14233a")
+const PANEL := Color("405273")
+const NAVY_DARK := Color("1c2a42")
+const PAPER := Color("bcad9f")
+const GOLD := Color("e9b85c")
+const GOLD_DARK := Color("8a6a3a")
+const GOLD_LIGHT := Color("fdd179")
 const CYAN := Color("71e4d4")
 const CYAN_DARK := Color("2b6f69")
-const TEXT := Color("ece3cc")
-const TEXT_DIM := Color("8f8a7c")
-const HP := Color("d4473f")
-const MAGICULES := Color("3f8ee0")
-const XP := Color("e1bf3c")
+const TEXT := Color("ffe9c4")
+const TEXT_DIM := Color("9aa6bd")
+const HP := Color("c4593f")
+const MAGICULES := Color("4f86c6")
+const XP := Color("fdd179")
 ## Material icons in the bag (by item ID); camp resources by resource name.
 const ICONS := {
     "gnasher_essence": "res://assets/game/ui/icons/essence.png",
@@ -25,74 +29,130 @@ const ICONS := {
     "stone": "res://assets/game/ui/icons/stone.png",
     "essence": "res://assets/game/ui/icons/essence.png",
 }
+## Pieces of the pixel UI (assets/game/ui/pixel/) and their corner sizes.
+const PIECES := {
+    "panel": ["panel_navy", 5],
+    "flat": ["panel_navy_flat", 4],
+    "paper": ["panel_paper", 5],
+    "plate": ["plate_navy", 4],
+    "plate_paper": ["plate_paper", 4],
+    "slot": ["slot", 4],
+    "slot_grey": ["slot_grey", 4],
+    "slot_light": ["slot_light", 4],
+    "bar_back": ["bar_thin_navy", 3],
+    "bar_red": ["bar_red", 6],
+    "bar_red_empty": ["bar_red_empty", 6],
+    "bar_blue": ["bar_blue", 6],
+    "bar_magic": ["bar_magic", 6],
+    "bar_blue_empty": ["bar_blue_empty", 6],
+    "bar_gold": ["bar_thin_gold", 3],
+}
+## The status card's bars: [track, fill] pieces.
+const BARS := {"hp": ["bar_red_empty", "bar_red"], "magicules": ["bar_red_empty", "bar_magic"], "xp": ["bar_back", "bar_gold"]}
+const FONTS := {
+    "body": "res://assets/game/fonts/m5x7.ttf",
+    "small": "res://assets/game/fonts/m3x6.ttf",
+    "head": "res://assets/game/fonts/toasty.ttf",
+}
+## The size each font is drawn at (whole pixels at any integer window scale).
+const FONT_SIZES := {"body": 16, "small": 16, "head": 14}
+## Requested sizes below this use the small font. Text drawn by hand (`draw_string`) asks for at
+## least 8: the fixed-size fonts round their scale, so smaller sizes would vanish.
+const SMALL_BELOW := 10
 
 static var _theme: Theme
-const ORNATE := preload("res://scripts/ui/ornate_box.gd")
-## Ornamented frames (Kenney Fantasy UI Borders, CC0): white, tinted per use. Windows and banners
-## use the large 96 px "Double" frames (32 px corners, 2 px lines); HUD blocks, item cards
-## and the analysis box the 48 px ones (16 px corners) so they stay slim.
-const FRAMES := {
-    "panel": "res://assets/game/ui/frames/frame_panel.png",
-    "hud": "res://assets/game/ui/frames/frame_hud.png",
-    "assistant": "res://assets/game/ui/frames/frame_assistant.png",
-    "banner": "res://assets/game/ui/frames/frame_banner.png",
-    "card": "res://assets/game/ui/frames/frame_card.png",
-}
+static var _fonts := {}
 
-## An ornamented frame: "panel" (windows, menus), "hud" (HUD blocks), "assistant" (cyan
-## analysis), "banner" (titles), "card" (item cards; pass the rarity colour).
-static func ornate(kind: String = "panel", color: Color = GOLD) -> StyleBox:
-    var style := ORNATE.new()
-    style.texture = load(FRAMES[kind])
-    style.border_color = CYAN if kind == "assistant" else color
-    style.corner = 32 if kind in ["panel", "banner"] else 16
-    style.inset = 0.0 if style.corner == 32 else 2.0
-    style.outset = 6.0 if style.corner == 32 else 0.0
-    style.crest = kind in ["panel", "banner"]
-    if kind == "assistant":
-        style.bg_color = Color(0.04, 0.10, 0.12, 0.92)
-    elif kind == "card":
-        style.bg_color = Color(0.08, 0.06, 0.11, 0.97)
-    style.set_content_margin_all(10 if style.corner == 32 else (6 if kind == "card" else 8))
+static func font(kind: String = "body") -> Font:
+    if not _fonts.has(kind):
+        var file := FontFile.new()
+        file.load_dynamic_font(FONTS[kind])
+        file.antialiasing = TextServer.FONT_ANTIALIASING_NONE
+        file.hinting = TextServer.HINTING_NONE
+        file.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
+        file.fixed_size = FONT_SIZES[kind]
+        file.fixed_size_scale_mode = TextServer.FIXED_SIZE_SCALE_INTEGER_ONLY
+        _fonts[kind] = file
+    return _fonts[kind]
+
+## A pixel nine-patch: "panel", "flat", "paper", "plate", "plate_paper", "slot", "slot_grey",
+## "slot_light", "bar_back". `alpha` makes it see-through; `content` is the inner margin.
+static func piece(kind: String, content: float = 6.0, alpha: float = 1.0, tint: Color = Color.WHITE) -> StyleBox:
+    var style := PIXEL_BOX.new()
+    style.texture = load("res://assets/game/ui/pixel/%s.png" % PIECES[kind][0])
+    style.margin = int(PIECES[kind][1])
+    style.tint = Color(tint, tint.a * alpha)
+    style.set_content_margin_all(content)
     return style
 
-## A framed box: gold trim on a dark fill (kind "frame"), cyan for analysis ("assistant"),
-## a hotbar/inventory cell ("slot"), or a flat inner well ("well").
-static func box(kind: String = "frame") -> StyleBoxFlat:
-    var style := StyleBoxFlat.new()
-    style.bg_color = PANEL
-    style.border_color = GOLD
-    style.set_border_width_all(1)
-    style.set_content_margin_all(4)
+## A window frame: "panel" (windows, menus), "hud" (see-through HUD blocks), "assistant"
+## (teal analysis box), "banner" (titles), "card" (item cards; pass the rarity colour).
+static func ornate(kind: String = "panel", color: Color = GOLD) -> StyleBox:
+    match kind:
+        "hud":
+            return piece("panel", 6.0, 0.86)
+        "assistant":
+            return piece("panel", 6.0, 0.92, Color(0.72, 0.98, 0.95))
+        "banner":
+            return piece("plate", 6.0)
+        "card":
+            var card: StyleBox = piece("panel", 6.0, 0.97)
+            card.accent = color
+            return card
+    return piece("panel", 10.0, 0.95)
+
+## Boxes: a navy frame ("frame"), the teal analysis box ("assistant"), an item cell ("slot",
+## "slot_hover", "slot_pressed", "slot_disabled"), keyboard focus ("focus"), a darker inner well
+## ("well"), a selected row ("selected") or a bar's track ("bar_back").
+static func box(kind: String = "frame") -> StyleBox:
     match kind:
         "assistant":
-            style.bg_color = Color(0.04, 0.10, 0.12, 0.92)
-            style.border_color = CYAN
+            return ornate("assistant")
         "slot":
-            style.bg_color = Color(0.10, 0.12, 0.16, 0.95)
-            style.border_color = GOLD_DARK
+            return piece("slot", 4.0)
         "slot_hover":
-            style.bg_color = Color(0.14, 0.16, 0.21, 0.98)
-            style.border_color = GOLD_LIGHT
+            return piece("slot", 4.0, 1.0, Color(1.3, 1.3, 1.45))
         "slot_pressed":
-            style.bg_color = Color(0.20, 0.17, 0.10, 0.98)
-            style.border_color = GOLD_LIGHT
+            return piece("slot_grey", 4.0)
         "slot_disabled":
-            style.bg_color = Color(0.07, 0.08, 0.10, 0.9)
-            style.border_color = Color(0.25, 0.23, 0.2)
+            return piece("slot", 4.0, 0.55)
         "focus":
-            style.draw_center = false
-            style.border_color = CYAN
+            var focus := StyleBoxFlat.new()
+            focus.draw_center = false
+            focus.border_color = CYAN
+            focus.set_border_width_all(1)
+            return focus
         "well":
-            style.bg_color = Color(0.03, 0.04, 0.06, 0.9)
-            style.border_color = Color(0.2, 0.19, 0.16)
+            return piece("flat", 4.0, 0.95, Color(0.62, 0.66, 0.78))
         "selected":
-            style.bg_color = Color(0.30, 0.24, 0.12, 0.95)
-            style.border_color = GOLD_LIGHT
+            var selected := StyleBoxFlat.new()
+            selected.bg_color = Color(0.55, 0.42, 0.18, 0.9)
+            selected.border_color = GOLD_LIGHT
+            selected.set_border_width_all(1)
+            selected.set_content_margin_all(4)
+            return selected
         "bar_back":
-            style.bg_color = Color(0.02, 0.03, 0.05, 0.95)
-            style.border_color = GOLD_DARK
-            style.set_content_margin_all(0)
+            return piece("bar_back", 0.0)
+    return piece("panel", 4.0, 0.95)
+
+## A button in the given state: a navy plate that lights up on hover and darkens when pressed.
+static func button_box(state: String) -> StyleBox:
+    var style: StyleBox
+    match state:
+        "hover":
+            style = piece("plate", 0.0, 1.0, Color(1.3, 1.25, 1.1))
+        "pressed":
+            style = piece("plate", 0.0, 1.0, Color(0.7, 0.7, 0.8))
+        "disabled":
+            style = piece("plate", 0.0, 0.55)
+        "focus":
+            return box("focus")
+        _:
+            style = piece("plate", 0.0)
+    style.content_margin_left = 5
+    style.content_margin_right = 5
+    style.content_margin_top = 0
+    style.content_margin_bottom = 1
     return style
 
 static func fill(color: Color) -> StyleBoxFlat:
@@ -102,38 +162,26 @@ static func fill(color: Color) -> StyleBoxFlat:
     style.border_width_top = 1
     return style
 
-## HUD blocks (user feedback: keep the dark background, round the corners): a softly rounded
-## dark box with a thin trim (gold, or cyan for the analysis box).
-static func hud_box(kind: String = "frame") -> StyleBoxFlat:
-    var style := StyleBoxFlat.new()
-    style.bg_color = Color(0.06, 0.07, 0.10, 0.86) if kind != "assistant" else Color(0.04, 0.10, 0.12, 0.88)
-    style.border_color = Color(GOLD_DARK, 0.9) if kind != "assistant" else Color(CYAN, 0.8)
-    style.set_border_width_all(1)
-    style.set_corner_radius_all(7)
-    style.corner_detail = 6
-    style.shadow_color = Color(0, 0, 0, 0.35)
-    style.shadow_size = 3
-    style.set_content_margin_all(6)
-    return style
+## HUD blocks: a see-through navy panel.
+static func hud_box(kind: String = "frame") -> StyleBox:
+    return ornate("assistant") if kind == "assistant" else ornate("hud")
 
-## Rounded hotbar cells in the same spirit.
-static func round_slot(kind: String) -> StyleBoxFlat:
-    var style := box(kind)
-    style.set_corner_radius_all(5)
-    style.corner_detail = 5
-    return style
+## Hotbar cells: the gold-cornered slot.
+static func round_slot(kind: String) -> StyleBox:
+    return box(kind)
 
 ## The shared Theme (built once).
 static func theme() -> Theme:
     if _theme != null:
         return _theme
     var built := Theme.new()
-    built.default_font_size = 11
+    built.default_font = font("body")
+    built.default_font_size = FONT_SIZES.body
     built.set_stylebox("panel", "Panel", ornate())
     built.set_stylebox("panel", "PanelContainer", ornate())
     built.set_color("font_color", "Label", TEXT)
     for state in ["normal", "hover", "pressed", "disabled", "focus"]:
-        built.set_stylebox(state, "Button", box({"normal": "slot", "hover": "slot_hover", "pressed": "slot_pressed", "disabled": "slot_disabled", "focus": "focus"}[state]))
+        built.set_stylebox(state, "Button", button_box(state))
     built.set_color("font_color", "Button", TEXT)
     built.set_color("font_hover_color", "Button", GOLD_LIGHT)
     built.set_color("font_pressed_color", "Button", GOLD_LIGHT)
@@ -150,12 +198,11 @@ static func theme() -> Theme:
     built.set_constant("v_separation", "ItemList", 3)
     built.set_stylebox("background", "ProgressBar", box("bar_back"))
     built.set_stylebox("fill", "ProgressBar", fill(MAGICULES))
-    built.set_stylebox("panel", "TooltipPanel", box())
+    built.set_stylebox("panel", "TooltipPanel", ornate("hud"))
     built.set_color("font_color", "TooltipLabel", TEXT)
-    built.set_font_size("font_size", "TooltipLabel", 10)
     built.set_stylebox("normal", "LineEdit", box("well"))
     built.set_stylebox("focus", "LineEdit", box("focus"))
-    built.set_stylebox("panel", "PopupMenu", box())
+    built.set_stylebox("panel", "PopupMenu", ornate("hud"))
     built.set_color("default_color", "RichTextLabel", TEXT)
     _theme = built
     return built
@@ -164,16 +211,42 @@ static var installed := false
 
 ## Give every interface the shared look (idempotent). The HUD lives under a CanvasLayer, which a
 ## Window/Control theme does not reach, so the look is merged into the engine's default theme.
-static func install(_tree: SceneTree = null) -> void:
+## Text drawn by hand (map labels, names over heads) uses the small pixel font.
+static func install(tree: SceneTree = null) -> void:
     if installed:
         return
     ThemeDB.get_default_theme().merge_with(theme())
+    ThemeDB.fallback_font = font("small")
+    var main_loop: MainLoop = tree if tree != null else Engine.get_main_loop()
+    if main_loop is SceneTree:
+        (main_loop as SceneTree).node_added.connect(_on_node_added)
     installed = true
 
-## A thin bar in the given colour (HP red, Magicules blue, XP gold).
+## Controls asked for a small size (below 10) get the small pixel font.
+static func _on_node_added(node: Node) -> void:
+    if node is Control:
+        _small_font.call_deferred(node)
+
+static func _small_font(node: Control) -> void:
+    if not is_instance_valid(node) or node.has_theme_font_override("font") or node.has_theme_font_override("normal_font"):
+        return
+    var key := "normal_font_size" if node is RichTextLabel else "font_size"
+    if node.has_theme_font_size_override(key) and node.get_theme_font_size(key) < SMALL_BELOW:
+        node.add_theme_font_override("normal_font" if node is RichTextLabel else "font", font("small"))
+        # The fixed-size fonts round their scale: below 8 they would vanish.
+        node.add_theme_font_size_override(key, FONT_SIZES.small)
+
+## A slim bar in the given colour (HP red, Magicules blue, XP gold).
 static func style_bar(bar: ProgressBar, color: Color) -> void:
     bar.add_theme_stylebox_override("background", box("bar_back"))
     bar.add_theme_stylebox_override("fill", fill(color))
+    bar.show_percentage = false
+    bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+## A status-card bar drawn with the pack's bar pieces: "hp", "magicules" or "xp".
+static func pixel_bar(bar: ProgressBar, kind: String) -> void:
+    bar.add_theme_stylebox_override("background", piece(BARS[kind][0], 0.0))
+    bar.add_theme_stylebox_override("fill", piece(BARS[kind][1], 0.0))
     bar.show_percentage = false
     bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
@@ -186,23 +259,22 @@ static func gear_icon(item: Dictionary) -> Texture2D:
         return null
     return preload("res://scripts/items/gear_catalogue.gd").icon_texture(item.base, int(item.rarity))
 
-## A menu entry in the title/pause reference style: gold capitals, a gold bar when focused or hovered.
+## A menu entry (title and pause menus): heading font in gold, a lit plate when focused or hovered.
 static func menu_entry(button: Button) -> void:
-    button.add_theme_font_size_override("font_size", 13)
+    button.add_theme_font_override("font", font("head"))
     button.add_theme_color_override("font_color", GOLD_LIGHT)
     button.add_theme_color_override("font_focus_color", Color.WHITE)
     button.add_theme_color_override("font_hover_color", Color.WHITE)
-    button.add_theme_color_override("font_disabled_color", Color(0.45, 0.42, 0.38))
+    button.add_theme_color_override("font_disabled_color", Color(0.45, 0.48, 0.56))
     var empty := StyleBoxEmpty.new()
     button.add_theme_stylebox_override("normal", empty)
     button.add_theme_stylebox_override("disabled", empty)
     for state in ["hover", "focus", "pressed"]:
-        var bar := box("selected")
-        bar.bg_color = Color(0.36, 0.27, 0.12, 0.9)
-        button.add_theme_stylebox_override(state, bar)
+        button.add_theme_stylebox_override(state, piece("plate", 0.0, 1.0, Color(1.25, 1.2, 1.05)))
 
-## Section title in gold.
+## Section title: the heading font in gold.
 static func heading(label: Label) -> Label:
+    label.add_theme_font_override("font", font("head"))
     label.add_theme_color_override("font_color", GOLD_LIGHT)
     return label
 

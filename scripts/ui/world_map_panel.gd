@@ -342,16 +342,16 @@ func _draw_map() -> void:
         _canvas.draw_rect(Rect2(spot - Vector2(2, 2) if big else spot - Vector2(1, 1), Vector2(5, 5) if big else Vector2(3, 3)), Color(0.03, 0.04, 0.06))
         _canvas.draw_rect(Rect2(spot - Vector2(1, 1) if big else spot - Vector2(0.5, 0.5), Vector2(3, 3) if big else Vector2(2, 2)), UI.GOLD_LIGHT if big else UI.TEXT)
         if big:
-            _canvas.draw_string_outline(font, spot + Vector2(4, 9), town[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 7, 3, Color(0.03, 0.04, 0.06))
-            _canvas.draw_string(font, spot + Vector2(4, 9), town[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 7, UI.GOLD_LIGHT)
+            _canvas.draw_string_outline(font, spot + Vector2(4, 9), town[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.03, 0.04, 0.06))
+            _canvas.draw_string(font, spot + Vector2(4, 9), town[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, UI.GOLD_LIGHT)
     # M5d: the rival nations at their capitals.
     if not realm:
         for entry in preload("res://scripts/nation/rival_nations.gd").RIVALS:
             var capital := tile_to_map(MAP.town(entry[3])[3]).round()
             _canvas.draw_rect(Rect2(capital + Vector2(-8, -12), Vector2(1, 9)), Color("6b4a2b"))
             _canvas.draw_rect(Rect2(capital + Vector2(-7, -12), Vector2(6, 4)), entry[4])
-            _canvas.draw_string_outline(font, capital + Vector2(-8, -14), entry[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 7, 3, Color(0.03, 0.04, 0.06))
-            _canvas.draw_string(font, capital + Vector2(-8, -14), entry[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 7, entry[4].lightened(0.35))
+            _canvas.draw_string_outline(font, capital + Vector2(-8, -14), entry[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.03, 0.04, 0.06))
+            _canvas.draw_string(font, capital + Vector2(-8, -14), entry[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, entry[4].lightened(0.35))
     # M5a: your nation's name and banner at the camp.
     var camp: Node2D = hud.get_parent().get("camp")
     if camp != null and camp.state.founded and not realm:
@@ -372,16 +372,16 @@ func _draw_map() -> void:
         if _shown(DUNGEONS.DUNGEONS[cave][2]):
             var mouth := tile_to_map(DUNGEONS.DUNGEONS[cave][2]).round()
             _canvas.draw_arc(mouth, 3.0, PI, TAU, 8, Color("c89a6a"), 2.0)
-            _canvas.draw_string_outline(font, mouth + Vector2(5, 3), DUNGEONS.DUNGEONS[cave][0], HORIZONTAL_ALIGNMENT_LEFT, -1, 7, 3, Color(0.03, 0.04, 0.06))
-            _canvas.draw_string(font, mouth + Vector2(5, 3), DUNGEONS.DUNGEONS[cave][0], HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("e8c89a"))
+            _canvas.draw_string_outline(font, mouth + Vector2(5, 3), DUNGEONS.DUNGEONS[cave][0], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.03, 0.04, 0.06))
+            _canvas.draw_string(font, mouth + Vector2(5, 3), DUNGEONS.DUNGEONS[cave][0], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("e8c89a"))
     var bosses := preload("res://scripts/bosses/boss_catalogue.gd")
     for elite in hud.player.progression.get("elites", []):
         if bosses.ELITES.has(elite) and _shown(bosses.ELITES[elite][3]):
             var at_elite := tile_to_map(bosses.ELITES[elite][3]).round()
             _canvas.draw_arc(at_elite, 3.5, 0, TAU, 12, Color("ff5a5a"), 1.5)
             var label: String = "%s (Lv %d)" % [bosses.ELITES[elite][0], bosses.ELITES[elite][5]]
-            _canvas.draw_string_outline(font, at_elite + Vector2(5, 3), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, 3, Color(0.03, 0.04, 0.06))
-            _canvas.draw_string(font, at_elite + Vector2(5, 3), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("ffb0a0"))
+            _canvas.draw_string_outline(font, at_elite + Vector2(5, 3), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.03, 0.04, 0.06))
+            _canvas.draw_string(font, at_elite + Vector2(5, 3), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("ffb0a0"))
     # Discovered leveling spots (violet rings, named) and your dropped item piles (gold) — 24a.
     var known: Array = hud.player.progression.get("spots", [])
     var region_content := preload("res://scripts/world/region_content.gd")

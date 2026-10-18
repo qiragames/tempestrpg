@@ -370,8 +370,8 @@ func _draw_overlay() -> void:
             if not title.is_empty():
                 var width := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, 7).x
                 var spot: Vector2 = character.global_position + Vector2(-width / 2.0, -26)
-                _overlay.draw_string_outline(font, spot, title, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, 3, Color(0.05, 0.04, 0.02))
-                _overlay.draw_string(font, spot, title, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("ffe08a"))
+                _overlay.draw_string_outline(font, spot, title, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.05, 0.04, 0.02))
+                _overlay.draw_string(font, spot, title, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("ffe08a"))
     for id in _npcs:
         var npc: Node2D = _npcs[id]
         # The Court's people show themselves only to whoever has come to face them.

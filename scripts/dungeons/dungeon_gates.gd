@@ -74,7 +74,7 @@ func _draw() -> void:
             draw_colored_polygon(PackedVector2Array([mouth + Vector2(-20, 4), mouth + Vector2(-16, -14), mouth + Vector2(-6, -22), mouth + Vector2(8, -21), mouth + Vector2(18, -12), mouth + Vector2(21, 4)]), Color("6a6470"))
             draw_colored_polygon(PackedVector2Array([mouth + Vector2(-14, 4), mouth + Vector2(-12, -6), mouth + Vector2(-6, -12), mouth + Vector2(6, -12), mouth + Vector2(12, -6), mouth + Vector2(14, 4)]), Color("4a4450"))
             draw_colored_polygon(PackedVector2Array([mouth + Vector2(-9, 4), mouth + Vector2(-8, -4), mouth + Vector2(-3, -8), mouth + Vector2(3, -8), mouth + Vector2(8, -4), mouth + Vector2(9, 4)]), Color("0c0a10"))
-            draw_string(ThemeDB.fallback_font, mouth + Vector2(-34, -26), DUNGEONS.DUNGEONS[id][0], HORIZONTAL_ALIGNMENT_CENTER, 68, 7, Color(1, 0.9, 0.7, 0.9))
+            draw_string(ThemeDB.fallback_font, mouth + Vector2(-34, -26), DUNGEONS.DUNGEONS[id][0], HORIZONTAL_ALIGNMENT_CENTER, 68, 8, Color(1, 0.9, 0.7, 0.9))
         if local == null or local.global_position.distance_to(out) < 700.0:
             # A shaft of daylight with a rope ladder.
             draw_colored_polygon(PackedVector2Array([out + Vector2(-10, 6), out + Vector2(-5, -30), out + Vector2(5, -30), out + Vector2(10, 6)]), Color(1.0, 0.95, 0.7, 0.28))
@@ -82,4 +82,4 @@ func _draw() -> void:
             draw_line(out + Vector2(3, 4), out + Vector2(3, -26), Color("8a6440"), 1.0)
             for step in range(6):
                 draw_line(out + Vector2(-3, 2 - step * 5), out + Vector2(3, 2 - step * 5), Color("b58a5a"), 1.0)
-            draw_string(ThemeDB.fallback_font, out + Vector2(-20, -32), "Way out", HORIZONTAL_ALIGNMENT_CENTER, 40, 7, Color(1, 0.95, 0.75, 0.9))
+            draw_string(ThemeDB.fallback_font, out + Vector2(-20, -32), "Way out", HORIZONTAL_ALIGNMENT_CENTER, 40, 8, Color(1, 0.95, 0.75, 0.9))

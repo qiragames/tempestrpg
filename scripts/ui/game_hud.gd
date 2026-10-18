@@ -182,10 +182,12 @@ func _backdrop(rect: Rect2, kind: String = "frame") -> Panel:
     move_child(back, 0)
     return back
 
-## Dark outline so text stays readable straight over the world.
+## A crisp one-pixel shadow so pixel text stays readable straight over the world (M13).
 func _outline(label: Label) -> void:
-    label.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.05))
-    label.add_theme_constant_override("outline_size", 3)
+    label.add_theme_color_override("font_shadow_color", Color(0.02, 0.03, 0.05, 0.95))
+    label.add_theme_constant_override("shadow_offset_x", 1)
+    label.add_theme_constant_override("shadow_offset_y", 1)
+    label.add_theme_constant_override("shadow_outline_size", 0)
 
 func _bar(rect: Rect2, color: Color) -> ProgressBar:
     var bar := ProgressBar.new()
@@ -204,7 +206,7 @@ func _build_status() -> void:
     var well := Panel.new()
     well.position = Vector2(9, 10)
     well.size = Vector2(42, 42)
-    well.add_theme_stylebox_override("panel", UI.box("well"))
+    well.add_theme_stylebox_override("panel", UI.box("slot"))
     well.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(well)
     _portrait = TextureRect.new()
@@ -216,12 +218,15 @@ func _build_status() -> void:
     _portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(_portrait)
     _name = UI.heading(_label("", Vector2(56, 6), Vector2(168, 14), self, 10))
-    _hp_bar = _bar(Rect2(56, 21, 168, 11), UI.HP)
-    UI.style_bar($MagiculeBar, UI.MAGICULES)
+    # M13: the pack's bar pieces (red HP, blue Magicules, a thin gold XP strip).
+    _hp_bar = _bar(Rect2(56, 20, 168, 12), UI.HP)
+    UI.pixel_bar(_hp_bar, "hp")
+    UI.pixel_bar($MagiculeBar, "magicules")
     $MagiculeBar.position = Vector2(56, 34)
-    $MagiculeBar.size = Vector2(168, 11)
-    _xp_bar = _bar(Rect2(56, 47, 168, 5), UI.XP)
-    for entry in [[$Health, 20], [$Magicules, 33]]:
+    $MagiculeBar.size = Vector2(168, 12)
+    _xp_bar = _bar(Rect2(56, 48, 168, 6), UI.XP)
+    UI.pixel_bar(_xp_bar, "xp")
+    for entry in [[$Health, 20], [$Magicules, 34]]:
         var label: Label = entry[0]
         label.position = Vector2(56, entry[1])
         label.size = Vector2(168, 13)
@@ -231,7 +236,7 @@ func _build_status() -> void:
         # Over its bar (later siblings draw on top), but still below every window built after.
         move_child(label, -1)
         _outline(label)
-    _level = _label("", Vector2(56, 53), Vector2(168, 14), self, 9)
+    _level = _label("", Vector2(56, 54), Vector2(168, 14), self, 9)
     _level.add_theme_color_override("font_color", UI.GOLD_LIGHT)
     _zeni = _label("", Vector2(8, 86), Vector2(220, 12), self, 9)
     _zeni.add_theme_color_override("font_color", UI.GOLD_LIGHT)
@@ -397,7 +402,9 @@ func _refresh_clock() -> void:
         clock.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
         clock.add_theme_color_override("font_color", UI.GOLD_LIGHT)
         clock.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.05))
-        clock.add_theme_constant_override("outline_size", 3)
+        clock.add_theme_color_override("font_shadow_color", Color(0.02, 0.03, 0.05, 0.95))
+        clock.add_theme_constant_override("shadow_offset_x", 1)
+        clock.add_theme_constant_override("shadow_offset_y", 1)
     var day_night := preload("res://scripts/world/day_night.gd")
     var time: float = float(get_parent().progression.get("world_time", 0.0))
     var sky: Node = get_parent().get("sky")
@@ -411,7 +418,9 @@ func _refresh_clock() -> void:
         tracker.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
         tracker.add_theme_color_override("font_color", Color("ffe9a8"))
         tracker.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.05))
-        tracker.add_theme_constant_override("outline_size", 3)
+        tracker.add_theme_color_override("font_shadow_color", Color(0.02, 0.03, 0.05, 0.95))
+        tracker.add_theme_constant_override("shadow_offset_x", 1)
+        tracker.add_theme_constant_override("shadow_offset_y", 1)
     get_node("Tracker").text = quest_panel.tracker_text() if is_instance_valid(quest_panel) and get_parent().get("quests") != null else ""
     # Windows cover the clock and the tracked quest (they sit above the minimap's layer).
     get_node("Clock").visible = not menu_open()
@@ -431,7 +440,9 @@ func _refresh_boss_bar() -> void:
         title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
         title.add_theme_color_override("font_color", Color("ffcf7a"))
         title.add_theme_color_override("font_outline_color", Color(0.05, 0.02, 0.02))
-        title.add_theme_constant_override("outline_size", 4)
+        title.add_theme_color_override("font_shadow_color", Color(0.02, 0.03, 0.05, 0.95))
+        title.add_theme_constant_override("shadow_offset_x", 1)
+        title.add_theme_constant_override("shadow_offset_y", 1)
         var bar := ProgressBar.new()
         bar.name = "Bar"
         bar.position = Vector2(0, 16)
@@ -481,7 +492,9 @@ func _refresh_node_prompt() -> void:
         prompt_label.name = "NodePrompt"
         prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
         prompt_label.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.05))
-        prompt_label.add_theme_constant_override("outline_size", 4)
+        prompt_label.add_theme_color_override("font_shadow_color", Color(0.02, 0.03, 0.05, 0.95))
+        prompt_label.add_theme_constant_override("shadow_offset_x", 1)
+        prompt_label.add_theme_constant_override("shadow_offset_y", 1)
     var label: Label = get_node("NodePrompt")
     var index := -1
     if String(player.gather_id).begins_with("node:"):
@@ -530,7 +543,9 @@ func _process(_delta: float) -> void:
             siege_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
             siege_label.add_theme_color_override("font_color", Color("ff9a7a"))
             siege_label.add_theme_color_override("font_outline_color", Color(0.05, 0.02, 0.02))
-            siege_label.add_theme_constant_override("outline_size", 4)
+            siege_label.add_theme_color_override("font_shadow_color", Color(0.02, 0.03, 0.05, 0.95))
+            siege_label.add_theme_constant_override("shadow_offset_x", 1)
+            siege_label.add_theme_constant_override("shadow_offset_y", 1)
         get_node("SiegeBanner").text = siege_node.banner()
     # M11d: a running world event.
     var events_node: Node = get_parent().get("events")
@@ -541,7 +556,9 @@ func _process(_delta: float) -> void:
             event_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
             event_label.add_theme_color_override("font_color", Color("ffd27a"))
             event_label.add_theme_color_override("font_outline_color", Color(0.05, 0.03, 0.02))
-            event_label.add_theme_constant_override("outline_size", 4)
+            event_label.add_theme_color_override("font_shadow_color", Color(0.02, 0.03, 0.05, 0.95))
+            event_label.add_theme_constant_override("shadow_offset_x", 1)
+            event_label.add_theme_constant_override("shadow_offset_y", 1)
         get_node("EventBanner").text = events_node.banner()
         get_node("EventBanner").visible = not menu_open()
     _refresh_node_prompt()

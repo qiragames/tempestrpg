@@ -72,7 +72,7 @@ func show_item(item_data: Dictionary, where: String = "") -> void:
     _box.add_child(header)
     var icon_frame := PanelContainer.new()
     var icon_box := UI.box("well")
-    icon_box.border_color = color
+    icon_box.accent = color
     icon_box.set_content_margin_all(2)
     icon_frame.add_theme_stylebox_override("panel", icon_box)
     icon_frame.name = "IconFrame"

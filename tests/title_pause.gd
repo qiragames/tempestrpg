@@ -82,7 +82,9 @@ func _run() -> void:
     for child in menu._panels.credits.get_children():
         if child is Label:
             credits += child.text + "\n"
-    _check(credits.contains("Gear icons by Kyrise (https://kyrise.itch.io/)") and credits.contains("Ninja Adventure") and credits.contains("Pixel Crawler") and credits.contains("Kenney"), "Credits name every art pack, with the required Kyrise attribution")
+        elif child is RichTextLabel:
+            credits += child.get_parsed_text() + "\n"
+    _check(credits.contains("Gear icons by Kyrise (https://kyrise.itch.io/)") and credits.contains("Ninja Adventure") and credits.contains("Pixel Crawler") and credits.contains("Kenney") and credits.contains("Dogobongocat") and credits.contains("Daniel Linssen"), "Credits name every art pack and font, with the required Kyrise attribution")
     _cancel(menu)
     _check(menu._panels.main.visible and not menu._panels.credits.visible, "Esc steps back to the main menu")
     menu._show("settings")
