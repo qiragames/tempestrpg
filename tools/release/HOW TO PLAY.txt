@@ -26,6 +26,11 @@ YOUR OWN CHARACTER IN A FRIEND'S WORLD
   autosave and when you leave). The map you discovered stays with each world.
   Otherwise you play a new character in their world (saved in their world for next time).
 
+STORAGE
+  Build Vaults in your village (B, build mode) for settlement storage; open it at a Vault or at the
+  town hall of any major city (the "Storage" sign). In a major city you can also rent storage that
+  opens only in that city.
+
 HANDY
   Your saves are in %APPDATA%\TempestRPG (type it into the Explorer address bar).
   Esc -> Options: HUD size (65-100%), window size, sound.  F1: hide/show the controls line.

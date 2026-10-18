@@ -22,6 +22,7 @@ func _frames(count: int = 3) -> void:
         await process_frame
 
 func _run() -> void:
+    preload("res://scripts/pets/pet_followers.gd").egg_drops = true
     _check(PETS.ORDER.size() == 10 and PETS.ORDER.all(func(id): return PETS.texture(id) != null and PETS.face(id) != null and PETS.PETS[id][2].size() >= 1), "Ten pets, each with art, a portrait and a bonus")
     var rng := RandomNumberGenerator.new()
     rng.seed = 4

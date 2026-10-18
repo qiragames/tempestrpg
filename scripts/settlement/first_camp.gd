@@ -202,6 +202,8 @@ func place_problem(actor: Node2D, kind: String, tile: Vector2i) -> String:
         return "%s needs a %s." % [spec[0], NATION.tier_name(int(spec[4])).to_lower()]
     if spec[5] and NATION.count(state.nation, kind) > 0:
         return "Your nation has a %s already." % spec[0]
+    if kind == "vault" and NATION.count(state.nation, kind) >= preload("res://scripts/settlement/storage.gd").MAX_VAULTS:
+        return "Your nation has the most Vaults it can (six)."
     if state.nation.buildings.size() >= NATION.MAX_BUILDINGS:
         return "No more buildings fit the settlement."
     var area := NATION.footprint(kind, tile)

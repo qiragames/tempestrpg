@@ -154,6 +154,17 @@ func open_nearest() -> void:
     if not wild.is_empty():
         session.request_action("mount", {"operation": "tame", "id": wild})
         return
+    # Storage: F at a Vault in your village or at a major city's town hall.
+    var storage_node = hud.get_parent().get("storage")
+    if storage_node != null:
+        var places: Array = storage_node.reachable(hud.player)
+        var city := ""
+        for town_id in storage_node.cities():
+            if hud.player.global_position.distance_to(storage_node.hall_position(town_id)) <= storage_node.REACH:
+                city = town_id
+        if not places.is_empty() or not city.is_empty():
+            hud.storage_panel.open_at(places, city)
+            return
     # M11d: F at a fallen meteorite collects it.
     var events_node = hud.get_parent().get("events")
     if events_node != null:

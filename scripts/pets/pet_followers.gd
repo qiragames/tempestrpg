@@ -6,6 +6,10 @@ const PETS := preload("res://scripts/pets/pet_catalogue.gd")
 const AUTHORITY := preload("res://scripts/network/authority.gd")
 const FOLLOW := Vector2(-14, 6)
 
+## Eggs drop in the game (switched on by the title menu, where every game starts); scripted test
+## runs that count bag items stay exact unless they switch it on (the pets test does).
+static var egg_drops := false
+
 var world: Node2D
 var _followers: Dictionary = {}
 var _rng := RandomNumberGenerator.new()
@@ -50,7 +54,7 @@ func choose(actor: Node2D, id: String) -> bool:
 
 ## Host: a creature fell (QuestLog passes defeats on) — sometimes an egg for whoever beat it.
 func on_event(actor: Node, kind: String, data: Dictionary) -> void:
-    if not AUTHORITY.can_mutate(actor):
+    if not AUTHORITY.can_mutate(actor) or not egg_drops:
         return
     var entity := String(data.get("id", ""))
     var chance := 0.0

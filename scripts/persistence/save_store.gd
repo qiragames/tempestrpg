@@ -144,6 +144,9 @@ static func validate_player(state: Variant, id: String) -> bool:
         return false
     if not progression.get("quests") is Dictionary or not progression.get("equipment") is Dictionary:
         return false
+    # Storage (after 1.0): settlement and city boxes of known shape and contents.
+    if not preload("res://scripts/settlement/storage.gd").valid(progression):
+        return false
     # M11f: pets (known, owned once) and the one following.
     if not preload("res://scripts/pets/pet_catalogue.gd").valid(progression):
         return false

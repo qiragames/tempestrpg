@@ -46,6 +46,7 @@ var _current: String = ""
 func _ready() -> void:
     UI.install()
     SETTINGS.apply(SETTINGS.load_settings())
+    preload("res://scripts/pets/pet_followers.gd").egg_drops = true
     if has_node("/root/Audio"):
         get_node("/root/Audio").music("title")
     set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

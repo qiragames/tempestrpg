@@ -234,6 +234,7 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-18: Claude Code added storage (user request) on `claude/storage`: `Storage` (world node; per character `progression.storage` {home, city}), the Vault nation building (room per Vault, at most six), city storage rented at a major city's town hall (2,500 Zeni, only usable there), settlement storage also opened at every major city's town hall, the `storage` intent, `StoragePanel`, save checks; storage stays with its world (not carried by imported characters). Tests: `tests/storage.gd` (23).
 - 2026-10-16: Claude Code polished the UI after 1.0 (user feedback) on `claude/ui-polish`: map and minimap markers are arrows showing where each character faces (`UI.draw_arrow`); the equipment window no longer pastes item icons onto the character; worn armour no longer draws coloured bars on the character in the world (only the weapon in hand). Before it, on `claude/tower-fix`: the desert tower art is whole (48 px) and the nation's watchtower uses the wooden lookout.
 - 2026-10-16: Claude Code published release v1.0.0 (all of the user's list done: M9–M11).
 - 2026-10-16: Claude Code added armies (M11h) on `claude/m11h-armies`: `Army` (world node; soldiers in the world progression `army`, host simulation, bodies on every peer), the `army` intent, `ArmyPanel` (C), siege waves grow with the army.

@@ -27,6 +27,8 @@ const BUILDINGS := {
     "field": ["Field", "", Vector2(32, 32), {"wood": 4}, 0, false, "Farmland: plant and harvest crops for food (F)."],
     "workshop": ["Workshop", "shop_green", Vector2(40, 20), {"wood": 20, "stone": 10}, 1, false, "Two crafters turn wood and stone into trade goods."],
     "market": ["Market", "shop", Vector2(40, 20), {"wood": 20, "stone": 15}, 1, false, "Two merchants sell trade goods and lead caravans."],
+    # User request (after 1.0): settlement storage, also reachable at any major city's town hall.
+    "vault": ["Vault", "hut_tent", Vector2(40, 18), {"wood": 20, "stone": 20}, 1, false, "Settlement storage: room for 150 items and 20 gear per Vault; open it here or at any major city's town hall."],
 }
 ## Buildings you can walk over (no collision).
 const WALKABLE := ["field"]

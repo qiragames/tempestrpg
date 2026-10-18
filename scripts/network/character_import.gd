@@ -12,7 +12,7 @@ const REGISTRY := preload("res://scripts/menu/world_registry.gd")
 ## Parts of a character record that travel with it.
 const RECORD_KEYS := ["progression", "gear", "inventory", "skill_ids", "slots", "skill_evidence", "form", "health", "magicules"]
 ## Progression entries that belong to a world.
-const WORLD_PROGRESSION := ["chests", "spots", "elites", "ferry_pass_until", "ship"]
+const WORLD_PROGRESSION := ["chests", "spots", "elites", "ferry_pass_until", "ship", "storage"]
 
 ## What travels of a character record.
 static func carried(record: Dictionary) -> Dictionary:
