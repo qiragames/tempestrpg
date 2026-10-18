@@ -158,7 +158,7 @@ Requested by the user after 17e; exact order and scope to be confirmed with the 
 ### M16 — Housing (user design 2026-10-18) · Done
 
 - **M16 — houses and inn rooms: Done (Claude, 2026-10-18).** Build **Your House** in the settlement (build mode, wood 25 + stone 15, one per character): its door (F) leads inside, where you furnish it (F: buy a piece and place it where you stand, up to 20; take it away for its price). 17 pieces from Pixel Crawler's interior art; some help — a bed (rest: full HP and Well rested, +10% XP for 20 minutes), a trophy (+3% Zeni from creatures), the wardrobe (your settlement storage), the stove (cook as in a town). Friends may visit; only the owner furnishes. **Inn rooms:** rent one at a major city's town hall (1500 Zeni, move it to another city for the same), go up to it there; it has a bed and room for four decorations. Interiors are rooms in an empty stretch of open sea (no weather inside; characters there collide only with the room walls). Saves v41. Tests: `tests/housing.gd` (27).
-- Next: release v1.2.
+- **Release v1.2.0: Done (Claude, 2026-10-19)** from `claude/release-v1.2`: guilds and chat, the guild hall, duels and the arena, housing, boss drops, the finished pixel UI.
 
 ### Boss drops and HUD fixes (user requests 2026-10-18) · Done
 
@@ -268,6 +268,7 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-19: Claude Code published release v1.2.0 (version 1.2.0 in project.godot and the exe; HOW TO PLAY covers guilds, chat, duels, the arena and houses).
 - 2026-10-18/19: Claude Code added housing (M16) on `claude/m16-housing`: `WorldHousing` (node "Housing": houses and inn rooms, `MAP.HOME_ZONE` interiors, walls on physics layer 8 with players' mask switched inside, furniture, rest/trophy/stove/wardrobe hooks), the `home` nation building (claimed in `FirstCamp.place`), `HousingPanel`, the inn button in `StoragePanel`, the `housing` intent, "Indoors" region (no weather, skipped by the regions achievement), save v41.
 - 2026-10-18: Claude Code added boss drops and fixed the HUD (user requests) on `claude/hud-fixes-boss-drops`: `BossLoot` (materials `bossmat_<boss>`, names, icons in `assets/game/ui/icons/boss_materials/`, counts, forge costs), uniques for elites and dungeon bosses (`BossItems`, `BossCatalogue.DUNGEON_UNIQUES`, staff/fist templates), materials from `RaidBoss._defeat`, `bossforge:<item>` Smithing recipes (`CraftingCatalogue.bar_for_level`), the drops row in `GameHud._build_boss_drops`; `GameHud.pixel_scale/window_scale` snap the HUD size.
 - 2026-10-18: Claude Code added duels and the arena (M15) on `claude/m15-duels`: `WorldDuels` (node "Duels": challenges and matches, snapshots only; `guard` from `Health.take_damage` via `Player.duel_guard`; `can_hit`), duelists' strikes query layer 2 and arrows/bolts ray layer 2 only during a match (no elements or statuses on players), the `arena` nation building (art `wall`), `ArenaPanel`, duel controls in `PartyPanel`, the HUD duel banner, `progression.pvp` records checked in saves.
