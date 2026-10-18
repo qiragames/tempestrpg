@@ -250,6 +250,11 @@ static func pixel_bar(bar: ProgressBar, kind: String) -> void:
     bar.show_percentage = false
     bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
+## A skill's icon (M12c: the class skills; others have none yet).
+static func skill_icon(id: String) -> Texture2D:
+    var path := "res://assets/game/ui/skills/%s.png" % id
+    return load(path) if ResourceLoader.exists(path) else null
+
 static func icon(id: String) -> Texture2D:
     return load(ICONS[id]) if ICONS.has(id) else null
 

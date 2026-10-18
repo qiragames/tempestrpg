@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/skills/skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"skewer_line"
+display_name = "Skewer Line"
+tier = "Common"
+description = "A thrust so long it stuns everything along it."
+damage = 67
+magicule_cost = 20.0
+cooldown = 3.5
+effect = &"pierce"

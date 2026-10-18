@@ -68,6 +68,8 @@ NOUNS = {
     "spear": ["Spear", "Lance", "Pike", "Glaive", "Halberd", "Partisan", "Trident", "Javelin", "Spike", "Ranseur"],
     "scythe": ["Scythe", "Reaper", "Sickle", "Harvester", "Crescent", "Grim", "Thresher", "Cutter"],
     "bow": ["Bow", "Longbow", "Recurve", "Shortbow", "Warbow", "Greatbow", "Crossbow", "Arbalest", "Flatbow", "Stringer"],
+    "staff": ["Staff", "Wand", "Rod", "Scepter", "Stave", "Crook", "Focus", "Spire", "Cane", "Branch"],
+    "fist": ["Knuckles", "Claws", "Cestus", "Fists", "Talons", "Handwraps", "Knucklebands", "Grips"],
     "head": ["Helm", "Hood", "Cap", "Coif", "Crown", "Visor", "Circlet", "Mask", "Greathelm", "Cowl"],
     "body": ["Mail", "Cuirass", "Robe", "Jerkin", "Hauberk", "Plate", "Vestment", "Brigandine", "Tunic", "Coat"],
     "hands": ["Gloves", "Gauntlets", "Bracers", "Grips", "Handwraps", "Vambraces", "Mitts", "Fists"],
@@ -111,11 +113,22 @@ UNIQUES = [
     ["Band of Fury", "ring", ("armory", "gold_ring"), "blood", 4, "berserker"],
     ["Seal of the Warden", "ring", ("armory", "silver_ring"), "holy", 4, "warden"],
 ]
+# M12c: uniques of the two new weapon types.
+CLASS_UNIQUES = [
+    ["Starweaver's Staff", "staff", ("7soul", "W_Staff08.png"), "arcane", 5, "starfall"],
+    ["Emberwand", "staff", ("arsenal", "wand2.png"), "fire", 4, "inferno"],
+    ["Frostbinder Rod", "staff", ("7soul", "W_Staff05.png"), "frost", 4, "glacier"],
+    ["Dragon's Grip", "fist", ("7soul", "W_Fist005.png"), "fire", 5, "inferno"],
+    ["Thunder Knuckles", "fist", ("7soul", "W_Fist003.png"), "storm", 4, "thunderlord"],
+    ["Bloodfist Claws", "fist", ("7soul", "W_Fist004.png"), "blood", 4, "bloodthirst"],
+]
 UNIQUE_ARCHETYPE = {"head": "metal", "body": "metal", "hands": "metal", "feet": "leather", "ring": "ring", "amulet": "amulet"}
 EPIC_WORDS = {"fire": "Dragonfire", "frost": "Glacial", "nature": "Wildwood", "holy": "Sunforged", "shadow": "Nightshade"}
 
 # --- Stats
-WEAPON_DAMAGE = {"dagger": (8, 11), "sword": (12, 15), "spear": (13, 17), "scythe": (15, 20), "bow": (9, 12)}
+WEAPON_DAMAGE = {"dagger": (8, 11), "sword": (12, 15), "spear": (13, 17), "scythe": (15, 20), "bow": (9, 12),
+                 # M12c: the Mage's staff (a free magic bolt) and the Monk's fist weapons (very fast).
+                 "staff": (11, 14), "fist": (7, 9)}
 # Armour archetypes: stat → [low, high] at level 1.
 ARMOUR = {
     "head": {"cloth": {"hp": (3, 6), "magicules": (3, 6)}, "leather": {"hp": (5, 8), "speed": (1, 3)}, "metal": {"hp": (6, 10), "defense": (1, 2)}},
@@ -299,6 +312,20 @@ def sources():
     return found
 
 
+def class_weapon_sources():
+    """M12c: [group, archetype, image, origin] for staffs and fist weapons."""
+    soul = PACKS / "icons_7soul"
+    arsenal = PACKS / "icons_idylwild_arsenal"
+    found = []
+    for path in sorted(p for p in soul.rglob("*.png") if re.fullmatch(r"W_Staff\d+\.png", p.name)):
+        found.append(["staff", "", fit(Image.open(path)), "7soul"])
+    for path in sorted(p for p in arsenal.rglob("*.png") if re.fullmatch(r"(staff\d|wand\d)\.png", p.name)):
+        found.append(["staff", "", fit(Image.open(path)), "idylwild"])
+    for path in sorted(p for p in soul.rglob("*.png") if re.fullmatch(r"W_Fist\d+\.png", p.name)):
+        found.append(["fist", "", fit(Image.open(path)), "7soul"])
+    return found
+
+
 def armory_file(folder, name):
     return next(p for p in folder.rglob(name + ".png"))
 
@@ -415,13 +442,13 @@ def main():
             entry["weapon"] = group
         bases.append(entry)
 
-    slot_of = {"sword": "weapon", "dagger": "weapon", "spear": "weapon", "scythe": "weapon", "bow": "weapon",
+    slot_of = {"sword": "weapon", "dagger": "weapon", "spear": "weapon", "scythe": "weapon", "bow": "weapon", "staff": "weapon", "fist": "weapon",
                "head": "head", "body": "body", "hands": "hands", "feet": "feet", "ring": "accessory", "amulet": "accessory"}
     found = sources()
     per_group = {}
     for entry in found:
         per_group.setdefault(entry[0], []).append(entry)
-    for group, entries in per_group.items():
+    def expand(group, entries):
         nouns = NOUNS[group]
         for index, (group_name, archetype, image, origin) in enumerate(entries):
             seed = int(hashlib.md5(f"{group}:{index}".encode()).hexdigest(), 16)
@@ -446,6 +473,9 @@ def main():
                 alt_noun = nouns[(index + 3 + k * 5) % len(nouns)]
                 add(group, archetype, recolour(image, element, group in WEAPON_DAMAGE), f"{word} {alt_noun}", element,
                     min(20, level + 4 + 2 * k), 2, 0.12, slot_of[group])
+
+    for group, entries in per_group.items():
+        expand(group, entries)
     # Epic themed pieces from the Super Epic sheet: Epic and up, high level.
     for index, (group, archetype, image, theme) in enumerate(epic_sources()):
         nouns = NOUNS[group]
@@ -470,6 +500,18 @@ def main():
         image = glow_outline(recolour(image, element, group in WEAPON_DAMAGE), ACCENTS[element])
         archetype = UNIQUE_ARCHETYPE.get(group, "")
         add(group, archetype, image, name, element, 18 if min_rarity == 4 else 20, min_rarity, 0.45, slot_of[group])
+        bases[-1]["unique"] = ability
+    # M12c: staffs and fist weapons, after everything else so every earlier item keeps its ID
+    # and name.
+    per_class = {}
+    for entry in class_weapon_sources():
+        per_class.setdefault(entry[0], []).append(entry)
+    for group, entries in per_class.items():
+        expand(group, entries)
+    for name, group, (pack, file), element, min_rarity, ability in CLASS_UNIQUES:
+        folder = {"7soul": soul, "arsenal": arsenal}[pack]
+        image = glow_outline(recolour(fit(Image.open(next(folder.rglob(file)))), element, True), ACCENTS[element])
+        add(group, "", image, name, element, 18 if min_rarity == 4 else 20, min_rarity, 0.45, slot_of[group])
         bases[-1]["unique"] = ability
     # Atlases and previews.
     PREVIEW.mkdir(parents=True, exist_ok=True)

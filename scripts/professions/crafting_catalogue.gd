@@ -28,11 +28,11 @@ const BAR_LEVELS := {
 ## What can be forged: [name, bars, logs (any wood), gems (any)]
 const FORGE := {
     "dagger": ["Dagger", 2, 1, 0], "sword": ["Sword", 3, 1, 0], "spear": ["Spear", 3, 2, 0],
-    "scythe": ["Scythe", 4, 2, 0], "bow": ["Bow", 1, 3, 0],
+    "scythe": ["Scythe", 4, 2, 0], "bow": ["Bow", 1, 3, 0], "staff": ["Staff", 1, 3, 1], "fist": ["Fist weapon", 2, 1, 0],
     "head": ["Helmet", 3, 0, 0], "body": ["Armour", 5, 0, 0], "hands": ["Gloves", 2, 0, 0], "feet": ["Boots", 2, 0, 0],
     "accessory": ["Ring or amulet", 1, 0, 1],
 }
-const WEAPON_TYPES := ["dagger", "sword", "spear", "scythe", "bow"]
+const WEAPON_TYPES := ["dagger", "sword", "spear", "scythe", "bow", "staff", "fist"]
 
 
 ## Potions: [name, Alchemy level, price, effect, amount, seconds, ingredients, description]

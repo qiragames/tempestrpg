@@ -14,6 +14,7 @@ TempestRPG is a private project for the user and their friends. Third-party art 
 | Idylwild's Armory | Idylwild | CC0 1.0 (credited with thanks) | https://opengameart.org/content/idylwilds-armory |
 | Super Epic Weapons Fantasy Pack FREE | babysamurai | CC0 1.0 (credited with thanks) | https://opengameart.org/content/super-epic-weapons-fantasy-pack-free |
 | UI assets pack (and the Sta.Toasty font) | Dogobongocat | CC0 1.0 (credited with thanks) — the pixel UI since M13 | https://dogobongocat.itch.io/ui-assets-pack-srt |
+| Raven Fantasy Icons (free edition) | Clockwork Raven | Free edition: personal use (games released for free, no microtransactions or paid ads); not to be redistributed as assets — buy before any sale | https://clockworkraven.itch.io/raven-fantasy-icons |
 | m5x7 and m3x6 fonts | Daniel Linssen | Free to use, attribution appreciated | https://managore.itch.io/m5x7, https://managore.itch.io/m3x6 |
 
 All packs, including the required Kyrise credit, are listed in the game's Credits screen (title menu, step 22).

@@ -88,14 +88,14 @@ func refresh() -> void:
     var price := CLASSES.change_price(progression)
     _summary.text = "Class: %s · subclass: %s · a change costs %d Zeni (you have %d)" % [CLASSES.CLASSES[mine.main][0] if not mine.main.is_empty() else "none yet", CLASSES.CLASSES[mine.sub][0] if not mine.sub.is_empty() else ("from level %d" % CLASSES.SUB_LEVEL if level < CLASSES.SUB_LEVEL else "none yet"), price, int(progression.get("zeni", 0))]
     _reset.disabled = ATTRIBUTES.total_points(progression) == ATTRIBUTES.unspent(progression)
-    var skills: Node = hud.get_parent().get("class_skills")
+    var skills := preload("res://scripts/skills/class_skills.gd")
     for id in CLASSES.ORDER:
         var info: Array = CLASSES.CLASSES[id]
         var row := HBoxContainer.new()
         row.custom_minimum_size = Vector2(FRAME.size.x - 44, 32)
         row.add_theme_constant_override("separation", 6)
         _list.add_child(row)
-        var taught: String = skills.skill_text(id) if skills != null else ""
+        var taught: String = skills.skill_text(id)
         var label: Label = hud._label("%s — %s weapons · %s / %s\n   %s%s" % [info[0], info[1], ATTRIBUTES.SHORT[info[2]], ATTRIBUTES.SHORT[info[3]], info[4], "  Skills: " + taught if not taught.is_empty() else ""], Vector2.ZERO, Vector2(10, 30), row, 8)
         label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
         label.autowrap_mode = TextServer.AUTOWRAP_OFF

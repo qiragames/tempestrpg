@@ -13,6 +13,7 @@ const REGION := preload("res://scripts/world/region_content.gd")
 const LEVELING := preload("res://scripts/progression/leveling.gd")
 const RACES := preload("res://scripts/races/race_catalogue.gd")
 const TREE := preload("res://scripts/skills/skill_tree.gd")
+const CLASS_SKILLS := preload("res://scripts/skills/class_skills.gd")
 const RESPAWNER := preload("res://scripts/world/respawner.gd")
 const GEAR := preload("res://scripts/items/gear_catalogue.gd")
 const SOURCES := preload("res://scripts/items/gear_sources.gd")
@@ -103,7 +104,7 @@ static func validate_player(state: Variant, id: String) -> bool:
         seen[skill] = true
     var equipped := {}
     for slot in slots:
-        if not slot is String or (slot != "" and ((not seen.has(slot) and not TREE.SKILLS.has(slot)) or equipped.has(slot))):
+        if not slot is String or (slot != "" and ((not seen.has(slot) and not TREE.SKILLS.has(slot) and not CLASS_SKILLS.SKILLS.has(slot)) or equipped.has(slot))):
             return false
         equipped[slot] = true
     # Every saved skill must follow from this character's own unlock evidence.
@@ -135,7 +136,7 @@ static func validate_player(state: Variant, id: String) -> bool:
     # Skill tree (v15): nodes of this race in order, activations of learned skills, exact point total.
     if not TREE.valid(progression, known):
         return false
-    var granted: Array = TREE.granted_skills(progression.tree.nodes)
+    var granted: Array = TREE.granted_skills(progression.tree.nodes) + CLASS_SKILLS.granted(progression)
     for slot in slots:
         if slot != "" and not slot in granted and not TREE.activated(slot, progression.tree.active):
             return false

@@ -2,6 +2,7 @@ extends Node
 const AUTHORITY := preload("res://scripts/network/authority.gd")
 const CATALOGUE := preload("res://scripts/skills/skill_catalogue.gd")
 const TREE := preload("res://scripts/skills/skill_tree.gd")
+const CLASS_SKILLS := preload("res://scripts/skills/class_skills.gd")
 ## One character's learned skills, hotbar loadout and unlock evidence. Skills are granted only
 ## when the catalogue rules are met by this character's own evidence; repeats never stack.
 
@@ -54,6 +55,30 @@ func grant_tree_skill(id: StringName) -> void:
     auto_slot(id)
     learned.emit(skill)
 
+## M12c, host-side: learn the main class's skills (the second from level 25) and forget those of
+## a class left behind (also from the hotbar). True when something changed.
+func sync_class_skills() -> bool:
+    var progression: Variant = get_parent().get("progression")
+    if not AUTHORITY.can_mutate(self) or not progression is Dictionary:
+        return false
+    var granted: Array = CLASS_SKILLS.granted(progression)
+    var changed := false
+    for id in _known.keys():
+        if CLASS_SKILLS.SKILLS.has(String(id)) and not String(id) in granted:
+            _known.erase(id)
+            var slot := _slots.find(id)
+            if slot >= 0:
+                _slots[slot] = &""
+            changed = true
+    for id in granted:
+        if not _known.has(StringName(id)):
+            var skill: Resource = load(CLASS_SKILLS.SKILLS[id])
+            _known[StringName(id)] = skill
+            auto_slot(StringName(id))
+            learned.emit(skill)
+            changed = true
+    return changed
+
 func auto_slot(id: StringName) -> void:
     var empty := _slots.find(&"")
     if empty >= 0 and not _slots.has(id):
@@ -64,7 +89,7 @@ func auto_slot(id: StringName) -> void:
 func is_active(id: StringName) -> bool:
     if not _known.has(id):
         return false
-    if TREE.SKILLS.has(String(id)):
+    if TREE.SKILLS.has(String(id)) or CLASS_SKILLS.SKILLS.has(String(id)):
         return true
     var progression: Variant = get_parent().get("progression")
     if not progression is Dictionary:

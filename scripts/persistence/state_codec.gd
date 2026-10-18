@@ -4,6 +4,7 @@ extends RefCounted
 const CATALOGUE := preload("res://scripts/skills/skill_catalogue.gd")
 const SKILLS := CATALOGUE.SKILLS
 const TREE := preload("res://scripts/skills/skill_tree.gd")
+const CLASS_SKILLS := preload("res://scripts/skills/class_skills.gd")
 const SPECIMEN := "res://data/specimens/forest_gnasher.tres"
 ## Saved enemy kind -> scene. Stable IDs only; never a client-supplied path.
 const ENEMY_SCENES := {"gnasher": "res://scenes/enemies/forest_gnasher.tscn", "treasure_goblin": "res://scenes/enemies/forest_gnasher.tscn", "thornback": "res://scenes/enemies/thornback_gnasher.tscn",
@@ -93,6 +94,9 @@ static func apply_player(actor: Node2D, state: Dictionary, world: Node2D, replic
         book._known[StringName(id)] = load(SKILLS[id])
     for id in TREE.granted_skills(state.progression.tree.nodes):
         book._known[StringName(id)] = load(TREE.SKILLS[id])
+    # M12c: the main class's skills follow from the class and level.
+    for id in CLASS_SKILLS.granted(state.progression):
+        book._known[StringName(id)] = load(CLASS_SKILLS.SKILLS[id])
     for index in range(book.SLOT_COUNT):
         book._slots[index] = StringName(state.slots[index])
     book.evidence = CATALOGUE.empty_evidence()

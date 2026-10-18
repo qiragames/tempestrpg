@@ -18,7 +18,14 @@ const SPEAR_WIDTH := 10.0
 const SWORD_RADIUS := 20.0
 const SCYTHE_RADIUS := 30.0
 const BOW_RANGE := 200.0
-const BASIC_EFFECTS := [&"strike", &"dagger", &"sword", &"spear", &"scythe", &"bow"]
+const BASIC_EFFECTS := [&"strike", &"dagger", &"sword", &"spear", &"scythe", &"bow", &"staff", &"fist"]
+## M12c: fist weapons jab close in front; every third jab in a row (within COMBO_WINDOW) lands a
+## heavier blow.
+const FIST_RADIUS := 12.0
+const COMBO_WINDOW := 1.0
+const COMBO_FACTOR := 1.6
+var _combo := 0
+var _combo_at := -100.0
 ## Daggers (item expansion): a small, quick stab right in front.
 const DAGGER_RADIUS := 11.0
 const SKILL_EFFECTS := preload("res://scripts/skills/skill_effects.gd")
@@ -251,7 +258,19 @@ func attack(facing: Vector2) -> bool:
         return _strike(facing, int(round((int(race.get("strike_damage", damage)) + bonus + race.strike_bonus) * _aura() * attributes)), strike_cost(), cooldown * race.recovery * quicker)
     var kind: String = GEAR.BASES[weapon.base].weapon
     var set_factor: float = SETS.damage_factor(get_parent().equipped_items(), GEAR.BASES) if get_parent().has_method("equipped_items") else 1.0
-    return _strike(facing, element_damage(int(round((int(weapon.stats.damage) + bonus + race.strike_bonus) * _aura() * set_factor * attributes))), strike_cost(), GEAR.WEAPONS[kind].recovery * race.recovery * quicker, StringName(kind))
+    var cost: float = strike_cost()
+    if kind == "staff" and progression is Dictionary:
+        # M12c: the staff's bolt is free and grows with Intelligence instead of Strength.
+        attributes *= ATTRIBUTES.skill_factor(progression) / ATTRIBUTES.damage_factor(progression)
+        cost = 0.0
+    elif kind == "fist":
+        var now := Time.get_ticks_msec() / 1000.0
+        _combo = _combo + 1 if now - _combo_at <= COMBO_WINDOW else 1
+        _combo_at = now
+        if _combo >= 3:
+            attributes *= COMBO_FACTOR
+            _combo = 0
+    return _strike(facing, element_damage(int(round((int(weapon.stats.damage) + bonus + race.strike_bonus) * _aura() * set_factor * attributes))), cost, GEAR.WEAPONS[kind].recovery * race.recovery * quicker, StringName(kind))
 
 func attack_skill(facing: Vector2, skill_id: StringName) -> bool:
     var book = get_parent().get_node("SkillBook")
@@ -312,8 +331,8 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
         get_parent().dismount()
     flash_left = 0.12
     flash_effect = effect
-    if effect == &"bow":
-        return _shoot(strike_damage)
+    if effect == &"bow" or effect == &"staff":
+        return _shoot(strike_damage, effect == &"staff")
     var fx: Dictionary = SKILL_EFFECTS.effects(_skill_id)
     # Lunge-style skills move the caster forward first (stopped by walls and creatures).
     if fx.has("dash") and get_parent() is CharacterBody2D:
@@ -331,6 +350,12 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
         query.shape = stab
         query.transform = Transform2D(0.0, global_position + direction * 15.0)
         reach_dot = 0.5
+    elif effect == &"fist":
+        var jab := CircleShape2D.new()
+        jab.radius = FIST_RADIUS
+        query.shape = jab
+        query.transform = Transform2D(0.0, global_position + direction * 13.0)
+        reach_dot = 0.4
     elif effect == &"sword":
         var arc := CircleShape2D.new()
         arc.radius = SWORD_RADIUS
@@ -390,13 +415,13 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
 
 ## Bow: the first thing in line of sight up to BOW_RANGE takes the hit (terrain stops the shot).
 ## Bow (24a): a flying arrow does the hit when it arrives (see Arrow).
-func _shoot(shot_damage: int) -> bool:
-    spawn_arrow(get_parent(), direction, shot_damage, false, self)
+func _shoot(shot_damage: int, magic: bool = false) -> bool:
+    spawn_arrow(get_parent(), direction, shot_damage, false, self, magic)
     return true
 
 ## Launch an arrow from `shooter` into the world. Cosmetic arrows only fly (clients' view of
 ## other characters' shots).
-static func spawn_arrow(shooter: Node2D, toward: Vector2, shot_damage: int, cosmetic: bool, attack: Node = null) -> Node2D:
+static func spawn_arrow(shooter: Node2D, toward: Vector2, shot_damage: int, cosmetic: bool, attack: Node = null, magic: bool = false) -> Node2D:
     var world: Node = shooter.get_parent()
     if world == null:
         return null
@@ -406,6 +431,7 @@ static func spawn_arrow(shooter: Node2D, toward: Vector2, shot_damage: int, cosm
     arrow.shooter = shooter
     arrow.attack = attack
     arrow.cosmetic = cosmetic
+    arrow.magic = magic
     arrow.position = shooter.position + arrow.direction * 6.0
     world.add_child(arrow)
     return arrow
@@ -415,6 +441,10 @@ func _draw() -> void:
     if flash_left > 0.0 and flash_effect == &"bow":
         # The arrow itself flies (Arrow); only a short release flash here.
         draw_line(direction * 4.0, direction * 10.0, tint, 1.0)
+    elif flash_left > 0.0 and flash_effect == &"staff":
+        draw_circle(direction * 8.0, 4.0, Color(0.5, 0.7, 1.0, 0.5))
+    elif flash_left > 0.0 and flash_effect == &"fist":
+        draw_arc(direction * 13.0, FIST_RADIUS * 0.6, direction.angle() - 0.8, direction.angle() + 0.8, 8, tint, 2.0)
     elif flash_left > 0.0 and flash_effect == &"spear":
         draw_line(direction * 6.0, direction * (SPEAR_LENGTH + 4.0), tint, 2.0)
     elif flash_left > 0.0 and flash_effect == &"dagger":

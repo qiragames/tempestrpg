@@ -22,6 +22,7 @@ const CREDITS := [
     ["Item icons", "7Soul1, Idylwild, babysamurai (OpenGameArt) · CC0 · weapons and armour"],
     ["UI assets pack", "Dogobongocat (dogobongocat.itch.io) · CC0 · panels, slots, bars; Toasty font"],
     ["m5x7 and m3x6", "Fonts by Daniel Linssen (managore.itch.io)"],
+    ["Raven Fantasy Icons", "Clockwork Raven (clockworkraven.itch.io) · class skill icons"],
 ]
 ## Tests point this at a temporary folder.
 var worlds_dir: String = REGISTRY.DEFAULT_DIR

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/skills/skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"fireball"
+display_name = "Fireball"
+tier = "Common"
+description = "A ball of fire that leaves its target burning."
+damage = 46
+magicule_cost = 12.0
+cooldown = 1.4
+effect = &"pierce"

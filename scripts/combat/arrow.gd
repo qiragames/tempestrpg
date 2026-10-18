@@ -6,12 +6,15 @@ extends Node2D
 ## only fly and vanish.
 const SPEED := 320.0
 const RANGE := 200.0
+## M12c: a staff's magic bolt (a glowing orb, a little shorter reach).
+const MAGIC_RANGE := 170.0
 
 var direction := Vector2.RIGHT
 var damage: int = 0
 var shooter: Node2D
 var attack: Node
 var cosmetic := false
+var magic := false
 var _travelled := 0.0
 var _start := Vector2.ZERO
 
@@ -21,7 +24,8 @@ func _ready() -> void:
     z_index = 4
 
 func _physics_process(delta: float) -> void:
-    var step: float = minf(SPEED * delta, RANGE - _travelled)
+    var reach: float = MAGIC_RANGE if magic else RANGE
+    var step: float = minf(SPEED * delta, reach - _travelled)
     var from := global_position
     var to := from + direction * step
     var ray := PhysicsRayQueryParameters2D.create(from, to, 1 | 4)
@@ -42,7 +46,7 @@ func _physics_process(delta: float) -> void:
         return
     global_position = to
     _travelled += step
-    if _travelled >= RANGE - 0.01:
+    if _travelled >= reach - 0.01:
         _stop()
 
 func _stop() -> void:
@@ -52,6 +56,11 @@ func _stop() -> void:
     queue_free()
 
 func _draw() -> void:
+    if magic:
+        draw_circle(Vector2(-4, 0), 2.0, Color(0.55, 0.75, 1.0, 0.45))
+        draw_circle(Vector2.ZERO, 3.5, Color(0.45, 0.65, 1.0, 0.55))
+        draw_circle(Vector2.ZERO, 2.0, Color("e8f4ff"))
+        return
     draw_line(Vector2(-7, 0), Vector2(4, 0), Color("c8a46a"), 1.0)
     draw_colored_polygon(PackedVector2Array([Vector2(6, 0), Vector2(2, -2), Vector2(2, 2)]), Color("e8e2d0"))
     draw_line(Vector2(-7, -2), Vector2(-5, 0), Color("f4e2b8"), 1.0)

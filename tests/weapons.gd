@@ -62,7 +62,7 @@ func _run() -> void:
             types[GEAR.BASES[base].weapon] = true
             for rarity in range(int(GEAR.BASES[base].get("min_rarity", 0)), GEAR.RARITIES.size()):
                 valid = valid and GEAR.valid_item(GEAR.roll(base, rarity, rng))
-    _check(types.keys().size() == 5 and types.has("dagger") and types.has("sword") and types.has("spear") and types.has("scythe") and types.has("bow"), "Five weapon types: dagger, sword, spear, scythe, bow")
+    _check(types.keys().size() == 7 and types.has("dagger") and types.has("sword") and types.has("spear") and types.has("scythe") and types.has("bow") and types.has("staff") and types.has("fist"), "Seven weapon types: dagger, sword, spear, scythe, bow, staff (M12c), fist (M12c)")
     _check(valid and GEAR.SLOTS.has("weapon"), "Rolled weapons of every rarity validate; there is a weapon slot")
     _check(GEAR.stat_range("iron_sword", "damage", 4) == [26.0, 33.0], "Rarity scales weapon damage (Legendary sword 26–33)")
     world = load("res://scenes/world/forest.tscn").instantiate()

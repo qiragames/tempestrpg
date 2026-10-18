@@ -85,9 +85,15 @@ func _run() -> void:
     _check(actor.craft("enchant:rune_vigor") and bag.count_of("rune_vigor") > runes, "Inscribing a Rune of Vigor")
     # Tailoring.
     actor.progression.professions["tailoring"] = PRO.max_xp()
-    bag.add_material("frost_pelt", 4)
     var items: int = actor.gear.items.size()
-    _check(actor.craft("tailor:frost_pelt:body") and actor.gear.items.size() == items + 1, "Sewing a Frost Pelt robe")
+    # Even a master fails 2% of tries, and Double Stitch (Tailoring 40) sometimes sews two.
+    var sewn := false
+    for _try in range(4):
+        bag.add_material("frost_pelt", 4)
+        if actor.craft("tailor:frost_pelt:body"):
+            sewn = true
+            break
+    _check(sewn and actor.gear.items.size() in [items + 1, items + 2], "Sewing a Frost Pelt robe")
     var robe: Dictionary = actor.gear.items[-1]
     var level: int = int(GEAR.BASES[robe.base].get("level", 1))
     _check(GEAR.BASES[robe.base].slot == "body" and level >= 5 and level <= 11, "Body armour in the pelt's level band (Lv %d)" % level)

@@ -70,6 +70,9 @@ const WEAPONS := {
     "spear": {"name": "Spear", "recovery": 0.55, "text": "long thrust through a line"},
     "scythe": {"name": "Scythe", "recovery": 0.75, "text": "wide sweep around the front"},
     "bow": {"name": "Bow", "recovery": 0.6, "text": "shot at the first creature up to 200 px"},
+    # M12c: the Mage's and the Monk's weapons.
+    "staff": {"name": "Staff", "recovery": 0.65, "text": "free magic bolt up to 170 px, grows with Intelligence"},
+    "fist": {"name": "Fist weapon", "recovery": 0.22, "text": "very fast jabs; every third in a row hits harder"},
 }
 const PASSIVES := {
     "keen": "Skills deal 10% more damage",

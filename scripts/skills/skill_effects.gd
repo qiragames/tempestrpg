@@ -44,6 +44,21 @@ const EFFECTS := {
     "turtle_wave": {"reach": 220.0, "width": 16.0, "knockback": 40.0, "color": "7fd8ff"},
     "ki_disc": {"reach": 150.0, "width": 6.0, "dot": [6.0, 3.0], "color": "f8f39a"},
     "spirit_orb": {"area": 72.0, "stun": 0.8, "color": "a8e6ff"},
+    # M12c class skills.
+    "cleave": {"area": 30.0, "knockback": 30.0},
+    "earthsplitter": {"area": 46.0, "stun": 0.8},
+    "shadowstep": {"dash": 56.0, "drain": 0.15},
+    "venom_flurry": {"dot": [8.0, 4.0], "slow": [0.6, 2.0]},
+    "piercing_charge": {"dash": 40.0, "knockback": 30.0},
+    "skewer_line": {"reach": 140.0, "width": 8.0, "stun": 0.6, "color": "e8e2d0"},
+    "soul_harvest": {"area": 40.0, "drain": 0.25},
+    "deaths_whirl": {"area": 56.0, "dot": [7.0, 3.0]},
+    "volley": {"reach": 200.0, "width": 12.0, "knockback": 20.0, "color": "f4e2b8"},
+    "pinning_shot": {"reach": 220.0, "width": 6.0, "root": 2.0, "color": "c8a46a"},
+    "fireball": {"reach": 170.0, "width": 10.0, "dot": [6.0, 3.0], "color": "ff8030"},
+    "frost_nova": {"area": 60.0, "root": 1.2, "slow": [0.4, 3.0]},
+    "palm_strike": {"knockback": 50.0, "stun": 0.5},
+    "hundred_fists": {"dash": 24.0, "area": 30.0, "stun": 0.3},
 }
 ## Short words for tooltips and the skill tree.
 const SUMMARY := {

@@ -69,9 +69,8 @@ func choose(actor: Node2D, slot: String, id: String) -> bool:
             return false
     mine[slot] = id
     actor.progression["classes"] = mine
-    var skills: Node = get_parent().get("class_skills") if get_parent() != null else null
-    if skills != null and slot == "main":
-        skills.update_for(actor)
+    # M12c: the new main class's skills replace the old ones.
+    actor.get_node("SkillBook").sync_class_skills()
     enforce(actor)
     _tell(actor, "The master nods: you are now a %s%s." % [CLASSES.CLASSES[id][0], "" if slot == "main" else " (subclass)"])
     session().queue_save()
@@ -119,6 +118,9 @@ func _physics_process(delta: float) -> void:
     for actor in get_tree().get_nodes_in_group("player"):
         if actor.get_parent() == world:
             enforce(actor)
+            # M12c: the second class skill arrives at level 25.
+            if actor.get_node("SkillBook").sync_class_skills():
+                _tell(actor, "The master's teaching takes hold: new class skill.")
 
 func _process(_delta: float) -> void:
     if _body == null:

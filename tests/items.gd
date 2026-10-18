@@ -203,7 +203,7 @@ func _run() -> void:
                 near = near or absi(int(tier_level) - level) <= 2
             if not near:
                 gaps.append("%s %d" % [type, level])
-    _check(by_type.size() == 10 and gaps.is_empty(), "Every weapon, armour and accessory type has gear within two levels of every level 21-50 %s" % [gaps])
+    _check(by_type.size() == 12 and gaps.is_empty(), "Every weapon, armour and accessory type has gear within two levels of every level 21-50 %s" % [gaps])
     var tier_names := {}
     for id in preload("res://scripts/items/high_items.gd").BASES:
         tier_names[GEAR.BASES[id].name] = true

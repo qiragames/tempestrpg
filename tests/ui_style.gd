@@ -21,6 +21,8 @@ func _frames(count: int = 3) -> void:
         await process_frame
 
 func _run() -> void:
+    # The equipment window is shown with random chest gear; class rules (M12b) are not the point here.
+    preload("res://scripts/progression/class_catalogue.gd").enforced = false
     var world: Node2D = load("res://scenes/world/forest.tscn").instantiate()
     root.add_child(world)
     current_scene = world
@@ -96,10 +98,11 @@ func _run() -> void:
     rng.seed = 3
     var item: Dictionary = SOURCES.roll_chest(rng)
     actor.add_item(item)
-    actor.equip(item.id, hud.gear_panel.target_slot(item))
+    # The slot is chosen before equipping (afterwards a ring's target is the other ring slot).
+    var slot: String = hud.gear_panel.target_slot(item)
+    actor.equip(item.id, slot)
     hud.gear_panel.open()
     await _frames(2)
-    var slot: String = hud.gear_panel.target_slot(item)
     var spare: Dictionary = SOURCES.roll_chest(rng)
     actor.add_item(spare)
     await _frames(2)

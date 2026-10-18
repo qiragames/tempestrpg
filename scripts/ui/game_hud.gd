@@ -218,6 +218,9 @@ func _build_status() -> void:
     _portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(_portrait)
     _name = UI.heading(_label("", Vector2(56, 6), Vector2(168, 14), self, 10))
+    # M13: one line in the heading font; long names with a title end in "…".
+    _name.autowrap_mode = TextServer.AUTOWRAP_OFF
+    _name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
     # M13: the pack's bar pieces (red HP, blue Magicules, a thin gold XP strip).
     _hp_bar = _bar(Rect2(56, 20, 168, 12), UI.HP)
     UI.pixel_bar(_hp_bar, "hp")
@@ -594,8 +597,10 @@ func _process(_delta: float) -> void:
         var button := _slots[index]
         if skill == null:
             button.text = "Empty"
+            button.icon = null
             button.disabled = true
             continue
+        button.icon = UI.skill_icon(String(skill.id))
         var cooldown: float = player.get_node("MeleeAttack").cooldown_left
         button.text = "%s\n%s" % [skill.display_name, "%.1fs" % cooldown if cooldown > 0.0 else "%.0f Magicules" % skill.magicule_cost]
         var effect_text: String = SKILL_EFFECTS.describe(String(skill.id))

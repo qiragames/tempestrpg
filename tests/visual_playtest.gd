@@ -1415,6 +1415,24 @@ func _run() -> void:
     await _wait(0.4)
     await _shot("classes", "The class window: seven classes, a subclass from level 20, changes cost Zeni; weapons need their class")
     hud_nation.class_panel.close_panel()
+    # M12c: the Mage's staff bolt and the first class skill on the hotbar.
+    var gear_bases: Dictionary = load("res://scripts/items/gear_catalogue.gd").BASES
+    var staff_base := ""
+    for id in gear_bases:
+        if gear_bases[id].get("weapon", "") == "staff" and int(gear_bases[id].level) == 1 and int(gear_bases[id].min_rarity) == 0:
+            staff_base = id
+            break
+    showcase.progression["zeni"] = maxi(int(showcase.progression.get("zeni", 0)), 100000)
+    _check(session.apply_action(showcase, "class", {"operation": "choose", "slot": "main", "id": "mage"}), "Changed to Mage at the master")
+    var staff: Dictionary = load("res://scripts/items/gear_catalogue.gd").roll(staff_base, 1, RandomNumberGenerator.new())
+    staff["id"] = "item_showcase_staff"
+    showcase.add_item(staff)
+    _check(showcase.equip("item_showcase_staff", "weapon") and showcase.get_node("SkillBook").knows(&"fireball"), "The Mage wields a staff and knows Fireball")
+    showcase.facing = Vector2.RIGHT
+    showcase.get_node("MeleeAttack").cooldown_left = 0.0
+    showcase.get_node("MeleeAttack").attack(Vector2.RIGHT)
+    await _wait(0.15)
+    await _shot("class_staff", "The Mage's staff: a free magic bolt that grows with Intelligence; the first class skill, Fireball, sits on the hotbar")
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)
