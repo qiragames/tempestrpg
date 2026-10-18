@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 40
+const VERSION := 41
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -25,6 +25,7 @@ const WORLD_TRADE := preload("res://scripts/trade/world_trade.gd")
 const HARBOURS := preload("res://scripts/travel/world_harbours.gd")
 const PARTY := preload("res://scripts/party/world_party.gd")
 const GUILDS := preload("res://scripts/guilds/world_guilds.gd")
+const HOUSING := preload("res://scripts/housing/world_housing.gd")
 const KI_REALM := preload("res://scripts/realm/ki_realm.gd")
 const SIEGE := preload("res://scripts/nation/siege.gd")
 const REALM := preload("res://scripts/realm/realm_catalogue.gd")
@@ -404,6 +405,9 @@ static func validate(data: Variant) -> bool:
         return false
     # Ship invitations and crews (v24).
     if not HARBOURS.valid_state(data.get("harbours")):
+        return false
+    # M16: houses and inn rooms (v41) of this world's characters.
+    if not HOUSING.valid_state(data.get("housing"), data.players):
         return false
     # M14a: guilds (v40) of this world's characters.
     if not GUILDS.valid_state(data.get("guilds"), data.players):
@@ -954,6 +958,11 @@ static func migrate(data: Variant) -> Variant:
         data = data.duplicate(true)
         data.version = 40
         data["guilds"] = GUILDS.initial_state()
+    # v41 (M16): houses and inn rooms.
+    if data.get("version") == 40:
+        data = data.duplicate(true)
+        data.version = 41
+        data["housing"] = HOUSING.initial_state()
     return data
 
 ## Saved enemy entry for a raid boss at full health in its arena (v33 and new worlds).

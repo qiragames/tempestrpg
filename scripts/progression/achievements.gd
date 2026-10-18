@@ -80,7 +80,7 @@ const ACHIEVEMENTS := {
 const LISTS := ["elites", "raids", "dungeons", "regions", "heroic"]
 const LIST_LIMIT := 64
 ## Regions that count for the Wanderer (the sea and the underground do not).
-const SKIP_REGIONS := ["The Sapphire Sea", "The Underdeep"]
+const SKIP_REGIONS := ["The Sapphire Sea", "The Underdeep", "Indoors"]
 
 static func title_of(id: String) -> String:
     return String(ACHIEVEMENTS[id][3]) if ACHIEVEMENTS.has(id) else ""

@@ -44,6 +44,8 @@ var guilds: Node2D
 var chat: Node
 ## M15: duels and the arena.
 var duels: Node2D
+## M16: houses and inn rooms.
+var housing: Node2D
 var respawner: Node
 ## M6a: harvestable trees and ore rocks (professions).
 var nodes: Node
@@ -107,6 +109,8 @@ func _ready() -> void:
     add_child(chat)
     duels = load("res://scripts/pvp/world_duels.gd").new()
     add_child(duels)
+    housing = load("res://scripts/housing/world_housing.gd").new()
+    add_child(housing)
     nodes = load("res://scripts/professions/resource_nodes.gd").new(self)
     add_child(nodes)
     trial = load("res://scripts/trials/proving_trial.gd").new()

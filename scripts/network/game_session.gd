@@ -999,6 +999,29 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
                 return world.exchange.mark_ready(actor, payload.value)
         rejected_requests += 1
         return false
+    if action == "housing":
+        # M16: doors, furniture, resting and inn rooms; the host checks the rest.
+        var housing_operation: Variant = payload.get("operation")
+        var what: Variant = payload.get("id", "")
+        if not housing_operation in ["enter", "leave", "place", "remove", "rest", "rent", "enter_room"] or not what is String or what.length() > 64 or payload.size() > 2:
+            rejected_requests += 1
+            return false
+        match housing_operation:
+            "enter":
+                return world.housing.enter_house(actor, what)
+            "leave":
+                return world.housing.leave(actor)
+            "place":
+                return world.housing.place(actor, what)
+            "remove":
+                return what.is_valid_int() and world.housing.remove(actor, int(what))
+            "rest":
+                return world.housing.rest(actor)
+            "rent":
+                return world.housing.rent_room(actor, what)
+            "enter_room":
+                return world.housing.enter_room(actor)
+        return false
     if action == "duel":
         # M15: challenge, answer or give up; the host checks the rest.
         var duel_operation: Variant = payload.get("operation")

@@ -135,6 +135,10 @@ func gain_zeni(amount: int, reason: String) -> void:
         amount = int(round(amount * (1.0 + pet_zeni / 100.0)))
     # M14b: the guild's Zeni perk (from creatures and bosses).
     var guilds: Node = get_parent().get("guilds") if get_parent() != null else null
+    # M16: a trophy in your house or inn room.
+    var housing: Node = get_parent().get("housing") if get_parent() != null else null
+    if housing != null and reason in ["defeat", "boss"] and housing.has_trophy(character_id):
+        amount = int(round(amount * (1.0 + housing.TROPHY_ZENI / 100.0)))
     if guilds != null and reason in ["defeat", "boss"]:
         var guild_zeni: int = guilds.perk(character_id, "zeni")
         if guild_zeni > 0:
@@ -558,6 +562,10 @@ func start_node(index: int) -> bool:
 func craft_station(profession: String) -> String:
     var map := preload("res://scripts/world/world_map.gd")
     if not map.town_at(global_position).is_empty():
+        return "town"
+    # M16: the stove in your house cooks like a town.
+    var housing: Node = get_parent().get("housing") if get_parent() != null else null
+    if profession == "cooking" and housing != null and housing.piece_near(self, ["stove"]) >= 0:
         return "town"
     var camp: Node = get_parent().get("camp") if get_parent() != null else null
     if camp == null:

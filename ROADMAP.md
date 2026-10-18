@@ -154,7 +154,11 @@ Requested by the user after 17e; exact order and scope to be confirmed with the 
 ### M15 — Duels and the arena (user design 2026-10-18) · Done
 
 - **M15 — duels and the arena: Done (Claude, 2026-10-18).** P → **Duel** challenges a character next to you (they answer in their Party window within 30 s). Both start at full HP inside a ring; only the two fighters can hurt each other; the blow that would finish one wins the round instead (nobody dies, nothing is lost); leaving the ring gives the match away; a round lasts at most 90 s (more HP left wins). A duel is one round. Build an **Arena** in your village: a match started there is best of three, announced to everyone, and counted in the arena board (F at the Arena) — each character keeps duel and arena wins and losses. Matches are never saved. Tests: `tests/duels.gd` (22).
-- Next: M16 housing (an own house with furniture in the settlement, rooms in city inns), then release v1.2.
+
+### M16 — Housing (user design 2026-10-18) · Done
+
+- **M16 — houses and inn rooms: Done (Claude, 2026-10-18).** Build **Your House** in the settlement (build mode, wood 25 + stone 15, one per character): its door (F) leads inside, where you furnish it (F: buy a piece and place it where you stand, up to 20; take it away for its price). 17 pieces from Pixel Crawler's interior art; some help — a bed (rest: full HP and Well rested, +10% XP for 20 minutes), a trophy (+3% Zeni from creatures), the wardrobe (your settlement storage), the stove (cook as in a town). Friends may visit; only the owner furnishes. **Inn rooms:** rent one at a major city's town hall (1500 Zeni, move it to another city for the same), go up to it there; it has a bed and room for four decorations. Interiors are rooms in an empty stretch of open sea (no weather inside; characters there collide only with the room walls). Saves v41. Tests: `tests/housing.gd` (27).
+- Next: release v1.2.
 
 ### Boss drops and HUD fixes (user requests 2026-10-18) · Done
 
@@ -264,6 +268,7 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-18/19: Claude Code added housing (M16) on `claude/m16-housing`: `WorldHousing` (node "Housing": houses and inn rooms, `MAP.HOME_ZONE` interiors, walls on physics layer 8 with players' mask switched inside, furniture, rest/trophy/stove/wardrobe hooks), the `home` nation building (claimed in `FirstCamp.place`), `HousingPanel`, the inn button in `StoragePanel`, the `housing` intent, "Indoors" region (no weather, skipped by the regions achievement), save v41.
 - 2026-10-18: Claude Code added boss drops and fixed the HUD (user requests) on `claude/hud-fixes-boss-drops`: `BossLoot` (materials `bossmat_<boss>`, names, icons in `assets/game/ui/icons/boss_materials/`, counts, forge costs), uniques for elites and dungeon bosses (`BossItems`, `BossCatalogue.DUNGEON_UNIQUES`, staff/fist templates), materials from `RaidBoss._defeat`, `bossforge:<item>` Smithing recipes (`CraftingCatalogue.bar_for_level`), the drops row in `GameHud._build_boss_drops`; `GameHud.pixel_scale/window_scale` snap the HUD size.
 - 2026-10-18: Claude Code added duels and the arena (M15) on `claude/m15-duels`: `WorldDuels` (node "Duels": challenges and matches, snapshots only; `guard` from `Health.take_damage` via `Player.duel_guard`; `can_hit`), duelists' strikes query layer 2 and arrows/bolts ray layer 2 only during a match (no elements or statuses on players), the `arena` nation building (art `wall`), `ArenaPanel`, duel controls in `PartyPanel`, the HUD duel banner, `progression.pvp` records checked in saves.
 - 2026-10-18: Claude Code added the guild hall, bank, level and weekly quests (M14b) on `claude/m14b-guild-hall`: `guild_hall` nation building (art `house_c`), `WorldGuilds` bank operations (`bank_put/take/zeni`, `set_withdraw`, only at a hall), levels/perks (`level_for`, `perk`), `member_xp` from `Player.gain_experience`, perks in `gain_experience`, `gain_zeni` (defeat/boss) and `ResourceNodes.swing_seconds`, weekly quests from `QuestLog.on_event` (and bounties), `GuildHallPanel` (F at a hall), stricter `valid_state` (bank items, goods, quests).

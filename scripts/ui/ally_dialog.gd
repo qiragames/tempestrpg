@@ -159,6 +159,28 @@ func open_nearest() -> void:
     if master != null and master.near(hud.player):
         hud.class_panel.open()
         return
+    # M16: houses and inn rooms — the door, the bed, the wardrobe, furnishing; or a house's front door.
+    var housing_node = hud.get_parent().get("housing")
+    if housing_node != null:
+        var me: Node2D = hud.player
+        var inside: Dictionary = housing_node.interior_at(me.global_position)
+        if not inside.is_empty():
+            if me.global_position.distance_to(housing_node.door_inside(inside.rect)) <= housing_node.DOOR_REACH:
+                hud.session.request_action("housing", {"operation": "leave"})
+                return
+            if inside.owner == me.character_id:
+                if housing_node.piece_near(me, ["bed", "bed_double"]) >= 0 or (inside.kind == "room" and me.global_position.distance_to(housing_node._inn_bed(inside.rect)) <= housing_node.USE_REACH):
+                    hud.session.request_action("housing", {"operation": "rest"})
+                    return
+                if housing_node.piece_near(me, ["wardrobe"]) >= 0 and hud.get_parent().get("storage") != null:
+                    hud.storage_panel.open_at(hud.get_parent().storage.reachable(me))
+                    return
+                hud.housing_panel.open()
+                return
+        for owner in housing_node.state.houses:
+            if me.global_position.distance_to(housing_node.house_door(owner)) <= housing_node.DOOR_REACH:
+                hud.session.request_action("housing", {"operation": "enter", "id": owner})
+                return
     # M15: F at the Arena.
     var duels_node = hud.get_parent().get("duels")
     if duels_node != null and duels_node.arena_at(hud.player) != Vector2.INF:

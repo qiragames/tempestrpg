@@ -103,7 +103,7 @@ func _run() -> void:
     me.global_position = hall
     hud.storage_panel.open_at(storage.reachable(me), "brookhaven")
     await _frames(3)
-    _check(hud.storage_panel.visible and hud.storage_panel._tabs.get_child_count() == 1 and hud.storage_panel._stored.get_child_count() >= 1, "The storage window shows Brookhaven storage and its contents")
+    _check(hud.storage_panel.visible and hud.storage_panel._tabs.get_children().filter(func(tab): return not String(tab.name).begins_with("InnButton")).size() == 1 and hud.storage_panel._tabs.get_children().any(func(tab): return String(tab.name).begins_with("InnButton")) and hud.storage_panel._stored.get_child_count() >= 1, "The storage window shows Brookhaven storage and its contents (and the inn, M16)")
     hud.storage_panel.close_panel()
     world.queue_free()
     await _frames()

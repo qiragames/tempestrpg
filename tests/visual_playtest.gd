@@ -1511,6 +1511,46 @@ func _run() -> void:
     await _wait(0.4)
     await _shot("arena_window", "The arena window (F at the Arena): challenge someone there, and the arena board")
     hud_nation.arena_panel.close_panel()
+    _log("## 47. Your house")
+    hall_camp.state.wood = int(hall_camp.state.wood) + 40
+    hall_camp.state.stone = int(hall_camp.state.stone) + 30
+    var home_tile := Vector2i(-9999, -9999)
+    for ring in range(3, 12):
+        if home_tile.x != -9999:
+            break
+        for dy in range(-ring, ring + 1):
+            if home_tile.x != -9999:
+                break
+            for dx in range(-ring, ring + 1):
+                var candidate: Vector2i = hall_centre + Vector2i(dx, dy)
+                showcase.global_position = load("res://scripts/nation/nation_catalogue.gd").foot(candidate) + Vector2(0, 12)
+                if maxi(absi(dx), absi(dy)) == ring and hall_camp.place_problem(showcase, "home", candidate).is_empty() and hall_camp.place(showcase, "home", candidate):
+                    home_tile = candidate
+                    break
+    _check(home_tile.x != -9999, "Your House built in the village")
+    showcase.global_position = world.housing.house_door(showcase.character_id) + Vector2(0, 8)
+    world.terrain.ensure_props_at(showcase.global_position)
+    await _wait(0.5)
+    await _shot("house_outside", "Your own house in the village: its door (F) leads inside")
+    showcase.global_position = world.housing.house_door(showcase.character_id)
+    _check(world.housing.enter_house(showcase, showcase.character_id), "Went inside")
+    var home_rect: Rect2 = world.housing.house_rect(int(world.housing.house_of(showcase.character_id).slot))
+    showcase.progression["zeni"] = maxi(int(showcase.progression.get("zeni", 0)), 10000)
+    var furnished := 0
+    for entry in [["bed_double", Vector2(36, 76)], ["dresser", Vector2(84, 74)], ["stove", Vector2(176, 78)], ["trophy_bear", Vector2(120, 38)], ["window", Vector2(60, 40)], ["chandelier", Vector2(150, 40)], ["covered_table", Vector2(112, 120)], ["stool", Vector2(88, 122)], ["stool", Vector2(136, 122)], ["plant_tall", Vector2(18, 140)], ["plant", Vector2(206, 140)]]:
+        showcase.global_position = home_rect.position + entry[1]
+        if world.housing.place(showcase, entry[0]):
+            furnished += 1
+    _check(furnished >= 9, "Furnished the house (%d pieces)" % furnished)
+    showcase.global_position = home_rect.position + Vector2(112, 100)
+    await _wait(0.5)
+    await _shot("house_inside", "Inside your house: furnish it (F) — the bed lets you rest (Well rested: +10% XP), a trophy adds Zeni, the stove cooks")
+    hud_nation.housing_panel.open()
+    await _wait(0.4)
+    await _shot("house_furnish", "The furnishing window: buy a piece and place it where you stand; take pieces away for their price")
+    hud_nation.housing_panel.close_panel()
+    showcase.global_position = world.housing.door_inside(home_rect)
+    _check(world.housing.leave(showcase), "Left the house")
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

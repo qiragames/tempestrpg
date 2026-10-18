@@ -53,7 +53,7 @@ const REGION_WEATHER := {
     "The Ki Realm": {"clear": 7, "rain": 2, "storm": 1},
     "The Sapphire Sea": {"clear": 6, "rain": 3, "storm": 2},
 }
-const INDOORS := ["The Underdeep"]
+const INDOORS := ["The Underdeep", "Indoors"]
 
 ## Game hour 0..24.
 static func hour(world_time: float) -> float:

@@ -53,6 +53,12 @@ DUELS AND THE ARENA
   the ring: the blow that would finish someone wins instead - nobody dies, nothing is lost.
   Build an Arena in your village: matches there are best of three and go on the arena board (F).
 
+YOUR HOUSE
+  Build "Your House" in your village (B). Its door (F) leads inside; F inside buys furniture and
+  places it where you stand. Rest in your bed for +10% XP (20 min); a trophy gives a little more
+  Zeni, the wardrobe opens your storage, the stove lets you cook. Friends can visit.
+  Or rent a room at a major city's town hall (F there -> "Rent an inn room").
+
 HANDY
   Your saves are in %APPDATA%\TempestRPG (type it into the Explorer address bar).
   Esc -> Options: HUD size (65-100%), window size, sound.  F1: hide/show the controls line.

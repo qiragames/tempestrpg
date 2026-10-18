@@ -113,6 +113,30 @@ func refresh() -> void:
             _signature = ""
             refresh()
         )
+    # M16: the inn of a major city (rent a room, move it here, or go up to it).
+    var housing: Node = hud.get_parent().get("housing")
+    var city := ""
+    for where in _places:
+        if where != "home":
+            city = where
+    if housing != null and not city.is_empty():
+        var room: Dictionary = housing.room_of(me.character_id)
+        var inn: Button = hud._button("", Vector2.ZERO, Vector2(170, 20), _tabs)
+        inn.name = "InnButton"
+        inn.custom_minimum_size = Vector2(170, 20)
+        inn.add_theme_font_size_override("font_size", 9)
+        if not room.is_empty() and room.town == city:
+            inn.text = "Go up to your inn room"
+            inn.pressed.connect(func():
+                close_panel()
+                hud.session.request_action("housing", {"operation": "enter_room"}))
+        else:
+            inn.text = ("Move your inn room here" if not room.is_empty() else "Rent an inn room") + " (%d Zeni)" % housing.ROOM_PRICE
+            inn.pressed.connect(func():
+                hud.session.request_action("housing", {"operation": "rent", "id": city})
+                await get_tree().process_frame
+                _signature = ""
+                refresh())
     if _where.is_empty():
         _summary.text = "No storage here."
         return

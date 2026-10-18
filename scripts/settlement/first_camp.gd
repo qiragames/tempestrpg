@@ -202,6 +202,9 @@ func place_problem(actor: Node2D, kind: String, tile: Vector2i) -> String:
         return "%s needs a %s." % [spec[0], NATION.tier_name(int(spec[4])).to_lower()]
     if spec[5] and NATION.count(state.nation, kind) > 0:
         return "Your nation has a %s already." % spec[0]
+    # M16: one house per character.
+    if kind == "home" and get_parent().get("housing") != null and not get_parent().housing.build_problem(actor).is_empty():
+        return get_parent().housing.build_problem(actor)
     if kind == "vault" and NATION.count(state.nation, kind) >= preload("res://scripts/settlement/storage.gd").MAX_VAULTS:
         return "Your nation has the most Vaults it can (six)."
     if state.nation.buildings.size() >= NATION.MAX_BUILDINGS:
@@ -273,6 +276,9 @@ func place(actor: Node2D, kind: String, tile: Vector2i) -> bool:
         state.nation.spent[resource] = int(state.nation.spent[resource]) + int(cost[resource])
     state.nation.buildings.append({"id": "b_%d" % int(state.nation.next), "kind": kind, "tile": [tile.x, tile.y]})
     state.nation.next = int(state.nation.next) + 1
+    # M16: a character's own house.
+    if kind == "home" and get_parent().get("housing") != null:
+        get_parent().housing.claim(actor, state.nation.buildings[-1].id)
     _sync_placed()
     queue_redraw()
     return true

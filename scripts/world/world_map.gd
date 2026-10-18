@@ -19,6 +19,9 @@ const COLS := 2900
 const ROWS := 768
 ## World position of tile (0, 0) (unchanged since M4.5a).
 const ORIGIN := Vector2(-2560, -1536)
+## M16: where house interiors and inn rooms are: open sea with no land within 20 tiles (grid tiles
+## 2200-2360 x 340-400, from bounds().position). Characters inside collide only with the walls.
+const HOME_ZONE := Rect2(Vector2(10240, -192), Vector2(2560, 960))
 const SIZE := Vector2(COLS * TILE, ROWS * TILE)
 ## The First Clearing in tiles (its own scene content, roads and obstacles stay as before).
 const CLEARING := Rect2i(160, 96, 60, 40)
@@ -614,6 +617,9 @@ static func region_at(world: Vector2) -> int:
     return data().region[tile_index(tile.x, tile.y)]
 
 static func region_name(world: Vector2) -> String:
+    # M16: house interiors and inn rooms live in an empty stretch of open sea.
+    if HOME_ZONE.has_point(world):
+        return "Indoors"
     return REGION_NAMES[region_at(world)]
 
 ## The town or village around a position ([] when none).

@@ -79,8 +79,12 @@ static func units(stored: Dictionary) -> int:
 ## Which storages a character can open where they stand: ["home"] and/or a city id.
 func reachable(actor: Node2D) -> Array:
     var found: Array = []
+    # M16: the wardrobe in your house opens your settlement storage.
+    var housing: Node = world.get("housing") if world != null else null
+    if housing != null and not vaults().is_empty() and housing.piece_near(actor, ["wardrobe"]) >= 0:
+        found.append("home")
     for entry in vaults():
-        if actor.global_position.distance_to(NATION.foot(Vector2i(entry.tile[0], entry.tile[1]))) <= REACH + 10.0:
+        if not "home" in found and actor.global_position.distance_to(NATION.foot(Vector2i(entry.tile[0], entry.tile[1]))) <= REACH + 10.0:
             found.append("home")
             break
     for town_id in cities():
