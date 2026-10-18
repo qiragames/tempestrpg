@@ -159,6 +159,11 @@ func open_nearest() -> void:
     if master != null and master.near(hud.player):
         hud.class_panel.open()
         return
+    # M15: F at the Arena.
+    var duels_node = hud.get_parent().get("duels")
+    if duels_node != null and duels_node.arena_at(hud.player) != Vector2.INF:
+        hud.arena_panel.open()
+        return
     # M14b: F at a Guild Hall.
     var guilds_node = hud.get_parent().get("guilds")
     if guilds_node != null and guilds_node.at_hall(hud.player):

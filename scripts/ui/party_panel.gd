@@ -128,6 +128,27 @@ func _refresh() -> void:
     _invite_label.text = "%s invites you to their party." % invite.from if not invite.is_empty() else ""
     _accept.visible = not invite.is_empty()
     _decline.visible = not invite.is_empty()
+    # M15: a duel challenge to answer, or the running duel to give up.
+    var duels: Node = hud.get_parent().get("duels")
+    if duels != null:
+        var offer: Dictionary = duels.state.challenges.get(me, {})
+        if not offer.is_empty():
+            var row := _row()
+            var text: Label = _fit(hud._label("%s challenges you%s" % [offer.from, " (arena)" if offer.arena else ""], Vector2.ZERO, Vector2(170, 20), row, 9), 170)
+            text.add_theme_color_override("font_color", Color("ffb070"))
+            var yes: Button = _fit(hud._button("Fight", Vector2.ZERO, Vector2(60, 20), row), 60)
+            yes.pressed.connect(func():
+                hud.session.request_action("duel", {"operation": "accept"})
+                close())
+            var no: Button = _fit(hud._button("Decline", Vector2.ZERO, Vector2(60, 20), row), 60)
+            no.pressed.connect(func(): _duel("decline"))
+            _list.add_child(row)
+        if duels.in_match(me):
+            var row := _row()
+            _fit(hud._label("Fighting %s" % duels.opponent(me), Vector2.ZERO, Vector2(170, 20), row, 9), 170)
+            var give_up: Button = _fit(hud._button("Give up", Vector2.ZERO, Vector2(80, 20), row), 80)
+            give_up.pressed.connect(func(): _duel("forfeit"))
+            _list.add_child(row)
     var mine: Array = node.members(me)
     var leading: bool = node.leader(me) == me
     _title.text = "PARTY (%d / %d)" % [mine.size(), node.MAX_SIZE] if mine.size() > 1 else "PARTY"
@@ -145,6 +166,7 @@ func _refresh() -> void:
                 kick.pressed.connect(_send.bind("kick", id))
             if id != me:
                 row.add_child(_trade_button(id))
+                row.add_child(_duel_button(id))
             _list.add_child(row)
     var others: Array = []
     for actor in get_tree().get_nodes_in_group("player"):
@@ -159,9 +181,29 @@ func _refresh() -> void:
         invite_button.disabled = mine.size() >= node.MAX_SIZE or (mine.size() > 1 and not leading)
         invite_button.pressed.connect(_send.bind("invite", id))
         row.add_child(_trade_button(id))
+        row.add_child(_duel_button(id))
         _list.add_child(row)
     if others.is_empty() and mine.size() <= 1:
         _fit(hud._label("Nobody else is online. Open your world to friends (Esc).", Vector2.ZERO, Vector2(300, 18), _list, 10), 290)
+
+## M15: a Duel button (they must stand near you; at an Arena it is a best-of-three match).
+func _duel_button(id: String) -> Button:
+    var button := Button.new()
+    button.text = "Duel"
+    button.custom_minimum_size = Vector2(50, 20)
+    button.add_theme_font_size_override("font_size", 9)
+    button.pressed.connect(func():
+        hud.session.request_action("duel", {"operation": "challenge", "id": id})
+        close()
+    )
+    return button
+
+func _duel(operation: String) -> void:
+    hud.session.request_action("duel", {"operation": operation})
+    get_tree().create_timer(0.15, true).timeout.connect(func():
+        if window().visible:
+            _refresh()
+    )
 
 ## M11c: a Trade button for another character (they must stand near you).
 func _trade_button(id: String) -> Button:

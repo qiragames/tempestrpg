@@ -385,12 +385,21 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
         if fx.has("area"):
             reach_dot = -1.0
     query.collision_mask = 4
+    # M15: fighters in a duel also strike their opponent (players are on layer 2).
+    var duels: Node = get_parent().get_parent().get("duels") if get_parent().get_parent() != null else null
+    var dueling: bool = duels != null and get_parent().get("character_id") is String and duels.in_match(get_parent().character_id)
+    if dueling:
+        query.collision_mask = 4 | 2
+        query.exclude = [get_parent().get_rid()]
     var space := get_world_2d().direct_space_state
     var dealt := 0
     var hits := 0
     var struck: Array = []
     for hit in space.intersect_shape(query):
         var target: Node2D = hit.collider
+        var rival: bool = dueling and target.is_in_group("player")
+        if rival and not duels.can_hit(get_parent(), target):
+            continue
         var offset := target.global_position - global_position
         if offset.normalized().dot(direction) < reach_dot:
             continue
@@ -402,9 +411,9 @@ func _strike(facing: Vector2, strike_damage: int, cost: float, recovery: float, 
                 dealt += before - target.get_node("Health").current
                 hits += 1
                 struck.append(target)
-                if effect in BASIC_EFFECTS and effect != &"strike":
+                if effect in BASIC_EFFECTS and effect != &"strike" and not rival:
                     element_hit(target, before - target.get_node("Health").current, struck)
-                if not fx.is_empty() and target.has_method("apply_status"):
+                if not fx.is_empty() and target.has_method("apply_status") and not rival:
                     target.apply_status(fx, get_parent())
     if drain > 0.0 and dealt > 0:
         get_parent().get_node("Health").heal(int(round(dealt * drain)))

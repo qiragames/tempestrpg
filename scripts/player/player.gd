@@ -884,6 +884,11 @@ func gear_bonus(stat: String) -> float:
 const SETS := preload("res://scripts/items/set_catalogue.gd")
 var phoenix_left := 0.0
 
+## M15: duels (see WorldDuels.guard).
+func duel_guard(source: Node, hit: int) -> int:
+    var duels: Node = get_parent().get("duels") if get_parent() != null else null
+    return duels.guard(self, source, hit) if duels != null and source != null and source != self else hit
+
 func lethal_guard() -> bool:
     if phoenix_left > 0.0 or not SETS.has_ability(equipped_items(), GEAR.BASES, "phoenix"):
         return false

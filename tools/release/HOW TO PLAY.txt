@@ -48,6 +48,11 @@ GUILDS AND CHAT
   Build a Guild Hall in your village (B): F there opens your guild's bank (items, gear, Zeni),
   its level and perks, and this week's three guild quests that everyone helps with.
 
+DUELS AND THE ARENA
+  P -> "Duel" next to a friend challenges them (they answer in their Party window). Fight inside
+  the ring: the blow that would finish someone wins instead - nobody dies, nothing is lost.
+  Build an Arena in your village: matches there are best of three and go on the arena board (F).
+
 HANDY
   Your saves are in %APPDATA%\TempestRPG (type it into the Explorer address bar).
   Esc -> Options: HUD size (65-100%), window size, sound.  F1: hide/show the controls line.

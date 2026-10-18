@@ -999,6 +999,23 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
                 return world.exchange.mark_ready(actor, payload.value)
         rejected_requests += 1
         return false
+    if action == "duel":
+        # M15: challenge, answer or give up; the host checks the rest.
+        var duel_operation: Variant = payload.get("operation")
+        var rival: Variant = payload.get("id", "")
+        if not duel_operation in ["challenge", "accept", "decline", "forfeit"] or not rival is String or rival.length() > 64 or payload.size() > 2:
+            rejected_requests += 1
+            return false
+        match duel_operation:
+            "challenge":
+                return world.duels.challenge(actor, rival)
+            "accept":
+                return world.duels.accept(actor)
+            "decline":
+                return world.duels.decline(actor)
+            "forfeit":
+                return world.duels.forfeit(actor)
+        return false
     if action == "chat":
         # M14a: a line for the world, your guild or your party.
         if payload.size() != 2 or not payload.get("channel") is String or not payload.get("text") is String or payload.text.length() > 200:
@@ -1252,8 +1269,9 @@ func persistent_document() -> Dictionary:
     # M11c: open trades end with the session (M11d: and so do world events and their creatures).
     data.erase("exchange")
     data.erase("events")
-    # M14a: chat lines are never saved.
+    # M14a: chat lines are never saved (M15: nor are running duels).
     data.erase("chat")
+    data.erase("duels")
     data.enemies = data.enemies.filter(func(enemy): return not String(enemy.id).begins_with("trial_") and not String(enemy.id).begins_with("event_"))
     return data
 

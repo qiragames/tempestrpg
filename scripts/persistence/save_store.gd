@@ -146,6 +146,9 @@ static func validate_player(state: Variant, id: String) -> bool:
         return false
     if not progression.get("quests") is Dictionary or not progression.get("equipment") is Dictionary:
         return false
+    # M15: duel and arena records.
+    if not preload("res://scripts/pvp/world_duels.gd").valid_record(progression):
+        return false
     # M12b: classes (known, a subclass only from level 20 and different from the class).
     if not preload("res://scripts/progression/class_catalogue.gd").valid(progression):
         return false

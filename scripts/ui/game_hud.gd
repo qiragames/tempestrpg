@@ -69,6 +69,9 @@ var class_panel: Control
 ## Guilds (M14a), see guild_panel.gd; the guild hall (M14b), see guild_hall_panel.gd.
 var guild_panel: Control
 var guild_hall_panel: Control
+## The arena (M15), see arena_panel.gd; the banner while fighting a duel.
+var arena_panel: Control
+var _duel_banner: Label
 var _zeni: Label
 var _close: Button
 var _log: RichTextLabel
@@ -150,6 +153,14 @@ func _ready() -> void:
     add_child(guild_panel)
     guild_hall_panel = load("res://scripts/ui/guild_hall_panel.gd").new(self)
     add_child(guild_hall_panel)
+    arena_panel = load("res://scripts/ui/arena_panel.gd").new(self)
+    add_child(arena_panel)
+    _duel_banner = _label("", Vector2(170, 46), Vector2(300, 14), self, 9)
+    _duel_banner.name = "DuelBanner"
+    _duel_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _duel_banner.add_theme_color_override("font_color", Color("ffb070"))
+    _outline(_duel_banner)
+    move_child(_duel_banner, arena_panel.get_index())
     # The owner's mod menu (F10), only in the dev build.
     if preload("res://scripts/dev/dev_tools.gd").available():
         dev_panel = load("res://scripts/ui/dev_panel.gd").new(self)
@@ -162,7 +173,7 @@ func _ready() -> void:
     add_child(_camp_dialog)
 
 func menu_open() -> bool:
-    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible) or (is_instance_valid(harbour_panel) and harbour_panel.visible) or (is_instance_valid(party_panel) and party_panel.is_open()) or (is_instance_valid(dialog_panel) and dialog_panel.is_open()) or (is_instance_valid(nation_panel) and nation_panel.is_open()) or (is_instance_valid(citizens_panel) and citizens_panel.is_open()) or (is_instance_valid(invite_panel) and invite_panel.is_open()) or (is_instance_valid(dev_panel) and dev_panel.is_open()) or (is_instance_valid(professions_panel) and professions_panel.is_open()) or (is_instance_valid(quest_panel) and quest_panel.is_open()) or (is_instance_valid(achievements_panel) and achievements_panel.is_open()) or (is_instance_valid(exchange_panel) and exchange_panel.is_open()) or (is_instance_valid(pets_panel) and pets_panel.is_open()) or (is_instance_valid(army_panel) and army_panel.is_open()) or (is_instance_valid(storage_panel) and storage_panel.is_open()) or (is_instance_valid(class_panel) and class_panel.is_open()) or (is_instance_valid(guild_panel) and guild_panel.is_open()) or (is_instance_valid(guild_hall_panel) and guild_hall_panel.is_open())
+    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible) or (is_instance_valid(harbour_panel) and harbour_panel.visible) or (is_instance_valid(party_panel) and party_panel.is_open()) or (is_instance_valid(dialog_panel) and dialog_panel.is_open()) or (is_instance_valid(nation_panel) and nation_panel.is_open()) or (is_instance_valid(citizens_panel) and citizens_panel.is_open()) or (is_instance_valid(invite_panel) and invite_panel.is_open()) or (is_instance_valid(dev_panel) and dev_panel.is_open()) or (is_instance_valid(professions_panel) and professions_panel.is_open()) or (is_instance_valid(quest_panel) and quest_panel.is_open()) or (is_instance_valid(achievements_panel) and achievements_panel.is_open()) or (is_instance_valid(exchange_panel) and exchange_panel.is_open()) or (is_instance_valid(pets_panel) and pets_panel.is_open()) or (is_instance_valid(army_panel) and army_panel.is_open()) or (is_instance_valid(storage_panel) and storage_panel.is_open()) or (is_instance_valid(class_panel) and class_panel.is_open()) or (is_instance_valid(guild_panel) and guild_panel.is_open()) or (is_instance_valid(guild_hall_panel) and guild_hall_panel.is_open()) or (is_instance_valid(arena_panel) and arena_panel.is_open())
 
 func bind_player(actor: Node2D) -> void:
     if player == actor:
@@ -547,6 +558,11 @@ func _refresh_node_prompt() -> void:
 func _process(_delta: float) -> void:
     _scale_new_elements()
     _poll_chat()
+    # M15: the duel banner.
+    var duels: Node = get_parent().get("duels")
+    if is_instance_valid(_duel_banner) and duels != null and is_instance_valid(player):
+        _duel_banner.text = duels.banner(player.character_id)
+        _duel_banner.visible = not _duel_banner.text.is_empty() and not menu_open()
     if _pause_panel.visible:
         # A friend joined while this host was paused alone: resume the shared world, keep this player stopped.
         if not _pause_blocking and get_tree().paused and session.active and session.owners.size() > 1:

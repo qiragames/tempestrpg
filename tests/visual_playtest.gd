@@ -1472,6 +1472,45 @@ func _run() -> void:
     await _wait(0.4)
     await _shot("guild_bank", "The guild hall window: the guild bank, level and perks, and this week's three guild quests")
     hud_nation.guild_hall_panel.close_panel()
+    _log("## 46. Duels and the arena")
+    hall_camp.state.wood = int(hall_camp.state.wood) + 40
+    hall_camp.state.stone = int(hall_camp.state.stone) + 60
+    var arena_tile := Vector2i(-9999, -9999)
+    for ring in range(3, 11):
+        if arena_tile.x != -9999:
+            break
+        for dy in range(-ring, ring + 1):
+            if arena_tile.x != -9999:
+                break
+            for dx in range(-ring, ring + 1):
+                if maxi(absi(dx), absi(dy)) == ring and hall_camp.place(null, "arena", hall_centre + Vector2i(dx, dy)):
+                    arena_tile = hall_centre + Vector2i(dx, dy)
+                    break
+    _check(arena_tile.x != -9999, "An Arena built in the village")
+    var arena_foot: Vector2 = load("res://scripts/nation/nation_catalogue.gd").foot(arena_tile)
+    showcase.global_position = arena_foot + Vector2(-12, 34)
+    world.terrain.ensure_props_at(showcase.global_position)
+    # A sparring partner (only for the showcase; removed again before the world is saved).
+    var sparring = load("res://scenes/player/player.tscn").instantiate()
+    sparring.character_id = "sparring_partner"
+    sparring.local_controlled = false
+    sparring.position = arena_foot + Vector2(14, 34)
+    world.add_child(sparring)
+    await _wait(0.3)
+    _check(world.duels.challenge(showcase, "sparring_partner") and world.duels.accept(sparring), "An arena match against a sparring partner")
+    world.duels._process(world.duels.BREAK_SECONDS + 0.1)
+    showcase.facing = Vector2.RIGHT
+    showcase.get_node("MeleeAttack").cooldown_left = 0.0
+    showcase.get_node("MeleeAttack").attack(Vector2.RIGHT)
+    await _wait(0.2)
+    await _shot("arena_match", "An arena match: best of three inside the ring, nobody dies and nothing is lost (P → Duel anywhere for a one-round duel)")
+    world.duels.forfeit(sparring)
+    sparring.queue_free()
+    await _wait(0.2)
+    hud_nation.arena_panel.open()
+    await _wait(0.4)
+    await _shot("arena_window", "The arena window (F at the Arena): challenge someone there, and the arena board")
+    hud_nation.arena_panel.close_panel()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

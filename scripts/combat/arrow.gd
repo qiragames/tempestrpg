@@ -28,13 +28,19 @@ func _physics_process(delta: float) -> void:
     var step: float = minf(SPEED * delta, reach - _travelled)
     var from := global_position
     var to := from + direction * step
-    var ray := PhysicsRayQueryParameters2D.create(from, to, 1 | 4)
+    var duels: Node = shooter.get_parent().get("duels") if is_instance_valid(shooter) and shooter.get_parent() != null else null
+    var dueling: bool = duels != null and shooter.get("character_id") is String and duels.in_match(shooter.character_id)
+    # M15: in a duel, arrows and bolts also fly at the opponent (players are on layer 2).
+    var ray := PhysicsRayQueryParameters2D.create(from, to, 1 | 4 | (2 if dueling else 0))
     if is_instance_valid(shooter):
         ray.exclude = [shooter.get_rid()]
     var hit := get_world_2d().direct_space_state.intersect_ray(ray)
     if not hit.is_empty():
         global_position = hit.position
-        if not cosmetic and hit.collider.has_node("Health") and hit.collider.is_in_group("enemies"):
+        if not cosmetic and dueling and hit.collider.is_in_group("player"):
+            if duels.can_hit(shooter, hit.collider):
+                hit.collider.get_node("Health").take_damage(damage, shooter)
+        elif not cosmetic and hit.collider.has_node("Health") and hit.collider.is_in_group("enemies"):
             var before: int = hit.collider.get_node("Health").current
             var landed: bool = hit.collider.get_node("Health").take_damage(damage, shooter)
             if landed and is_instance_valid(shooter) and shooter.has_method("gear_passive") and shooter.gear_passive("lifesteal"):

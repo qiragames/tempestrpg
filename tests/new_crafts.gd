@@ -79,10 +79,16 @@ func _run() -> void:
     _check(int(actor.progression.experience) - before == 120, "...and it works (100 XP → 120)")
     # Enchanting.
     actor.progression.professions["enchanting"] = PRO.max_xp()
-    bag.add_material("gem_sapphire", 2)
-    bag.add_material("gnasher_essence", 4)
     var runes: int = bag.count_of("rune_vigor")
-    _check(actor.craft("enchant:rune_vigor") and bag.count_of("rune_vigor") > runes, "Inscribing a Rune of Vigor")
+    # Even a master fails 2% of tries.
+    var inscribed := false
+    for _try in range(4):
+        bag.add_material("gem_sapphire", 2)
+        bag.add_material("gnasher_essence", 4)
+        if actor.craft("enchant:rune_vigor"):
+            inscribed = true
+            break
+    _check(inscribed and bag.count_of("rune_vigor") > runes, "Inscribing a Rune of Vigor")
     # Tailoring.
     actor.progression.professions["tailoring"] = PRO.max_xp()
     var items: int = actor.gear.items.size()

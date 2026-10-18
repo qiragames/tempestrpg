@@ -79,6 +79,12 @@ func take_damage(amount: int, source: Node = null, over_time: bool = false) -> b
         return false
     last_hit_by = source
     var hit: int = maxi(1, amount - armor)
+    # M15: in a duel the finishing blow wins the round instead (nobody dies).
+    if get_parent().has_method("duel_guard"):
+        hit = get_parent().duel_guard(source, hit)
+        if hit <= 0:
+            last_hit_by = null
+            return true
     # Item expansion: a Phoenix piece turns one lethal hit into a close call.
     if hit >= current and current > 1 and get_parent().has_method("lethal_guard") and get_parent().lethal_guard():
         hit = current - 1
