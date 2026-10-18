@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.2 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.0 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -299,7 +299,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (960x540)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Uncommon Knight's Shortbow
+- [x] The chest gave an Uncommon-or-better item: Rare Dusk Falchion
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (960x540)
@@ -838,6 +838,18 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 ![The Mage's staff: a free magic bolt that grows with Intelligence; the first class skill, Fireball, sits on the hotbar](154_class_staff.png)
 *The Mage's staff: a free magic bolt that grows with Intelligence; the first class skill, Fireball, sits on the hotbar* (960x540)
 
+## 45. Guilds and chat
+- [x] Founded the guild Moon Wardens <MOON>
+- [x] Said something to the world
+- [x] ...and to the guild
+
+![Guilds and chat: the guild tag above your head, and chat lines in the log (Enter to chat, /g guild, /p party)](155_guild_chat.png)
+*Guilds and chat: the guild tag above your head, and chat lines in the log (Enter to chat, /g guild, /p party)* (960x540)
+
+
+![The guild window (P → Guild): members and ranks, inviting characters online; found a guild for 1000 Zeni](156_guild_window.png)
+*The guild window (P → Guild): members and ranks, inviting characters online; found a guild for 1000 Zeni* (960x540)
+
 
 ## System messages seen
 
@@ -899,7 +911,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +1500 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Epic Crimson Spike.
+- Trial reward: Rare Magma Scythe.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +21 XP (defeat).
@@ -917,8 +929,8 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Rare Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Uncommon Knight's Shortbow.
-- +32 Zeni (chest).
+- Chest opened: Rare Dusk Falchion.
+- +35 Zeni (chest).
 - World "Showcase World" loaded. Esc: pause menu — switch on Multiplayer to invite friends.
 - Multiplayer is on: Invite a Friend makes one code per friend.
 - Multiplayer is off: your world is single player again.
@@ -926,4 +938,4 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 The bot retreated 0 time(s) to let Magicules recover.
 XP assistance for skill points: 550 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 154 screenshots.**
+**Result: 0 failed checks, 156 screenshots.**

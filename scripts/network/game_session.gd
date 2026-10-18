@@ -999,6 +999,47 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
                 return world.exchange.mark_ready(actor, payload.value)
         rejected_requests += 1
         return false
+    if action == "chat":
+        # M14a: a line for the world, your guild or your party.
+        if payload.size() != 2 or not payload.get("channel") is String or not payload.get("text") is String or payload.text.length() > 200:
+            rejected_requests += 1
+            return false
+        return world.chat.say(actor, payload.channel, payload.text)
+    if action == "guild":
+        # M14a: founding, invitations, ranks and leaving; the host checks the rest.
+        var guild_operation: Variant = payload.get("operation")
+        var member: Variant = payload.get("id", "")
+        if not guild_operation in ["found", "invite", "accept", "decline", "leave", "kick", "promote", "demote", "transfer", "disband"] or not member is String or member.length() > 64:
+            rejected_requests += 1
+            return false
+        if guild_operation == "found":
+            if payload.size() != 5 or not payload.get("name") is String or not payload.get("tag") is String or not (payload.get("emblem") is int or payload.get("emblem") is float) or payload.name.length() > 40 or payload.tag.length() > 8:
+                rejected_requests += 1
+                return false
+            return world.guilds.found(actor, payload.name, payload.tag, int(payload.emblem))
+        if payload.size() > 2:
+            rejected_requests += 1
+            return false
+        match guild_operation:
+            "invite":
+                return world.guilds.invite(actor, member)
+            "accept":
+                return world.guilds.accept(actor)
+            "decline":
+                return world.guilds.decline(actor)
+            "leave":
+                return world.guilds.leave(actor)
+            "kick":
+                return world.guilds.kick(actor, member)
+            "promote":
+                return world.guilds.set_rank(actor, member, true)
+            "demote":
+                return world.guilds.set_rank(actor, member, false)
+            "transfer":
+                return world.guilds.transfer(actor, member)
+            "disband":
+                return world.guilds.disband(actor)
+        return false
     if action == "party":
         # M4.6: invitations, membership and revives; the host checks the rest.
         var party_operation: Variant = payload.get("operation")
@@ -1199,6 +1240,8 @@ func persistent_document() -> Dictionary:
     # M11c: open trades end with the session (M11d: and so do world events and their creatures).
     data.erase("exchange")
     data.erase("events")
+    # M14a: chat lines are never saved.
+    data.erase("chat")
     data.enemies = data.enemies.filter(func(enemy): return not String(enemy.id).begins_with("trial_") and not String(enemy.id).begins_with("event_"))
     return data
 

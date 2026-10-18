@@ -41,6 +41,11 @@ CLASSES AND ATTRIBUTES (new in 1.1)
   type. Every weapon needs its class; without a class you can use weapons up to Rare. Changing a
   class or resetting your attributes costs Zeni at the master.
 
+GUILDS AND CHAT
+  Press Enter to chat: plain text goes to everyone in the world, "/g text" to your guild,
+  "/p text" to your party. P -> "Guild" founds a guild (1000 Zeni: a name, a short tag and an
+  emblem) or shows yours: the leader and officers invite friends who are online.
+
 HANDY
   Your saves are in %APPDATA%\TempestRPG (type it into the Explorer address bar).
   Esc -> Options: HUD size (65-100%), window size, sound.  F1: hide/show the controls line.

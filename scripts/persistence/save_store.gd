@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 39
+const VERSION := 40
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -24,6 +24,7 @@ const TRADE := preload("res://scripts/trade/trade_catalogue.gd")
 const WORLD_TRADE := preload("res://scripts/trade/world_trade.gd")
 const HARBOURS := preload("res://scripts/travel/world_harbours.gd")
 const PARTY := preload("res://scripts/party/world_party.gd")
+const GUILDS := preload("res://scripts/guilds/world_guilds.gd")
 const KI_REALM := preload("res://scripts/realm/ki_realm.gd")
 const SIEGE := preload("res://scripts/nation/siege.gd")
 const REALM := preload("res://scripts/realm/realm_catalogue.gd")
@@ -400,6 +401,9 @@ static func validate(data: Variant) -> bool:
         return false
     # Ship invitations and crews (v24).
     if not HARBOURS.valid_state(data.get("harbours")):
+        return false
+    # M14a: guilds (v40) of this world's characters.
+    if not GUILDS.valid_state(data.get("guilds"), data.players):
         return false
     # Parties and party invitations of this world's characters (v25).
     if not PARTY.valid_state(data.get("party")):
@@ -942,6 +946,11 @@ static func migrate(data: Variant) -> Variant:
             var state: Variant = data.players[id]
             if state is Dictionary and state.get("slots") is Array and state.slots.size() == 4:
                 state.slots.append_array(["", "", "", ""])
+    # v40 (M14a): guilds.
+    if data.get("version") == 39:
+        data = data.duplicate(true)
+        data.version = 40
+        data["guilds"] = GUILDS.initial_state()
     return data
 
 ## Saved enemy entry for a raid boss at full health in its arena (v33 and new worlds).

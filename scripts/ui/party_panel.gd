@@ -45,6 +45,12 @@ func _init(owner_hud: CanvasLayer) -> void:
     _title = UI.heading(hud._label("PARTY", FRAME.position + Vector2(14, 10), Vector2(220, 20), window, 14))
     _close = hud._button("Close", FRAME.position + Vector2(FRAME.size.x - 92, 8), Vector2(80, 24), window)
     _close.pressed.connect(close)
+    # M14a: the guild window.
+    var guild: Button = hud._button("Guild", FRAME.position + Vector2(FRAME.size.x - 178, 8), Vector2(80, 24), window)
+    guild.name = "GuildButton"
+    guild.pressed.connect(func():
+        close()
+        hud.guild_panel.open())
     _invite_label = hud._label("", FRAME.position + Vector2(14, 38), Vector2(FRAME.size.x - 28, 16), window, 10)
     _invite_label.add_theme_color_override("font_color", UI.GOLD_LIGHT)
     _accept = hud._button("Accept", FRAME.position + Vector2(14, 56), Vector2(100, 22), window)
