@@ -50,6 +50,8 @@ func _swing(offsets: Array, wait: int = 0) -> Array:
     return result
 
 func _run() -> void:
+    # These checks are about items, not classes (M12b): class requirements are off here.
+    preload("res://scripts/progression/class_catalogue.gd").enforced = false
     # --- Catalogue
     var types := {}
     var valid := true

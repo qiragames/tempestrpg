@@ -26,19 +26,19 @@ Time to kill (s) and share of the character's HP lost, basic strikes only / with
 | Standard L9 (piercing_fang) | 93 | 19 | 1.9 s, 43% / 1.2 s, 34% | 1.4 s, 29% / 0.9 s, 22% | 1.9 s, 46% / 1.2 s, 22% |
 | Standard L11 (piercing_fang) | 107 | 20 | 1.9 s, 44% / 1.2 s, 35% | 1.4 s, 30% / 0.9 s, 22% | 1.9 s, 48% / 1.2 s, 20% |
 | Standard L8 (piercing_fang) | 84 | 18 | 1.4 s, 33% / 1.2 s, 33% | 1.0 s, 29% / 0.9 s, 22% | 1.4 s, 36% / 0.0 s, 13% |
-| Standard L12 (piercing_fang) | 111 | 21 | 1.4 s, 35% / 1.1 s, 36% | 1.0 s, 31% / 0.8 s, 32% | 1.4 s, 38% / 1.1 s, 25% |
-| Standard L12 (ember_burst) | 111 | 21 | 1.4 s, 35% / 1.1 s, 36% | 1.0 s, 31% / 0.8 s, 32% | 1.4 s, 38% / 1.1 s, 25% |
-| Standard L13 (ember_burst) | 115 | 21 | 1.4 s, 35% / 1.1 s, 36% | 1.0 s, 31% / 0.8 s, 32% | 1.4 s, 38% / 1.1 s, 24% |
-| Elite L15 (ember_burst) | 231 | 35 | 3.7 s, 85% / 3.3 s, 88% | 2.4 s, 55% / 2.8 s, 57% | 3.7 s, 91% / 2.2 s, 42% |
-| Standard L15 (ember_burst) | 125 | 22 | 2.3 s, 47% / 1.4 s, 37% | 1.4 s, 31% / 1.3 s, 32% | 2.3 s, 50% / 1.1 s, 24% |
-| Elite L17 (ember_burst) | 249 | 37 | 4.2 s, 88% / 3.3 s, 92% | 2.8 s, 57% / 2.8 s, 60% | 4.2 s, 95% / 3.3 s, 68% |
-| Standard L16 (ember_burst) | 129 | 23 | 2.3 s, 48% / 1.8 s, 50% | 1.4 s, 31% / 1.7 s, 32% | 2.3 s, 52% / 1.1 s, 24% |
-| Standard L14 (ember_burst) | 120 | 22 | 1.4 s, 36% / 1.1 s, 37% | 1.0 s, 31% / 0.8 s, 32% | 1.4 s, 39% / 1.1 s, 24% |
-| Elite L16 (ember_burst) | 240 | 36 | 3.7 s, 87% / 3.3 s, 90% | 2.4 s, 57% / 2.8 s, 59% | 3.7 s, 94% / 3.2 s, 67% |
-| Standard L17 (ember_burst) | 134 | 23 | 2.3 s, 48% / 2.2 s, 50% | 1.4 s, 31% / 1.7 s, 32% | 2.3 s, 52% / 1.1 s, 23% |
-| Elite L19 (ember_burst) | 267 | 38 | 4.2 s, 91% / 4.4 s, 93% | 2.8 s, 59% / 3.5 s, 81% | died / 3.3 s, 54% |
-| Standard L18 (ember_burst) | 138 | 24 | 2.3 s, 50% / 2.2 s, 51% | 1.4 s, 32% / 1.7 s, 33% | 2.3 s, 54% / 1.1 s, 23% |
-| Elite L20 (ember_burst) | 276 | 39 | 4.2 s, 93% / 4.4 s, 96% | 3.1 s, 81% / 3.5 s, 83% | died / 3.3 s, 69% |
+| Standard L12 (piercing_fang) | 111 | 21 | 2.5 s, 44% / 1.1 s, 36% | 2.5 s, 38% / 0.8 s, 32% | 2.1 s, 48% / 1.1 s, 25% |
+| Standard L12 (ember_burst) | 111 | 21 | 2.5 s, 44% / 1.1 s, 36% | 2.5 s, 38% / 0.8 s, 32% | 2.1 s, 48% / 1.1 s, 25% |
+| Standard L13 (ember_burst) | 115 | 21 | 2.5 s, 44% / 1.1 s, 36% | 2.5 s, 38% / 0.8 s, 32% | 2.5 s, 47% / 1.1 s, 24% |
+| Elite L15 (ember_burst) | 231 | 35 | died / 3.3 s, 88% | 5.7 s, 87% / 3.4 s, 75% | died / 2.2 s, 32% |
+| Standard L15 (ember_burst) | 125 | 22 | 2.9 s, 45% / 1.4 s, 37% | 2.8 s, 38% / 1.3 s, 32% | 2.5 s, 49% / 1.1 s, 24% |
+| Elite L17 (ember_burst) | 249 | 37 | died / 3.3 s, 92% | died / 3.8 s, 77% | died / 3.3 s, 68% |
+| Standard L16 (ember_burst) | 129 | 23 | 2.9 s, 46% / 1.8 s, 50% | 2.8 s, 39% / 1.7 s, 32% | 2.5 s, 50% / 1.1 s, 24% |
+| Standard L14 (ember_burst) | 120 | 22 | 2.9 s, 45% / 1.1 s, 37% | 2.8 s, 38% / 0.8 s, 32% | 2.5 s, 49% / 1.1 s, 24% |
+| Elite L16 (ember_burst) | 240 | 36 | died / 3.3 s, 90% | died / 3.4 s, 77% | died / 3.2 s, 67% |
+| Standard L17 (ember_burst) | 134 | 23 | 3.1 s, 58% / 2.2 s, 50% | 3.1 s, 50% / 1.7 s, 32% | 2.9 s, 50% / 1.1 s, 23% |
+| Elite L19 (ember_burst) | 267 | 38 | died / 4.4 s, 93% | died / 4.1 s, 80% | died / 3.3 s, 68% |
+| Standard L18 (ember_burst) | 138 | 24 | 3.3 s, 60% / 2.2 s, 51% | 3.5 s, 52% / 1.7 s, 33% | 2.9 s, 51% / 1.1 s, 23% |
+| Elite L20 (ember_burst) | 276 | 39 | died / 4.4 s, 96% | died / 4.3 s, 80% | died / 3.3 s, 64% |
 
 ## Leveling projection
 
@@ -49,7 +49,7 @@ Per kill: the measured fight with the band's skill, 8 s finding the next creatur
 | Clearing, Meadow and Beach (L1-4) | 2167 | 0.2 h (387 kills/h, 11436 XP/h) | 0.2 h (364 kills/h, 10766 XP/h) | 0.2 h (365 kills/h, 10789 XP/h) |
 | Lakeshore and Thornwood (L4-9) | 31612 | 1.6 h (356 kills/h, 20232 XP/h) | 1.6 h (343 kills/h, 19511 XP/h) | 1.6 h (348 kills/h, 19788 XP/h) |
 | Cinder Crater, Frostpeak and the desert (L9-14) | 97756 | 3.2 h (330 kills/h, 30978 XP/h) | 3.3 h (317 kills/h, 29763 XP/h) | 3.3 h (315 kills/h, 29579 XP/h) |
-| The ferry lands (L14-20) | 249101 | 6.7 h (318 kills/h, 36990 XP/h) | 6.9 h (311 kills/h, 36188 XP/h) | 6.8 h (315 kills/h, 36621 XP/h) |
-| **Level 1 to 20** | 3228131 | **11.6 h** | **12.0 h** | **11.9 h** |
+| The ferry lands (L14-20) | 249101 | 6.7 h (318 kills/h, 36990 XP/h) | 7.0 h (306 kills/h, 35646 XP/h) | 6.8 h (315 kills/h, 36621 XP/h) |
+| **Level 1 to 20** | 3228131 | **11.6 h** | **12.1 h** | **11.9 h** |
 
-Milestones (average of the races): level 2 after 5 Easy creatures; level 5 after 20 min, level 10 after 2.2 h, level 15 after 5.9 h, level 20 after 11.8 h.
+Milestones (average of the races): level 2 after 5 Easy creatures; level 5 after 20 min, level 10 after 2.2 h, level 15 after 5.9 h, level 20 after 11.9 h.

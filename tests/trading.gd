@@ -30,6 +30,8 @@ func _friend(id: String, at: Vector2) -> CharacterBody2D:
     return other
 
 func _run() -> void:
+    # These checks are about items, not classes (M12b): class requirements are off here.
+    preload("res://scripts/progression/class_catalogue.gd").enforced = false
     var session: Node = root.get_node("GameSession")
     var dir := OS.get_temp_dir().path_join("tempestrpg-trading-" + Crypto.new().generate_random_bytes(6).hex_encode())
     DirAccess.make_dir_recursive_absolute(dir)

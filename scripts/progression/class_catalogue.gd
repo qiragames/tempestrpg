@@ -30,6 +30,8 @@ const CHANGE_PER_LEVEL := 100
 ## jewellery for Intelligence, a little less.
 const NEEDS := {4: [0.5, 0.0], 5: [0.9, 0.25]}
 const GEAR_NEEDS := {4: 0.35, 5: 0.6}
+## Older suites that test items, weapons and trading (not classes) switch the requirements off.
+static var enforced := true
 
 static func chosen(progression: Dictionary) -> Dictionary:
     var stored: Variant = progression.get("classes")
@@ -64,6 +66,8 @@ static func requirements(item: Dictionary) -> Dictionary:
 
 ## Why a character cannot use an item ("" when they can).
 static func problem(progression: Dictionary, item: Dictionary) -> String:
+    if not enforced:
+        return ""
     var needs := requirements(item)
     if int(progression.get("level", 1)) < int(needs.level):
         return "Needs level %d." % int(needs.level)

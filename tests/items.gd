@@ -24,6 +24,8 @@ func _frames(count: int = 3) -> void:
         await process_frame
 
 func _run() -> void:
+    # These checks are about items, not classes (M12b): class requirements are off here.
+    preload("res://scripts/progression/class_catalogue.gd").enforced = false
     var rng := RandomNumberGenerator.new()
     rng.seed = 4242
     # --- Catalogue

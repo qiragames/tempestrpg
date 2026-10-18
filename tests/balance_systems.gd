@@ -167,6 +167,9 @@ func _run() -> void:
     actor.add_item(worn)
     actor.add_item(spare)
     var kind: String = preload("res://scripts/items/gear_catalogue.gd").BASES[worn.base].slot
+    # A random chest piece may ask for a class or level (M12b); this check is about death piles (the rules stay off for the rest of the run).
+    var classes := preload("res://scripts/progression/class_catalogue.gd")
+    classes.enforced = false
     actor.equip(worn.id, "accessory_1" if kind == "accessory" else kind)
     actor.position = Vector2(700, 360)
     var fell_at: Vector2 = actor.position

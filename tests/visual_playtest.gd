@@ -496,7 +496,7 @@ func _run() -> void:
     var weapons := [
         {"id": "item_showcase_sword", "base": "iron_sword", "rarity": 1, "stats": {"damage": 16}, "passives": [], "active": ""},
         {"id": "item_showcase_spear", "base": "ash_spear", "rarity": 2, "stats": {"damage": 20}, "passives": ["keen"], "active": ""},
-        {"id": "item_showcase_scythe", "base": "field_scythe", "rarity": 3, "stats": {"damage": 30}, "passives": ["lifesteal"], "active": "surge"},
+        {"id": "item_showcase_scythe", "base": "field_scythe", "rarity": 2, "stats": {"damage": 30}, "passives": ["lifesteal"], "active": ""},
         {"id": "item_showcase_bow", "base": "hunting_bow", "rarity": 0, "stats": {"damage": 11}, "passives": [], "active": ""},
     ]
     _log("- (Showcase weapons handed over; sources arrive in 17g)")
@@ -1403,6 +1403,18 @@ func _run() -> void:
     await _wait(0.4)
     await _shot("storage", "The storage window: your bag and gear on the left, what is stored on the right; city storage is rented in a city and opens only there")
     hud_nation.storage_panel.close_panel()
+    _log("## 44. Classes")
+    var master: Node2D = world.class_master
+    _check(master.present(), "The old master lives in the settlement")
+    showcase.global_position = master.position_in_world() + Vector2(14, 6)
+    world.terrain.ensure_props_at(showcase.global_position)
+    await _wait(0.6)
+    await _shot("class_master", "The old master moves into your settlement when it is founded: talk to him (F) to choose a class")
+    _check(session.apply_action(showcase, "class", {"operation": "choose", "slot": "main", "id": "warrior"}), "Warrior chosen at the master")
+    hud_nation.class_panel.open()
+    await _wait(0.4)
+    await _shot("classes", "The class window: seven classes, a subclass from level 20, changes cost Zeni; weapons need their class")
+    hud_nation.class_panel.close_panel()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)
