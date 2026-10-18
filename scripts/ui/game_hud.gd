@@ -93,6 +93,8 @@ func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
     add_to_group("hud_settings")
     apply_hud_settings.call_deferred(SETTINGS.load_settings())
+    # M13: a new window size can change which HUD sizes are whole pixels.
+    get_tree().root.size_changed.connect(_on_window_resized)
     get_parent().system_message.connect(record_event)
     UI.install(get_tree())
     _build_status()
@@ -235,7 +237,9 @@ func _build_status() -> void:
     _portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
     _portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(_portrait)
-    _name = UI.heading(_label("", Vector2(56, 6), Vector2(168, 14), self, 10))
+    # M13: the clean text font in gold (the heading font touched the card's frame).
+    _name = _label("", Vector2(56, 5), Vector2(168, 14), self, 11)
+    _name.add_theme_color_override("font_color", UI.GOLD_LIGHT)
     # M13: one line in the heading font; long names with a title end in "…".
     _name.autowrap_mode = TextServer.AUTOWRAP_OFF
     _name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -439,19 +443,26 @@ func _refresh_clock() -> void:
     get_node("Clock").text = "%s  %s %s" % [day_night.clock_text(time), symbol, day_night.WEATHER[weather][0]]
     # M13b: the pack's sky face for the hour, beside the minimap.
     if not has_node("ClockFace"):
+        # A holder reaching the right screen edge, so the HUD size setting scales it with the
+        # minimap (pieces away from the edges shrink toward the middle of the screen).
+        var holder := Control.new()
+        holder.name = "ClockFace"
+        holder.position = minimap.position + Vector2(-20, 58)
+        holder.size = Vector2(VIEW.x - holder.position.x, 24)
+        holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
         var face := TextureRect.new()
-        face.name = "ClockFace"
-        face.position = minimap.position + Vector2(-20, 58)
+        face.name = "Face"
         face.size = Vector2(24, 24)
         face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
         face.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
         face.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        add_child(face)
+        holder.add_child(face)
+        add_child(holder)
         # Beside the minimap, under every window.
-        move_child(face, minimap.get_index() + 1)
+        move_child(holder, minimap.get_index() + 1)
     var hour: float = day_night.hour(time)
     var phase := "midnight" if hour < 5.0 else ("dawn" if hour < 8.0 else ("day" if hour < 17.0 else ("dusk" if hour < 19.0 else ("evening" if hour < 21.0 else "night"))))
-    var face_node: TextureRect = get_node("ClockFace")
+    var face_node: TextureRect = get_node("ClockFace/Face")
     if face_node.get_meta("phase", "") != phase:
         face_node.set_meta("phase", phase)
         face_node.texture = load("res://assets/game/ui/pixel/clock_%s.png" % phase)
@@ -478,7 +489,7 @@ func _refresh_boss_bar() -> void:
         var holder := Control.new()
         holder.name = "BossBar"
         holder.position = Vector2(170, 58)
-        holder.size = Vector2(300, 30)
+        holder.size = Vector2(300, 48)
         holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
         add_child(holder)
         var title := _label("", Vector2.ZERO, Vector2(300, 14), holder, 10)
@@ -491,10 +502,9 @@ func _refresh_boss_bar() -> void:
         title.add_theme_constant_override("shadow_offset_y", 1)
         var bar := ProgressBar.new()
         bar.name = "Bar"
-        bar.position = Vector2(0, 16)
-        bar.size = Vector2(300, 8)
-        bar.show_percentage = false
-        UI.style_bar(bar, Color("e05a4a"))
+        bar.position = Vector2(0, 15)
+        bar.size = Vector2(300, 12)
+        UI.pixel_bar(bar, "hp")
         holder.add_child(bar)
     var holder: Control = get_node("BossBar")
     var shown: Node2D = null
@@ -510,6 +520,67 @@ func _refresh_boss_bar() -> void:
     holder.get_node("Title").text = "Lv %d %s · phase %d" % [shown.level, bosses.display_name(shown.entity_id), phase + 1]
     holder.get_node("Bar").max_value = health.maximum
     holder.get_node("Bar").value = health.current
+    # User request after M15: what this boss drops, under its bar.
+    if holder.get_meta("drops_of", "") != shown.entity_id:
+        holder.set_meta("drops_of", shown.entity_id)
+        _build_boss_drops(holder, shown.entity_id)
+
+## The boss's own drops: its uniques (icon on a glow and name in the rarity's colour) and its
+## material with how many each helper gets.
+func _build_boss_drops(holder: Control, boss_id: String) -> void:
+    if holder.has_node("Drops"):
+        holder.get_node("Drops").free()
+    var row := HBoxContainer.new()
+    row.name = "Drops"
+    row.position = Vector2(0, 29)
+    row.size = Vector2(300, 20)
+    row.alignment = BoxContainer.ALIGNMENT_CENTER
+    row.add_theme_constant_override("separation", 8)
+    row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    holder.add_child(row)
+    var loot := preload("res://scripts/bosses/boss_loot.gd")
+    for drop in loot.drops(boss_id):
+        var icon: Texture2D
+        var text: String
+        var colour: Color
+        if drop.has("base"):
+            var rarity: int = int(GEAR.BASES[drop.base].get("min_rarity", 4))
+            icon = GEAR.icon_texture(drop.base, rarity)
+            text = String(GEAR.BASES[drop.base].name)
+            colour = Color(GEAR.RARITY_COLORS[rarity])
+        else:
+            icon = loot.icon(drop.material)
+            text = "%s ×%d-%d" % [loot.name_of(drop.material), int(drop.min), int(drop.max)] if int(drop.min) != int(drop.max) else "%s ×%d" % [loot.name_of(drop.material), int(drop.min)]
+            colour = UI.GOLD_LIGHT
+        var entry := HBoxContainer.new()
+        entry.add_theme_constant_override("separation", 3)
+        entry.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        row.add_child(entry)
+        # The glow: a soft halo in the rarity's colour behind the icon.
+        var glow := Panel.new()
+        glow.custom_minimum_size = Vector2(18, 18)
+        glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        var halo := StyleBoxFlat.new()
+        halo.bg_color = Color(colour, 0.25)
+        halo.set_corner_radius_all(9)
+        halo.shadow_color = Color(colour, 0.55)
+        halo.shadow_size = 4
+        glow.add_theme_stylebox_override("panel", halo)
+        entry.add_child(glow)
+        var picture := TextureRect.new()
+        picture.texture = icon
+        picture.size = Vector2(16, 16)
+        picture.position = Vector2(1, 1)
+        picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+        picture.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+        picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        glow.add_child(picture)
+        var label := _label(text, Vector2.ZERO, Vector2(10, 18), entry, 9)
+        label.autowrap_mode = TextServer.AUTOWRAP_OFF
+        label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+        label.custom_minimum_size = Vector2(0, 18)
+        label.add_theme_color_override("font_color", colour)
+        _outline(label)
 
 ## M6b: the reel-in bar while a fish is hooked: the green zone is the chance per press.
 func _refresh_reel(delta: float) -> void:
@@ -947,10 +1018,34 @@ const LAYOUT := preload("res://scripts/world/world_layout.gd")
 ## should close fully). The always-on parts of the HUD (status card, minimap, hotbar, messages,
 ## analysis box, title…) shrink toward their own screen corner; windows keep their size.
 var hud_scale := 1.0
+## The HUD size chosen in Options (hud_scale is it snapped to whole pixels).
+var hud_setting := 1.0
 const VIEW := Vector2(640, 360)
 
+## M13 (user report: blurry, squashed HUD text): the pixel fonts and frames only stay sharp when
+## every HUD pixel covers a whole number of screen pixels. The window shows the game at an integer
+## scale s, so the HUD size is snapped to n / s (at 3x: 2/3 or 1; at 2x: 1; at 4x: 3/4 or 1).
+func window_scale() -> int:
+    var window: Vector2 = Vector2(get_viewport().get_visible_rect().size) * get_viewport().get_final_transform().get_scale() if is_inside_tree() else VIEW
+    return maxi(1, mini(int(window.x / VIEW.x + 0.01), int(window.y / VIEW.y + 0.01)))
+
+func _on_window_resized() -> void:
+    var snapped := pixel_scale(hud_setting)
+    if is_equal_approx(snapped, hud_scale):
+        return
+    hud_scale = snapped
+    for child in get_children():
+        _scale_element(child)
+    if is_instance_valid(party_panel) and party_panel.get("_frames") != null:
+        party_panel._frames.scale = Vector2(hud_scale, hud_scale)
+
+func pixel_scale(setting: float) -> float:
+    var s := window_scale()
+    return clampf(roundf(setting * s), 1.0, float(s)) / float(s)
+
 func apply_hud_settings(values: Dictionary) -> void:
-    hud_scale = float(values.get("hud", SETTINGS.DEFAULTS.hud))
+    hud_setting = float(values.get("hud", SETTINGS.DEFAULTS.hud))
+    hud_scale = pixel_scale(hud_setting)
     if has_node("Controls"):
         $Controls.visible = bool(values.get("controls", true))
         if has_node("BottomBar"):

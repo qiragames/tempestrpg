@@ -40,6 +40,7 @@ const EVENT_KINDS := {"kill": "defeat", "gather": "gather", "catch": "gather", "
 
 var state: Dictionary = initial_state()
 var world: Node
+var _drawn_tags := false
 
 static func initial_state() -> Dictionary:
     return {"guilds": {}, "invites": {}, "next": 1}
@@ -475,16 +476,21 @@ func _process(_delta: float) -> void:
         for id in state.invites.keys():
             if float(state.invites[id].until) < now:
                 state.invites.erase(id)
-    queue_redraw()
+    # Tags are only drawn while guilds exist (no per-frame work otherwise).
+    if not state.guilds.is_empty() or _drawn_tags:
+        _drawn_tags = not state.guilds.is_empty()
+        queue_redraw()
 
 ## Guild tags above characters' heads (above a worn title).
 func _draw() -> void:
     var me: Node2D = world.get_local_player() if world != null and world.has_method("get_local_player") else null
     if me == null:
         return
+    if state.guilds.is_empty():
+        return
     var font := ThemeDB.fallback_font
-    for character in world.get_children():
-        if not (character is CharacterBody2D and character.is_in_group("player") and character.visible) or character.global_position.distance_to(me.global_position) > 400.0:
+    for character in get_tree().get_nodes_in_group("player"):
+        if character.get_parent() != world or not character.visible or character.global_position.distance_to(me.global_position) > 400.0:
             continue
         var tag := tag_of(character.character_id)
         if tag.is_empty():

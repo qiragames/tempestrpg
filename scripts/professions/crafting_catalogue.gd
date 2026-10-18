@@ -151,6 +151,16 @@ static func recipes(profession: String) -> Dictionary:
                 if int(FORGE[kind][3]) > 0:
                     needs["gem_*"] = int(FORGE[kind][3])
                 all["forge:%s:%s" % [bar, kind]] = ["%s %s" % [BARS[bar][0].trim_suffix(" Bar"), FORGE[kind][0]], int(BARS[bar][1]) + 2, needs]
+        # User request after M15: forge a boss's uniques from its own material and bars of the tier.
+        var loot := preload("res://scripts/bosses/boss_loot.gd")
+        var bosses := preload("res://scripts/bosses/boss_catalogue.gd")
+        for boss in bosses.all_ids():
+            for base in bosses.entry(boss)[8]:
+                if not GEAR.BASES.has(base):
+                    continue
+                var level: int = int(GEAR.BASES[base].get("level", 1))
+                var needs := {loot.material(boss): int(loot.FORGE_COST[loot.kind(boss)]), bar_for_level(level): loot.FORGE_BARS}
+                all["bossforge:" + base] = ["Forge %s" % GEAR.BASES[base].name, mini(50, level), needs]
     elif profession == "alchemy":
         for potion in POTIONS:
             all["brew:" + potion] = ["Brew " + POTIONS[potion][0], int(POTIONS[potion][1]), POTIONS[potion][6]]
@@ -173,6 +183,14 @@ static func recipe(id: String) -> Array:
         if all.has(id):
             return [profession] + all[id]
     return []
+
+## The bar whose forging band holds an item level (the highest band below it when none does).
+static func bar_for_level(level: int) -> String:
+    var best := "bar_bronze"
+    for bar in BAR_LEVELS:
+        if level >= int(BAR_LEVELS[bar][0]):
+            best = bar
+    return best
 
 ## Gear rarity weights for a forged item: better with Smithing above the recipe, Mythic at 50.
 static func forge_weights(level: int, required: int) -> Array:

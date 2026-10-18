@@ -626,7 +626,7 @@ func craft(recipe_id: String) -> bool:
         if ingredient_count(id) < int(needs[id]):
             session.notify_character(character_id, "Missing ingredients for %s." % recipe[1])
             return false
-    var forging := recipe_id.begins_with("forge:") or recipe_id.begins_with("tailor:")
+    var forging := recipe_id.begins_with("forge:") or recipe_id.begins_with("tailor:") or recipe_id.begins_with("bossforge:")
     if forging and gear.items.size() >= GEAR.MAX_ITEMS:
         session.notify_character(character_id, "Your gear bag is full.")
         return false
@@ -656,7 +656,12 @@ func craft(recipe_id: String) -> bool:
             if roll <= 0.0:
                 rarity = index
                 break
-        var base: String = CRAFT.tailor_base(parts[2], parts[1], rarity, rng) if recipe_id.begins_with("tailor:") else CRAFT.forge_base(parts[2], parts[1], rarity, rng)
+        var base: String
+        if recipe_id.begins_with("bossforge:"):
+            # A boss's unique: always that item, at least its rarity floor.
+            base = parts[1]
+        else:
+            base = CRAFT.tailor_base(parts[2], parts[1], rarity, rng) if recipe_id.begins_with("tailor:") else CRAFT.forge_base(parts[2], parts[1], rarity, rng)
         if base.is_empty():
             return false
         rarity = maxi(rarity, int(GEAR.BASES[base].get("min_rarity", 0)))

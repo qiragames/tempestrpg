@@ -21,6 +21,7 @@ const ARENA_ROUNDS := 2
 var state: Dictionary = initial_state()
 var world: Node
 var _clock := 0.0
+var _drawn_rings := false
 
 static func initial_state() -> Dictionary:
     return {"challenges": {}, "matches": {}, "next": 1}
@@ -198,7 +199,9 @@ func _finish(id: String, winner: String, why: String) -> void:
 
 func _process(delta: float) -> void:
     _clock += delta
-    queue_redraw()
+    if not state.matches.is_empty() or _drawn_rings:
+        _drawn_rings = not state.matches.is_empty()
+        queue_redraw()
     if world == null or not _host():
         return
     for target in state.challenges.keys():

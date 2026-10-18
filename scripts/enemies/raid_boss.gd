@@ -211,6 +211,13 @@ func _defeat() -> void:
             world.quests.on_event(actor, "boss", {"id": entity_id})
         actor.gain_experience(LEVELING.defeat_xp(level, Difficulty.ELITE) * (BOSS.XP_FACTOR if raid else 8), "boss")
         actor.gain_zeni(TRADE.zeni_for(level, Difficulty.ELITE) * (BOSS.ZENI_FACTOR if raid else 10), "boss")
+        # User request after M15: the boss's own material for every helper (it forges the uniques).
+        var loot := preload("res://scripts/bosses/boss_loot.gd")
+        var counts: Array = loot.count_range(entity_id)
+        var material: String = loot.material(entity_id)
+        var got: int = actor.get_node("Inventory").add_material(material, rng.randi_range(int(counts[0]), int(counts[1])))
+        if got > 0 and world.get_node_or_null("/root/GameSession") != null:
+            world.get_node("/root/GameSession").notify_character(actor.character_id, "+%d %s." % [got, loot.name_of(material)])
         var item: Dictionary
         if rng.randf() < BOSS.UNIQUE_CHANCE and not uniques.is_empty():
             var base: String = uniques[rng.randi_range(0, uniques.size() - 1)]

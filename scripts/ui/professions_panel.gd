@@ -231,6 +231,9 @@ func _craft_rows(profession: String, level: int) -> void:
         if id.begins_with("forge:") or id.begins_with("tailor:"):
             continue
         var recipe: Array = recipes[id]
+        # Boss uniques show once you carry some of that boss's material.
+        if id.begins_with("bossforge:") and not recipe[2].keys().any(func(need): return String(need).begins_with("bossmat_") and hud.player.ingredient_count(need) > 0):
+            continue
         var chance := PRO.chance(level, recipe[1])
         _row("%s · Lv %d · %d%% · %s" % [recipe[0], recipe[1], int(round(chance * 100.0)), _needs_text(recipe[2])], chance_colour(chance), CRAFT_VERB[profession], not station.is_empty() and _can_make(recipe[2]), _craft.bind(id))
     if profession == "tailoring":

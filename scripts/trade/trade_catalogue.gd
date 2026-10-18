@@ -83,10 +83,13 @@ static func bag_item(id: String) -> bool:
     return preload("res://scripts/skills/skill_catalogue.gd").MATERIALS.has(id) or is_good(id)
 
 static func is_good(id: String) -> bool:
-    return id == "pet_egg" or preload("res://scripts/dungeons/dungeon_features.gd").is_key(id) or CONSUMABLES.has(id) or scroll_skill(id) in COMMON_SCROLLS + RARE_SCROLLS or not TRAVEL.ticket_harbour(id).is_empty() or TRAVEL.is_fish(id) or UPGRADES.is_rune(id) or UPGRADES.is_augment(id) or REALM.is_orb(id) or PRO.is_resource(id) or CRAFT.is_good(id)
+    return id == "pet_egg" or preload("res://scripts/dungeons/dungeon_features.gd").is_key(id) or CONSUMABLES.has(id) or scroll_skill(id) in COMMON_SCROLLS + RARE_SCROLLS or not TRAVEL.ticket_harbour(id).is_empty() or TRAVEL.is_fish(id) or UPGRADES.is_rune(id) or UPGRADES.is_augment(id) or REALM.is_orb(id) or PRO.is_resource(id) or CRAFT.is_good(id) or preload("res://scripts/bosses/boss_loot.gd").is_material(id)
 
 ## [name, category, description] of a good.
 static func good_info(id: String) -> Array:
+    # User request after M15: every boss's own material.
+    if preload("res://scripts/bosses/boss_loot.gd").is_material(id):
+        return preload("res://scripts/bosses/boss_loot.gd").good_info(id)
     if id == "pet_egg":
         return ["Mysterious Egg", "Pets", "Something moves inside. Use it to hatch a pet you do not have yet (V: pets)."]
     var features := preload("res://scripts/dungeons/dungeon_features.gd")
@@ -116,6 +119,8 @@ static func good_info(id: String) -> Array:
 
 ## Buy price of a bag good or material ("" for unknown).
 static func price(id: String) -> int:
+    if preload("res://scripts/bosses/boss_loot.gd").is_material(id):
+        return preload("res://scripts/bosses/boss_loot.gd").PRICE
     if MATERIAL_PRICE.has(id):
         return MATERIAL_PRICE[id]
     if CONSUMABLES.has(id):

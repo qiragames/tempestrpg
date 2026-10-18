@@ -37,6 +37,27 @@ const UNIQUES := {
     # M9d: the Eclipse Wyrm, the story's final boss.
     "boss_wyrm_scale": ["Eclipse Wyrm Scale", "body", "", "body", 84, "warden", "shadow", 50, 5],
     "boss_wyrmfang": ["Wyrmfang", "weapon", "spear", "spear", 94, "eclipse", "shadow", 50, 5],
+    # User request (after M15): every hidden elite and dungeon boss has its own uniques too.
+    "elite_oakfang_cleaver": ["Oakfang Cleaver", "weapon", "sword", "sword", 116, "overgrowth", "nature", 9, 4],
+    "elite_snowmane_hood": ["Snowmane Hood", "head", "", "head", 56, "warden", "frost", 15, 4],
+    "elite_stalker_kris": ["Stalker's Kris", "weapon", "dagger", "dagger", 121, "executioner", "", 14, 4],
+    "elite_shriekfeather_bow": ["Shriekfeather Bow", "weapon", "bow", "bow", 102, "starfall", "holy", 17, 4],
+    "elite_fen_witch_rod": ["Fen Witch's Rod", "weapon", "staff", "staff", 53, "overgrowth", "nature", 19, 4],
+    "elite_ronin_knuckles": ["Ronin's Knuckles", "weapon", "fist", "fist", 21, "thunderlord", "storm", 18, 4],
+    "elite_storm_eye_amulet": ["Eye of the Storm", "accessory", "", "amulet", 56, "windwalker", "storm", 26, 4],
+    "elite_nightweaver_mantle": ["Nightweaver Mantle", "body", "", "body", 84, "phoenix", "shadow", 32, 4],
+    "elite_cloud_serpent_lance": ["Cloud Serpent Lance", "weapon", "spear", "spear", 93, "thunderlord", "storm", 39, 4],
+    "elite_alpha_reaper": ["Alpha's Reaper", "weapon", "scythe", "scythe", 77, "bloodthirst", "", 46, 5],
+    "dungeon_rootmaw_crown": ["Rootmaw's Crown", "head", "", "head", 56, "warden", "nature", 12, 4],
+    "dungeon_rotting_staff": ["Rotting King's Staff", "weapon", "staff", "staff", 54, "overgrowth", "nature", 12, 4],
+    "dungeon_cyclops_ring": ["Cyclops Eye Ring", "accessory", "", "ring", 24, "warden", "frost", 18, 4],
+    "dungeon_frostfang_fists": ["Frostfang Knuckles", "weapon", "fist", "fist", 20, "glacier", "frost", 18, 4],
+    "dungeon_magmaw_fang": ["Magmaw Fang", "weapon", "dagger", "dagger", 122, "inferno", "fire", 25, 4],
+    "dungeon_lava_plate": ["Lava Wyrm Plate", "body", "", "body", 85, "phoenix", "fire", 25, 4],
+    "dungeon_abbot_staff": ["Abbot's Censer Staff", "weapon", "staff", "staff", 52, "eclipse", "shadow", 35, 4],
+    "dungeon_abbot_cowl": ["Bone Abbot's Cowl", "head", "", "head", 56, "berserker", "shadow", 35, 4],
+    "dungeon_jade_blade": ["Jade Guardian Blade", "weapon", "sword", "sword", 117, "radiance", "holy", 43, 5],
+    "dungeon_jade_charm": ["Jade Spirit Charm", "accessory", "", "amulet", 56, "windwalker", "nature", 43, 5],
     # M9d: the story's ending rewards (never dropped; given by the ending choice).
     "story_moonwarden_crescent": ["Moonwarden's Crescent", "weapon", "scythe", "scythe", 78, "moonwarden", "holy", 50, 5],
     "story_eclipse_reaper": ["Eclipse Sovereign's Reaper", "weapon", "scythe", "scythe", 77, "sovereign", "shadow", 50, 5],
@@ -46,6 +67,8 @@ const UNIQUES := {
 const TEMPLATES := {
     "sword": {"damage": [28, 35]}, "dagger": {"damage": [18, 25]}, "spear": {"damage": [30, 39]},
     "scythe": {"damage": [35, 46]}, "bow": {"damage": [21, 28]},
+    # M12c: the class weapons.
+    "staff": {"damage": [24, 31]}, "fist": {"damage": [15, 20]},
     "head": {"hp": [13, 22], "defense": [2, 4], "speed": [4, 9]},
     "body": {"hp": [23, 37], "defense": [3, 8], "strike": [2, 5]},
     "feet": {"speed": [8, 20], "hp": [6, 12]},

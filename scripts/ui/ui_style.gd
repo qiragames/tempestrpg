@@ -261,6 +261,8 @@ static func skill_icon(id: String) -> Texture2D:
     return load(path) if ResourceLoader.exists(path) else null
 
 static func icon(id: String) -> Texture2D:
+    if id.begins_with("bossmat_"):
+        return preload("res://scripts/bosses/boss_loot.gd").icon(id)
     return load(ICONS[id]) if ICONS.has(id) else null
 
 ## The prepared gear icon for an item instance: one per base and rarity (step 18).

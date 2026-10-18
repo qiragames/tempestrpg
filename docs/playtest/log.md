@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.0 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.2 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -299,7 +299,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (960x540)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Rare Veteran's Bracers
+- [x] The chest gave an Uncommon-or-better item: Uncommon Knight's Lance
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (960x540)
@@ -334,7 +334,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *Playable races, left to right: Slime, Human, Demon (placeholder looks)* (960x540)
 
 ## 15. The archipelago (M4.5a)
-- [x] Walking east follows the road out of the clearing: x 1169
+- [x] Walking east follows the road out of the clearing: x 1168
 
 ![The east road continues beyond the clearing towards the Harrowmere bridge](56_road_east.png)
 *The east road continues beyond the clearing towards the Harrowmere bridge* (960x540)
@@ -932,7 +932,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +1500 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Rare Mystic Vestment.
+- Trial reward: Rare Mercenary's Warbow.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +21 XP (defeat).
@@ -950,8 +950,8 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Rare Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Rare Veteran's Bracers.
-- +21 Zeni (chest).
+- Chest opened: Uncommon Knight's Lance.
+- +22 Zeni (chest).
 - World "Showcase World" loaded. Esc: pause menu — switch on Multiplayer to invite friends.
 - Multiplayer is on: Invite a Friend makes one code per friend.
 - Multiplayer is off: your world is single player again.

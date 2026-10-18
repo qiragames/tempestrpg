@@ -33,7 +33,7 @@ func _run() -> void:
             for need in CRAFT.recipes(profession)[id][2]:
                 ingredients_ok = ingredients_ok and (need in ["log_*", "gem_*"] or trade.bag_item(need) or materials.has(need))
     _check(ingredients_ok, "Every ingredient is a real bag item")
-    _check(CRAFT.recipes("smithing").size() == CRAFT.BARS.size() * (1 + CRAFT.FORGE.size()) and CRAFT.recipes("alchemy").size() == CRAFT.POTIONS.size(), "Recipes: smelting and forging for every bar, a brew for every potion")
+    _check(CRAFT.recipes("smithing").keys().filter(func(id): return not String(id).begins_with("bossforge:")).size() == CRAFT.BARS.size() * (1 + CRAFT.FORGE.size()) and CRAFT.recipes("alchemy").size() == CRAFT.POTIONS.size(), "Recipes: smelting and forging for every bar, a brew for every potion")
     _check(trade.is_good("bar_mithril") and trade.is_good("elixir_might") and trade.is_good("herb_sakura") and trade.price("senzu_bean") > trade.price("healing_draught"), "Bars, potions and herbs are bag goods merchants buy")
     var rng := RandomNumberGenerator.new()
     rng.seed = 4
