@@ -142,7 +142,7 @@ Requested by the user after 17e; exact order and scope to be confirmed with the 
 
 - User decisions: only the interface changes (the world art stays). After a Sword-Art-Online-style draft was dropped, the user picked a pixel UI from free packs; mockup `docs/ui_overhaul/mockup_pixel_ui.png`, approved with "go with this style, add a lowercase font for text". The state before it is the git tag `before-ui-overhaul`.
 - **M13a — the new look everywhere: Done (Claude, 2026-10-18).** Every window, the HUD, the title and pause menus use Dogobongocat's CC0 UI pack: navy panels (see-through HUD blocks), gold-cornered slots, lit plates as buttons, red/blue/gold bars on the status card, rarity strips on item slots and cards. Three pixel fonts are drawn at their native size so they stay sharp at every window scale: m5x7 for text, m3x6 for small labels and text over the world (one-pixel shadow instead of a thick outline), Toasty capitals for headings. Credits list the new pack and fonts.
-- Next: release v1.1 (classes, attributes, the pixel UI).
+- **Release v1.1.0: Done (Claude, 2026-10-18)** from `claude/release-v1.1`: classes, attributes, class weapons and skills, the pixel UI. The exported game loads the fonts as imported resources (the raw .ttf files are not in an export).
 
 ### M11 — More to do in the world (user batch 2026-10-16) · In progress, requires M9
 
@@ -247,6 +247,7 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-18: Claude Code published release v1.1.0 (version 1.1.0 in project.godot and the exe; HOW TO PLAY gained a classes section). A smoke test of the exported build caught `UI.font` reading raw .ttf files, which exports do not carry; it now duplicates the imported FontFile.
 - 2026-10-18: Claude Code added class weapons and skills (M12c) on `claude/m12c-class-skills`: `tools/generate_items.py` appends staff and fist groups after every older group (no existing ID or name changes), `GEAR.WEAPONS.staff/fist`, `MeleeAttack` (free INT-scaled bolt via `Arrow.magic`, fist jab and combo), `ClassSkills` (granted by main class and level, rebuilt on load like tree skills, accepted on the hotbar by the save checks), `SkillBook.sync_class_skills`, 14 skill resources and `SkillEffects` entries, hotbar icons (`UI.skill_icon`).
 - 2026-10-18: Claude Code restyled the interface (M13a) on `claude/m13-pixel-ui`: `PixelBox` (nine-patch StyleBox), `UI.piece/font/pixel_bar`, a rewritten `ui_style.gd` (same API), pieces sliced by `tools/prepare_pixel_ui.py`, fonts patched by `tools/patch_fonts.py` (m3x6's middle dot, dashes); controls asking for sizes below 10 get the small font through a `node_added` hook; `draw_string` text asks for at least size 8 (the fixed-size fonts round their scale). `ornate_box.gd` removed.
 - 2026-10-18: Claude Code added classes (M12b) on `claude/m12b-classes`: `ClassCatalogue` (classes, requirements, prices, validation), the `ClassMaster` world node (host rules for the `class` intent; unequips gear that no longer fits), `ClassPanel`, the requirement line on item cards, a check in `Player.equip`, save checks. Older item/weapon/trading suites switch the requirements off (`ClassCatalogue.enforced`). Before it, the save point tag `before-ui-overhaul` was pushed (user request) so the coming UI overhaul can be undone.

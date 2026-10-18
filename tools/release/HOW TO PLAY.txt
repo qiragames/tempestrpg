@@ -31,6 +31,16 @@ STORAGE
   town hall of any major city (the "Storage" sign). In a major city you can also rent storage that
   opens only in that city.
 
+CLASSES AND ATTRIBUTES (new in 1.1)
+  Every level gives 4 attribute points (Strength, Dexterity, Intelligence, Vitality): spend them
+  with the + buttons in the equipment window (I -> Equipment).
+  Once your settlement is founded, an old master moves in: talk to him (F) to choose a class -
+  Warrior (swords), Assassin (daggers), Lancer (spears), Reaper (scythes), Archer (bows), Mage
+  (staffs: a free magic bolt) or Monk (fist weapons: very fast jabs). Your class teaches two class
+  skills (the second at level 25) and from level 20 you can add a subclass for a second weapon
+  type. Every weapon needs its class; without a class you can use weapons up to Rare. Changing a
+  class or resetting your attributes costs Zeni at the master.
+
 HANDY
   Your saves are in %APPDATA%\TempestRPG (type it into the Explorer address bar).
   Esc -> Options: HUD size (65-100%), window size, sound.  F1: hide/show the controls line.

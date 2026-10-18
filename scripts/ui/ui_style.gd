@@ -65,8 +65,8 @@ static var _fonts := {}
 
 static func font(kind: String = "body") -> Font:
     if not _fonts.has(kind):
-        var file := FontFile.new()
-        file.load_dynamic_font(FONTS[kind])
+        # The imported resource (exported games carry only that, not the raw .ttf).
+        var file: FontFile = (load(FONTS[kind]) as FontFile).duplicate()
         file.antialiasing = TextServer.FONT_ANTIALIASING_NONE
         file.hinting = TextServer.HINTING_NONE
         file.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
@@ -227,7 +227,8 @@ static func _on_node_added(node: Node) -> void:
     if node is Control:
         _small_font.call_deferred(node)
 
-static func _small_font(node: Control) -> void:
+static func _small_font(node: Variant) -> void:
+    # Untyped: the control may already be freed when this deferred call runs.
     if not is_instance_valid(node) or node.has_theme_font_override("font") or node.has_theme_font_override("normal_font"):
         return
     var key := "normal_font_size" if node is RichTextLabel else "font_size"
