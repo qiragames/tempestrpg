@@ -96,6 +96,8 @@ var _slot_cells: Dictionary = {}
 var _grid: Array = []
 var _doll: Control
 var _stats: Label
+const ATTRIBUTES := preload("res://scripts/progression/attributes.gd")
+var _attr_points: Label
 var _score: Label
 var _details: Label
 var _equip: Button
@@ -150,6 +152,19 @@ func _init(owner_hud: CanvasLayer) -> void:
     hud._label("GEAR SCORE", ORIGIN + Vector2(294, 44), Vector2(100, 12), self, 8).add_theme_color_override("font_color", UI.TEXT_DIM)
     _score = UI.heading(hud._label("0", ORIGIN + Vector2(294, 54), Vector2(110, 24), self, 18))
     _stats = hud._label("", ORIGIN + Vector2(400, 43), Vector2(182, 98), self, 7)
+    # M12a: attributes under the gear score, a + for each while points are left.
+    for index in range(ATTRIBUTES.KEYS.size()):
+        var key: String = ATTRIBUTES.KEYS[index]
+        var row_label: Label = hud._label("", ORIGIN + Vector2(294, 80 + index * 12), Vector2(70, 12), self, 7)
+        row_label.name = "Attr_" + key
+        row_label.tooltip_text = ATTRIBUTES.NAMES[key]
+        row_label.mouse_filter = Control.MOUSE_FILTER_PASS
+        var plus: Button = hud._button("+", ORIGIN + Vector2(364, 80 + index * 12), Vector2(16, 11), self)
+        plus.name = "AttrPlus_" + key
+        plus.add_theme_font_size_override("font_size", 7)
+        plus.pressed.connect(func(): hud.session.request_action("attribute", {"key": key}))
+    _attr_points = hud._label("", ORIGIN + Vector2(294, 128), Vector2(100, 12), self, 7)
+    _attr_points.add_theme_color_override("font_color", UI.GOLD_LIGHT)
     var sets_label: Label = hud._label("", ORIGIN + Vector2(294, 82), Vector2(104, 58), self, 7)
     sets_label.name = "Sets"
     sets_label.add_theme_color_override("font_color", Color("7fe3a0"))
@@ -277,6 +292,11 @@ func refresh() -> void:
         "Regeneration    %.1f/s" % float(player.get_node("Magicules").regeneration_per_second),
     ]
     _stats.text = "\n".join(lines)
+    var unspent: int = ATTRIBUTES.unspent(player.progression)
+    for key in ATTRIBUTES.KEYS:
+        get_node("Attr_" + key).text = "%s  %d" % [ATTRIBUTES.SHORT[key], ATTRIBUTES.value(player.progression, key)]
+        get_node("AttrPlus_" + key).visible = unspent > 0
+    _attr_points.text = "%d point%s to spend" % [unspent, "" if unspent == 1 else "s"] if unspent > 0 else ""
     var worn_sets := SETS.counts(player.equipped_items(), GEAR.BASES)
     var set_lines: Array = []
     for set_id in worn_sets:

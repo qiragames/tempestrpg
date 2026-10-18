@@ -144,6 +144,9 @@ static func validate_player(state: Variant, id: String) -> bool:
         return false
     if not progression.get("quests") is Dictionary or not progression.get("equipment") is Dictionary:
         return false
+    # M12a: spent attribute points (never more than the level gives).
+    if not preload("res://scripts/progression/attributes.gd").valid(progression):
+        return false
     # Storage (after 1.0): settlement and city boxes of known shape and contents.
     if not preload("res://scripts/settlement/storage.gd").valid(progression):
         return false

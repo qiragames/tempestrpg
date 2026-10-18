@@ -912,6 +912,12 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             "sail":
                 return world.harbours.sail(actor, here, target)
         return false
+    if action == "attribute":
+        # M12a: spend one point (the host checks the points left).
+        if payload.size() != 1 or not payload.get("key") is String:
+            rejected_requests += 1
+            return false
+        return actor.spend_attribute(payload.key)
     if action == "storage":
         # Storage: rent a city box, put in, take out (the host checks where you stand and room).
         if payload.size() != 4 or not payload.get("operation") in ["buy", "put", "take"] or not payload.get("where") is String or payload.where.length() > 32 or not payload.get("item") is String or payload.item.length() > 64 or not (payload.get("count") is int or payload.get("count") is float):

@@ -131,6 +131,12 @@ Requested by the user after 17e; exact order and scope to be confirmed with the 
 - **M9e — achievements and titles: Done (Claude, 2026-10-16).** 46 achievements in six categories (combat, story, quests, professions, fishing, journey); 34 give a title you can wear — e.g. Leviathan Catcher, Master Miner, Wyrmslayer, Moonwarden, Raid Legend, Wanderer. Titles show on your status card and above your head (friends see them too); Y opens the window with every achievement's progress; a gold banner announces each new one. Older characters unlock what their level, professions, fish log and quests already show.
 - Next: see M10 and M11 below.
 
+### M12 — Classes and attributes (user design 2026-10-18) · In progress
+
+- User decisions: an old master (every weapon and martial art) lives in your settlement from its founding; choose a main class and, from level 20, a subclass (changing costs ~100 Zeni per level). Seven classes: Assassin (dagger), Warrior (sword), Lancer (spear), Reaper (scythe), Archer (bow), Mage (new staff: free magic bolt, INT), Monk (new fist weapons). Main class: its weapon and two class skills (at choice and level 25); subclass: its weapon only. Every weapon needs its class or subclass; armour free; level requirements on everything; attribute requirements on Legendary and Mythic. Attributes STR/DEX/INT/VIT, 4 points per level. Classless characters use weapons up to Rare.
+- **M12a — attributes: Done (Claude, 2026-10-18).** Strength (+0.8% weapon and unarmed damage a point), Dexterity (faster strikes up to 30%, +0.15 speed, +0.2% critical chance up to 35%, crits ×1.75), Intelligence (+2 Magicules, +0.8% skill damage), Vitality (+4 HP, +0.06 defence). Four points per level after the first — older characters have theirs at once; spend them with the + buttons in the equipment window. Tests: `tests/attributes.gd` (16).
+- Next: M12b the master, classes and weapon requirements; M12c staffs, fist weapons and the class skills.
+
 ### M11 — More to do in the world (user batch 2026-10-16) · In progress, requires M9
 
 - **M11a — distinct looks for the gear tiers: Done (Claude, 2026-10-16).** The ten tiers of levels 21–48 no longer only change the name: each recolours its art in its own palette — Stormtouched storm blue, Steppeforged gold, Windwrought teal, Gloomwrought violet, Duskforged ember, Jadecarved jade, Cloudforged silver — and the three highest also glow (Starforged and Celestial a glowing edge, Ascendant a brighter double glow). Bag, equipment window, item cards, the merchant and the weapon in your character's hand all show it. Tests: `tests/tier_looks.gd` (6).
@@ -234,6 +240,7 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-18: Claude Code added attributes (M12a) on `claude/m12a-attributes`: `Attributes` (points from the level, effects, validation), `Player.spend_attribute/reset_attributes`, hooks in `MeleeAttack.attack/attack_skill` and `gear_bonus`, the `attribute` intent, rows in the equipment window.
 - 2026-10-18: Claude Code added storage (user request) on `claude/storage`: `Storage` (world node; per character `progression.storage` {home, city}), the Vault nation building (room per Vault, at most six), city storage rented at a major city's town hall (2,500 Zeni, only usable there), settlement storage also opened at every major city's town hall, the `storage` intent, `StoragePanel`, save checks; storage stays with its world (not carried by imported characters). Tests: `tests/storage.gd` (23).
 - 2026-10-16: Claude Code polished the UI after 1.0 (user feedback) on `claude/ui-polish`: map and minimap markers are arrows showing where each character faces (`UI.draw_arrow`); the equipment window no longer pastes item icons onto the character; worn armour no longer draws coloured bars on the character in the world (only the weapon in hand). Before it, on `claude/tower-fix`: the desert tower art is whole (48 px) and the nation's watchtower uses the wooden lookout.
 - 2026-10-16: Claude Code published release v1.0.0 (all of the user's list done: M9–M11).

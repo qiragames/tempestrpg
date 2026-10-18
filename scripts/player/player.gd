@@ -777,6 +777,33 @@ func _weather_speed() -> float:
         return 1.0
     return day_night.speed_factor(day_night.weather(map.region_name(global_position), float(world.progression.get("world_time", 0.0))))
 
+## --- M12a: attributes.
+const ATTRIBUTES := preload("res://scripts/progression/attributes.gd")
+
+## Host: spend one unspent point on an attribute (Vitality and Intelligence raise the maxima).
+func spend_attribute(key: String) -> bool:
+    if not AUTHORITY.can_mutate(self) or not key in ATTRIBUTES.KEYS or ATTRIBUTES.unspent(progression) <= 0:
+        return false
+    var all := ATTRIBUTES.spent(progression)
+    all[key] = int(all[key]) + 1
+    progression["attributes"] = all
+    var gain: Array = ATTRIBUTES.capacity(key)
+    _apply_stats(int(gain[0]), float(gain[1]), 0.0, 1)
+    refresh_gear()
+    session.queue_save()
+    return true
+
+## Host: give every point back (the class master, M12b).
+func reset_attributes() -> void:
+    if not AUTHORITY.can_mutate(self):
+        return
+    var all := ATTRIBUTES.spent(progression)
+    for key in all:
+        var gain: Array = ATTRIBUTES.capacity(key)
+        _apply_stats(int(gain[0]) * int(all[key]), float(gain[1]) * int(all[key]), 0.0, -1)
+    progression["attributes"] = {"str": 0, "dex": 0, "int": 0, "vit": 0}
+    refresh_gear()
+
 func current_speed() -> float:
     var boost: float = DEV.SPEED_FACTOR if DEV.speed and DEV.applies(self) else 1.0
     boost *= _weather_speed()
@@ -835,6 +862,8 @@ func gear_bonus(stat: String) -> float:
         total += elixir("iron")
     # M11f: the following pet.
     total += preload("res://scripts/pets/pet_catalogue.gd").bonus(progression, stat)
+    # M12a: Dexterity (speed) and Vitality (defence).
+    total += ATTRIBUTES.bonus(progression, stat)
     # Augments count like gear (their maxima are applied when installed).
     return total + augment_bonus(stat)
 

@@ -222,19 +222,36 @@ func _bolt(from: Vector2, to: Vector2, colour: Color) -> void:
 func strike_cost() -> float:
     return float(_race().get("strike_cost", magicule_cost))
 
+const ATTRIBUTES := preload("res://scripts/progression/attributes.gd")
+## Whether the last basic strike was critical (Dexterity, M12a).
+var last_critical := false
+
 func attack(facing: Vector2) -> bool:
     # Mimic forms and Human weapon mastery strengthen the basic strike; skills keep their own damage.
     var bonus: int = get_parent().form_strike_bonus() if get_parent().has_method("form_strike_bonus") else 0
     bonus += get_parent().tree_strike_bonus() if get_parent().has_method("tree_strike_bonus") else 0
     bonus += int(get_parent().gear_bonus("strike")) if get_parent().has_method("gear_bonus") else 0
     var race := _race()
+    # M12a: Strength (damage), Dexterity (faster recovery and critical strikes).
+    var attributes: float = 1.0
+    var quicker: float = 1.0
+    var progression: Variant = get_parent().get("progression")
+    if progression is Dictionary:
+        attributes = ATTRIBUTES.damage_factor(progression)
+        quicker = ATTRIBUTES.recovery_factor(progression)
+        var crit: float = ATTRIBUTES.crit_chance(progression)
+        if crit > 0.0 and _element_rng.randf() < crit:
+            attributes *= ATTRIBUTES.CRIT_FACTOR
+            last_critical = true
+        else:
+            last_critical = false
     # An equipped weapon replaces the unarmed damage and sets the attack's shape and timing.
     var weapon: Dictionary = get_parent().equipped_weapon() if get_parent().has_method("equipped_weapon") else {}
     if weapon.is_empty():
-        return _strike(facing, int(round((int(race.get("strike_damage", damage)) + bonus + race.strike_bonus) * _aura())), strike_cost(), cooldown * race.recovery)
+        return _strike(facing, int(round((int(race.get("strike_damage", damage)) + bonus + race.strike_bonus) * _aura() * attributes)), strike_cost(), cooldown * race.recovery * quicker)
     var kind: String = GEAR.BASES[weapon.base].weapon
     var set_factor: float = SETS.damage_factor(get_parent().equipped_items(), GEAR.BASES) if get_parent().has_method("equipped_items") else 1.0
-    return _strike(facing, element_damage(int(round((int(weapon.stats.damage) + bonus + race.strike_bonus) * _aura() * set_factor))), strike_cost(), GEAR.WEAPONS[kind].recovery * race.recovery, StringName(kind))
+    return _strike(facing, element_damage(int(round((int(weapon.stats.damage) + bonus + race.strike_bonus) * _aura() * set_factor * attributes))), strike_cost(), GEAR.WEAPONS[kind].recovery * race.recovery * quicker, StringName(kind))
 
 func attack_skill(facing: Vector2, skill_id: StringName) -> bool:
     var book = get_parent().get_node("SkillBook")
@@ -246,7 +263,9 @@ func attack_skill(facing: Vector2, skill_id: StringName) -> bool:
     # Demons hit harder with skills and drain part of the damage; Humans recover faster.
     var race := _race()
     var keen: float = 0.1 if get_parent().has_method("gear_passive") and get_parent().gear_passive("keen") else 0.0
-    var power := int(round(skill.damage * (1.0 + race.skill_bonus + keen) * _aura()))
+    # M12a: Intelligence makes skills stronger.
+    var mind: float = ATTRIBUTES.skill_factor(get_parent().progression) if get_parent().get("progression") is Dictionary else 1.0
+    var power := int(round(skill.damage * (1.0 + race.skill_bonus + keen) * _aura() * mind))
     _flash_length = PIERCE_LENGTH
     _flash_width = 3.0
     _flash_color = Color("c9f6df")
