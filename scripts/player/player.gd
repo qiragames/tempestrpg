@@ -133,6 +133,12 @@ func gain_zeni(amount: int, reason: String) -> void:
     var pet_zeni: float = preload("res://scripts/pets/pet_catalogue.gd").bonus(progression, "zeni")
     if pet_zeni > 0.0:
         amount = int(round(amount * (1.0 + pet_zeni / 100.0)))
+    # M14b: the guild's Zeni perk (from creatures and bosses).
+    var guilds: Node = get_parent().get("guilds") if get_parent() != null else null
+    if guilds != null and reason in ["defeat", "boss"]:
+        var guild_zeni: int = guilds.perk(character_id, "zeni")
+        if guild_zeni > 0:
+            amount = int(round(amount * (1.0 + guild_zeni / 100.0)))
     progression["zeni"] = mini(TRADE.MAX_ZENI, zeni() + amount)
     if reason in ["defeat", "chest", "pile"]:
         session.notify_character(character_id, "+%d Zeni (%s)." % [amount, reason])
@@ -479,6 +485,13 @@ func gain_experience(amount: int, reason: String) -> void:
     var pet_xp: float = preload("res://scripts/pets/pet_catalogue.gd").bonus(progression, "xp")
     if pet_xp > 0.0:
         amount = int(round(amount * (1.0 + pet_xp / 100.0)))
+    # M14b: the guild's XP perk, and a share of what members earn feeds the guild.
+    var guilds: Node = get_parent().get("guilds") if get_parent() != null else null
+    if guilds != null:
+        var guild_xp: int = guilds.perk(character_id, "xp")
+        if guild_xp > 0:
+            amount = int(round(amount * (1.0 + guild_xp / 100.0)))
+        guilds.member_xp(self, amount)
     var gained: int = LEVELING.grant(self, amount)
     if is_instance_valid(session.world):
         var text := "+%d XP (%s)." % [amount, reason]

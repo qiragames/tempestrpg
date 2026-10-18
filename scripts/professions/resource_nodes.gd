@@ -98,7 +98,12 @@ func success_chance(actor: Node2D, index: int) -> float:
 func swing_seconds(actor: Node2D, index: int) -> float:
     var node := info(index)
     var level: int = PRO.level_of(actor.progression, node.profession)
-    return PRO.work_seconds(PRO.BASE_SWING, level, node.required, tool_tier(actor, node.profession))
+    var seconds: float = PRO.work_seconds(PRO.BASE_SWING, level, node.required, tool_tier(actor, node.profession))
+    # M14b: the guild's gathering perk.
+    var guilds: Node = actor.get_parent().get("guilds") if actor.get_parent() != null else null
+    if guilds != null:
+        seconds /= 1.0 + guilds.perk(actor.character_id, "gather") / 100.0
+    return seconds
 
 ## Host: one swing landed. Returns false when the work must stop (node gone, bag full).
 func strike(actor: Node2D, index: int, rng: RandomNumberGenerator) -> bool:

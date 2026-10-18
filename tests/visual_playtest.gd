@@ -1445,6 +1445,33 @@ func _run() -> void:
     await _wait(0.4)
     await _shot("guild_window", "The guild window (P → Guild): members and ranks, inviting characters online; found a guild for 1000 Zeni")
     hud_nation.guild_panel.close_panel()
+    # M14b: a Guild Hall in the village, its bank and this week's quests.
+    var hall_camp: Node = world.camp
+    hall_camp.state.wood = int(hall_camp.state.wood) + 60
+    hall_camp.state.stone = int(hall_camp.state.stone) + 40
+    var hall_centre: Vector2i = load("res://scripts/world/world_map.gd").to_tile(hall_camp.SITE)
+    var hall_tile := Vector2i(-9999, -9999)
+    for ring in range(3, 10):
+        if hall_tile.x != -9999:
+            break
+        for dy in range(-ring, ring + 1):
+            if hall_tile.x != -9999:
+                break
+            for dx in range(-ring, ring + 1):
+                if maxi(absi(dx), absi(dy)) == ring and hall_camp.place(null, "guild_hall", hall_centre + Vector2i(dx, dy)):
+                    hall_tile = hall_centre + Vector2i(dx, dy)
+                    break
+    _check(hall_tile.x != -9999, "A Guild Hall built in the village")
+    showcase.global_position = load("res://scripts/nation/nation_catalogue.gd").foot(hall_tile) + Vector2(0, 6)
+    world.terrain.ensure_props_at(showcase.global_position)
+    showcase.get_node("Inventory").add_material("ore_iron", 12)
+    _check(world.guilds.bank_put(showcase, "ore_iron", 12) and world.guilds.bank_zeni(showcase, 500), "Iron ore and Zeni deposited in the guild bank")
+    await _wait(0.5)
+    await _shot("guild_hall", "The Guild Hall in your village (F): every guild's meeting place")
+    hud_nation.guild_hall_panel.open()
+    await _wait(0.4)
+    await _shot("guild_bank", "The guild hall window: the guild bank, level and perks, and this week's three guild quests")
+    hud_nation.guild_hall_panel.close_panel()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

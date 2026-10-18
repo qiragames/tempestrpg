@@ -159,6 +159,11 @@ func open_nearest() -> void:
     if master != null and master.near(hud.player):
         hud.class_panel.open()
         return
+    # M14b: F at a Guild Hall.
+    var guilds_node = hud.get_parent().get("guilds")
+    if guilds_node != null and guilds_node.at_hall(hud.player):
+        hud.guild_hall_panel.open()
+        return
     # Storage: F at a Vault in your village or at a major city's town hall.
     var storage_node = hud.get_parent().get("storage")
     if storage_node != null:

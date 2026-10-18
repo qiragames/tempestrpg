@@ -162,7 +162,7 @@ func refresh() -> void:
     var entry: Dictionary = node.guild(id)
     var rank: String = node.rank_of(me)
     _title.text = "%s <%s>" % [String(entry.name).to_upper(), entry.tag]
-    _info.text = "%s emblem · %d / %d members · you are %s" % [NATION.EMBLEMS[int(entry.emblem)], entry.members.size(), node.MAX_MEMBERS, "the leader" if rank == "leader" else ("an officer" if rank == "officer" else "a member")]
+    _info.text = "Level %d · %s emblem · %d / %d members · you are %s" % [node.level_of(id), NATION.EMBLEMS[int(entry.emblem)], entry.members.size(), node.MAX_MEMBERS, "the leader" if rank == "leader" else ("an officer" if rank == "officer" else "a member")]
     for member in entry.members:
         var row := _row()
         var their: String = node.rank_of(member)

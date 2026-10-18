@@ -66,8 +66,9 @@ var army_panel: Control
 var storage_panel: Control
 ## Classes at the old master (M12b), see class_panel.gd.
 var class_panel: Control
-## Guilds (M14a), see guild_panel.gd.
+## Guilds (M14a), see guild_panel.gd; the guild hall (M14b), see guild_hall_panel.gd.
 var guild_panel: Control
+var guild_hall_panel: Control
 var _zeni: Label
 var _close: Button
 var _log: RichTextLabel
@@ -147,6 +148,8 @@ func _ready() -> void:
     add_child(class_panel)
     guild_panel = load("res://scripts/ui/guild_panel.gd").new(self)
     add_child(guild_panel)
+    guild_hall_panel = load("res://scripts/ui/guild_hall_panel.gd").new(self)
+    add_child(guild_hall_panel)
     # The owner's mod menu (F10), only in the dev build.
     if preload("res://scripts/dev/dev_tools.gd").available():
         dev_panel = load("res://scripts/ui/dev_panel.gd").new(self)
@@ -159,7 +162,7 @@ func _ready() -> void:
     add_child(_camp_dialog)
 
 func menu_open() -> bool:
-    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible) or (is_instance_valid(harbour_panel) and harbour_panel.visible) or (is_instance_valid(party_panel) and party_panel.is_open()) or (is_instance_valid(dialog_panel) and dialog_panel.is_open()) or (is_instance_valid(nation_panel) and nation_panel.is_open()) or (is_instance_valid(citizens_panel) and citizens_panel.is_open()) or (is_instance_valid(invite_panel) and invite_panel.is_open()) or (is_instance_valid(dev_panel) and dev_panel.is_open()) or (is_instance_valid(professions_panel) and professions_panel.is_open()) or (is_instance_valid(quest_panel) and quest_panel.is_open()) or (is_instance_valid(achievements_panel) and achievements_panel.is_open()) or (is_instance_valid(exchange_panel) and exchange_panel.is_open()) or (is_instance_valid(pets_panel) and pets_panel.is_open()) or (is_instance_valid(army_panel) and army_panel.is_open()) or (is_instance_valid(storage_panel) and storage_panel.is_open()) or (is_instance_valid(class_panel) and class_panel.is_open()) or (is_instance_valid(guild_panel) and guild_panel.is_open())
+    return (is_instance_valid(_camp_dialog) and _camp_dialog.visible) or _modal.visible or _pause_panel.visible or (is_instance_valid(_ally_dialog) and _ally_dialog.visible) or (is_instance_valid(skill_tree) and skill_tree.visible) or (is_instance_valid(fusion) and fusion.visible) or (is_instance_valid(gear_panel) and gear_panel.visible) or (is_instance_valid(world_map) and world_map.visible) or (is_instance_valid(trade_panel) and trade_panel.visible) or (is_instance_valid(harbour_panel) and harbour_panel.visible) or (is_instance_valid(party_panel) and party_panel.is_open()) or (is_instance_valid(dialog_panel) and dialog_panel.is_open()) or (is_instance_valid(nation_panel) and nation_panel.is_open()) or (is_instance_valid(citizens_panel) and citizens_panel.is_open()) or (is_instance_valid(invite_panel) and invite_panel.is_open()) or (is_instance_valid(dev_panel) and dev_panel.is_open()) or (is_instance_valid(professions_panel) and professions_panel.is_open()) or (is_instance_valid(quest_panel) and quest_panel.is_open()) or (is_instance_valid(achievements_panel) and achievements_panel.is_open()) or (is_instance_valid(exchange_panel) and exchange_panel.is_open()) or (is_instance_valid(pets_panel) and pets_panel.is_open()) or (is_instance_valid(army_panel) and army_panel.is_open()) or (is_instance_valid(storage_panel) and storage_panel.is_open()) or (is_instance_valid(class_panel) and class_panel.is_open()) or (is_instance_valid(guild_panel) and guild_panel.is_open()) or (is_instance_valid(guild_hall_panel) and guild_hall_panel.is_open())
 
 func bind_player(actor: Node2D) -> void:
     if player == actor:

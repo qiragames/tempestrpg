@@ -29,6 +29,8 @@ const BUILDINGS := {
     "market": ["Market", "shop", Vector2(40, 20), {"wood": 20, "stone": 15}, 1, false, "Two merchants sell trade goods and lead caravans."],
     # User request (after 1.0): settlement storage, also reachable at any major city's town hall.
     "vault": ["Vault", "hut_tent", Vector2(40, 18), {"wood": 20, "stone": 20}, 1, false, "Settlement storage: room for 150 items and 20 gear per Vault; open it here or at any major city's town hall."],
+    # M14b (user design): where guilds meet — every guild's bank and its weekly quests (F).
+    "guild_hall": ["Guild Hall", "house_c", Vector2(56, 20), {"wood": 40, "stone": 30}, 1, true, "Where guilds meet: open your guild's bank and this week's guild quests here (F)."],
 }
 ## Buildings you can walk over (no collision).
 const WALKABLE := ["field"]

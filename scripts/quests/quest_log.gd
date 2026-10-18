@@ -194,6 +194,9 @@ func on_event(actor: Node, kind: String, data: Dictionary) -> void:
     if not AUTHORITY.can_mutate(actor) or not is_instance_valid(actor):
         return
     ACH.record(actor, kind, data)
+    # M14b: members' deeds count towards their guild's weekly quests.
+    if world.get("guilds") != null:
+        world.guilds.on_event(actor, kind, data)
     if world.get("dungeon_features") != null:
         world.dungeon_features.on_event(actor, kind, data)
     if world.get("events") != null:
@@ -264,6 +267,8 @@ func _complete(actor: Node, id: String) -> void:
     if quest.kind == "bounty":
         state["again"] = world_time() + QUESTS.BOUNTY_SECONDS
         ACH.record(actor, "bounty", {})
+        if world.get("guilds") != null:
+            world.guilds.on_event(actor, "bounty", {})
     _grant(actor, quest.get("reward", {}))
     session().notify_character(actor.character_id, "Quest complete: %s!" % quest.title)
 

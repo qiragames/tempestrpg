@@ -17,6 +17,26 @@ const TAG_MIN := 2
 const TAG_MAX := 4
 const BANK_SLOTS := 40
 const RANKS := ["leader", "officer", "member"]
+## --- M14b: level, perks, the hall's bank, weekly quests.
+## Guild XP needed for levels 1-10.
+const LEVEL_XP := [0, 500, 1500, 3500, 7000, 12000, 20000, 32000, 50000, 75000]
+## Perks by guild level: [kind, amount] (they add up).
+const PERKS := {2: ["xp", 3], 3: ["bank_units", 100], 4: ["zeni", 5], 5: ["gather", 5], 6: ["bank_gear", 10], 7: ["xp", 3], 8: ["zeni", 5], 9: ["gather", 5], 10: ["bank_units", 200]}
+const PERK_TEXT := {"xp": "+%d%% XP", "zeni": "+%d%% Zeni from creatures", "gather": "+%d%% gathering speed", "bank_units": "+%d items in the bank", "bank_gear": "+%d gear in the bank"}
+## Members' deeds: this share of the XP they earn also goes to the guild.
+const DEED_SHARE := 0.02
+const BANK_UNITS := 200
+const BANK_GEAR := 20
+const HALL_REACH := 44.0
+## A guild week: seven in-game days (a day is 24 minutes of play).
+const WEEK_DAYS := 7
+## Weekly quest kinds: [text, amount needed]; three of them each week.
+const QUEST_KINDS := {"defeat": ["Defeat creatures", 150], "gather": ["Gather wood, ore or fish", 120], "boss": ["Defeat raid bosses or hidden elites", 2], "bounty": ["Complete town bounties", 6], "craft": ["Craft, cook, brew or forge", 25]}
+const QUESTS_PER_WEEK := 3
+const QUEST_XP := 1500
+const QUEST_ZENI := 1000
+## Game events (world.quests.on_event) → weekly quest kinds.
+const EVENT_KINDS := {"kill": "defeat", "gather": "gather", "catch": "gather", "craft": "craft", "boss": "boss", "bounty": "bounty"}
 
 var state: Dictionary = initial_state()
 var world: Node
@@ -153,11 +173,20 @@ func decline(guest: Node) -> bool:
     _tell(from, "%s declined the guild invitation." % guest.character_id)
     return true
 
-## Leave (a leader hands the lead to an officer, else the longest member; alone, the guild ends).
+## Leave (a leader hands the lead to an officer, else the longest member; alone, the guild ends —
+## only with an empty bank, so nothing is lost).
 func leave(actor: Node) -> bool:
-    if not _host() or guild_of(actor.character_id).is_empty():
+    var id := guild_of(actor.character_id)
+    if not _host() or id.is_empty():
+        return false
+    if state.guilds[id].members.size() == 1 and not _bank_empty(id):
+        _tell(actor.character_id, "Empty the guild bank before the last member leaves.")
         return false
     return _remove(actor.character_id, "%s left the guild.")
+
+func _bank_empty(id: String) -> bool:
+    var bank: Dictionary = state.guilds[id].bank
+    return bank.items.is_empty() and bank.goods.is_empty() and int(bank.zeni) <= 0
 
 func kick(actor: Node, member_id: String) -> bool:
     var rank := rank_of(actor.character_id)
@@ -221,12 +250,222 @@ func disband(actor: Node) -> bool:
     var id := guild_of(actor.character_id)
     if not _host() or rank_of(actor.character_id) != "leader":
         return false
-    var bank: Dictionary = state.guilds[id].bank
-    if not bank.items.is_empty() or not bank.goods.is_empty() or int(bank.zeni) > 0:
+    if not _bank_empty(id):
         _tell(actor.character_id, "Empty the guild bank before disbanding.")
         return false
     _tell_guild(id, "The guild %s was disbanded." % state.guilds[id].name)
     state.guilds.erase(id)
+    session().queue_save()
+    return true
+
+## --- M14b: level and perks.
+static func level_for(xp: int) -> int:
+    var level := 1
+    for index in range(LEVEL_XP.size()):
+        if xp >= int(LEVEL_XP[index]):
+            level = index + 1
+    return level
+
+func level_of(id: String) -> int:
+    return level_for(int(state.guilds[id].xp)) if state.guilds.has(id) else 0
+
+## The total of one perk kind a guild's level gives (0 without a guild).
+func perk(character_id: String, kind: String) -> int:
+    var id := guild_of(character_id)
+    if id.is_empty():
+        return 0
+    var total := 0
+    for level in PERKS:
+        if int(level) <= level_of(id) and PERKS[level][0] == kind:
+            total += int(PERKS[level][1])
+    return total
+
+static func perk_lines(level: int) -> Array:
+    var lines: Array = []
+    for at in PERKS:
+        lines.append(["Lv %d  %s" % [at, PERK_TEXT[PERKS[at][0]] % int(PERKS[at][1])], int(at) <= level])
+    return lines
+
+func _add_xp(id: String, amount: int) -> void:
+    if amount <= 0 or not state.guilds.has(id):
+        return
+    var before := level_of(id)
+    state.guilds[id].xp = int(state.guilds[id].xp) + amount
+    if level_of(id) > before:
+        _tell_guild(id, "The guild %s reached level %d!" % [state.guilds[id].name, level_of(id)])
+
+## Host: a share of what a member earns feeds the guild (from Player.gain_experience).
+func member_xp(actor: Node, amount: int) -> void:
+    var id := guild_of(actor.character_id)
+    if not _host() or id.is_empty():
+        return
+    _add_xp(id, int(round(amount * DEED_SHARE)))
+
+## --- M14b: weekly quests (three shared goals, new every guild week).
+func week() -> int:
+    return int(world_time() / (preload("res://scripts/world/day_night.gd").DAY_SECONDS * WEEK_DAYS))
+
+func _ensure_week(id: String) -> void:
+    var quests: Dictionary = state.guilds[id].quests
+    if int(quests.get("week", -1)) == week() and quests.get("goals") is Array:
+        return
+    var kinds: Array = QUEST_KINDS.keys()
+    var seed := hash("%s:%d" % [id, week()])
+    var goals: Array = []
+    while goals.size() < QUESTS_PER_WEEK:
+        var kind: String = kinds[absi(seed) % kinds.size()]
+        seed = hash(str(seed) + kind)
+        if goals.any(func(goal): return goal.kind == kind):
+            continue
+        goals.append({"kind": kind, "need": int(QUEST_KINDS[kind][1]), "have": 0, "done": false})
+    state.guilds[id].quests = {"week": week(), "goals": goals}
+
+## This week's goals of a guild (made when first asked).
+func goals(id: String) -> Array:
+    if not state.guilds.has(id):
+        return []
+    if _host():
+        _ensure_week(id)
+    return state.guilds[id].quests.get("goals", [])
+
+## Host: a member's deed (world.quests.on_event) counts towards this week's goals.
+func on_event(actor: Node, kind: String, _data: Dictionary) -> void:
+    var id := guild_of(actor.character_id)
+    if not _host() or id.is_empty() or not EVENT_KINDS.has(kind):
+        return
+    _ensure_week(id)
+    var goal_kind: String = EVENT_KINDS[kind]
+    for goal in state.guilds[id].quests.goals:
+        if goal.kind != goal_kind or goal.done:
+            continue
+        goal.have = mini(int(goal.need), int(goal.have) + 1)
+        if int(goal.have) >= int(goal.need):
+            goal.done = true
+            state.guilds[id].bank.zeni = int(state.guilds[id].bank.zeni) + QUEST_ZENI
+            _tell_guild(id, "Guild quest done: %s! +%d guild XP, +%d Zeni in the bank." % [QUEST_KINDS[goal_kind][0], QUEST_XP, QUEST_ZENI])
+            _add_xp(id, QUEST_XP)
+            session().queue_save()
+
+## --- M14b: the guild hall and its bank.
+func halls() -> Array:
+    var camp: Node = world.get("camp") if world != null else null
+    if camp == null or not camp.state.founded:
+        return []
+    return camp.state.nation.buildings.filter(func(entry): return entry.kind == "guild_hall")
+
+func at_hall(actor: Node2D) -> bool:
+    for entry in halls():
+        if actor.global_position.distance_to(NATION.foot(Vector2i(entry.tile[0], entry.tile[1]))) <= HALL_REACH:
+            return true
+    return false
+
+## Room in a guild's bank: [items, gear] (perks add more).
+func bank_room(id: String) -> Array:
+    var units := BANK_UNITS
+    var gear := BANK_GEAR
+    for level in PERKS:
+        if int(level) <= level_of(id):
+            if PERKS[level][0] == "bank_units":
+                units += int(PERKS[level][1])
+            elif PERKS[level][0] == "bank_gear":
+                gear += int(PERKS[level][1])
+    return [units, gear]
+
+static func units(bank: Dictionary) -> int:
+    var total := 0
+    for good in bank.goods:
+        total += int(bank.goods[good])
+    return total
+
+func can_withdraw(character_id: String) -> bool:
+    var id := guild_of(character_id)
+    return not id.is_empty() and (rank_of(character_id) in ["leader", "officer"] or state.guilds[id].withdraw == "members")
+
+func _bank_ready(actor: Node2D) -> String:
+    var id := guild_of(actor.character_id)
+    if not _host() or id.is_empty() or not at_hall(actor):
+        return ""
+    return id
+
+## Deposit a gear piece (unworn) or `count` of a bag item.
+func bank_put(actor: Node2D, item: String, count: int) -> bool:
+    var id := _bank_ready(actor)
+    if id.is_empty():
+        return false
+    var bank: Dictionary = state.guilds[id].bank
+    var room := bank_room(id)
+    var piece: Dictionary = actor.item_by_id(item)
+    if not piece.is_empty():
+        if bank.items.size() >= int(room[1]) or item in actor.progression.get("equipment", {}).values() or not actor.remove_item(item):
+            _tell(actor.character_id, "No room for more gear in the bank." if bank.items.size() >= int(room[1]) else "Take it off first.")
+            return false
+        bank.items.append(piece)
+    else:
+        var bag: Node = actor.get_node("Inventory")
+        count = mini(mini(count, bag.count_of(item)), int(room[0]) - units(bank))
+        if count <= 0 or not bag.discard(StringName(item), count):
+            return false
+        bank.goods[item] = int(bank.goods.get(item, 0)) + count
+    session().queue_save()
+    return true
+
+## Withdraw (officers and the leader; members too when the leader allows it).
+func bank_take(actor: Node2D, item: String, count: int) -> bool:
+    var id := _bank_ready(actor)
+    if id.is_empty():
+        return false
+    if not can_withdraw(actor.character_id):
+        _tell(actor.character_id, "Only officers and the leader take from the bank.")
+        return false
+    var bank: Dictionary = state.guilds[id].bank
+    for index in range(bank.items.size()):
+        if bank.items[index].id == item:
+            if not actor.add_item(bank.items[index]):
+                _tell(actor.character_id, "Your gear bag is full.")
+                return false
+            bank.items.remove_at(index)
+            session().queue_save()
+            return true
+    var have: int = int(bank.goods.get(item, 0))
+    count = mini(count, have)
+    if count <= 0:
+        return false
+    var added: int = actor.get_node("Inventory").add_material(item, count)
+    if added <= 0:
+        _tell(actor.character_id, "Your bag is full.")
+        return false
+    if have - added <= 0:
+        bank.goods.erase(item)
+    else:
+        bank.goods[item] = have - added
+    session().queue_save()
+    return true
+
+## Zeni: a positive amount is deposited, a negative one withdrawn.
+func bank_zeni(actor: Node2D, amount: int) -> bool:
+    var id := _bank_ready(actor)
+    if id.is_empty() or amount == 0:
+        return false
+    var bank: Dictionary = state.guilds[id].bank
+    if amount > 0:
+        if not actor.spend_zeni(amount):
+            return false
+        bank.zeni = int(bank.zeni) + amount
+    else:
+        if not can_withdraw(actor.character_id) or int(bank.zeni) < -amount:
+            return false
+        bank.zeni = int(bank.zeni) + amount
+        actor.progression["zeni"] = int(actor.progression.get("zeni", 0)) - amount
+    session().queue_save()
+    return true
+
+## The leader decides who may take from the bank: "officers" or "members".
+func set_withdraw(actor: Node, who: String) -> bool:
+    var id := guild_of(actor.character_id)
+    if not _host() or rank_of(actor.character_id) != "leader" or not who in ["officers", "members"]:
+        return false
+    state.guilds[id].withdraw = who
+    _tell_guild(id, "The guild bank: %s may take from it now." % ("all members" if who == "members" else "officers and the leader"))
     session().queue_save()
     return true
 
@@ -297,6 +536,26 @@ static func valid_state(value: Variant, players: Dictionary = {}) -> bool:
             return false
         if not entry.get("withdraw") in ["officers", "members"] or not (entry.get("xp") is int or entry.get("xp") is float) or int(entry.xp) < 0 or not entry.get("quests") is Dictionary or not (entry.get("founded") is int or entry.get("founded") is float):
             return false
+        # M14b: the bank holds real items within the largest room perks can give.
+        var gear_catalogue := preload("res://scripts/items/gear_catalogue.gd")
+        var trade := preload("res://scripts/trade/trade_catalogue.gd")
+        if bank.items.size() > BANK_GEAR + 10 or units(bank) > BANK_UNITS + 300:
+            return false
+        for item in bank.items:
+            if not item is Dictionary or not gear_catalogue.valid_item(item):
+                return false
+        for good in bank.goods:
+            if not good is String or not trade.bag_item(good) or not (bank.goods[good] is int or bank.goods[good] is float) or int(bank.goods[good]) < 1:
+                return false
+        # Weekly quests: {} or {week, goals: [{kind, need, have, done}]}.
+        if not entry.quests.is_empty():
+            if entry.quests.size() != 2 or not (entry.quests.get("week") is int or entry.quests.get("week") is float) or not entry.quests.get("goals") is Array or entry.quests.goals.size() != QUESTS_PER_WEEK:
+                return false
+            for goal in entry.quests.goals:
+                if not goal is Dictionary or goal.size() != 4 or not QUEST_KINDS.has(goal.get("kind")) or not goal.get("done") is bool:
+                    return false
+                if int(goal.get("need", 0)) != int(QUEST_KINDS[goal.kind][1]) or int(goal.get("have", -1)) < 0 or int(goal.have) > int(goal.need):
+                    return false
     for guest in value.invites:
         var invite: Variant = value.invites[guest]
         if not invite is Dictionary or invite.size() != 3 or not invite.get("guild") is String or not invite.get("from") is String or not (invite.get("until") is float or invite.get("until") is int):

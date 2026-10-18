@@ -1009,9 +1009,21 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
         # M14a: founding, invitations, ranks and leaving; the host checks the rest.
         var guild_operation: Variant = payload.get("operation")
         var member: Variant = payload.get("id", "")
-        if not guild_operation in ["found", "invite", "accept", "decline", "leave", "kick", "promote", "demote", "transfer", "disband"] or not member is String or member.length() > 64:
+        if not guild_operation in ["found", "invite", "accept", "decline", "leave", "kick", "promote", "demote", "transfer", "disband", "put", "take", "zeni", "withdraw"] or not member is String or member.length() > 64:
             rejected_requests += 1
             return false
+        if guild_operation in ["put", "take", "zeni"]:
+            # M14b: the bank at a guild hall: an item id and a count (zeni: + deposit, - withdraw).
+            if payload.size() != 3 or not (payload.get("count") is int or payload.get("count") is float) or absi(int(payload.count)) > 10000000:
+                rejected_requests += 1
+                return false
+            if guild_operation == "put":
+                return world.guilds.bank_put(actor, member, int(payload.count))
+            if guild_operation == "take":
+                return world.guilds.bank_take(actor, member, int(payload.count))
+            return world.guilds.bank_zeni(actor, int(payload.count))
+        if guild_operation == "withdraw":
+            return payload.size() == 2 and world.guilds.set_withdraw(actor, member)
         if guild_operation == "found":
             if payload.size() != 5 or not payload.get("name") is String or not payload.get("tag") is String or not (payload.get("emblem") is int or payload.get("emblem") is float) or payload.name.length() > 40 or payload.tag.length() > 8:
                 rejected_requests += 1

@@ -45,6 +45,8 @@ GUILDS AND CHAT
   Press Enter to chat: plain text goes to everyone in the world, "/g text" to your guild,
   "/p text" to your party. P -> "Guild" founds a guild (1000 Zeni: a name, a short tag and an
   emblem) or shows yours: the leader and officers invite friends who are online.
+  Build a Guild Hall in your village (B): F there opens your guild's bank (items, gear, Zeni),
+  its level and perks, and this week's three guild quests that everyone helps with.
 
 HANDY
   Your saves are in %APPDATA%\TempestRPG (type it into the Explorer address bar).
