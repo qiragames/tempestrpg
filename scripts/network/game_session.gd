@@ -912,6 +912,14 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             "sail":
                 return world.harbours.sail(actor, here, target)
         return false
+    if action == "class":
+        # M12b: choose or change a class or subclass, or reset attributes, at the old master.
+        if payload.size() != 3 or not payload.get("operation") in ["choose", "reset"] or not payload.get("slot") is String or not payload.get("id") is String or payload.id.length() > 32:
+            rejected_requests += 1
+            return false
+        if payload.operation == "reset":
+            return world.class_master.reset_attributes(actor)
+        return world.class_master.choose(actor, payload.slot, payload.id)
     if action == "attribute":
         # M12a: spend one point (the host checks the points left).
         if payload.size() != 1 or not payload.get("key") is String:

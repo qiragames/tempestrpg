@@ -1224,6 +1224,11 @@ func equip(id: String, slot: String) -> bool:
     if item.is_empty() or not GEAR.slot_fits(item.base, slot):
         session.notify_character(character_id, "That item does not fit there.")
         return false
+    # M12b: level, class and attribute requirements.
+    var why: String = preload("res://scripts/progression/class_catalogue.gd").problem(progression, item)
+    if not why.is_empty():
+        session.notify_character(character_id, "%s: %s" % [GEAR.display_name(item), why])
+        return false
     var equipment: Dictionary = progression.equipment
     for other in equipment.keys():
         if equipment[other] == id:

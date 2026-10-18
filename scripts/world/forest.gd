@@ -37,6 +37,8 @@ var pets: Node2D
 var army: Node2D
 ## Settlement and city storage (after 1.0).
 var storage: Node2D
+## M12b: the old master (classes) in your settlement.
+var class_master: Node2D
 var respawner: Node
 ## M6a: harvestable trees and ore rocks (professions).
 var nodes: Node
@@ -92,6 +94,8 @@ func _ready() -> void:
     add_child(army)
     storage = load("res://scripts/settlement/storage.gd").new(self)
     add_child(storage)
+    class_master = load("res://scripts/nation/class_master.gd").new(self)
+    add_child(class_master)
     nodes = load("res://scripts/professions/resource_nodes.gd").new(self)
     add_child(nodes)
     trial = load("res://scripts/trials/proving_trial.gd").new()

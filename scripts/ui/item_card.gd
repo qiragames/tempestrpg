@@ -147,6 +147,14 @@ func show_item(item_data: Dictionary, where: String = "") -> void:
         var active: Dictionary = GEAR.ACTIVES[item.active]
         _label("Active (G): %s" % active.name, 10, UI.CYAN, _box).name = "Active"
         _label("%s · %d s cooldown" % [active.text, int(active.cooldown)], 9, UI.TEXT_DIM, _box).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    # M12b: what the item asks of its wearer (red when the local character falls short).
+    var classes := preload("res://scripts/progression/class_catalogue.gd")
+    var scene: Node = get_tree().current_scene if is_inside_tree() else null
+    var wearer: Node = scene.get_local_player() if scene != null and scene.has_method("get_local_player") else null
+    var why: String = classes.problem(wearer.progression, item) if wearer != null else ""
+    var needs := _label("Requires: " + classes.requirement_text(item) + ("  — " + why if not why.is_empty() else ""), 9, BAD if not why.is_empty() else UI.TEXT_DIM, _box)
+    needs.name = "Requirements"
+    needs.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     if not where.is_empty():
         _label(where, 9, UI.TEXT_DIM, _box).name = "Where"
     _fit()

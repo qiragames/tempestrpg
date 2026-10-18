@@ -154,6 +154,11 @@ func open_nearest() -> void:
     if not wild.is_empty():
         session.request_action("mount", {"operation": "tame", "id": wild})
         return
+    # M12b: F at the old master in your settlement.
+    var master = hud.get_parent().get("class_master")
+    if master != null and master.near(hud.player):
+        hud.class_panel.open()
+        return
     # Storage: F at a Vault in your village or at a major city's town hall.
     var storage_node = hud.get_parent().get("storage")
     if storage_node != null:

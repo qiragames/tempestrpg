@@ -66,6 +66,7 @@ const FOUR := {
     "ember_flame": {"walk": "res://assets/game/sprites/ember_flame/ember_flame_walk.png"},
     "salamander": {"walk": "res://assets/game/sprites/salamander/salamander_walk.png"},
     # M9c: quest givers and story characters (Ninja Adventure characters).
+    "npc_class_master": {"walk": "res://assets/game/sprites/npc_class_master/npc_class_master_walk.png"},
     "npc_orrin": {"walk": "res://assets/game/sprites/npc_orrin/npc_orrin_walk.png"},
     "npc_maren": {"walk": "res://assets/game/sprites/npc_maren/npc_maren_walk.png"},
     "npc_vex": {"walk": "res://assets/game/sprites/npc_vex/npc_vex_walk.png"},
