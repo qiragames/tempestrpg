@@ -21,6 +21,10 @@ func _run() -> void:
     root.add_child(world)
     current_scene = world
     await process_frame
+    # "relay=off": the relay is unreachable, so the long two-step codes are used (fallback).
+    var relay_on: bool = options.get("relay", "on") != "off"
+    if not relay_on:
+        session._relay().transport = func(_method: int, _url: String, _body: String) -> Array: return [false, ""]
     if options.mode == "host":
         if session.start_host(24000, options.save, false) != OK or session.open_with_codes() != OK:
             _write(options.report, JSON.stringify({"error": "host could not open with codes"}))
@@ -28,8 +32,10 @@ func _run() -> void:
             return
         var invite: String = await session.create_invite()
         _write(options.dir + "/invite.txt", invite)
-        var reply := await _read_when_ready(options.dir + "/reply.txt")
-        var accepted: bool = session.accept_reply(reply)
+        var accepted := true
+        if not session.RELAY_SCRIPT.is_short(invite):
+            var reply := await _read_when_ready(options.dir + "/reply.txt")
+            accepted = session.accept_reply(reply)
         var waited := 0.0
         while session.owners.size() < 2 and waited < 30.0:
             await create_timer(0.2).timeout
@@ -47,7 +53,8 @@ func _run() -> void:
         )
         var invite := await _read_when_ready(options.dir + "/invite.txt")
         var reply: String = await session.join_with_code(invite, options.identity)
-        _write(options.dir + "/reply.txt", reply)
+        if not session.RELAY_SCRIPT.is_short(invite):
+            _write(options.dir + "/reply.txt", reply)
         await session.character_assigned
         while session.latest_snapshot.is_empty():
             await process_frame

@@ -62,6 +62,19 @@ var import_path := ""
 var _leaving := false
 signal character_synced
 signal reply_code_ready(code: String)
+## A short invite code's answer went out by itself: the friend only waits (no reply code).
+signal relay_joining
+const RELAY_SCRIPT := preload("res://scripts/network/code_relay.gd")
+## How long a short invite listens for its friend's answer.
+const RELAY_LISTEN_SECONDS := 900.0
+var relay: Node
+
+func _relay() -> Node:
+    if relay == null:
+        relay = RELAY_SCRIPT.new()
+        relay.name = "CodeRelay"
+        add_child(relay)
+    return relay
 var code_mode := false
 var _rtc: WebRTCMultiplayerPeer
 var _invites: Dictionary = {}
@@ -439,7 +452,24 @@ func create_invite() -> String:
     _invites[id] = link
     link.create_offer()
     await _gather(link)
-    return CODES.code_for(link, id)
+    var long_code := CODES.code_for(link, id)
+    if long_code.is_empty():
+        return ""
+    # User request: one short code, no reply. The offer waits on the relay under the short code
+    # and the friend's answer comes back the same way (else the long two-step code still works).
+    var short := RELAY_SCRIPT.new_code()
+    if await _relay().post(short, "offer", long_code):
+        _listen_for_answer(short, id)
+        return short
+    return long_code
+
+## Host: apply a short invite's answer as soon as the friend's game sends it.
+func _listen_for_answer(short: String, id: int) -> void:
+    var answer: String = await _relay().wait_for(short, "answer", RELAY_LISTEN_SECONDS, 3.0)
+    if answer.is_empty() or not code_mode or not _invites.has(id):
+        return
+    if accept_reply(answer) and is_instance_valid(world):
+        world._announce("A friend is joining with your invite code…")
 
 ## Host: a friend's reply code completes their invite.
 func accept_reply(code: String) -> bool:
@@ -453,6 +483,16 @@ func accept_reply(code: String) -> bool:
 ## Friend: join with the host's invite code; the reply code to send back comes after a moment
 ## (also through `reply_code_ready`).
 func join_with_code(code: String, profile: String = "user://profiles/characters.json", race: String = RACES.DEFAULT) -> String:
+    # A short code: fetch the host's offer from the relay first.
+    var short := ""
+    if RELAY_SCRIPT.is_short(code):
+        short = code
+        if is_instance_valid(world):
+            world._announce("Looking up the invite code…")
+        code = await _relay().wait_for(short, "offer", 20.0)
+        if code.is_empty():
+            _fail("Could not find that invite code (it may be old, mistyped, or the internet relay is unreachable). Ask your friend for a new code.")
+            return ""
     var data := CODES.decode(code)
     if active or not is_instance_valid(world) or data.is_empty() or data.type != "offer":
         _fail("That is not a valid invite code.")
@@ -486,12 +526,18 @@ func join_with_code(code: String, profile: String = "user://profiles/characters.
     CODES.apply(link, data)
     await _gather(link)
     reply_code = CODES.code_for(link, int(data.id))
+    if not short.is_empty() and not reply_code.is_empty() and await _relay().post(short, "answer", reply_code):
+        world._announce("Connecting to your friend…")
+        relay_joining.emit()
+        return reply_code
     reply_code_ready.emit(reply_code)
     return reply_code
 
 func _gather(link: WebRTCPeerConnection) -> void:
     var waited := 0.0
-    while waited < CODES.GATHER_SECONDS and link.get_gathering_state() != WebRTCPeerConnection.GATHERING_STATE_COMPLETE:
+    while waited < CODES.GATHER_SECONDS and (link.get_gathering_state() != WebRTCPeerConnection.GATHERING_STATE_COMPLETE or link.get_meta("description", []).is_empty()):
+        # The connection reports its description and candidates only when polled.
+        link.poll()
         await get_tree().create_timer(0.1, true, false, true).timeout
         waited += 0.1
 

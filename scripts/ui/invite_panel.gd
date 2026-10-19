@@ -53,7 +53,7 @@ func _init(owner_hud: CanvasLayer) -> void:
     _code.size = Vector2(FRAME.size.x - 28, 80)
     _code.editable = false
     _code.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
-    _code.add_theme_font_size_override("font_size", 8)
+    _code.add_theme_font_size_override("font_size", 16)
     window.add_child(_code)
     _reply = LineEdit.new()
     _reply.position = FRAME.position + Vector2(14, 196)
@@ -91,7 +91,7 @@ func open_host() -> void:
     if not session.code_mode and session.open_with_codes() != OK:
         return
     _title.text = "INVITE FRIENDS WITH A CODE"
-    _text.text = "1. Make an invite code and send it to one friend.  2. They paste it into Join a Friend and send you their reply code.  3. Paste the reply below and let them in."
+    _text.text = "Make an invite code and send it to one friend. They paste it into Join a Friend and are in — nothing to paste back. (Only if their game says so, paste their reply code below.)"
     _make.visible = true
     _reply.visible = true
     _connect.visible = true
@@ -121,7 +121,12 @@ func _make_invite() -> void:
     _making = false
     _make.disabled = false
     _code.text = code
-    _status.text = "Copy this code to one friend, then paste their reply below." if not code.is_empty() else "No more room (8 players) or join codes are unavailable."
+    if code.is_empty():
+        _status.text = "No more room (8 players) or join codes are unavailable."
+    elif hud.session.RELAY_SCRIPT.is_short(code):
+        _status.text = "Send this code to one friend — they join by themselves (the code works for 15 minutes)."
+    else:
+        _status.text = "The internet relay could not be reached: send this long code, then paste your friend's reply below."
 
 func _accept() -> void:
     if hud.session.accept_reply(_reply.text):

@@ -183,7 +183,7 @@ func _build_join() -> void:
     var panel := _panel("join")
     UI.heading(_label("JOIN A FRIEND", Vector2(14, 10), Vector2(272, 20), panel, 13))
     _label("Paste your friend's invite code (they make it in Esc → Invite a Friend).", Vector2(14, 34), Vector2(272, 30), panel, 10)
-    _address_field = _field("invite code (TRPG1-…)", Vector2(14, 64), panel)
+    _address_field = _field("invite code (TRPG-…)", Vector2(14, 64), panel)
     _label("Character: a new one for their world, or one of yours (if they allow it)", Vector2(14, 96), Vector2(272, 14), panel, 9)
     _join_character = OptionButton.new()
     _join_character.position = Vector2(14, 110)
@@ -326,7 +326,8 @@ func join_world() -> void:
         _status.text = "Paste your friend's invite code first."
         return
     var codes := preload("res://scripts/network/join_codes.gd")
-    if not codes.is_code(code) or codes.decode(code).is_empty():
+    var short: bool = preload("res://scripts/network/code_relay.gd").is_short(code)
+    if not short and (not codes.is_code(code) or codes.decode(code).is_empty()):
         _status.text = "That is not a complete invite code — ask your friend for it again (Esc → Invite a Friend)."
         return
     var request := {"mode": "join_code", "code": code, "race": RACES.ORDER[_join_race.selected]}
