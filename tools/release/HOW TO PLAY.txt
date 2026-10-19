@@ -9,11 +9,12 @@ own computer: no server to rent, no ports to open, no IP addresses to type.
 
 PLAYING TOGETHER (invite codes)
   Host:   in your world press Esc -> "MULTIPLAYER: OFF" (it switches on) -> "New invite code"
-          -> "Copy code" and send it to ONE friend (Discord, chat...).
-  Friend: TempestRPG.exe -> "Join a Friend" -> paste the code -> choose a character -> "Join".
-          The game shows a REPLY code -> copy it and send it back to the host.
-  Host:   paste the reply code -> "Let them in". Esc -> "Invite a Friend" makes a code for the
-          next friend (one code per friend, up to 8 players).
+          -> "Copy code" and send the short code (TRPG-XXXXX-XXXXX) to ONE friend.
+  Friend: TempestRPG.exe -> PLAY -> pick your character (or a new one) -> "Join a Friend" ->
+          paste the code -> "Join". That's it - no reply code, no router settings.
+  One code per friend (up to 8 players); a code works for 15 minutes.
+  (If the game says the internet relay is unreachable, it shows a long code instead: then the
+  friend gets a reply code to send back, and the host pastes it -> "Let them in".)
   Esc -> "MULTIPLAYER: ON" switches it off again: friends leave, their characters stay saved.
   Codes contain your Internet address: share them only with friends. Some strict networks
   (mobile hotspots, school/company networks) can block invite codes.
@@ -58,6 +59,13 @@ YOUR HOUSE
   places it where you stand. Rest in your bed for +10% XP (20 min); a trophy gives a little more
   Zeni, the wardrobe opens your storage, the stove lets you cook. Friends can visit.
   Or rent a room at a major city's town hall (F there -> "Rent an inn room").
+
+CHARACTERS (new in 1.4)
+  PLAY shows your characters with their stats and progress. Play one's world, take it to a
+  friend's world (if they allow own characters), or make a new character (name and race).
+  Names show above everyone's head (Options: "Show my name" hides your own).
+  Options -> Keys: any action can go on a key or a mouse button; the HUD shows its icon.
+  Salvage old gear into bars, cloth and gems at your Forge or in a town (equipment window).
 
 TOOLS, SPRINT AND LOOT (new in 1.3)
   You start with a basic axe, pickaxe and fishing rod. F at a tree or rock chops or mines it;
