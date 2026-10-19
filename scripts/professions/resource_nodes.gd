@@ -93,7 +93,7 @@ static func tool_tier(actor: Node2D, profession: String) -> int:
 func success_chance(actor: Node2D, index: int) -> float:
     var node := info(index)
     var level: int = PRO.level_of(actor.progression, node.profession)
-    return PRO.chance(level, node.required, 0.03 * tool_tier(actor, node.profession))
+    return PRO.chance(level, node.required, 0.03 * preload("res://scripts/travel/travel_catalogue.gd").tool_power(tool_tier(actor, node.profession)))
 
 func swing_seconds(actor: Node2D, index: int) -> float:
     var node := info(index)

@@ -207,7 +207,8 @@ static func roll_stock(entry: Array, rng: RandomNumberGenerator) -> Array:
         stock.append({"kind": "gear", "id": item.id, "item": item, "price": gear_price(item, level), "count": 1})
     # Tools (M4.5d): every town sells the tiers its level allows (fixed, not random).
     if kind == "town":
-        var top: int = 1 if level < 10 else (2 if level < 15 else 3)
+        # Above the shop tiers tools are crafted (professions window).
+        var top: int = 1 if level < 10 else TRAVEL.SHOP_TIERS
         for tool in TRAVEL.TOOLS:
             for tier in range(1, top + 1):
                 stock.append({"kind": "tool", "id": TRAVEL.tool_item(tool, tier), "price": TRAVEL.tool_price(tool, tier), "count": 99})

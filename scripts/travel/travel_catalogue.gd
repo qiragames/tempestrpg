@@ -27,16 +27,29 @@ static func fare(from: String, to: String) -> int:
     var distance: float = Vector2(MAP.harbour(from)[2]).distance_to(Vector2(MAP.harbour(to)[2]))
     return 20 + int(round(distance / 10.0))
 
-## --- Tools: bought once, used automatically for their work (never equipped).
-const TOOL_TIERS := ["", "Basic", "Fine", "Master"]
-## tool → [name, price per tier (Basic, Fine, Master)]
+## --- Tools: owned, used automatically for their work (never equipped).
+## User request after the SVE fixes: seven tiers. Merchants sell the first SHOP_TIERS; the rest are
+## crafted (CraftingCatalogue.TOOL_RECIPES) with the tool's own profession level and materials
+## from that level's trees, rocks and waters.
+const MAX_TOOL_TIER := 7
+const SHOP_TIERS := 2
+## tool → [name, merchant price per shop tier, tier names (index = tier)]
 const TOOLS := {
-    "axe": ["Axe", [120, 600, 2400]],
-    "pickaxe": ["Pickaxe", [120, 600, 2400]],
-    "rod": ["Fishing Rod", [80, 450, 2000]],
+    "axe": ["Axe", [120, 600], ["", "Basic", "Bronze", "Iron", "Silver", "Gold", "Mithril", "Adamantite"]],
+    "pickaxe": ["Pickaxe", [120, 600], ["", "Basic", "Bronze", "Iron", "Silver", "Gold", "Mithril", "Adamantite"]],
+    "rod": ["Fishing Rod", [80, 450], ["", "Basic", "Birch", "Pine", "Maple", "Cherrywood", "Ironwood", "Jadewood"]],
 }
+## How much a tier helps (speed, success, rare fish): the old Basic/Fine/Master were 1/2/3.
+const TOOL_POWER := [0.0, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
 ## Extra share of wood (axe) or stone (pickaxe) when you gather a deposit, by tier.
-const GATHER_BONUS := [0.0, 0.25, 0.5, 1.0]
+const GATHER_BONUS := [0.0, 0.25, 0.4, 0.5, 0.75, 1.0, 1.15, 1.3]
+
+static func tool_power(tier: int) -> float:
+    return TOOL_POWER[clampi(tier, 0, MAX_TOOL_TIER)]
+
+## "Iron Pickaxe", "Maple Fishing Rod".
+static func tool_name(tool: String, tier: int) -> String:
+    return "%s %s" % [TOOLS[tool][2][clampi(tier, 1, MAX_TOOL_TIER)], TOOLS[tool][0]]
 ## Fishing: seconds until a bite (Fishing 20 makes it 25% sooner).
 const BITE_DELAY := [2.0, 5.0]
 ## Water must be within this many pixels in front of the character to fish.
@@ -51,7 +64,7 @@ static func parse_tool(id: String) -> Array:
     if parts.size() != 3 or parts[0] != "tool" or not TOOLS.has(parts[1]) or not parts[2].is_valid_int():
         return ["", 0]
     var tier := int(parts[2])
-    return [parts[1], tier] if tier >= 1 and tier <= 3 else ["", 0]
+    return [parts[1], tier] if tier >= 1 and tier <= SHOP_TIERS else ["", 0]
 
 static func tool_price(tool: String, tier: int) -> int:
     return TOOLS[tool][1][tier - 1]

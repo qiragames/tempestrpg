@@ -215,7 +215,7 @@ func _run() -> void:
     document.merge({"version": STORE.VERSION, "world_id": "travel", "players": {"host": CODEC.capture_player(actor)}, "progression": world.progression.duplicate(true)})
     _check(STORE.validate(document.duplicate(true)), "Ships, passes, tools, mounts, runes and augments save")
     var forgeries: Array = []
-    for change in [["mount", "black_horse"], ["augments", ["aug_absorb", "aug_iron"]], ["tools", {"axe": 4, "pickaxe": 0, "rod": 1}], ["ship", {"owned": true, "at": "nowhere"}]]:
+    for change in [["mount", "black_horse"], ["augments", ["aug_absorb", "aug_iron"]], ["tools", {"axe": 9, "pickaxe": 0, "rod": 1}], ["ship", {"owned": true, "at": "nowhere"}]]:
         var forged: Dictionary = document.duplicate(true)
         forged.players.host.progression[change[0]] = change[1]
         forgeries.append(STORE.validate(forged))

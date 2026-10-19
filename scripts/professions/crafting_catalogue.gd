@@ -34,6 +34,35 @@ const FORGE := {
 }
 const WEAPON_TYPES := ["dagger", "sword", "spear", "scythe", "bow", "staff", "fist"]
 
+## User request: better axes, pickaxes and rods are crafted (at the Forge or in a town) once the
+## tool's own profession is high enough, from that level's logs, ores or fish. Always succeeds.
+## tool → profession, and per tier 2-7: [profession level, ingredients].
+const TOOL_PROFESSIONS := {"axe": "woodcutting", "pickaxe": "mining", "rod": "fishing"}
+const TOOL_RECIPES := {
+    "axe": {
+        2: [5, {"log_birch": 6, "bar_bronze": 2}], 3: [10, {"log_pine": 6, "bar_iron": 2}],
+        4: [18, {"log_maple": 6, "bar_silver": 2}], 5: [25, {"log_cherry": 6, "bar_gold": 2}],
+        6: [32, {"log_ironwood": 6, "bar_mithril": 2}], 7: [40, {"log_jadewood": 6, "bar_adamantite": 3}],
+    },
+    "pickaxe": {
+        2: [5, {"ore_tin": 8, "log_oak": 2}], 3: [10, {"ore_iron": 8, "log_birch": 2}],
+        4: [18, {"ore_silver": 8, "log_pine": 2}], 5: [25, {"ore_gold": 8, "log_maple": 2}],
+        6: [32, {"ore_mithril": 8, "log_cherry": 2}], 7: [40, {"ore_adamantite": 8, "log_ironwood": 2}],
+    },
+    "rod": {
+        2: [5, {"log_birch": 4, "carp": 2}], 3: [10, {"log_pine": 4, "catfish": 2}],
+        4: [18, {"log_maple": 4, "salmon": 2}], 5: [25, {"log_cherry": 4, "swordfish": 2}],
+        6: [32, {"log_ironwood": 4, "bog_lurker": 2}], 7: [40, {"log_jadewood": 4, "cloud_carp": 2}],
+    },
+}
+
+## "tool:<tool>:<tier>" → [tool, tier] (["", 0] when not a tool recipe).
+static func parse_tool_recipe(id: String) -> Array:
+    var parts := id.split(":")
+    if parts.size() != 3 or parts[0] != "tool" or not TOOL_RECIPES.has(parts[1]) or not parts[2].is_valid_int() or not TOOL_RECIPES[parts[1]].has(int(parts[2])):
+        return ["", 0]
+    return [parts[1], int(parts[2])]
+
 
 ## Potions: [name, Alchemy level, price, effect, amount, seconds, ingredients, description]
 ## Effects: heal / tonic over 5 s, full (instant HP and Magicules), speed / might / iron buffs.

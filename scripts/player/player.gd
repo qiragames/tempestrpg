@@ -586,8 +586,8 @@ func _draw_stamina() -> void:
 
 ## --- Chopping and mining (user request)
 const CHOP := preload("res://scripts/visual/chopping.gd")
-## Swings per deposit by tool tier (none, Basic, Fine, Master).
-const SWINGS := [5, 4, 3, 2]
+## Swings per deposit by tool tier (none, Basic, Bronze ... Adamantite).
+const SWINGS := [5, 4, 4, 3, 3, 2, 2, 2]
 var gather_id := ""
 var gather_resource := ""
 var gather_at := Vector2.ZERO
@@ -680,6 +680,9 @@ func _take_ingredient(id: String, count: int) -> void:
 func craft(recipe_id: String) -> bool:
     if not AUTHORITY.can_mutate(self) or $Health.current <= 0:
         return false
+    var tool_recipe: Array = CRAFT.parse_tool_recipe(recipe_id)
+    if not String(tool_recipe[0]).is_empty():
+        return craft_tool(tool_recipe[0], tool_recipe[1])
     var recipe: Array = CRAFT.recipe(recipe_id)
     if recipe.is_empty():
         return false
@@ -762,6 +765,40 @@ func craft(recipe_id: String) -> bool:
     session.queue_save()
     return true
 
+## Host, user request: craft the next axe, pickaxe or rod (at the Forge or in a town). Needs the
+## tier below, the tool's own profession level and the ingredients; it always succeeds.
+func craft_tool(tool: String, tier: int) -> bool:
+    if not AUTHORITY.can_mutate(self) or $Health.current <= 0 or not CRAFT.TOOL_RECIPES.has(tool) or not CRAFT.TOOL_RECIPES[tool].has(tier):
+        return false
+    var spec: Array = CRAFT.TOOL_RECIPES[tool][tier]
+    var profession: String = CRAFT.TOOL_PROFESSIONS[tool]
+    var name: String = TRAVEL.tool_name(tool, tier)
+    if craft_station("smithing").is_empty():
+        session.notify_character(character_id, "Tools are made at the camp's Forge or in a town.")
+        return false
+    var owned: int = int(progression.get("tools", {}).get(tool, 0))
+    if owned >= tier:
+        session.notify_character(character_id, "You already own an equal or better %s." % TRAVEL.TOOLS[tool][0].to_lower())
+        return false
+    if owned < tier - 1:
+        session.notify_character(character_id, "Make the %s first." % TRAVEL.tool_name(tool, tier - 1))
+        return false
+    if PRO.level_of(progression, profession) < int(spec[0]):
+        session.notify_character(character_id, "The %s needs %s level %d." % [name, PRO.PROFESSIONS[profession][0], int(spec[0])])
+        return false
+    var needs: Dictionary = spec[1]
+    for id in needs:
+        if ingredient_count(id) < int(needs[id]):
+            session.notify_character(character_id, "Missing ingredients for the %s." % name)
+            return false
+    for id in needs:
+        _take_ingredient(id, int(needs[id]))
+    progression.tools[tool] = tier
+    gain_profession_xp(profession, PRO.xp_reward(int(spec[0])) * 3)
+    session.notify_character(character_id, "Made a %s! It works faster and yields more from now on." % name)
+    session.queue_save()
+    return true
+
 ## Host: profession experience (M6a), with a message on each new level.
 func gain_profession_xp(profession: String, amount: int) -> void:
     if amount <= 0 or not AUTHORITY.can_mutate(self) or not PRO.PROFESSIONS.has(profession):
@@ -788,7 +825,7 @@ func start_gather(id: String, resource: String, at: Vector2) -> bool:
     gather_id = id
     gather_resource = resource
     gather_at = at
-    gather_swings = SWINGS[clampi(tier, 0, 3)]
+    gather_swings = SWINGS[clampi(tier, 0, SWINGS.size() - 1)]
     gather_period = CHOP.SWING
     gather_clock = CHOP.SWING
     facing = (at - global_position).normalized() if at.distance_to(global_position) > 1.0 else facing

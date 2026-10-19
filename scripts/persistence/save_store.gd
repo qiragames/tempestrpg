@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 42
+const VERSION := 43
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -209,7 +209,7 @@ static func validate_player(state: Variant, id: String) -> bool:
     if not tools is Dictionary or tools.size() != TRAVEL.TOOLS.size():
         return false
     for tool in TRAVEL.TOOLS:
-        if not _number(tools.get(tool), 0, 3, true):
+        if not _number(tools.get(tool), 0, TRAVEL.MAX_TOOL_TIER, true):
             return false
     var mounts: Variant = progression.get("mounts")
     if not mounts is Array or mounts.size() > TRAVEL.MOUNTS.size() or mounts.any(func(id): return not id is String or not TRAVEL.MOUNTS.has(id)) or mounts.size() != _unique(mounts):
@@ -974,6 +974,18 @@ static func migrate(data: Variant) -> Variant:
             if state is Dictionary and state.get("progression") is Dictionary and state.progression.get("tools") is Dictionary:
                 for tool in state.progression.tools:
                     state.progression.tools[tool] = maxi(1, int(state.progression.tools[tool]))
+    # v43: seven tool tiers; the old Fine (2) and Master (3) become the tiers of equal strength.
+    if data.get("version") == 42:
+        if not data.get("players") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = 43
+        for id in data.players:
+            var state: Variant = data.players[id]
+            if state is Dictionary and state.get("progression") is Dictionary and state.progression.get("tools") is Dictionary:
+                for tool in state.progression.tools:
+                    var old: int = int(state.progression.tools[tool])
+                    state.progression.tools[tool] = {2: 3, 3: 5}.get(old, old)
     return data
 
 ## Saved enemy entry for a raid boss at full health in its arena (v33 and new worlds).

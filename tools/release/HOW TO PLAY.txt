@@ -59,6 +59,16 @@ YOUR HOUSE
   Zeni, the wardrobe opens your storage, the stove lets you cook. Friends can visit.
   Or rent a room at a major city's town hall (F there -> "Rent an inn room").
 
+TOOLS, SPRINT AND LOOT (new in 1.3)
+  You start with a basic axe, pickaxe and fishing rod. F at a tree or rock chops or mines it;
+  F facing a lake or the sea casts your line. Better tools: merchants sell the second tier, the
+  rest you craft at your camp's Forge or in a town (Professions, L -> Woodcutting / Mining /
+  Fishing): each needs that profession's level and logs, ores or fish of that level. Seven
+  tiers - Basic, Bronze, Iron, Silver, Gold, Mithril, Adamantite (rods: Birch ... Jadewood).
+  Hold Shift to sprint (the bar under you is your stamina).
+  Loot pops out of creatures and chests: walk over it, or press F close by, to take it.
+  The log box (bottom left): - and + make it smaller or bigger; the mouse wheel scrolls back.
+
 HANDY
   Your saves are in %APPDATA%\TempestRPG (type it into the Explorer address bar).
   Esc -> Options: HUD size (65-100%), window size, sound.  F1: hide/show the controls line.

@@ -7,6 +7,7 @@ const PRO := preload("res://scripts/professions/profession_catalogue.gd")
 const FISHES := preload("res://scripts/professions/fish_catalogue.gd")
 const CRAFT := preload("res://scripts/professions/crafting_catalogue.gd")
 const TRADE := preload("res://scripts/trade/trade_catalogue.gd")
+const TRAVEL := preload("res://scripts/travel/travel_catalogue.gd")
 const FRAME := Rect2(40, 10, 560, 338)
 
 var hud: CanvasLayer
@@ -150,6 +151,8 @@ func refresh() -> void:
     for child in _list.get_children():
         child.queue_free()
     var rows := _entries(_selected)
+    if CRAFT.TOOL_PROFESSIONS.values().has(_selected):
+        _tool_rows(_selected, level)
     if _selected == "fishing":
         var log: Dictionary = progression.get("fish_log", {})
         var rod: int = int(progression.get("tools", {}).get("rod", 0))
@@ -218,6 +221,37 @@ func _row(text: String, colour: Color, button_text: String, enabled: bool, actio
     button.add_theme_font_size_override("font_size", 8)
     button.disabled = not enabled
     button.pressed.connect(action)
+
+## User request: your axe / pickaxe / rod and the next one to craft (the tool's own profession).
+func _tool_rows(profession: String, level: int) -> void:
+    var tool: String = CRAFT.TOOL_PROFESSIONS.find_key(profession)
+    var owned: int = int(hud.player.progression.get("tools", {}).get(tool, 0))
+    var station: String = hud.player.craft_station("smithing")
+    var text := "Your %s: %s" % [TRAVEL.TOOLS[tool][0].to_lower(), TRAVEL.tool_name(tool, owned) if owned > 0 else "none"]
+    if owned >= TRAVEL.MAX_TOOL_TIER:
+        text += " (the best there is)"
+    elif station.is_empty():
+        text += " · craft the next one at the camp's Forge or in a town"
+    var head: Label = hud._label(text, Vector2.ZERO, Vector2(FRAME.size.x - 44, 13), _list, 8)
+    head.custom_minimum_size = Vector2(FRAME.size.x - 44, 13)
+    head.add_theme_color_override("font_color", UI.GOLD_LIGHT)
+    var tier := owned + 1
+    if tier > TRAVEL.MAX_TOOL_TIER:
+        return
+    if not CRAFT.TOOL_RECIPES[tool].has(tier):
+        var buy: Label = hud._label("Buy a %s from a town merchant." % TRAVEL.tool_name(tool, tier), Vector2.ZERO, Vector2(FRAME.size.x - 44, 13), _list, 8)
+        buy.custom_minimum_size = Vector2(FRAME.size.x - 44, 13)
+        return
+    var spec: Array = CRAFT.TOOL_RECIPES[tool][tier]
+    var ready: bool = level >= int(spec[0])
+    _row("%s · %s Lv %d · %s" % [TRAVEL.tool_name(tool, tier), PRO.PROFESSIONS[profession][0], int(spec[0]), _needs_text(spec[1])], Color("7ee07e") if ready else Color("ff7a6a"), "Craft", not station.is_empty() and ready and _can_make(spec[1]), _craft.bind("tool:%s:%d" % [tool, tier]))
+    var later: Array = []
+    for next in range(tier + 1, TRAVEL.MAX_TOOL_TIER + 1):
+        later.append("%s (Lv %d)" % [TRAVEL.TOOLS[tool][2][next], int(CRAFT.TOOL_RECIPES[tool][next][0])])
+    if not later.is_empty():
+        var ladder: Label = hud._label("Later: " + " · ".join(later), Vector2.ZERO, Vector2(FRAME.size.x - 44, 13), _list, 8)
+        ladder.custom_minimum_size = Vector2(FRAME.size.x - 44, 13)
+        ladder.add_theme_color_override("font_color", UI.TEXT_DIM)
 
 ## M6c: Smithing and Alchemy recipes with their chance, ingredients (what you have) and a button.
 func _craft_rows(profession: String, level: int) -> void:

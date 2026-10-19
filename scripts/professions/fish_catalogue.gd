@@ -146,7 +146,7 @@ static func pick(region: String, lake: bool, rod: int, level: int, rng: RandomNu
         var rarity: int = FISH[id][4]
         var weight: float = RARITY_WEIGHT[rarity] * float(FISH[id][5]) / 10.0
         if rarity >= 2:
-            weight *= 1.0 + 0.25 * clampi(rod, 0, 3)
+            weight *= 1.0 + 0.25 * preload("res://scripts/travel/travel_catalogue.gd").tool_power(rod)
             if level >= 30:
                 weight *= 1.5
         if rarity == 5 and level >= 40:
@@ -162,7 +162,7 @@ static func pick(region: String, lake: bool, rod: int, level: int, rng: RandomNu
 
 ## The reel's green zone as a share of the bar: the catch chance per press (shown).
 static func zone(level: int, id: String, rod: int) -> float:
-    var bonus := 0.03 * clampi(rod, 0, 3) + (0.1 if level >= 50 else 0.0)
+    var bonus := 0.03 * preload("res://scripts/travel/travel_catalogue.gd").tool_power(rod) + (0.1 if level >= 50 else 0.0)
     return clampf(PRO.chance(level, int(FISH[id][3]), bonus) * 0.6, 0.06, 0.6)
 
 ## Marker position 0..1 (back and forth) after `t` seconds at `speed` sweeps per second.

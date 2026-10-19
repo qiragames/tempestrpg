@@ -156,12 +156,12 @@ func _run() -> void:
     me.progression.tools = {"axe": 0, "pickaxe": 3, "rod": 0}
     _check(session.save_world() == OK, "Saved")
     var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(dir.path_join("sve.json")))
-    _check(int(raw.version) == 42 and STORE.validate(raw), "The save is v42")
+    _check(int(raw.version) == STORE.VERSION and STORE.validate(raw), "The save is current")
     var old: Dictionary = raw.duplicate(true)
     old.version = 41
     var migrated: Variant = STORE.migrate(old)
     var tools: Dictionary = migrated.players.host.progression.tools if migrated is Dictionary else {}
-    _check(migrated is Dictionary and int(migrated.version) == STORE.VERSION and int(tools.axe) == 1 and int(tools.rod) == 1 and int(tools.pickaxe) == 3 and STORE.validate(migrated), "v41 characters get the basic tools; better ones stay")
+    _check(migrated is Dictionary and int(migrated.version) == STORE.VERSION and int(tools.axe) == 1 and int(tools.rod) == 1 and int(tools.pickaxe) == 5 and STORE.validate(migrated), "v41 characters get the basic tools; better ones stay (Master becomes Gold, v43)")
     world.queue_free()
     await _frames()
     session.stop_session(false)

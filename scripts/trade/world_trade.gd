@@ -185,7 +185,7 @@ static func describe(entry: Dictionary) -> String:
             return entry.id.replace("_", " ").capitalize()
         "tool":
             var tool: Array = TRAVEL.parse_tool(entry.id)
-            return "%s %s" % [TRAVEL.TOOL_TIERS[tool[1]], TRAVEL.TOOLS[tool[0]][0]]
+            return TRAVEL.tool_name(tool[0], tool[1])
         "mount":
             return "Mount: %s" % TRAVEL.MOUNTS[entry.id.trim_prefix("mount_")][0]
     return CATALOGUE.good_info(entry.id)[0]

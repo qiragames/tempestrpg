@@ -79,7 +79,7 @@ static func chance(level: int, required: int, bonus: float = 0.0) -> float:
 ## Seconds per swing (or per step of work): faster with level (−0.6% per level), slower below
 ## the requirement (+6% per level short, at most double), tool tier −8% each.
 static func work_seconds(base: float, level: int, required: int, tool_tier: int = 0) -> float:
-    var factor := 1.0 - 0.006 * level - 0.08 * clampi(tool_tier, 0, 3)
+    var factor := 1.0 - 0.006 * level - 0.08 * preload("res://scripts/travel/travel_catalogue.gd").tool_power(tool_tier)
     if level >= 50:
         factor -= 0.1
     factor *= minf(2.0, 1.0 + 0.06 * maxi(0, required - level))
