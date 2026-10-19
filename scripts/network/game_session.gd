@@ -1180,6 +1180,11 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             return actor.unequip(payload.slot)
         if operation == "use" and payload.size() == 1:
             return false if actor.input_blocked else actor.use_gear_active()
+        # User request: salvage gear into materials.
+        if operation == "salvage" and payload.size() == 2 and payload.get("id") is String and payload.id.length() <= 64:
+            return actor.salvage(payload.id)
+        if operation == "salvage_common" and payload.size() == 1:
+            return actor.salvage_common() > 0
         rejected_requests += 1
         return false
     if action == "fusion":

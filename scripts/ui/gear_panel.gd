@@ -103,6 +103,8 @@ var _attr_points: Label
 var _score: Label
 var _details: Label
 var _equip: Button
+var _salvage: Button
+var _salvage_common: Button
 var _close: Button
 var _selected: String = ""
 ## Item card (21b) for the hovered item, else the selected one.
@@ -188,6 +190,15 @@ func _init(owner_hud: CanvasLayer) -> void:
         _grid.append(cell)
     _equip = hud._button("Equip", ORIGIN + Vector2(70, 280), Vector2(150, 24), self)
     _equip.pressed.connect(_equip_selected)
+    # User request: salvage gear into materials (at the Forge or in a town).
+    _salvage = hud._button("Salvage", ORIGIN + Vector2(70, 308), Vector2(72, 20), self)
+    _salvage.name = "Salvage"
+    _salvage.pressed.connect(func(): _request({"operation": "salvage", "id": _selected}))
+    _salvage_common = hud._button("Salvage Commons", ORIGIN + Vector2(146, 308), Vector2(74, 20), self)
+    _salvage_common.name = "SalvageCommon"
+    _salvage_common.pressed.connect(func(): _request({"operation": "salvage_common"}))
+    for small in [_salvage, _salvage_common]:
+        small.add_theme_font_size_override("font_size", 8)
     _details = hud._label("", ORIGIN + Vector2(14, 312), Vector2(260, 14), self, 8)
     _details.hide()
     hud._label("Drag items onto a slot (or double-click) · right-click a slot to take off · G: gear active · I / Esc: close", ORIGIN + Vector2(14, FRAME.y - 20), Vector2(FRAME.x - 28, 14), self, 8).add_theme_color_override("font_color", UI.TEXT_DIM)
@@ -238,6 +249,10 @@ func _request(payload: Dictionary) -> void:
         hud.session.request_action("gear", payload)
     elif payload.operation == "equip":
         hud.player.equip(payload.id, payload.slot)
+    elif payload.operation == "salvage":
+        hud.player.salvage(payload.id)
+    elif payload.operation == "salvage_common":
+        hud.player.salvage_common()
     else:
         hud.player.unequip(payload.slot)
 
@@ -252,6 +267,13 @@ func _unequip(slot: String) -> void:
     if hud.player.progression.get("equipment", {}).has(slot):
         _request({"operation": "unequip", "slot": slot})
 
+func _yield_text(item: Dictionary) -> String:
+    var parts: Array = []
+    var gains: Dictionary = preload("res://scripts/professions/crafting_catalogue.gd").salvage_yield(item)
+    for material in gains:
+        parts.append("%d %s" % [int(gains[material]), preload("res://scripts/trade/trade_catalogue.gd").item_name(material)])
+    return ", ".join(parts)
+
 ## Gear score: every worn piece counts by its item level and rarity.
 func gear_score() -> int:
     var total := 0.0
@@ -261,6 +283,7 @@ func gear_score() -> int:
 
 func refresh() -> void:
     var player = hud.player
+    _salvage_common.disabled = player.craft_station("smithing").is_empty()
     var equipment: Dictionary = player.progression.get("equipment", {})
     for slot in GEAR.SLOTS:
         var item: Dictionary = player.item_by_id(equipment.get(slot, ""))
@@ -279,11 +302,15 @@ func refresh() -> void:
         _details.text = "No gear yet. Gear comes from creatures, chests, the forge and merchants." if _owned().is_empty() else "Select an item."
         _equip.disabled = true
         _equip.text = "Equip"
+        _salvage.disabled = true
     else:
         # Plain-text details stay available (tests, screen readers); the card shows them.
         _details.text = "%s\n%s\n\n%s" % [GEAR.display_name(selected), "Worn: " + SLOT_NAMES[worn] if not worn.is_empty() else "In the bag", GEAR.describe(selected)]
         _equip.disabled = false
         _equip.text = "Take off" if not worn.is_empty() else "Equip (%s)" % SLOT_NAMES[target_slot(selected)]
+        var station: bool = not player.craft_station("smithing").is_empty()
+        _salvage.disabled = not worn.is_empty() or not station
+        _salvage.tooltip_text = ("Breaks it into: " + _yield_text(selected)) if station else "Salvage at the camp's Forge or in a town."
     # The card: the hovered item (else nothing, so the doll stays visible).
     var carded: Dictionary = player.item_by_id(_hovered) if not _hovered.is_empty() else {}
     var place: String = _worn_slot(carded.get("id", ""))

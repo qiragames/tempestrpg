@@ -42,17 +42,17 @@ const TOOL_RECIPES := {
     "axe": {
         2: [5, {"log_birch": 6, "bar_bronze": 2}], 3: [10, {"log_pine": 6, "bar_iron": 2}],
         4: [18, {"log_maple": 6, "bar_silver": 2}], 5: [25, {"log_cherry": 6, "bar_gold": 2}],
-        6: [32, {"log_ironwood": 6, "bar_mithril": 2}], 7: [40, {"log_jadewood": 6, "bar_adamantite": 3}],
+        6: [32, {"log_ironwood": 6, "bar_mithril": 2}], 7: [40, {"log_jadewood": 6, "bar_adamantite": 3, "arcane_essence": 1}],
     },
     "pickaxe": {
         2: [5, {"ore_tin": 8, "log_oak": 2}], 3: [10, {"ore_iron": 8, "log_birch": 2}],
         4: [18, {"ore_silver": 8, "log_pine": 2}], 5: [25, {"ore_gold": 8, "log_maple": 2}],
-        6: [32, {"ore_mithril": 8, "log_cherry": 2}], 7: [40, {"ore_adamantite": 8, "log_ironwood": 2}],
+        6: [32, {"ore_mithril": 8, "log_cherry": 2}], 7: [40, {"ore_adamantite": 8, "log_ironwood": 2, "arcane_essence": 1}],
     },
     "rod": {
         2: [5, {"log_birch": 4, "carp": 2}], 3: [10, {"log_pine": 4, "catfish": 2}],
         4: [18, {"log_maple": 4, "salmon": 2}], 5: [25, {"log_cherry": 4, "swordfish": 2}],
-        6: [32, {"log_ironwood": 4, "bog_lurker": 2}], 7: [40, {"log_jadewood": 4, "cloud_carp": 2}],
+        6: [32, {"log_ironwood": 4, "bog_lurker": 2}], 7: [40, {"log_jadewood": 4, "cloud_carp": 2, "arcane_essence": 1}],
     },
 }
 
@@ -149,9 +149,46 @@ static func is_potion(id: String) -> bool:
 
 ## Bag goods of this catalogue (herbs are profession resources, see ProfessionCatalogue).
 static func is_good(id: String) -> bool:
-    return is_bar(id) or is_potion(id) or is_food(id)
+    return is_bar(id) or is_potion(id) or is_food(id) or id == ARCANE_ESSENCE
+
+## --- User request: salvage gear (at the Forge or in a town) into what it was made of.
+## Weapons and armour with defence give bars of their tier, armour without defence (cloth) the cloth
+## of its level, rings and amulets gems; more for rarer pieces, and Legendary/Mythic pieces also
+## Arcane Essence (the Adamantite tools need it).
+const SALVAGE_COUNT := [1, 1, 2, 3, 4, 6]
+const ARCANE_ESSENCE := "arcane_essence"
+const ESSENCE_COUNT := [0, 0, 0, 0, 1, 2]
+
+## {material: count} that salvaging `item` gives.
+static func salvage_yield(item: Dictionary) -> Dictionary:
+    var spec: Dictionary = GEAR.BASES.get(item.get("base", ""), {})
+    if spec.is_empty():
+        return {}
+    var rarity: int = clampi(int(item.get("rarity", 0)), 0, 5)
+    var level: int = int(spec.get("level", 1))
+    var count: int = SALVAGE_COUNT[rarity]
+    var result := {}
+    if spec.get("slot", "") == "accessory":
+        result[PRO.gem_for(level, hash(String(item.get("id", ""))))] = maxi(1, count / 2)
+    elif spec.has("weapon") or spec.get("stats", {}).has("defense"):
+        result[bar_for_level(level)] = count
+    else:
+        result[cloth_for_level(level)] = count
+    if ESSENCE_COUNT[rarity] > 0:
+        result[ARCANE_ESSENCE] = ESSENCE_COUNT[rarity]
+    return result
+
+## The cloth whose tailoring band holds an item level (the highest below it otherwise).
+static func cloth_for_level(level: int) -> String:
+    var best := "bamboo_fiber"
+    for cloth in CLOTHS:
+        if level >= int(CLOTHS[cloth][2][0]):
+            best = cloth
+    return best
 
 static func good_info(id: String) -> Array:
+    if id == ARCANE_ESSENCE:
+        return ["Arcane Essence", "Materials", "Distilled from salvaged Legendary and Mythic gear. Needed for the Adamantite tools."]
     if is_bar(id):
         return [BARS[id][0], "Bars", "Smelted metal for forging gear (Smithing %d)." % BARS[id][1]]
     if is_food(id):
@@ -159,6 +196,8 @@ static func good_info(id: String) -> Array:
     return [POTIONS[id][0], "Potions", POTIONS[id][7] + " Use it from the bag."]
 
 static func price(id: String) -> int:
+    if id == ARCANE_ESSENCE:
+        return 900
     if is_bar(id):
         return BARS[id][2]
     if POTIONS.has(id):

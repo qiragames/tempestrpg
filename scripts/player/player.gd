@@ -767,6 +767,49 @@ func craft(recipe_id: String) -> bool:
     session.queue_save()
     return true
 
+## Host, user request: salvage a piece of gear from the bag (not worn) at the Forge or in a town.
+func salvage(id: String, quiet: bool = false) -> bool:
+    if not AUTHORITY.can_mutate(self) or $Health.current <= 0:
+        return false
+    if craft_station("smithing").is_empty():
+        session.notify_character(character_id, "Salvage at the camp's Forge or in a town.")
+        return false
+    var item: Dictionary = item_by_id(id)
+    if item.is_empty() or progression.get("equipment", {}).values().has(id):
+        return false
+    var gains: Dictionary = CRAFT.salvage_yield(item)
+    if gains.is_empty():
+        return false
+    var bag: Node = $Inventory
+    var units := 0
+    for material in gains:
+        units += int(gains[material])
+    if bag.total_units() + units > bag.capacity:
+        session.notify_character(character_id, "Your bag is full.")
+        return false
+    if not remove_item(id):
+        return false
+    var parts: Array = []
+    for material in gains:
+        var added: int = bag.add_material(material, int(gains[material]))
+        parts.append("%d %s" % [added, TRADE.item_name(material)])
+    if not quiet:
+        session.notify_character(character_id, "Salvaged %s: %s." % [GEAR.display_name(item), ", ".join(parts)])
+    session.queue_save()
+    return true
+
+## Host: salvage every Common piece in the bag (worn pieces stay).
+func salvage_common() -> int:
+    if craft_station("smithing").is_empty():
+        session.notify_character(character_id, "Salvage at the camp's Forge or in a town.")
+        return 0
+    var count := 0
+    for item in gear.items.duplicate():
+        if int(item.get("rarity", 0)) == 0 and salvage(String(item.id), true):
+            count += 1
+    session.notify_character(character_id, "Salvaged %d Common piece%s." % [count, "" if count == 1 else "s"] if count > 0 else "No Common pieces in the bag.")
+    return count
+
 ## Host, user request: craft the next axe, pickaxe or rod (at the Forge or in a town). Needs the
 ## tier below, the tool's own profession level and the ingredients; it always succeeds.
 func craft_tool(tool: String, tier: int) -> bool:

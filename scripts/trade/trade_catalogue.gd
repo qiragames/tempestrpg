@@ -85,6 +85,15 @@ static func bag_item(id: String) -> bool:
 static func is_good(id: String) -> bool:
     return id == "pet_egg" or preload("res://scripts/dungeons/dungeon_features.gd").is_key(id) or CONSUMABLES.has(id) or scroll_skill(id) in COMMON_SCROLLS + RARE_SCROLLS or not TRAVEL.ticket_harbour(id).is_empty() or TRAVEL.is_fish(id) or UPGRADES.is_rune(id) or UPGRADES.is_augment(id) or REALM.is_orb(id) or PRO.is_resource(id) or CRAFT.is_good(id) or preload("res://scripts/bosses/boss_loot.gd").is_material(id)
 
+## The display name of anything that goes in the bag (goods and creature materials).
+static func item_name(id: String) -> String:
+    if is_good(id):
+        return good_info(id)[0]
+    var catalogue := preload("res://scripts/skills/skill_catalogue.gd")
+    if catalogue.MATERIALS.has(id):
+        return load(catalogue.SPECIMENS[catalogue.MATERIALS[id]]).material_name
+    return id.replace("_", " ").capitalize()
+
 ## [name, category, description] of a good.
 static func good_info(id: String) -> Array:
     # User request after M15: every boss's own material.
