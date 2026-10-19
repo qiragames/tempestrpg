@@ -190,6 +190,8 @@ func _build_join() -> void:
     _join_character.add_theme_font_size_override("font_size", 9)
     panel.add_child(_join_character)
     _join_race = _race_picker(Vector2(14, 138), panel)
+    # User report: one of your own characters keeps its race; the picker is only for a new one.
+    _join_character.item_selected.connect(func(index: int): _join_race.visible = index == 0)
     _button("Join", Vector2(14, 170), Vector2(170, 32), panel, join_world)
     _button("Back", Vector2(190, 170), Vector2(96, 32), panel, func(): _show("main"))
     _first_focus["join"] = _address_field
@@ -315,6 +317,7 @@ func refresh_join_characters() -> void:
     for entry in _own_characters:
         _join_character.add_item("%s, level %d — from \"%s\"" % [entry.race, entry.level, entry.world])
     _join_character.select(0)
+    _join_race.visible = true
 
 func join_world() -> void:
     var code := _address_field.text.strip_edges()

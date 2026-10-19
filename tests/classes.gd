@@ -55,7 +55,7 @@ func _run() -> void:
     var me = world.get_local_player()
     var master: Node = world.class_master
     var camp: Node = world.camp
-    _check(not master.present(), "No master before the settlement is founded")
+    _check(master.present(), "The master lives at the camp site from the start (user report: missing in a friend's world)")
     var camp_before: Dictionary = camp.state.duplicate(true)
     camp.state.founded = true
     camp.state.founder = "host"

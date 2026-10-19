@@ -37,9 +37,10 @@ func position_in_world() -> Vector2:
     var camp: Node = world.get("camp") if world != null else null
     return (camp.SITE if camp != null else Vector2.ZERO) + OFFSET
 
+## User report: he was missing in a friend's world whose camp was not founded yet; every player
+## needs him for classes, so he lives at the camp site from the start in every world.
 func present() -> bool:
-    var camp: Node = world.get("camp") if world != null else null
-    return camp != null and bool(camp.state.founded)
+    return world != null and world.get("camp") != null
 
 func near(actor: Node2D) -> bool:
     return present() and actor.global_position.distance_to(position_in_world()) <= REACH

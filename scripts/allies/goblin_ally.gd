@@ -25,6 +25,8 @@ var race: String = "Goblin"
 var maximum_hp: int = 30
 var power: int = 4
 var follow_speed: float = 45.0
+## Further than this from its owner, a following ally appears at the owner's side.
+const CATCH_UP_DISTANCE := 260.0
 var work_role: String = "follow"
 var work_target: String = ""
 var work_left: float = 0.0
@@ -219,6 +221,11 @@ func _physics_process(delta: float) -> void:
         return
     var owner = get_parent().player_by_id(owner_id)
     if owner != null and owner.get_node("Health").current > 0 and global_position.distance_to(owner.global_position) > 28.0:
+        # User report: after you respawn (or travel) far away, the goblin is back at your side at
+        # once instead of walking the whole way.
+        if global_position.distance_to(owner.global_position) > CATCH_UP_DISTANCE:
+            global_position = owner.global_position + Vector2(-18, 6)
+            return
         velocity = global_position.direction_to(owner.global_position) * follow_speed
         move_and_slide()
 
