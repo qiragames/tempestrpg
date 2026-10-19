@@ -34,7 +34,7 @@ func _run() -> void:
     var player := world.get_node("Player") as CharacterBody2D
     _check(player != null, "Player must be a CharacterBody2D")
     _check(player.get_node("Camera2D").is_current(), "Player camera must be active")
-    _check(world.get_node("HUD/Controls").text.contains("WASD"), "Controls must be visible")
+    _check(world.get_node("HUD/Controls").visible and world.get_node("HUD/Controls/Keys").get_child_count() > 10, "Controls must be visible (key icons with their actions)")
     for action in ["move_left", "move_right", "move_up", "move_down", "restart"]:
         _check(InputMap.has_action(action) and not InputMap.action_get_events(action).is_empty(), "Missing binding: " + action)
 

@@ -100,6 +100,7 @@ func _ready() -> void:
     get_parent().system_message.connect(record_event)
     UI.install(get_tree())
     _build_status()
+    _build_control_hints()
     _recovery = _label("", Vector2(8, 86), Vector2(300, 14), self, 9)
     _outline(_recovery)
     _trial_back = ColorRect.new()
@@ -223,6 +224,40 @@ func _bar(rect: Rect2, color: Color) -> ProgressBar:
     return bar
 
 ## Top-left status card: portrait, race/form, HP, Magicules, XP and level (scene labels reused).
+const KEY_ICONS := preload("res://scripts/ui/key_icons.gd")
+## The controls line: [actions shown as icons, text] (the rest is in Options → Keys).
+const CONTROL_HINTS := [
+    [["move_up", "move_left", "move_down", "move_right"], "Move"], [["sprint"], "Sprint"], [["attack"], "Strike"],
+    [["absorb"], "Absorb"], [["interact"], "Talk / use"], [["use_draught", "use_tonic"], "Potions"], [["inventory"], "Bag"],
+    [["skill_tree"], "Skills"], [["world_map"], "Map"], [["party"], "Party"],
+    [["toggle_controls"], "Hide"],
+]
+
+## User request: the controls line shows each action's key or mouse icon (it follows rebinding).
+func _build_control_hints() -> void:
+    if not has_node("Controls"):
+        return
+    var line: Label = $Controls
+    line.text = ""
+    var row := HBoxContainer.new()
+    row.name = "Keys"
+    row.position = Vector2(-6, -3)
+    row.add_theme_constant_override("separation", 3)
+    row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    line.add_child(row)
+    for hint in CONTROL_HINTS:
+        for action in hint[0]:
+            row.add_child(KEY_ICONS.Badge.new(action, 16.0))
+        var text := Label.new()
+        text.text = hint[1]
+        text.add_theme_font_size_override("font_size", 7)
+        text.add_theme_color_override("font_color", UI.TEXT)
+        text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        row.add_child(text)
+        var gap := Control.new()
+        gap.custom_minimum_size = Vector2(4, 1)
+        row.add_child(gap)
+
 func _build_status() -> void:
     $TopBar.hide()
     $BottomBar.color = Color(0.03, 0.04, 0.06, 0.85)
@@ -389,19 +424,11 @@ func _build_hotbar() -> void:
         for state in ["normal", "hover", "pressed", "disabled"]:
             button.add_theme_stylebox_override(state, UI.round_slot({"normal": "slot", "hover": "slot_hover", "pressed": "slot_pressed", "disabled": "slot_disabled"}[state]))
         _slots.append(button)
-        # Key badge above the slot, like the reference.
-        var badge := Label.new()
-        badge.text = str(index + 1)
-        badge.position = Vector2(181 + index * 37 + 11, 288)
-        badge.size = Vector2(12, 12)
-        badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-        badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-        badge.add_theme_font_size_override("font_size", 8)
-        badge.add_theme_color_override("font_color", UI.GOLD_LIGHT)
-        var badge_box := UI.box("slot")
-        badge_box.set_content_margin_all(0)
-        badge.add_theme_stylebox_override("normal", badge_box)
-        badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        # Key badge above the slot (user request: the icon of whatever the slot is bound to,
+        # e.g. a mouse when skill 4 is on Mouse 4).
+        var badge := KEY_ICONS.Badge.new("skill_%d" % (index + 1), 16.0)
+        badge.name = "SlotKey%d" % (index + 1)
+        badge.position = Vector2(181 + index * 37 + 10, 284)
         add_child(badge)
     _log_back = _backdrop(Rect2(4, 266, 166, 72))
     _log_back.name = "LogBox"
@@ -654,13 +681,25 @@ func _refresh_node_prompt() -> void:
         index = int(String(player.gather_id).trim_prefix("node:"))
     elif not menu_open() and player.get_node("Health").current > 0:
         index = nodes.nearest(player)
+    var key: TextureRect = get_node_or_null("NodePromptKey")
+    if key == null:
+        key = KEY_ICONS.Badge.new("interact", 16.0)
+        key.name = "NodePromptKey"
+        add_child(key)
     if index < 0:
         label.text = ""
+        key.visible = false
         return
     var shown: Array = nodes.prompt(player, index)
     var working := String(player.gather_id).begins_with("node:")
-    label.text = String(shown[0]).replace("F: Chop", "Chopping").replace("F: Mine", "Mining") if working else shown[0]
+    # User request: the interact key as its icon (whatever it is bound to), not a letter.
+    label.text = String(shown[0]).replace("F: Chop", "Chopping").replace("F: Mine", "Mining") if working else String(shown[0]).trim_prefix("F: ")
     label.add_theme_color_override("font_color", professions_panel.chance_colour(shown[1]))
+    key.visible = not working
+    if key.visible:
+        var font: Font = label.get_theme_font("font")
+        var width: float = font.get_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, label.get_theme_font_size("font_size")).x
+        key.position = Vector2(label.position.x + label.size.x / 2.0 - width / 2.0 - key.size.x - 3.0, label.position.y)
 
 func _process(_delta: float) -> void:
     _scale_new_elements()

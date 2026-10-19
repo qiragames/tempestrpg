@@ -65,11 +65,19 @@ func _run() -> void:
     # The clearing's decorations are nodes.
     var decor: Dictionary = world.decor_nodes
     _check(decor.size() == world.layout.trees.size() + world.layout.rocks.size() and decor.keys().all(func(index): return not nodes.info(index).is_empty()), "Every tree and rock of the clearing is a resource node (%d)" % decor.size())
-    var tree_index := -1
+    var tree_index: int = nodes.DECOR_BASE
     var tree_foot: Vector2 = decor[tree_index][1]
     me.global_position = nodes.work_point(tree_index) + Vector2(0, 6)
     await _frames(2)
     _check(nodes.nearest(me) == tree_index, "Standing at a clearing tree, F finds it")
+    var all_found := true
+    for index in decor:
+        me.global_position = nodes.work_point(index) + Vector2(0, 6)
+        if nodes.nearest(me) < 0:
+            all_found = false
+    _check(all_found, "F finds every tree and rock of the clearing (none is mistaken for 'nothing here')")
+    me.global_position = nodes.work_point(tree_index) + Vector2(0, 6)
+    await _frames(2)
     _check(session.apply_action(me, "node", {"index": tree_index}) and me.gather_id == "node:%d" % tree_index, "F at a clearing tree starts chopping it")
     var logs_before: int = me.get_node("Inventory").total_units()
     me.progression.professions.woodcutting = PRO.xp_for(30)
@@ -84,7 +92,7 @@ func _run() -> void:
     var marks: Node2D = holder.get_node_or_null("Marks")
     _check(marks != null and marks.depleted and not holder.get_children().any(func(child): return child is Sprite2D and child.visible), "The felled clearing tree shows a stump")
     _check(_blocked(me, tree_foot + Vector2(0, 12), tree_foot - Vector2(0, 8)), "A clearing tree (even a stump) cannot be walked through")
-    var rock_index := -1001
+    var rock_index: int = nodes.DECOR_BASE + 1000
     _check(PRO.ORES.has(nodes.info(rock_index).resource), "A clearing rock is mined for ore")
     var rock_body: StaticBody2D = decor[rock_index][2]
     _check(_blocked(me, rock_body.global_position + Vector2(0, 26), rock_body.global_position), "A clearing rock cannot be walked through")

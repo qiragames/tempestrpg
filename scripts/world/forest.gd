@@ -197,15 +197,16 @@ func apply_layout(seed: int, fresh: bool) -> void:
         _decorations.remove_child(child)
         child.queue_free()
     # One collision body per decoration (as before); its art sits on the footprint's bottom edge.
-    # SVE feedback: the clearing's own trees and rocks are resource nodes too (ResourceNodes uses
-    # negative indices for them: trees -1, -2, ...; rocks -1001, -1002, ...).
+    # SVE feedback: the clearing's own trees and rocks are resource nodes too (ResourceNodes gives
+    # them indices from DECOR_BASE: trees DECOR_BASE + k, rocks DECOR_BASE + 1000 + k).
     decor_nodes = {}
+    var base: int = load("res://scripts/professions/resource_nodes.gd").DECOR_BASE
     for k in range(layout.rocks.size()):
         var rock: Rect2 = layout.rocks[k]
-        decor_nodes[-1001 - k] = ["boulder", rock.get_center() + Vector2(0, rock.size.y / 2.0 + 2.0), _add_obstacle(rock, _decorations, "rock")]
+        decor_nodes[base + 1000 + k] = ["boulder", rock.get_center() + Vector2(0, rock.size.y / 2.0 + 2.0), _add_obstacle(rock, _decorations, "rock")]
     for k in range(layout.trees.size()):
         var footprint := Rect2(layout.trees[k] + Vector2(-6, 4), Vector2(12, 12))
-        decor_nodes[-1 - k] = ["tree_round", footprint.get_center() + Vector2(0, footprint.size.y / 2.0 + 2.0), _add_obstacle(footprint, _decorations, "tree")]
+        decor_nodes[base + k] = ["tree_round", footprint.get_center() + Vector2(0, footprint.size.y / 2.0 + 2.0), _add_obstacle(footprint, _decorations, "tree")]
     if get("nodes") != null:
         nodes.reset_decor()
     if fresh:

@@ -244,7 +244,7 @@ static func open_keys(panel: Control, values: Dictionary) -> Control:
         for action in buttons:
             buttons[action].text = ("…" if waiting.action == action else INPUT.key_name(action))
             buttons[action].modulate = Color(1, 0.6, 0.5) if action in clash else Color.WHITE
-        status.text = "Press a key for %s (Esc cancels)." % waiting.action if not String(waiting.action).is_empty() else ("Two actions share a key (red)." if not clash.is_empty() else "Click a key to change it.")
+        status.text = "Press a key or mouse button for %s (Esc cancels)." % waiting.action if not String(waiting.action).is_empty() else ("Two actions share a key (red)." if not clash.is_empty() else "Click a key to change it.")
     for entry in INPUT.REBINDABLE:
         var label := Label.new()
         label.text = entry[1]

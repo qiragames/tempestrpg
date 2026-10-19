@@ -8,6 +8,9 @@ extends Node
 const PRO := preload("res://scripts/professions/profession_catalogue.gd")
 const MAP := preload("res://scripts/world/world_map.gd")
 const REACH := 30.0
+## The First Clearing's own trees and rocks (Forest.decor_nodes) use indices from here on
+## (above any prop plan index; -1 stays "none").
+const DECOR_BASE := 100000000
 
 var world: Node2D
 ## Host-owned: units taken from a node {index: count}, seconds until a used-up node regrows
@@ -32,14 +35,14 @@ func info(index: int) -> Dictionary:
     var plan: Array = _terrain().planned_props() if _terrain() != null else []
     var prop: String
     var foot: Vector2
-    if index < 0:
+    if index >= DECOR_BASE:
         # SVE feedback: the clearing's seeded trees and rocks (Forest.decor_nodes).
         var decor: Dictionary = world.get("decor_nodes") if world != null and world.get("decor_nodes") != null else {}
         if not decor.has(index):
             return {}
         prop = decor[index][0]
         foot = decor[index][1]
-    elif index >= plan.size():
+    elif index < 0 or index >= plan.size():
         return {}
     else:
         prop = plan[index][0]
@@ -216,13 +219,13 @@ func apply(data: Variant) -> void:
 ## A new clearing layout: forget the old decorations' use and redraw the new ones.
 func reset_decor() -> void:
     for index in _info_cache.keys():
-        if index < 0:
+        if index >= DECOR_BASE:
             _info_cache.erase(index)
     for index in used.keys():
-        if index < 0:
+        if index >= DECOR_BASE:
             used.erase(index)
     for index in regrow.keys():
-        if index < 0:
+        if index >= DECOR_BASE:
             regrow.erase(index)
     var decor: Dictionary = world.get("decor_nodes") if world != null and world.get("decor_nodes") != null else {}
     for index in decor:
@@ -239,7 +242,7 @@ func reset() -> void:
 ## Redraw a spawned prop (felled/broken or grown back).
 func refresh(index: int) -> void:
     var holder: Node2D
-    if index < 0:
+    if index >= DECOR_BASE:
         var decor: Dictionary = world.get("decor_nodes") if world != null and world.get("decor_nodes") != null else {}
         holder = decor[index][2] if decor.has(index) and is_instance_valid(decor[index][2]) else null
     else:
@@ -259,7 +262,7 @@ func decorate(holder: Node2D, index: int) -> void:
         # Just in front of the sprite (same foot) so the veins draw over the rock.
         marks.position = Vector2(0, 0.5)
         holder.add_child(marks)
-    if index < 0:
+    if index >= DECOR_BASE:
         # A decoration's body sits at its footprint's centre; the marks go to the art's foot.
         marks.position = node.foot - holder.position + Vector2(0, 0.5)
     marks.resource = node.resource

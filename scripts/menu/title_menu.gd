@@ -19,6 +19,7 @@ const CREDITS := [
     ["Gear icons", "Gear icons by Kyrise (https://kyrise.itch.io/) · CC BY 4.0"],
     ["16x16 Weapon RPG Icons", "Shade (merchant-shade) · scythe and spear icons"],
     ["Fantasy UI Borders", "Kenney (www.kenney.nl) · CC0 · ornamented frames"],
+    ["Input Prompts Pixel", "Kenney (www.kenney.nl) · CC0 · key and mouse icons"],
     ["Item icons", "7Soul1, Idylwild, babysamurai (OpenGameArt) · CC0 · weapons and armour"],
     ["UI assets pack", "Dogobongocat (dogobongocat.itch.io) · CC0 · panels, slots, bars; Toasty font"],
     ["m5x7 and m3x6", "Fonts by Daniel Linssen (managore.itch.io)"],

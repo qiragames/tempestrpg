@@ -56,29 +56,34 @@ static func _has_button(action: String, button: int) -> bool:
 static func _has_axis(action: String, axis: int, direction: float) -> bool:
     return InputMap.action_get_events(action).any(func(event): return event is InputEventJoypadMotion and event.axis == axis and signf(event.axis_value) == signf(direction))
 
-## The action's first keyboard key (physical keycode, 0 for none).
+const ICONS := preload("res://scripts/ui/key_icons.gd")
+
+## The action's binding: its first keyboard key (physical keycode) or mouse button
+## (KeyIcons.MOUSE_BASE + button); 0 for none.
 static func key_of(action: String) -> int:
-    if not InputMap.has_action(action):
-        return 0
-    for event in InputMap.action_get_events(action):
-        if event is InputEventKey:
-            return int(event.physical_keycode) if event.physical_keycode != 0 else int(event.keycode)
-    return 0
+    return ICONS.code_of(action)
 
 static func key_name(action: String) -> String:
-    var key := key_of(action)
-    return OS.get_keycode_string(key) if key != 0 else "—"
+    return ICONS.name_of(key_of(action))
 
-## Replace an action's keyboard keys with one key (gamepad and mouse events stay).
-static func rebind(action: String, physical_keycode: int) -> bool:
-    if not InputMap.has_action(action) or physical_keycode <= 0 or not REBINDABLE.any(func(entry): return entry[0] == action):
+## Replace an action's keyboard keys and mouse buttons with one key or mouse button (user
+## request: controls on mouse buttons too); gamepad events stay.
+static func rebind(action: String, code: int) -> bool:
+    if not InputMap.has_action(action) or code <= 0 or not REBINDABLE.any(func(entry): return entry[0] == action):
+        return false
+    if ICONS.is_mouse(code) and (code - ICONS.MOUSE_BASE < 1 or code - ICONS.MOUSE_BASE > 9):
         return false
     for event in InputMap.action_get_events(action):
-        if event is InputEventKey:
+        if event is InputEventKey or event is InputEventMouseButton:
             InputMap.action_erase_event(action, event)
-    var key := InputEventKey.new()
-    key.physical_keycode = physical_keycode
-    InputMap.action_add_event(action, key)
+    if ICONS.is_mouse(code):
+        var button := InputEventMouseButton.new()
+        button.button_index = code - ICONS.MOUSE_BASE
+        InputMap.action_add_event(action, button)
+    else:
+        var key := InputEventKey.new()
+        key.physical_keycode = code
+        InputMap.action_add_event(action, key)
     return true
 
 ## Actions whose key is the same as another rebindable action's (to warn in the list).
