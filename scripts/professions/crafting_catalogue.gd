@@ -71,6 +71,7 @@ const POTIONS := {
     "magicule_tonic": ["Magicule Tonic", 3, 25, "tonic", 40, 5.0, {"herb_mint": 2, "gnasher_essence": 1}, "Restores 40 Magicules over 5 s (Z)."],
     "potion_greater_healing": ["Greater Healing Draught", 15, 120, "heal", 120, 5.0, {"herb_sunbloom": 2, "salmon": 1}, "Restores 120 HP over 5 s."],
     "potion_greater_tonic": ["Greater Magicule Tonic", 18, 120, "tonic", 120, 5.0, {"herb_ambercap": 2, "wisp_mote": 1}, "Restores 120 Magicules over 5 s."],
+    "potion_glowcap": ["Glowcap Tonic", 16, 80, "tonic", 90, 5.0, {"herb_glowcap": 2, "herb_mint": 1}, "Restores 90 Magicules over 5 s."],
     "elixir_swiftness": ["Elixir of Swiftness", 22, 200, "speed", 25, 120.0, {"herb_sakura": 2, "koi": 1}, "+25% movement speed for 2 minutes."],
     "elixir_iron": ["Elixir of Iron Skin", 25, 220, "iron", 6, 120.0, {"herb_ambercap": 2, "bar_iron": 1}, "+6 defence for 2 minutes."],
     "elixir_might": ["Elixir of Might", 28, 260, "might", 20, 120.0, {"herb_bogmoss": 2, "ember_core": 1}, "+20% damage for 2 minutes."],

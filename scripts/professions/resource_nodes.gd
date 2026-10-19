@@ -30,12 +30,22 @@ func info(index: int) -> Dictionary:
     if _info_cache.has(index):
         return _info_cache[index]
     var plan: Array = _terrain().planned_props() if _terrain() != null else []
-    if index < 0 or index >= plan.size():
+    var prop: String
+    var foot: Vector2
+    if index < 0:
+        # SVE feedback: the clearing's seeded trees and rocks (Forest.decor_nodes).
+        var decor: Dictionary = world.get("decor_nodes") if world != null and world.get("decor_nodes") != null else {}
+        if not decor.has(index):
+            return {}
+        prop = decor[index][0]
+        foot = decor[index][1]
+    elif index >= plan.size():
         return {}
-    var prop: String = plan[index][0]
+    else:
+        prop = plan[index][0]
+        foot = plan[index][1]
     var result := {}
     if prop in PRO.TREE_PROPS or prop in PRO.ROCK_PROPS or prop in PRO.HERB_PROPS:
-        var foot: Vector2 = plan[index][1]
         var resource := PRO.resource_for(prop, MAP.region_name(foot), index)
         if prop in PRO.HERB_PROPS and resource.is_empty():
             result = {}
@@ -72,6 +82,14 @@ func nearest(actor: Node2D) -> int:
         if current < distance:
             best = index
             distance = current
+    var decor: Dictionary = world.get("decor_nodes") if world != null and world.get("decor_nodes") != null else {}
+    for index in decor:
+        if not intact(index):
+            continue
+        var gap: float = actor.global_position.distance_to(work_point(index))
+        if gap < distance:
+            best = index
+            distance = gap
     return best
 
 ## What the HUD prompt shows for a character at a node: [text, chance].
@@ -195,6 +213,21 @@ func apply(data: Variant) -> void:
         if not before.has(index):
             refresh(index)
 
+## A new clearing layout: forget the old decorations' use and redraw the new ones.
+func reset_decor() -> void:
+    for index in _info_cache.keys():
+        if index < 0:
+            _info_cache.erase(index)
+    for index in used.keys():
+        if index < 0:
+            used.erase(index)
+    for index in regrow.keys():
+        if index < 0:
+            regrow.erase(index)
+    var decor: Dictionary = world.get("decor_nodes") if world != null and world.get("decor_nodes") != null else {}
+    for index in decor:
+        refresh(index)
+
 func reset() -> void:
     var changed: Array = regrow.keys()
     used = {}
@@ -205,7 +238,12 @@ func reset() -> void:
 
 ## Redraw a spawned prop (felled/broken or grown back).
 func refresh(index: int) -> void:
-    var holder: Node2D = _terrain().spawned_prop(index) if _terrain() != null else null
+    var holder: Node2D
+    if index < 0:
+        var decor: Dictionary = world.get("decor_nodes") if world != null and world.get("decor_nodes") != null else {}
+        holder = decor[index][2] if decor.has(index) and is_instance_valid(decor[index][2]) else null
+    else:
+        holder = _terrain().spawned_prop(index) if _terrain() != null else null
     if holder != null:
         decorate(holder, index)
 
@@ -221,6 +259,9 @@ func decorate(holder: Node2D, index: int) -> void:
         # Just in front of the sprite (same foot) so the veins draw over the rock.
         marks.position = Vector2(0, 0.5)
         holder.add_child(marks)
+    if index < 0:
+        # A decoration's body sits at its footprint's centre; the marks go to the art's foot.
+        marks.position = node.foot - holder.position + Vector2(0, 0.5)
     marks.resource = node.resource
     marks.prop = node.prop
     marks.depleted = regrow.has(index)
@@ -259,8 +300,10 @@ class Marks extends Node2D:
         if PRO.ORES.has(resource):
             var colour: Color = PRO.ORES[resource][3]
             # A vein across the rock's face: a few nuggets with a dark rim and a highlight.
+            # Pebbles are low: the vein sits on them.
+            var squash := 0.35 if prop == "pebbles" else 1.0
             for spot in VEIN:
-                var at: Vector2 = spot + Vector2(0, -0.5)
+                var at: Vector2 = Vector2(spot.x, spot.y * squash) + Vector2(0, -0.5)
                 draw_rect(Rect2(at - Vector2(1, 1), Vector2(4, 4)), colour.darkened(0.55))
                 draw_rect(Rect2(at, Vector2(2, 2)), colour)
                 draw_rect(Rect2(at, Vector2(1, 1)), colour.lightened(0.5))

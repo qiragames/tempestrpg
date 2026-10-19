@@ -138,6 +138,8 @@ const HERBS := {
     "herb_bogmoss": ["Bogmoss", 24, 30, Color("6a8a3a"), ["bush"], ["Mirewood Marsh"], 10],
     "herb_steppe_sage": ["Steppe Sage", 22, 40, Color("d8c070"), ["bush", "bush_dry"], ["Goldwind Steppe"], 10],
     "herb_nightshade": ["Nightshade", 30, 60, Color("8a4ad0"), ["bush", "bush_gloom"], ["Gloomveil"], 10],
+    # SVE feedback: glowing mushrooms are picked too (Alchemy) - in every region they grow.
+    "herb_glowcap": ["Glowcap", 16, 28, Color("7ae8ff"), ["mushroom_glow"], ["Gloomveil"], 10],
     "herb_jade_lotus": ["Jade Lotus", 36, 90, Color("7ae0b0"), ["bush"], ["Jade Terraces"], 10],
     "herb_senzu": ["Senzu Sprout", 42, 120, Color("a8ff6a"), ["bush"], ["The Ki Realm"], 10],
     # M9b: no bush grows these; picking any herb at night (Moonbloom) or in a thunderstorm (Storm
@@ -146,7 +148,7 @@ const HERBS := {
     "herb_storm_orchid": ["Storm Orchid", 25, 80, Color("a8a0ff"), ["bush"], [], 0],
     "herb_dragon_blossom": ["Dragon Blossom", 48, 200, Color("ff7a5a"), ["bush"], ["The Ki Realm"], 4],
 }
-const HERB_PROPS := ["bush", "bush_gloom", "bush_dry"]
+const HERB_PROPS := ["bush", "bush_gloom", "bush_dry", "mushroom_glow"]
 
 ## Gems a mining success can turn up (by the ore's level): [name, price, from ore level]
 const GEMS := {
@@ -161,7 +163,8 @@ const GEM_CHANCE := 0.012
 const SAP := {"amber_sap": ["Amber Sap", 150]}
 
 const TREE_PROPS := ["pine", "tree_big", "tree_round", "tree_autumn", "tree_dead", "pine_snow", "tree_snow", "tree_snow_big", "tree_pink", "tree_blossom", "bamboo", "palm", "tree_gloom", "tree_gloom_dead", "tree_gloom_big", "tree_acacia", "tree_steppe", "tree_jade", "pine_jade"]
-const ROCK_PROPS := ["boulder", "boulder_snow"]
+## SVE feedback: every stone is mined, pebbles too (they give what a boulder there would).
+const ROCK_PROPS := ["boulder", "boulder_snow", "pebbles"]
 
 ## Swings per unit of a resource and the units a node holds.
 const SWINGS_PER_UNIT := 3
@@ -199,6 +202,8 @@ static func all_resources() -> Array:
 
 ## Which resource a prop is (deterministic from its plan index): "" when none fits.
 static func resource_for(prop: String, region: String, index: int) -> String:
+    if prop == "pebbles":
+        prop = "boulder"
     var table: Dictionary = WOODS if prop in TREE_PROPS else (ORES if prop in ROCK_PROPS else (HERBS if prop in HERB_PROPS else {}))
     var pool: Array = []
     var total := 0

@@ -73,7 +73,7 @@ const PROPS := {
     "tree_dead": ["res://assets/game/world/nature.png", Rect2(64, 0, 32, 32), Vector2(10, 8)],
     "boulder": ["res://assets/game/world/nature.png", Rect2(256, 128, 32, 32), Vector2(26, 22)],
     "bush": ["res://assets/game/world/nature.png", Rect2(0, 160, 16, 16), Vector2.ZERO],
-    "pebbles": ["res://assets/game/world/nature.png", Rect2(240, 288, 32, 16), Vector2.ZERO],
+    "pebbles": ["res://assets/game/world/nature.png", Rect2(240, 288, 32, 16), Vector2(22, 8)],
     "pine_snow": ["res://assets/game/world/nature.png", Rect2(128, 0, 32, 32), Vector2(10, 8)],
     "tree_snow": ["res://assets/game/world/nature.png", Rect2(192, 0, 32, 32), Vector2(10, 8)],
     "tree_snow_big": ["res://assets/game/world/nature.png", Rect2(96, 288, 48, 48), Vector2(12, 10)],

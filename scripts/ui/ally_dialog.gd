@@ -307,12 +307,8 @@ func _confirm() -> void:
         session.request_action("recruit", {"id": ally_id})
 
 func _facing_water() -> bool:
-    var map := preload("res://scripts/world/world_map.gd")
-    var tile: Vector2i = map.to_tile(hud.player.global_position + hud.player.facing.normalized() * preload("res://scripts/travel/travel_catalogue.gd").FISH_REACH)
-    if not map.in_grid(tile):
-        return false
-    var data: Dictionary = map.data()
-    return data.ocean[map.vertex_index(tile.x, tile.y)] == 1 or data.lake[map.vertex_index(tile.x, tile.y)] == 1
+    # The same search the host uses (any water a short way in front, puddles too).
+    return not hud.player.water_ahead().is_empty()
 
 func close_dialog() -> void:
     if not visible:

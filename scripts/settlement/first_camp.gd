@@ -171,7 +171,49 @@ func _ready() -> void:
 ## Switch to this world's deposit table (from its seed). Restore or reset `state` afterwards.
 func set_sites(table: Dictionary) -> void:
     sites = table
+    _build_deposit_bodies()
     queue_redraw()
+
+## SVE feedback ("I can mine this and walk through it"): a deposit with stock is solid at its
+## trunk or base. The footprint sits below the site point, so workers standing at the point and
+## the reach ray (which ignores these bodies) still get there. Stumps and rubble stay solid too.
+var _deposit_bodies: Dictionary = {}
+
+func _build_deposit_bodies() -> void:
+    for body in _deposit_bodies.values():
+        if is_instance_valid(body):
+            body.queue_free()
+    _deposit_bodies = {}
+    for id in sites:
+        var body := StaticBody2D.new()
+        body.name = "Deposit_" + String(id)
+        var footprint := Rect2(Vector2(-5, 5), Vector2(10, 6)) if sites[id].resource == "wood" else Rect2(Vector2(-11, 1), Vector2(22, 7))
+        body.position = sites[id].position + footprint.get_center()
+        var collider := CollisionShape2D.new()
+        var shape := RectangleShape2D.new()
+        shape.size = footprint.size
+        collider.shape = shape
+        body.add_child(collider)
+        add_child(body)
+        _deposit_bodies[id] = body
+    _sync_deposit_bodies()
+
+func _sync_deposit_bodies() -> void:
+    for id in _deposit_bodies:
+        var collider: CollisionShape2D = _deposit_bodies[id].get_child(0)
+        if collider.disabled:
+            collider.set_deferred("disabled", false)
+
+func deposit_body(id: String) -> StaticBody2D:
+    var body: Variant = _deposit_bodies.get(id)
+    return body if is_instance_valid(body) else null
+
+func deposit_body_rids() -> Array:
+    var rids: Array = []
+    for body in _deposit_bodies.values():
+        if is_instance_valid(body):
+            rids.append(body.get_rid())
+    return rids
 
 func restore(value: Dictionary) -> void:
     state = value.duplicate(true)
@@ -653,6 +695,7 @@ func _redraw_fields() -> void:
 
 ## Citizens wander near their homes (every peer; positions are not replicated).
 func _process(delta: float) -> void:
+    _sync_deposit_bodies()
     if not shake.is_empty():
         for id in shake.keys():
             shake[id] = float(shake[id]) - delta
@@ -779,6 +822,7 @@ func can_reach(actor: Node2D, target: Vector2, distance: float) -> bool:
     if actor.get_node("Health").current <= 0 or actor.is_exhausted() or actor.global_position.distance_to(target) > distance:
         return false
     var ray := PhysicsRayQueryParameters2D.create(actor.global_position, target, 1)
+    ray.exclude = deposit_body_rids()
     return get_world_2d().direct_space_state.intersect_ray(ray).is_empty()
 
 func can_found(actor: Node2D) -> bool:

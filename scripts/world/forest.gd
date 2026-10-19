@@ -197,10 +197,17 @@ func apply_layout(seed: int, fresh: bool) -> void:
         _decorations.remove_child(child)
         child.queue_free()
     # One collision body per decoration (as before); its art sits on the footprint's bottom edge.
-    for rock in layout.rocks:
-        _add_obstacle(rock, _decorations, "rock")
-    for tree in layout.trees:
-        _add_obstacle(Rect2(tree + Vector2(-6, 4), Vector2(12, 12)), _decorations, "tree")
+    # SVE feedback: the clearing's own trees and rocks are resource nodes too (ResourceNodes uses
+    # negative indices for them: trees -1, -2, ...; rocks -1001, -1002, ...).
+    decor_nodes = {}
+    for k in range(layout.rocks.size()):
+        var rock: Rect2 = layout.rocks[k]
+        decor_nodes[-1001 - k] = ["boulder", rock.get_center() + Vector2(0, rock.size.y / 2.0 + 2.0), _add_obstacle(rock, _decorations, "rock")]
+    for k in range(layout.trees.size()):
+        var footprint := Rect2(layout.trees[k] + Vector2(-6, 4), Vector2(12, 12))
+        decor_nodes[-1 - k] = ["tree_round", footprint.get_center() + Vector2(0, footprint.size.y / 2.0 + 2.0), _add_obstacle(footprint, _decorations, "tree")]
+    if get("nodes") != null:
+        nodes.reset_decor()
     if fresh:
         camp.restore(camp.initial_state(layout.deposits))
         for id in layout.creatures:
@@ -440,7 +447,10 @@ func announce_magicule_pickup(amount: float, character_id: String = "") -> void:
     elif get_local_player().get_node("Health").current > 0:
         _announce("Recovered %.1f Magicules." % amount)
 
-func _add_obstacle(rect: Rect2, parent: Node = self, art: String = "") -> void:
+## Decoration index → [prop kind, foot, body] (see apply_layout).
+var decor_nodes: Dictionary = {}
+
+func _add_obstacle(rect: Rect2, parent: Node = self, art: String = "") -> StaticBody2D:
     var body := StaticBody2D.new()
     body.position = rect.get_center()
     var collider := CollisionShape2D.new()
@@ -452,6 +462,7 @@ func _add_obstacle(rect: Rect2, parent: Node = self, art: String = "") -> void:
         body.y_sort_enabled = true
         body.add_child(ART.prop(art, Vector2(0, rect.size.y / 2.0 + 2.0)))
     parent.add_child(body)
+    return body
 
 func _unhandled_input(event: InputEvent) -> void:
     if event.is_action_pressed("restart") and not session.active:

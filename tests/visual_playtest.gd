@@ -116,6 +116,7 @@ func _walk_to(target: Vector2, tolerance: float = 6.0, timeout: float = 15.0) ->
     var start := Time.get_ticks_msec()
     var last := player.position
     var stuck := 0.0
+    var detours := 0
     while player.position.distance_to(target) > tolerance:
         if Time.get_ticks_msec() - start > timeout * 1000:
             _release_moves()
@@ -125,6 +126,16 @@ func _walk_to(target: Vector2, tolerance: float = 6.0, timeout: float = 15.0) ->
         await physics_frame
         stuck = stuck + 1.0 / Engine.physics_ticks_per_second if player.position.distance_to(last) < 0.2 else 0.0
         last = player.position
+        if stuck > 0.4 and detours < 6:
+            # Like a player: step sideways around a tree or rock, then head on.
+            detours += 1
+            var ahead := player.position.direction_to(target)
+            var side := Vector2(-ahead.y, ahead.x) * (1.0 if detours % 2 == 1 else -1.0)
+            for _step in range(int(0.3 * Engine.physics_ticks_per_second * detours)):
+                _steer((side + ahead * 0.3).normalized())
+                await physics_frame
+            stuck = 0.0
+            continue
         if stuck > 1.0:
             _release_moves()
             _log("  walk to %s blocked at %s" % [target, player.position.round()])
@@ -321,15 +332,15 @@ func _run() -> void:
     await _wait(0.5)
     await _shot("hut_built", "Goblin Hut built; camp level 2")
     _log("## 6. Explore for outlying materials")
-    _check(await _walk_to(camp.sites.wood_3.position, 8.0, 20.0), "Walked east to the outlying wood")
+    _check(await _walk_to(camp.sites.wood_3.position + Vector2(0, 20), 8.0, 20.0), "Walked east to the outlying wood")
     var second: Node2D = world.entity_by_id("gnasher_2")
     await _shot("outlying_wood", "Outlying wood near the second Gnasher")
     if second.get_node("Health").current > 0:
         _check(await _fight(second, true, "skill_fight"), "Defeated the second Gnasher using Rending Bite")
     _check(await _absorb(second), "Absorbed the second Gnasher (second essence)")
-    _check(await _walk_to(camp.sites.wood_3.position, 8.0), "Returned to the wood pile")
+    _check(await _walk_to(camp.sites.wood_3.position + Vector2(0, 20), 8.0), "Returned to the wood pile")
     _check(await _gather_here(), "Gathered outlying wood")
-    _check(await _walk_to(camp.sites.stone_2.position, 8.0, 20.0), "Walked northeast past the pond to outlying stone")
+    _check(await _walk_to(camp.sites.stone_2.position + Vector2(0, 20), 8.0, 20.0), "Walked northeast past the pond to outlying stone")
     _check(await _gather_here(), "Gathered northeast stone")
     await _shot("outlying_stone", "Northeast stone deposit gathered")
     var route_ok: bool = await _walk_to(Vector2(484, 340), 8.0, 20.0) and await _walk_to(Vector2(484, 440), 8.0, 20.0) and await _walk_to(Vector2(200, 470), 8.0, 20.0) and await _walk_to(camp.sites.stone_3.position, 8.0, 20.0)

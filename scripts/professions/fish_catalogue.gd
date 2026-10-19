@@ -85,6 +85,8 @@ const FISH := {
     # Mythical sea creatures (user request): very rare, worth a fortune.
     "kraken": ["Kraken", 30000, "sea", 40, 5, 10],
     "leviathan": ["Leviathan", 40000, "sea", 45, 5, 6],
+    # User request: the biggest lake (Mirror Lake) has its own lake monster.
+    "glasswater_wyrm": ["Glasswater Wyrm", 45000, "lake@Mirror Lake", 42, 5, 10],
     "frost_wyrm": ["Frost Wyrm", 35000, "Frostpeak", 42, 5, 10],
     "phoenix_eel": ["Phoenix Eel", 38000, "Emberreach Isles", 44, 5, 10],
     "abyss_serpent": ["Abyss Serpent", 36000, "Mirewood Marsh", 43, 5, 10],
@@ -135,13 +137,51 @@ static func bites_here(id: String, region: String, lake: bool) -> bool:
         return not lake and where.trim_prefix("sea@") == region
     return where == region
 
+## User request: small water holds small fish. A puddle or pond (fewer than PUDDLE_TILES connected
+## water tiles) only Common and Uncommon fish, a lake up to Epic, the sea everything. The great
+## lake (Mirror Lake, the biggest) also holds the Glasswater Wyrm.
+const PUDDLE_TILES := 120
+const BODY_TOP_RARITY := {"puddle": 1, "lake": 3, "great_lake": 3, "sea": 5}
+const GREAT_LAKE_FISH := ["glasswater_wyrm"]
+const BODY_NAMES := {"puddle": "small pond", "lake": "lake", "great_lake": "great lake", "sea": "sea"}
+
+## "puddle", "lake", "great_lake" or "sea" for the water at a grid tile (its connected water).
+static func water_body(tile: Vector2i, region: String) -> String:
+    var map := preload("res://scripts/world/world_map.gd")
+    var data: Dictionary = map.data()
+    var start: int = map.vertex_index(tile.x, tile.y)
+    var lake: bool = data.lake[start] == 1
+    var seen := {tile: true}
+    var queue: Array = [tile]
+    while not queue.is_empty() and seen.size() < PUDDLE_TILES:
+        var at: Vector2i = queue.pop_back()
+        for step in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+            var next: Vector2i = at + step
+            if seen.has(next) or not map.in_grid(next):
+                continue
+            var index: int = map.vertex_index(next.x, next.y)
+            if (data.lake[index] == 1) if lake else (data.ocean[index] != 0 and data.lake[index] == 0):
+                seen[next] = true
+                queue.append(next)
+    if seen.size() < PUDDLE_TILES:
+        return "puddle"
+    if not lake:
+        return "sea"
+    return "great_lake" if region == "Mirror Lake" else "lake"
+
 ## The fish that bites (host): rarity weights, raised for rare fish by the rod and Fishing
-## milestones (30: ×1.5 Rare and better, 40: ×2 Mythical).
-static func pick(region: String, lake: bool, rod: int, level: int, rng: RandomNumberGenerator, night: bool = false, weather: String = "clear") -> String:
+## milestones (30: ×1.5 Rare and better, 40: ×2 Mythical). `body` (water_body) caps the rarity.
+static func pick(region: String, lake: bool, rod: int, level: int, rng: RandomNumberGenerator, night: bool = false, weather: String = "clear", body: String = "") -> String:
     var pool: Array = []
     var total := 0.0
+    var top: int = int(BODY_TOP_RARITY.get(body, 5))
     for id in FISH:
         if not bites_here(id, region, lake) or not condition_met(id, night, weather):
+            continue
+        if id in GREAT_LAKE_FISH:
+            if body != "great_lake":
+                continue
+        elif int(FISH[id][4]) > top:
             continue
         var rarity: int = FISH[id][4]
         var weight: float = RARITY_WEIGHT[rarity] * float(FISH[id][5]) / 10.0

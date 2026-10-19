@@ -65,6 +65,8 @@ var reel: Dictionary = {}
 const FISHES := preload("res://scripts/professions/fish_catalogue.gd")
 var _fishing_spot := Vector2.ZERO
 var _fishing_lake := false
+## What water the line is in (FishCatalogue.water_body).
+var _fishing_body := "sea"
 var _tame_cooldown := 0.0
 var _mount_sprite: Sprite2D
 const REALM := preload("res://scripts/realm/realm_catalogue.gd")
@@ -1225,18 +1227,18 @@ func cast_line() -> bool:
         session.notify_character(character_id, "You need a fishing rod (town merchants sell them).")
         return false
     var map := preload("res://scripts/world/world_map.gd")
-    var spot: Vector2 = global_position + facing.normalized() * TRAVEL.FISH_REACH
-    var tile: Vector2i = map.to_tile(spot)
-    if not map.in_grid(tile):
-        return false
-    var data: Dictionary = map.data()
-    var lake: bool = data.lake[map.vertex_index(tile.x, tile.y)] == 1
-    if not lake and data.ocean[map.vertex_index(tile.x, tile.y)] == 0:
+    # SVE feedback: any water in front works, the smallest puddle too - look along the facing
+    # line (and a little to each side) up to FISH_SEARCH pixels.
+    var water: Array = water_ahead()
+    if water.is_empty():
         session.notify_character(character_id, "Face the water to fish.")
         return false
+    var tile: Vector2i = water[0]
+    var lake: bool = water[1]
     dismount()
     _fishing_lake = lake
     _fishing_spot = global_position
+    _fishing_body = FISHES.water_body(tile, map.region_name(global_position))
     fishing_window = FISHES.REEL_SECONDS
     reel = {}
     # Fishing 20 (Patient): bites come 25% sooner.
@@ -1245,8 +1247,29 @@ func cast_line() -> bool:
     var day_night := preload("res://scripts/world/day_night.gd")
     var wet: float = day_night.bite_factor(day_night.weather(map.region_name(global_position), float(get_parent().progression.get("world_time", 0.0))))
     fishing_bite_in = randf_range(TRAVEL.BITE_DELAY[0], TRAVEL.BITE_DELAY[1]) * patience * wet
-    session.notify_character(character_id, "You cast your line… wait for a bite.")
+    session.notify_character(character_id, "You cast your line… wait for a bite." + (" (Only small fish live in such little water.)" if _fishing_body == "puddle" else ""))
     return true
+
+## The first water tile in front of the character: [tile, lake] ([] for none).
+const FISH_SEARCH := 56.0
+func water_ahead() -> Array:
+    var map := preload("res://scripts/world/world_map.gd")
+    var data: Dictionary = map.data()
+    var ahead: Vector2 = facing.normalized() if not facing.is_zero_approx() else Vector2.DOWN
+    var side := Vector2(-ahead.y, ahead.x)
+    var distance := 6.0
+    while distance <= FISH_SEARCH:
+        for offset in [0.0, 8.0, -8.0]:
+            var tile: Vector2i = map.to_tile(global_position + ahead * distance + side * offset)
+            if not map.in_grid(tile):
+                continue
+            var index: int = map.vertex_index(tile.x, tile.y)
+            if data.lake[index] == 1:
+                return [tile, true]
+            if data.ocean[index] != 0:
+                return [tile, false]
+        distance += 4.0
+    return []
 
 ## Host: a fish bites — pick it and start the reel-in minigame.
 func _hook_fish() -> void:
@@ -1258,7 +1281,7 @@ func _hook_fish() -> void:
     var day_night := preload("res://scripts/world/day_night.gd")
     var time: float = float(get_parent().progression.get("world_time", 0.0))
     var region: String = map.region_name(_fishing_spot)
-    var fish: String = FISHES.pick(region, _fishing_lake, rod, level, rng, day_night.is_night(time), day_night.weather(region, time))
+    var fish: String = FISHES.pick(region, _fishing_lake, rod, level, rng, day_night.is_night(time), day_night.weather(region, time), _fishing_body)
     var rarity: int = int(FISHES.FISH[fish][4])
     var width: float = FISHES.zone(level, fish, rod)
     reel = {"fish": fish, "rarity": rarity, "need": FISHES.HITS[rarity], "hits": 0, "misses": 0, "centre": rng.randf_range(width / 2.0, 1.0 - width / 2.0), "width": width, "speed": FISHES.SPEED[rarity], "t": 0.0}

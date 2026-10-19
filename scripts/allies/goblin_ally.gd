@@ -184,8 +184,11 @@ func _work_tick(delta: float) -> void:
     if global_position.distance_to(target) > 10:
         velocity = global_position.direction_to(target) * follow_speed
         move_and_slide()
-        return
+        # Deposits are solid (SVE feedback): bumping into the one you came for means you are there.
+        if not (work_role == "gather" and _touching_deposit(camp, work_target)):
+            return
     var ray := PhysicsRayQueryParameters2D.create(global_position, target, 1)
+    ray.exclude = camp.deposit_body_rids()
     if not get_world_2d().direct_space_state.intersect_ray(ray).is_empty() or (work_role == "build" and not camp.build_ready(work_target)):
         return
     work_left = maxf(0.0, work_left - delta)
@@ -197,6 +200,15 @@ func _work_tick(delta: float) -> void:
         work_target = ""
     elif camp.complete(work_target):
         _finish_work("Ally completed the %s." % camp.STRUCTURES[work_target].name)
+
+func _touching_deposit(camp: Node, id: String) -> bool:
+    var body: Node = camp.deposit_body(id)
+    if body == null or global_position.distance_to(camp.sites[id].position) > 30.0:
+        return false
+    for index in range(get_slide_collision_count()):
+        if get_slide_collision(index).get_collider() == body:
+            return true
+    return false
 
 func _physics_process(delta: float) -> void:
     if not AUTHORITY.can_mutate(self):
