@@ -300,6 +300,8 @@ func _draw_props() -> void:
 ## SVE feedback: map labels in the crisp pixel fonts with a thin outline, each placed at the first
 ## of its candidate spots that overlaps no label already drawn (else left out at this zoom).
 const LABEL_INK := Color(0.03, 0.04, 0.06)
+const LABEL_PLATE := Color(0.04, 0.05, 0.09, 0.78)
+const PLATE_MARGIN := 2.0
 var _placed: Array = []
 var _reserved: Array = []
 
@@ -324,12 +326,17 @@ func _place_label(anchor: Vector2, text: String, color: Color, sides: Array, kin
             "left":
                 top_left = anchor + Vector2(-extent.x - 6, -height / 2.0)
         top_left = top_left.round()
-        var rect := Rect2(top_left, Vector2(extent.x, height)).grow(1.0)
+        var rect := Rect2(top_left, Vector2(extent.x, height)).grow(PLATE_MARGIN)
         if not force and (not bounds.encloses(rect) or _placed.any(func(other): return other.intersects(rect)) or _reserved.any(func(other): return other.intersects(rect))):
             continue
         _placed.append(rect)
+        # User request (map font readable): every label on a small dark plate, so it reads on snow,
+        # sand and sea alike; the text itself stays crisp (no thick outline).
+        var plate := rect.grow_individual(1.0, 0.0, 1.0, 1.0)
+        _canvas.draw_rect(plate, LABEL_PLATE)
+        _canvas.draw_rect(plate, Color(color, 0.35), false, 1.0)
         var baseline := top_left + Vector2(0, font.get_ascent(size) - 1.0)
-        _canvas.draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 2, LABEL_INK)
+        _canvas.draw_string(font, baseline + Vector2(1, 1), text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, LABEL_INK)
         _canvas.draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
         return true
     return false
@@ -350,6 +357,9 @@ func _draw_map() -> void:
     for town in MAP.TOWNS:
         if _shown(town[3]):
             _reserved.append(Rect2(tile_to_map(town[3]).round() - Vector2(3, 3), Vector2(6, 6)))
+    if not realm:
+        for ferry in MAP.HARBOURS:
+            _reserved.append(Rect2(tile_to_map(ferry[2]).round() - Vector2(4, 4), Vector2(8, 8)))
     if not dungeon.is_empty():
         var spec: Array = DUNGEONS.DUNGEONS[dungeon]
         var title := "%s · Lv %d–%d · %s in the deepest chamber" % [spec[0], spec[3][0], spec[3][1], spec[5]]
@@ -364,12 +374,12 @@ func _draw_map() -> void:
         var name: String = MAP.REGION_NAMES[region]
         var at: Vector2 = tile_to_map(LABELS[region])
         var reachable: bool = region in MAP.REACHABLE or region == MAP.Region.SEA
-        if not _place_label(at, name, UI.TEXT if reachable else Color(UI.TEXT, 0.6), ["centre", "below", "above"], "body"):
+        if not _place_label(at, name.to_upper(), UI.GOLD_LIGHT if reachable else Color(UI.TEXT, 0.7), ["centre", "below", "above"], "body"):
             continue
         # M7 (user request): what level the region is for.
         var levels: String = preload("res://scripts/world/region_content.gd").range_text(name)
         if not levels.is_empty():
-            _place_label(at + Vector2(0, 2), levels, Color("ffcf7a"), ["below"])
+            _place_label(at + Vector2(0, 4), levels, Color("ffcf7a"), ["below"])
     # Towns (larger, named) and villages; ferry piers.
     for town in MAP.TOWNS:
         if not _shown(town[3]):
@@ -379,7 +389,7 @@ func _draw_map() -> void:
         _canvas.draw_rect(Rect2(spot - Vector2(2, 2) if big else spot - Vector2(1, 1), Vector2(5, 5) if big else Vector2(3, 3)), Color(0.03, 0.04, 0.06))
         _canvas.draw_rect(Rect2(spot - Vector2(1, 1) if big else spot - Vector2(0.5, 0.5), Vector2(3, 3) if big else Vector2(2, 2)), UI.GOLD_LIGHT if big else UI.TEXT)
         if big:
-            _place_label(spot, town[1], UI.GOLD_LIGHT, ["right", "left", "below", "above"])
+            _place_label(spot, town[1], UI.TEXT, ["right", "left", "below", "above"])
     # M5d: the rival nations at their capitals.
     if not realm:
         for entry in preload("res://scripts/nation/rival_nations.gd").RIVALS:
