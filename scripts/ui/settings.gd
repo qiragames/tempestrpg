@@ -2,7 +2,7 @@ extends RefCounted
 ## Local settings: display (step 22: fullscreen, window scale) and sound/effects (step 23: music
 ## and effects volume 0..1, mute, reduced effects). Stored per machine in user://settings.cfg,
 ## never in world saves, and never sent to the host.
-const DEFAULTS := {"fullscreen": false, "scale": 2, "music": 0.7, "sfx": 0.8, "muted": false, "reduced": false, "hud": 0.75, "controls": true, "keys": {}}
+const DEFAULTS := {"fullscreen": false, "scale": 2, "music": 0.7, "sfx": 0.8, "muted": false, "reduced": false, "hud": 0.75, "controls": true, "own_name": true, "keys": {}}
 const SCALES := [1, 2, 3]
 ## HUD size (user request: the HUD was too big) and whether the controls line is shown.
 const HUD_SIZES := [0.65, 0.75, 0.85, 1.0]
@@ -30,6 +30,8 @@ static func load_settings() -> Dictionary:
         values.hud = float(hud) if (hud is int or hud is float) and HUD_SIZES.has(snappedf(float(hud), 0.01)) else DEFAULTS.hud
         var controls: Variant = file.get_value("display", "controls", DEFAULTS.controls)
         values.controls = controls if controls is bool else DEFAULTS.controls
+        var own_name: Variant = file.get_value("display", "own_name", DEFAULTS.own_name)
+        values.own_name = own_name if own_name is bool else DEFAULTS.own_name
         # M11g: rebound keys (action → physical keycode).
         var keys := {}
         if file.has_section("keys"):
@@ -46,6 +48,7 @@ static func save_settings(values: Dictionary) -> Error:
     file.set_value("display", "scale", int(values.scale))
     file.set_value("display", "hud", float(values.get("hud", DEFAULTS.hud)))
     file.set_value("display", "controls", bool(values.get("controls", DEFAULTS.controls)))
+    file.set_value("display", "own_name", bool(values.get("own_name", DEFAULTS.own_name)))
     for key in ["music", "sfx", "muted", "reduced"]:
         file.set_value("sound", key, values.get(key, DEFAULTS[key]))
     var keys: Variant = values.get("keys", {})
@@ -57,6 +60,7 @@ static func save_settings(values: Dictionary) -> Error:
 ## Apply to the game window (integer scaling of the 640x360 view), the audio buses and effects.
 static func apply(values: Dictionary) -> void:
     preload("res://scripts/visual/effects.gd").reduced = bool(values.get("reduced", false))
+    preload("res://scripts/progression/character_names.gd").show_own = bool(values.get("own_name", true))
     INPUT.install(values.get("keys", {}) if values.get("keys") is Dictionary else {})
     var tree := Engine.get_main_loop() as SceneTree
     if tree != null and tree.root.has_node("Audio"):
@@ -184,9 +188,9 @@ static func build(panel: Control, on_back: Callable) -> Control:
         )
     var controls := CheckButton.new()
     controls.name = "Controls"
-    controls.text = "Show the controls line (F1)"
+    controls.text = "Controls line (F1)"
     controls.position = Vector2(14, 218)
-    controls.size = Vector2(240, 24)
+    controls.size = Vector2(146, 24)
     controls.add_theme_font_size_override("font_size", 10)
     controls.button_pressed = values.controls
     controls.toggled.connect(func(on: bool):
@@ -194,6 +198,19 @@ static func build(panel: Control, on_back: Callable) -> Control:
         change.call()
     )
     panel.add_child(controls)
+    # User request: names over heads; your own can be hidden.
+    var own_name := CheckButton.new()
+    own_name.name = "OwnName"
+    own_name.text = "Show my name"
+    own_name.position = Vector2(164, 218)
+    own_name.size = Vector2(140, 24)
+    own_name.add_theme_font_size_override("font_size", 10)
+    own_name.button_pressed = bool(values.get("own_name", true))
+    own_name.toggled.connect(func(on: bool):
+        values.own_name = on
+        change.call()
+    )
+    panel.add_child(own_name)
     var back := Button.new()
     back.name = "Back"
     back.text = "Back"

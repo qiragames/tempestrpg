@@ -141,6 +141,15 @@ func _run() -> void:
     old.players.host.progression.tools = {"axe": 3, "pickaxe": 2, "rod": 1}
     var migrated: Variant = STORE.migrate(old)
     _check(migrated is Dictionary and int(migrated.version) == STORE.VERSION and migrated.players.host.progression.tools == {"axe": 5, "pickaxe": 3, "rod": 1} and STORE.validate(migrated), "v42 tools: Master becomes Gold (tier 5), Fine becomes Iron (tier 3)")
+    # Regression (found after v1.3): old merchants' stock still listed Master tools (tier 3);
+    # such worlds looked damaged. The v43 step drops those entries.
+    var stocked: Dictionary = raw.duplicate(true)
+    stocked.version = 42
+    var merchant: String = stocked.trade.merchants.keys()[0]
+    stocked.trade.merchants[merchant].stock.append({"kind": "tool", "id": "tool_axe_3", "price": 2400, "count": 99})
+    _check(not STORE.validate(stocked), "(an old Master tool in stock is not valid today)")
+    var fixed: Variant = STORE.migrate(stocked)
+    _check(fixed is Dictionary and STORE.validate(fixed) and not fixed.trade.merchants[merchant].stock.any(func(item): return item.id == "tool_axe_3"), "Older worlds whose merchants sold Master tools load again")
     _check(is_equal_approx(TRAVEL.tool_power(5), 3.0) and is_equal_approx(TRAVEL.tool_power(3), 2.0), "...which work exactly as well as before")
     world.queue_free()
     await _frames()

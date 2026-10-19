@@ -34,6 +34,11 @@ var listen_port: int = DEFAULT_PORT
 ## Name, seed and dates of the hosted world (saved with it).
 ## Race requested for a new character when joining (ignored for returning characters).
 var join_race: String = "Slime"
+## A new character's name (character-first start screen), sent with the join request.
+var join_name: String = ""
+## The name for a new world's own character (set by the title menu before start_host).
+var host_name: String = ""
+const NAMES := preload("res://scripts/progression/character_names.gd")
 var joining_address := ""
 var world_meta: Dictionary = {}
 ## A world chosen in the title menu, started once the game scene is ready.
@@ -139,6 +144,8 @@ func launch_pending() -> void:
         return
     var launch := pending_launch
     pending_launch = {}
+    join_name = NAMES.clean(String(launch.get("name", "")))
+    host_name = join_name
     if launch.mode == "join_code":
         import_path = String(launch.get("import", ""))
         join_with_code(launch.code, identity_path, launch.get("race", RACES.DEFAULT))
@@ -222,6 +229,8 @@ func start_host(port: int = DEFAULT_PORT, path: String = "user://worlds/forest.j
     host_actor.local_controlled = true
     if not records.has("host"):
         host_actor.choose_race(race if RACES.valid(race) else RACES.DEFAULT)
+        if not host_name.is_empty():
+            host_actor.progression["name"] = host_name
     # Seed 0 is the reference map (also every world saved before seeds existed).
     world.apply_layout(LAYOUT.seed_of(world_meta), loaded.is_empty())
     if not loaded.is_empty():
@@ -632,10 +641,10 @@ func _hello(id: String) -> void:
     if not import_path.is_empty() and bring.is_empty():
         _fail("Your character's world could not be read.")
         return
-    _join_world.rpc_id(1, profile.get("character", ""), profile.get("credential", ""), join_race, bring)
+    _join_world.rpc_id(1, profile.get("character", ""), profile.get("credential", ""), join_race, bring, join_name)
 
 @rpc("any_peer", "call_remote", "reliable")
-func _join_world(character: String, credential: String, race: String, bring: Dictionary = {}) -> void:
+func _join_world(character: String, credential: String, race: String, bring: Dictionary = {}, name: String = "") -> void:
     if not active or not multiplayer.is_server():
         return
     var peer := multiplayer.get_remote_sender_id()
@@ -686,6 +695,9 @@ func _join_world(character: String, credential: String, race: String, bring: Dic
     world.add_child(actor)
     if not records.has(character):
         actor.choose_race(String(bring.get("progression", {}).get("race", race)) if not bring.is_empty() else race)
+        # A new character's name (a brought character keeps its own).
+        if bring.is_empty() and NAMES.valid(name):
+            actor.progression["name"] = name
         records[character] = CODEC.capture_player(actor)
         records[character]["token_hash"] = (world_id + credential).sha256_text()
     if not bring.is_empty():

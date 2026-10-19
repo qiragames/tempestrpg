@@ -549,6 +549,8 @@ func _physics_process(_delta: float) -> void:
         if local_controlled:
             session.send_move(direction, wants_sprint)
         return
+    # Character screen: time played (host-side, while the character is in a world).
+    progression["playtime"] = float(progression.get("playtime", 0.0)) + _delta
     if $Health.current <= 0 or is_exhausted():
         velocity = Vector2.ZERO
         return

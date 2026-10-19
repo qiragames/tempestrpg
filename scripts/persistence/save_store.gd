@@ -180,6 +180,11 @@ static func validate_player(state: Variant, id: String) -> bool:
                     return false
             elif not _number(value, 0, 1e9, true):
                 return false
+    # Character names (optional; "" for characters from before names).
+    if progression.has("name") and not preload("res://scripts/progression/character_names.gd").valid(progression.name):
+        return false
+    if progression.has("playtime") and not _number(progression.playtime, 0, 1e9):
+        return false
     if progression.has("title"):
         if not progression.title is String:
             return false
@@ -986,6 +991,14 @@ static func migrate(data: Variant) -> Variant:
                 for tool in state.progression.tools:
                     var old: int = int(state.progression.tools[tool])
                     state.progression.tools[tool] = {2: 3, 3: 5}.get(old, old)
+        # Fix (found after v1.3): merchants sold up to the old Master tools; above the shop tiers
+        # tools are crafted now, so those stock entries go (a world keeping them looked damaged).
+        var trade: Variant = data.get("trade")
+        if trade is Dictionary and trade.get("merchants") is Dictionary:
+            for merchant in trade.merchants:
+                var entry: Variant = trade.merchants[merchant]
+                if entry is Dictionary and entry.get("stock") is Array:
+                    entry.stock = entry.stock.filter(func(item): return not (item is Dictionary and item.get("kind") == "tool" and TRAVEL.parse_tool(String(item.get("id", "")))[0] == ""))
     return data
 
 ## Saved enemy entry for a raid boss at full health in its arena (v33 and new worlds).

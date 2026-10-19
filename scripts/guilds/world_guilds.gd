@@ -497,7 +497,7 @@ func _draw() -> void:
             continue
         var text := "<%s>" % tag
         var width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x
-        var lift := -34.0 if not ACH.worn_title(character).is_empty() else -26.0
+        var lift := -42.0 if not ACH.worn_title(character).is_empty() else -34.0
         var spot: Vector2 = character.global_position + Vector2(-width / 2.0, lift)
         var colour := Color("8fe3a0") if same_guild(me.character_id, character.character_id) else Color("c9d4e8")
         draw_string_outline(font, spot, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.05, 0.04, 0.02))

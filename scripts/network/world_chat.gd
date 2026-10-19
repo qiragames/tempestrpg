@@ -44,7 +44,7 @@ func say(actor: Node, channel: String, text: String) -> bool:
         session().notify_character(actor.character_id, "You are in no %s." % channel)
         return false
     _last_said[actor.character_id] = now
-    state.lines.append({"id": int(state.next), "from": actor.character_id, "channel": channel, "to": to, "text": words})
+    state.lines.append({"id": int(state.next), "from": preload("res://scripts/progression/character_names.gd").display(actor.progression), "channel": channel, "to": to, "text": words})
     state.next = int(state.next) + 1
     while state.lines.size() > LINES:
         state.lines.pop_front()

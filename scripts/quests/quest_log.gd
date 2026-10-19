@@ -368,13 +368,21 @@ func _draw_overlay() -> void:
         _overlay.draw_line(at + Vector2(-7, -4), at + Vector2(-7, 4), Color("6b4a2b"), 2.0)
         _overlay.draw_line(at + Vector2(7, -4), at + Vector2(7, 4), Color("6b4a2b"), 2.0)
         _draw_marker(at + Vector2(0, -22), marker(me, "board_" + town), font)
-    # M9e: worn titles above characters' heads.
+    # M9e: worn titles above characters' heads; user request: everyone's name just above the head
+    # (your own unless switched off in Options), the title above it.
+    var names := preload("res://scripts/progression/character_names.gd")
     for character in world.get_children():
         if character is CharacterBody2D and character.is_in_group("player") and character.visible and character.global_position.distance_to(me.global_position) < 400.0:
+            if character != me or names.show_own:
+                var label: String = names.display(character.progression)
+                var label_width := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x
+                var at: Vector2 = character.global_position + Vector2(-label_width / 2.0, -26)
+                _overlay.draw_string_outline(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.05, 0.04, 0.02))
+                _overlay.draw_string(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color.WHITE if character != me else Color("cfe8ff"))
             var title := ACH.worn_title(character)
             if not title.is_empty():
                 var width := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, 7).x
-                var spot: Vector2 = character.global_position + Vector2(-width / 2.0, -26)
+                var spot: Vector2 = character.global_position + Vector2(-width / 2.0, -34)
                 _overlay.draw_string_outline(font, spot, title, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.05, 0.04, 0.02))
                 _overlay.draw_string(font, spot, title, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("ffe08a"))
     for id in _npcs:

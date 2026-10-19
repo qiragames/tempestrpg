@@ -45,6 +45,9 @@ var _entries: Dictionary = {}
 var _continue_hint: Label
 var _marker: Control
 var _current: String = ""
+## User request: characters first. The new character's name (for New World / Join a Friend).
+var _pending_name := ""
+var character_screen: Panel
 @onready var session: Node = get_node("/root/GameSession")
 
 func _ready() -> void:
@@ -59,6 +62,7 @@ func _ready() -> void:
     _status = _label("", Vector2(24, 304), Vector2(592, 16), self, 10)
     _outline(_status)
     _build_main()
+    _build_characters()
     _build_new()
     _build_load()
     _build_join()
@@ -133,11 +137,10 @@ func _field(placeholder: String, at: Vector2, parent: Node) -> LineEdit:
 
 func _build_main() -> void:
     var panel := _panel("main", MAIN)
+    # User request: choose your character first; its world (or a friend's) comes after.
     var entries := [
-        ["new", "NEW GAME", func(): _show("new")],
+        ["new", "PLAY", func(): _show("characters")],
         ["continue", "CONTINUE", continue_last],
-        ["load", "LOAD GAME", func(): _show("load")],
-        ["join", "JOIN A FRIEND", func(): refresh_join_characters(); _show("join")],
         ["settings", "SETTINGS", func(): _show("settings")],
         ["credits", "CREDITS", func(): _show("credits")],
         ["quit", "QUIT", func(): get_tree().quit()],
@@ -151,6 +154,43 @@ func _build_main() -> void:
     _marker = MARKER.new(_entries.values())
     add_child(_marker)
     _first_focus["main"] = _entries.new
+
+func _build_characters() -> void:
+    character_screen = load("res://scripts/menu/character_screen.gd").new(self)
+    character_screen.hide()
+    add_child(character_screen)
+    _panels["characters"] = character_screen
+    _first_focus["characters"] = character_screen.list
+
+## From the character screen: a new character (name, race) gets a new world.
+func start_new_character(name: String, race_index: int) -> void:
+    _show("new")
+    _pending_name = name
+    _new_race.select(race_index)
+    _new_race.visible = false
+    _status.text = "A new world for %s." % name
+
+## From the character screen: a new character joins a friend's world.
+func join_as_new(name: String, race_index: int) -> void:
+    refresh_join_characters()
+    _show("join")
+    _pending_name = name
+    _join_character.select(0)
+    _join_character.visible = false
+    _join_race.select(race_index)
+    _join_race.visible = false
+    _status.text = "%s joins a friend (as a new character there)." % name
+
+## From the character screen: one of your characters joins a friend's world (if they allow it).
+func join_as_own(path: String) -> void:
+    refresh_join_characters()
+    _show("join")
+    for index in range(_own_characters.size()):
+        if _own_characters[index].path == path:
+            _join_character.select(index + 1)
+    _join_character.visible = false
+    _join_race.visible = false
+    _status.text = "Your character comes along (only if your friend allows own characters)."
 
 func _build_new() -> void:
     var panel := _panel("new")
@@ -236,6 +276,15 @@ func _show(id: String) -> void:
     _current = id
     for key in _panels:
         _panels[key].visible = key == id
+    # Opened on their own (not from the character screen), New World and Join choose everything.
+    _pending_name = ""
+    if _new_race != null:
+        _new_race.visible = true
+    if _join_race != null and _join_character != null:
+        _join_character.visible = true
+        _join_race.visible = _join_character.selected <= 0
+    if id == "characters":
+        character_screen.refresh()
     _status.text = ""
     _marker.visible = id == "main"
     _continue_hint.visible = id == "main"
@@ -303,7 +352,7 @@ func create_world() -> void:
         name = "My World"
     var seed: int = REGISTRY.parse_seed(_seed_field.text)
     var path: String = REGISTRY.new_world_path(name, worlds_dir)
-    _launch({"mode": "host", "path": path, "listen": false, "meta": REGISTRY.new_meta(name, seed), "race": RACES.ORDER[_new_race.selected]})
+    _launch({"mode": "host", "path": path, "listen": false, "meta": REGISTRY.new_meta(name, seed), "race": RACES.ORDER[_new_race.selected], "name": _pending_name})
 
 func load_selected() -> void:
     if not _selected_ok():
@@ -330,7 +379,7 @@ func join_world() -> void:
     if not short and (not codes.is_code(code) or codes.decode(code).is_empty()):
         _status.text = "That is not a complete invite code — ask your friend for it again (Esc → Invite a Friend)."
         return
-    var request := {"mode": "join_code", "code": code, "race": RACES.ORDER[_join_race.selected]}
+    var request := {"mode": "join_code", "code": code, "race": RACES.ORDER[_join_race.selected], "name": _pending_name}
     var choice: int = _join_character.selected if _join_character != null else 0
     if choice > 0 and choice - 1 < _own_characters.size():
         request["import"] = _own_characters[choice - 1].path

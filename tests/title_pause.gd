@@ -52,7 +52,7 @@ func _run() -> void:
     SETTINGS.path = dir.path_join("settings.cfg")
     # --- Settings file (local only)
     _check(SETTINGS.load_settings() == SETTINGS.DEFAULTS, "Without a settings file the defaults apply (windowed, 1280x720)")
-    var custom := {"fullscreen": true, "scale": 3, "music": 0.25, "sfx": 0.5, "muted": true, "reduced": true, "hud": 0.65, "controls": false, "keys": {}}
+    var custom := {"fullscreen": true, "scale": 3, "music": 0.25, "sfx": 0.5, "muted": true, "reduced": true, "hud": 0.65, "controls": false, "own_name": false, "keys": {}}
     SETTINGS.save_settings(custom)
     _check(SETTINGS.load_settings() == custom, "Settings (display and sound) are saved and read back")
     var bad := ConfigFile.new()
@@ -64,19 +64,19 @@ func _run() -> void:
     # --- Title menu
     var menu = await _menu()
     var labels: Array = []
-    for key in ["new", "continue", "load", "join", "settings", "credits", "quit"]:
+    for key in ["new", "continue", "settings", "credits", "quit"]:
         labels.append(menu._entries[key].text)
-    _check(labels == ["NEW GAME", "CONTINUE", "LOAD GAME", "JOIN A FRIEND", "SETTINGS", "CREDITS", "QUIT"], "Title menu entries as in the reference")
+    _check(labels == ["PLAY", "CONTINUE", "SETTINGS", "CREDITS", "QUIT"], "Title menu entries (user request: PLAY opens your characters first)")
     _check(menu.get_child(0).get_script() == load("res://scripts/menu/title_backdrop.gd") and menu._panels.main.get_theme_stylebox("panel").get("texture") != null, "Storm backdrop and an ornamented menu frame")
     _check(menu._entries["continue"].disabled and menu._continue_hint.text.is_empty(), "Continue is unavailable without a saved world")
     menu.continue_last()
     _check(menu._status.text.contains("No saved world") and session.pending_launch.is_empty(), "Continue without a save explains itself and launches nothing")
-    _check(root.gui_get_focus_owner() == menu._entries.new, "Keyboard focus starts on New Game")
+    _check(root.gui_get_focus_owner() == menu._entries.new, "Keyboard focus starts on Play")
     await _frames(1)
     _check(menu._marker.visible and menu._marker.target == menu._entries.new, "The slime marks the focused entry")
-    menu._entries.load.grab_focus()
+    menu._entries.settings.grab_focus()
     await _frames(1)
-    _check(menu._marker.target == menu._entries.load, "The marker follows the focus")
+    _check(menu._marker.target == menu._entries.settings, "The marker follows the focus")
     menu._show("credits")
     var credits := ""
     for child in menu._panels.credits.get_children():
