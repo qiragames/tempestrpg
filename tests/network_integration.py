@@ -110,8 +110,12 @@ try:
     for proc, _ in resumed:
         finish(proc)
     for before, after in zip(results, restored):
-        for field in ["id", "position", "skill_ids", "slots", "skill_evidence", "inventory", "progression"]:
+        for field in ["id", "position", "skill_ids", "slots", "skill_evidence", "inventory"]:
             check(before["state"][field] == after["state"][field], f"Reconnect must restore {field}")
+        # Playtime keeps counting while the character is in the world; everything else is exact.
+        pb, pa = dict(before["state"]["progression"]), dict(after["state"]["progression"])
+        played_before, played_after = pb.pop("playtime", 0.0), pa.pop("playtime", 0.0)
+        check(pb == pa and played_after >= played_before, "Reconnect must restore progression (playtime only grows)")
         # Absorbed-vitality healing keeps ticking on the host until the character disconnects.
         hb, ha = before["state"]["health"], after["state"]["health"]
         check(all(ha[k] == hb[k] for k in ("maximum", "immunity_seconds")), "Reconnect must restore health limits")

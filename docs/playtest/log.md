@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.6 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.4 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -297,7 +297,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (960x540)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Rare Cyclone Greathelm
+- [x] The chest gave an Uncommon-or-better item: Uncommon Mercenary's Saber
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (960x540)
@@ -332,7 +332,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *Playable races, left to right: Slime, Human, Demon (placeholder looks)* (960x540)
 
 ## 15. The archipelago (M4.5a)
-- [x] Walking east follows the road out of the clearing: x 1168
+- [x] Walking east follows the road out of the clearing: x 1169
 
 ![The east road continues beyond the clearing towards the Harrowmere bridge](56_road_east.png)
 *The east road continues beyond the clearing towards the Harrowmere bridge* (960x540)
@@ -393,8 +393,8 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *World map: your pile (gold X) and discovered leveling spots (violet)* (960x540)
 
 ## 16. Sound and effects (step 23)
-- Sounds played during this run: analysis ×3, build ×3, chest ×1, defeat ×7, evolve ×1, form ×2, gather ×12, hit ×13, hurt ×4, item ×1, learned ×2, level_up ×2, magicules ×3, swing ×12, ui_accept ×16, ui_move ×13
-- Effects shown: aura ×3, boost ×3, claw ×7, hit_spark ×50, ring ×7, slash ×13, smoke ×12, sparkle ×5
+- Sounds played during this run: analysis ×3, build ×3, chest ×1, defeat ×7, evolve ×1, form ×2, gather ×12, hit ×13, hurt ×4, item ×1, learned ×2, level_up ×2, magicules ×3, swing ×12, ui_accept ×16, ui_move ×12
+- Effects shown: aura ×3, boost ×3, claw ×7, hit_spark ×51, ring ×7, slash ×13, smoke ×12, sparkle ×5
 - [x] The run produced the "swing" cue
 - [x] The run produced the "hit" cue
 - [x] The run produced the "defeat" cue
@@ -960,7 +960,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +3000 XP (trial). Level 4 reached: +2 skill points.
-- Trial reward: Rare Copper Blade.
+- Trial reward: Epic Silvered Talisman.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +42 XP (defeat).
@@ -977,9 +977,9 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Rare Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Rare Cyclone Greathelm.
-- +25 Zeni (chest).
-- Picked up Rare Cyclone Greathelm.
+- Chest opened: Uncommon Mercenary's Saber.
+- +22 Zeni (chest).
+- Picked up Uncommon Mercenary's Saber.
 - World "Showcase World" loaded. Esc: pause menu — switch on Multiplayer to invite friends.
 - Multiplayer is on: Invite a Friend makes one code per friend.
 - Multiplayer is off: your world is single player again.

@@ -60,7 +60,7 @@ YOUR HOUSE
   Zeni, the wardrobe opens your storage, the stove lets you cook. Friends can visit.
   Or rent a room at a major city's town hall (F there -> "Rent an inn room").
 
-CHARACTERS (new in 1.4)
+CHARACTERS (new in 1.5)
   PLAY shows your characters with their stats and progress. Play one's world, take it to a
   friend's world (if they allow own characters), or make a new character (name and race).
   Names show above everyone's head (Options: "Show my name" hides your own).
