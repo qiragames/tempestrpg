@@ -3,7 +3,8 @@ extends RefCounted
 ## bonus. Mysterious Eggs drop now and then from creatures (more often from elites and bosses; a
 ## treasure goblin always carries one); using an egg hatches a pet you do not have yet. Each
 ## character keeps progression.pets (the ones they own) and progression.pet (the one following,
-## "" for none). Art: Ninja Adventure Actor/Animal (CC0), two side-view frames of 16 × 16.
+## "" for none). Art: Ninja Adventure Actor/Animal (CC0), two side-view frames of 16 × 16; the
+## Chiikawa trio is drawn by tools/draw_chiikawa_pets.py.
 
 ## id → [name, bonus text, bonuses {stat: value}]. Stats: defense, speed, strike (like gear),
 ## xp and zeni (percent more from everything).
@@ -18,8 +19,12 @@ const PETS := {
     "frog": ["Sir Ribbit", "+2 defence, +4 move speed", {"defense": 2.0, "speed": 4.0}],
     "chick": ["Pip", "+4% XP", {"xp": 4.0}],
     "racoon": ["Bandit", "+8% XP and +8% Zeni (rare)", {"xp": 8.0, "zeni": 8.0}],
+    # User request: the Chiikawa trio (fan art, tools/draw_chiikawa_pets.py).
+    "chiikawa": ["Chiikawa", "+6% XP (tries its very best)", {"xp": 6.0}],
+    "hachiware": ["Hachiware", "+6% Zeni and +2 defence", {"zeni": 6.0, "defense": 2.0}],
+    "usagi": ["Usagi", "+10 move speed (Ura!)", {"speed": 10.0}],
 }
-const ORDER := ["cat", "ginger_cat", "dog", "golden_pup", "hamster", "parrot", "lion_cub", "frog", "chick", "racoon"]
+const ORDER := ["cat", "ginger_cat", "dog", "golden_pup", "hamster", "parrot", "lion_cub", "frog", "chick", "racoon", "chiikawa", "hachiware", "usagi"]
 const EGG := "pet_egg"
 ## Chance a defeated creature drops an egg for its top damage dealer, by difficulty (easy,
 ## standard, elite) and for bosses.

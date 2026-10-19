@@ -26,13 +26,13 @@ func _run() -> void:
     preload("res://scripts/player/player.gd").starter_kit = false
     preload("res://scripts/player/player.gd").early_double_xp = false
     preload("res://scripts/pets/pet_followers.gd").egg_drops = true
-    _check(PETS.ORDER.size() == 10 and PETS.ORDER.all(func(id): return PETS.texture(id) != null and PETS.face(id) != null and PETS.PETS[id][2].size() >= 1), "Ten pets, each with art, a portrait and a bonus")
+    _check(PETS.ORDER.size() == 13 and PETS.ORDER.all(func(id): return PETS.texture(id) != null and PETS.face(id) != null and PETS.PETS[id][2].size() >= 1), "Thirteen pets (with the Chiikawa trio), each with art, a portrait and a bonus")
     var rng := RandomNumberGenerator.new()
     rng.seed = 4
     var progression := {"pets": []}
-    for _i in range(10):
+    for _i in range(PETS.ORDER.size()):
         progression.pets.append(PETS.hatch(progression, rng))
-    _check(progression.pets.size() == 10 and not "" in progression.pets and PETS.hatch(progression, rng) == "", "Eggs hatch every pet once, then nothing")
+    _check(progression.pets.size() == PETS.ORDER.size() and not "" in progression.pets and PETS.hatch(progression, rng) == "", "Eggs hatch every pet once, then nothing")
     # A world.
     var session: Node = root.get_node("GameSession")
     var dir := OS.get_temp_dir().path_join("tempestrpg-pets-" + Crypto.new().generate_random_bytes(6).hex_encode())
@@ -85,12 +85,12 @@ func _run() -> void:
     hud.dialog_panel.close()
     hud.pets_panel.open()
     await _frames(2)
-    _check(hud.pets_panel.visible and hud.pets_panel._list.get_child_count() == 10, "V opens the pets window with every pet")
+    _check(hud.pets_panel.visible and hud.pets_panel._list.get_child_count() == PETS.ORDER.size(), "V opens the pets window with every pet")
     hud.pets_panel.close_panel()
     session.apply_action(me, "pet", {"operation": "choose", "id": "racoon"})
     _check(session.save_world() == OK, "Saved")
     var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(dir.path_join("pets.json")))
-    _check(raw.players.host.progression.pet == "racoon" and raw.players.host.progression.pets.size() == 10, "Pets are saved")
+    _check(raw.players.host.progression.pet == "racoon" and raw.players.host.progression.pets.size() == PETS.ORDER.size(), "Pets are saved")
     var bad: Dictionary = raw.duplicate(true)
     bad.players.host.progression.pets = ["cat", "cat"]
     var bad_pet: Dictionary = raw.duplicate(true)

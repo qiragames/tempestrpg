@@ -71,7 +71,7 @@ const ACHIEVEMENTS := {
     "town_defender": ["Town Defender", "Repel 5 town invasions", "Journey", "Town Defender", "stat", 5, "invasions"],
     "stargazer": ["Stargazer", "Collect 10 meteorites", "Journey", "Stargazer", "stat", 10, "meteorites"],
     "pet_first": ["A Friend for the Road", "Hatch your first pet", "Journey", "", "pets", 1, ""],
-    "beast_friend": ["Beast Friend", "Hatch every pet", "Journey", "Beast Friend", "pets", 10, ""],
+    "beast_friend": ["Beast Friend", "Hatch every pet", "Journey", "Beast Friend", "pets", 13, ""],
     "tycoon": ["Tycoon", "Hold 100,000 Zeni", "Journey", "Tycoon", "zeni", 100000, ""],
     "wanderer": ["Wanderer", "Set foot in every land of the world", "Journey", "Wanderer", "set", 16, "regions"],
     "realm_walker": ["Realm Walker", "Find the hidden Ki Realm", "Journey", "Realm Walker", "has", 1, ["regions", "The Ki Realm"]],
