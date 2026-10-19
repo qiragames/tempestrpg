@@ -226,9 +226,8 @@ func _defeat() -> void:
         else:
             item = SOURCES._item(rng, LOOT_RARITY if raid else ELITE_LOOT_RARITY, level)
         # Personal loot: only this helper can pick it up (for a long while).
-        var spot := position + Vector2.from_angle(TAU * index / maxf(1.0, ranked.size())) * 26.0
-        if world.has_method("drop_gear"):
-            world.drop_gear.call_deferred(item, spot, "", actor.character_id, (world.progression.get("world_time", 0.0) + 1800.0))
+        if world.has_method("pop_gear"):
+            world.pop_gear.call_deferred(item, position, actor.character_id, (world.progression.get("world_time", 0.0) + 1800.0))
         index += 1
     if world != null and world.has_method("_announce"):
         world._announce("%s has fallen!" % BOSS.entry(entity_id)[0])

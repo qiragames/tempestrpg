@@ -37,6 +37,9 @@ func _friend(id: String, at: Vector2) -> CharacterBody2D:
     return other
 
 func _run() -> void:
+    # Exact XP and gathered amounts: no double early XP, no starter tools (see tests/sve_fixes.gd).
+    preload("res://scripts/player/player.gd").starter_kit = false
+    preload("res://scripts/player/player.gd").early_double_xp = false
     _check(GUILDS.level_for(0) == 1 and GUILDS.level_for(500) == 2 and GUILDS.level_for(75000) == 10 and GUILDS.perk_lines(4).size() == GUILDS.PERKS.size(), "Ten guild levels with perks")
     var session: Node = root.get_node("GameSession")
     var dir := OS.get_temp_dir().path_join("tempestrpg-guild-hall-" + Crypto.new().generate_random_bytes(6).hex_encode())

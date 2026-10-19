@@ -13,7 +13,7 @@ const FRAME := Vector2(600, 344)
 const CELL := 32.0
 const GRID_COLUMNS := 8
 const GRID_ROWS := 4
-const SLOT_NAMES := {"weapon": "Weapon", "head": "Head", "body": "Body", "hands": "Hands", "feet": "Feet", "accessory_1": "Accessory", "accessory_2": "Accessory"}
+const SLOT_NAMES := {"weapon": "Weapon", "head": "Head", "body": "Body", "hands": "Hands", "feet": "Boots", "accessory_1": "Accessory", "accessory_2": "Accessory"}
 ## Where the slots sit (left column: armour and weapon; right of the doll: jewellery).
 const SLOT_AT := {
     "head": Vector2(14, 44), "body": Vector2(14, 88), "hands": Vector2(14, 132), "feet": Vector2(14, 176), "weapon": Vector2(14, 220),
@@ -95,6 +95,9 @@ var _slot_cells: Dictionary = {}
 var _grid: Array = []
 var _doll: Control
 var _stats: Label
+var _stats_values: Label
+var _stats_2: Label
+var _stats_2_values: Label
 const ATTRIBUTES := preload("res://scripts/progression/attributes.gd")
 var _attr_points: Label
 var _score: Label
@@ -150,7 +153,13 @@ func _init(owner_hud: CanvasLayer) -> void:
     add_child(stats_box)
     hud._label("GEAR SCORE", ORIGIN + Vector2(294, 44), Vector2(100, 12), self, 8).add_theme_color_override("font_color", UI.TEXT_DIM)
     _score = UI.heading(hud._label("0", ORIGIN + Vector2(294, 57), Vector2(110, 20), self, 18))
-    _stats = hud._label("", ORIGIN + Vector2(400, 43), Vector2(182, 98), self, 7)
+    # SVE feedback: the stats sit in two columns so they fit the box (names left, values right).
+    _stats = hud._label("", ORIGIN + Vector2(398, 46), Vector2(90, 94), self, 7)
+    _stats_values = hud._label("", ORIGIN + Vector2(398, 46), Vector2(88, 94), self, 7)
+    _stats_values.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    _stats_2 = hud._label("", ORIGIN + Vector2(496, 46), Vector2(86, 94), self, 7)
+    _stats_2_values = hud._label("", ORIGIN + Vector2(496, 46), Vector2(84, 94), self, 7)
+    _stats_2_values.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     # M12a: attributes under the gear score, a + for each while points are left.
     for index in range(ATTRIBUTES.KEYS.size()):
         var key: String = ATTRIBUTES.KEYS[index]
@@ -281,16 +290,21 @@ func refresh() -> void:
     card.show_item(carded, ("Worn: " + SLOT_NAMES[place]) if not place.is_empty() else "In the bag")
     _score.text = str(gear_score())
     var weapon: Dictionary = player.equipped_weapon()
-    var lines: Array = [
-        "Weapon damage   %s" % (str(int(weapon.stats.damage)) if not weapon.is_empty() else "unarmed"),
-        "Max HP          %d" % player.get_node("Health").maximum,
-        "Magicules       %d" % int(player.get_node("Magicules").maximum),
-        "Strike bonus    +%d" % int(player.gear_bonus("strike")),
-        "Defense         %d" % int(player.gear_bonus("defense")),
-        "Move speed      %d" % int(player.current_speed()),
-        "Regeneration    %.1f/s" % float(player.get_node("Magicules").regeneration_per_second),
+    var rows: Array = [
+        ["Damage", str(int(weapon.stats.damage)) if not weapon.is_empty() else "none"],
+        ["Max HP", str(player.get_node("Health").maximum)],
+        ["Magicules", str(int(player.get_node("Magicules").maximum))],
+        ["Strike", "+%d" % int(player.gear_bonus("strike"))],
+        ["Defense", str(int(player.gear_bonus("defense")))],
+        ["Speed", str(int(player.current_speed()))],
+        ["Regen", "%.1f/s" % float(player.get_node("Magicules").regeneration_per_second)],
     ]
-    _stats.text = "\n".join(lines)
+    var left: Array = rows.slice(0, 4)
+    var right: Array = rows.slice(4)
+    _stats.text = "\n".join(left.map(func(row): return row[0]))
+    _stats_values.text = "\n".join(left.map(func(row): return row[1]))
+    _stats_2.text = "\n".join(right.map(func(row): return row[0]))
+    _stats_2_values.text = "\n".join(right.map(func(row): return row[1]))
     var unspent: int = ATTRIBUTES.unspent(player.progression)
     for key in ATTRIBUTES.KEYS:
         get_node("Attr_" + key).text = "%s  %d" % [ATTRIBUTES.SHORT[key], ATTRIBUTES.value(player.progression, key)]

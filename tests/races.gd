@@ -47,6 +47,9 @@ func _hit(actor: Node2D, id: String, skill: StringName = &"") -> int:
     return dealt
 
 func _run() -> void:
+    # Exact XP and gathered amounts: no double early XP, no starter tools (see tests/sve_fixes.gd).
+    preload("res://scripts/player/player.gd").starter_kit = false
+    preload("res://scripts/player/player.gd").early_double_xp = false
     # --- Catalogue
     _check(RACES.ORDER == ["Slime", "Human", "Demon"] and RACES.valid("Human") and not RACES.valid("Orc") and not RACES.valid(3) and RACES.DEFAULT == "Slime", "Three playable races; unknown names are invalid")
     _check(RACES.can_mimic("Slime", 1) and not RACES.can_mimic("Demon", 4) and RACES.can_mimic("Demon", 5) and not RACES.can_mimic("Human", 19) and RACES.can_mimic("Human", 20), "Mimicry: Slimes from level 1, Demons from 5, Humans from 20 (endgame)")

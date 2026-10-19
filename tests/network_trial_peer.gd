@@ -23,6 +23,9 @@ func _evidence(players: Dictionary) -> Dictionary:
         result[id] = {"trials": players[id].skill_evidence.trials, "skills": players[id].skill_ids}
     return result
 func _run() -> void:
+    # Exact XP and gathered amounts: no double early XP, no starter tools (see tests/sve_fixes.gd).
+    preload("res://scripts/player/player.gd").starter_kit = false
+    preload("res://scripts/player/player.gd").early_double_xp = false
     session = root.get_node("GameSession")
     world = load("res://scenes/world/forest.tscn").instantiate()
     root.add_child(world)

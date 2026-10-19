@@ -706,12 +706,12 @@ func _accepted(character: String, credential: String) -> void:
     world.bind_local_player(actor)
     character_assigned.emit(character)
 
-func send_move(direction: Vector2) -> void:
+func send_move(direction: Vector2, sprint: bool = false) -> void:
     if active and not multiplayer.is_server() and not local_character_id.is_empty():
-        _move_input.rpc_id(1, direction)
+        _move_input.rpc_id(1, direction, sprint)
 
 @rpc("any_peer", "call_remote", "unreliable_ordered", 1)
-func _move_input(direction: Vector2) -> void:
+func _move_input(direction: Vector2, sprint: bool = false) -> void:
     if not multiplayer.is_server():
         return
     var peer := multiplayer.get_remote_sender_id()
@@ -721,6 +721,7 @@ func _move_input(direction: Vector2) -> void:
     var actor = world.player_by_id(owners[peer])
     if actor:
         actor.remote_direction = direction.limit_length(1.0)
+        actor.remote_sprint = sprint == true
         actor.last_input_msec = Time.get_ticks_msec()
 
 func request_action(action: String, payload: Dictionary = {}) -> void:
@@ -1159,6 +1160,12 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             rejected_requests += 1
             return false
         return actor.use_good(payload.id)
+    if action == "loot":
+        # SVE feedback: F picks up nearby loot; the host checks reach, claim and room.
+        if payload.size() != 1 or not payload.get("id") is String or payload.id.length() > 64:
+            rejected_requests += 1
+            return false
+        return false if actor.input_blocked else world.take_loot(actor, payload.id)
     if action == "chest":
         if payload.size() != 1 or not payload.get("id") is String or payload.id.length() > 16:
             rejected_requests += 1

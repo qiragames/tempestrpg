@@ -15,6 +15,9 @@ func _frames(count: int = 3) -> void:
         await physics_frame
         await process_frame
 func _run() -> void:
+    # Exact XP and gathered amounts: no double early XP, no starter tools (see tests/sve_fixes.gd).
+    preload("res://scripts/player/player.gd").starter_kit = false
+    preload("res://scripts/player/player.gd").early_double_xp = false
     var world = load("res://scenes/world/forest.tscn").instantiate()
     root.add_child(world)
     current_scene = world

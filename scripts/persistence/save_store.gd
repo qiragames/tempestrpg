@@ -1,7 +1,7 @@
 extends RefCounted
 ## Validate before applying; temp + rename replaces the primary atomically.
 
-const VERSION := 41
+const VERSION := 42
 const PILE := preload("res://scripts/pickups/item_pile.gd")
 const FORMS := preload("res://scripts/forms/form_catalogue.gd")
 const SKILLS := preload("res://scripts/skills/skill_catalogue.gd")
@@ -963,6 +963,17 @@ static func migrate(data: Variant) -> Variant:
         data = data.duplicate(true)
         data.version = 41
         data["housing"] = HOUSING.initial_state()
+    # v42: every character carries at least a basic axe, pickaxe and fishing rod.
+    if data.get("version") == 41:
+        if not data.get("players") is Dictionary:
+            return null
+        data = data.duplicate(true)
+        data.version = 42
+        for id in data.players:
+            var state: Variant = data.players[id]
+            if state is Dictionary and state.get("progression") is Dictionary and state.progression.get("tools") is Dictionary:
+                for tool in state.progression.tools:
+                    state.progression.tools[tool] = maxi(1, int(state.progression.tools[tool]))
     return data
 
 ## Saved enemy entry for a raid boss at full health in its arena (v33 and new worlds).

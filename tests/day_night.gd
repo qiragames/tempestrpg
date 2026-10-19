@@ -36,6 +36,9 @@ func _at_hour(h: float) -> float:
     return fposmod(h - DAY.START_HOUR, 24.0) / 24.0 * DAY.DAY_SECONDS
 
 func _run() -> void:
+    # Exact XP and gathered amounts: no double early XP, no starter tools (see tests/sve_fixes.gd).
+    preload("res://scripts/player/player.gd").starter_kit = false
+    preload("res://scripts/player/player.gd").early_double_xp = false
     _check(is_equal_approx(DAY.hour(0.0), 8.0) and DAY.clock_text(0.0) == "Day 1 · 08:00" and DAY.day(DAY.DAY_SECONDS) == 2, "The world starts at 08:00 on day 1; a day lasts 24 minutes")
     _check(DAY.is_night(_at_hour(23.0)) and DAY.is_night(_at_hour(3.0)) and not DAY.is_night(_at_hour(12.0)) and not DAY.is_night(_at_hour(19.0)), "Night is from 21:00 to 05:00")
     _check(DAY.ambient(_at_hour(12.0)).is_equal_approx(Color.WHITE) and DAY.ambient(_at_hour(0.0)).v < 0.7 and DAY.darkness(_at_hour(12.0)) == 0.0 and DAY.darkness(_at_hour(0.0)) > 0.9, "Bright noon, dark (but playable) midnight")

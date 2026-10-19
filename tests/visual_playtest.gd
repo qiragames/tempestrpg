@@ -539,6 +539,10 @@ func _run() -> void:
     await _shot("chest_closed", "A closed chest (gold lock) at a point of interest")
     await _tap("interact")
     _check(await _until(func(): return "chest_3" in player.progression.get("chests", [])), "F opens the chest")
+    # SVE feedback: the item pops out beside the chest; F again picks it up.
+    await _wait(0.7)
+    await _tap("interact")
+    await _until(func(): return player.gear.items.size() > gear_before)
     _check(player.gear.items.size() == gear_before + 1 and player.gear.items.back().rarity >= 1, "The chest gave an Uncommon-or-better item: %s" % (gear_catalogue.display_name(player.gear.items.back()) if player.gear.items.size() > gear_before else "none"))
     await _wait(0.3)
     await _shot("chest_open", "Chest opened (lid up) and the item announced")
@@ -1551,6 +1555,34 @@ func _run() -> void:
     hud_nation.housing_panel.close_panel()
     showcase.global_position = world.housing.door_inside(home_rect)
     _check(world.housing.leave(showcase), "Left the house")
+    _log("## 48. Playtest fixes: loot on the ground, sprint, the log, the map")
+    showcase.global_position += Vector2(0, 40)
+    world.terrain.ensure_props_at(showcase.global_position)
+    await _wait(0.3)
+    var popped := 0
+    var loot_rng := RandomNumberGenerator.new()
+    loot_rng.seed = 48
+    for base in ["iron_sword", "hunting_bow", "copper_ring"]:
+        if world.pop_gear(preload("res://scripts/items/gear_catalogue.gd").roll(base, popped + 1, loot_rng), showcase.global_position + Vector2(44, -4), "nobody_yet", 99999999.0) != null:
+            popped += 1
+    _check(popped == 3, "Loot popped out onto the ground")
+    showcase.stamina = 0.4
+    showcase._winded = false
+    await _wait(0.25)
+    await _shot("loot_pop", "Loot pops out of creatures and chests and lies on the ground: walk over it or press F nearby; Shift sprints (the bar under you is your stamina)")
+    for node in get_nodes_in_group("gear_pickups"):
+        if node.owner_id == "nobody_yet":
+            node.queue_free()
+    for index in range(12):
+        hud_nation.record_event("Log line %d: scroll back with the mouse wheel." % index)
+    hud_nation.set_log_mode(hud_nation.LOG_TALL)
+    await _wait(0.2)
+    await _shot("log_tall", "The log box: − and + make it smaller or bigger; the mouse wheel scrolls back through the last 30 lines")
+    hud_nation.set_log_mode(hud_nation.LOG_NORMAL)
+    hud_nation.world_map.open()
+    await _wait(0.4)
+    await _shot("map_labels", "The world map fits its frame; names never overlap (zoom in for more)")
+    hud_nation.world_map.close()
     for file in DirAccess.get_files_at(temp_worlds):
         DirAccess.remove_absolute(temp_worlds.path_join(file))
     DirAccess.remove_absolute(temp_worlds)

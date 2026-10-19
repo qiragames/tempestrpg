@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.0 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.2 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -165,7 +165,6 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 - [x] Absorbed the Thornback
 - [x] Learned Thorn Lash (Common); the Extra now comes from fusion
-- (XP assistance: +4 XP to reach level 2 for a skill point)
 - [x] Activated Thorn Lash in the skill tree
 - [x] U opens the fusion window
 
@@ -237,14 +236,13 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 - [x] Defeating it again earns XP again
 ## 11b. Experience and levels
-- [x] Reached level 3 (1621 XP, 0 skill points) from defeats, absorptions and the trial
-- [x] HUD title bar shows the level: Lv 3 · XP 1621 / 2167
+- [x] Reached level 4 (3234 XP, 1 skill points) from defeats, absorptions and the trial
+- [x] HUD title bar shows the level: Lv 4 · XP 3234 / 4850 · 1 skill point
 - [x] The System Voice announced a level-up
 
 ![Level, XP and unspent skill points in the top-right of the HUD](40_level_hud.png)
 *Level, XP and unspent skill points in the top-right of the HUD* (960x540)
 
-- (XP assistance: +546 XP to reach level 4 for a skill point)
 
 ![Skill tree: Gel Vitality bought (+10 max HP)](41_tree_node.png)
 *Skill tree: Gel Vitality bought (+10 max HP)* (960x540)
@@ -299,7 +297,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (960x540)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Rare Sleet Blade
+- [x] The chest gave an Uncommon-or-better item: Rare Blackened Charm
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (960x540)
@@ -334,7 +332,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *Playable races, left to right: Slime, Human, Demon (placeholder looks)* (960x540)
 
 ## 15. The archipelago (M4.5a)
-- [x] Walking east follows the road out of the clearing: x 1169
+- [x] Walking east follows the road out of the clearing: x 1168
 
 ![The east road continues beyond the clearing towards the Harrowmere bridge](56_road_east.png)
 *The east road continues beyond the clearing towards the Harrowmere bridge* (960x540)
@@ -395,8 +393,8 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *World map: your pile (gold X) and discovered leveling spots (violet)* (960x540)
 
 ## 16. Sound and effects (step 23)
-- Sounds played during this run: analysis ×3, build ×3, chest ×1, defeat ×7, evolve ×1, form ×2, gather ×12, hit ×13, hurt ×3, learned ×2, level_up ×3, magicules ×3, swing ×12, ui_accept ×16, ui_move ×12
-- Effects shown: aura ×3, boost ×4, claw ×7, hit_spark ×54, ring ×7, slash ×13, smoke ×12, sparkle ×4
+- Sounds played during this run: analysis ×3, build ×3, chest ×1, defeat ×7, evolve ×1, form ×2, gather ×12, hit ×13, hurt ×3, item ×2, learned ×2, level_up ×2, magicules ×3, swing ×12, ui_accept ×16, ui_move ×13
+- Effects shown: aura ×3, boost ×3, claw ×6, hit_spark ×50, ring ×7, slash ×13, smoke ×12, sparkle ×6
 - [x] The run produced the "swing" cue
 - [x] The run produced the "hit" cue
 - [x] The run produced the "defeat" cue
@@ -888,18 +886,32 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *The furnishing window: buy a piece and place it where you stand; take pieces away for their price* (960x540)
 
 - [x] Left the house
+## 48. Playtest fixes: loot on the ground, sprint, the log, the map
+- [x] Loot popped out onto the ground
+
+![Loot pops out of creatures and chests and lies on the ground: walk over it or press F nearby; Shift sprints (the bar under you is your stamina)](164_loot_pop.png)
+*Loot pops out of creatures and chests and lies on the ground: walk over it or press F nearby; Shift sprints (the bar under you is your stamina)* (960x540)
+
+
+![The log box: − and + make it smaller or bigger; the mouse wheel scrolls back through the last 30 lines](165_log_tall.png)
+*The log box: − and + make it smaller or bigger; the mouse wheel scrolls back through the last 30 lines* (960x540)
+
+
+![The world map fits its frame; names never overlap (zoom in for more)](166_map_labels.png)
+*The world map fits its frame; names never overlap (zoom in for more)* (960x540)
+
 
 ## System messages seen
 
 - Achievement unlocked: First Blood!
-- +21 XP (defeat).
+- +42 XP (defeat).
 - +9 Zeni (defeat).
 - Threat neutralized. Specimen retained.
 - Recovered 6.0 Magicules.
 - Analyzing Forest Gnasher. Remain nearby.
 - Recovered 10.0 Magicules.
 - Absorbed vitality: +25 HP over 10s.
-- +11 XP (absorption).
+- +22 XP (absorption).
 - Analysis complete. Common: Rending Bite acquired. Activate it in the skill tree (K).
 - Skill activated: Rending Bite.
 - A nameless goblin has joined you.
@@ -912,33 +924,32 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - All nearby deposits gathered. Ally returning to follow.
 - Aster: build assigned.
 - Ally completed the Goblin Hut.
-- +21 XP (defeat).
+- +42 XP (defeat). Level 2 reached: +1 skill point.
 - +9 Zeni (defeat).
 - Threat neutralized. Specimen retained.
 - Recovered 12.0 Magicules.
 - Analyzing Forest Gnasher. Remain nearby.
 - Recovered 4.0 Magicules.
 - Absorbed vitality: +25 HP over 10s.
-- +11 XP (absorption).
+- +22 XP (absorption).
 - Analysis complete. Common: Rending Bite already known.
-- Materials added to shared camp stock.
-- Materials added to shared camp stock.
-- Materials added to shared camp stock.
+- Materials added to shared camp stock (+2 wood from your axe).
+- Materials added to shared camp stock (+2 stone from your pickaxe).
+- Materials added to shared camp stock (+2 stone from your pickaxe).
 - Gnasher Essence offered to the camp.
 - Gnasher Essence offered to the camp.
 - Storehouse built. Shared materials consumed.
 - Essence Shrine built. Shared materials consumed.
 - The Night the Sky Fell: Make camp before dark: reach the camp site in the clearing
-- +21 XP (defeat).
+- +42 XP (defeat).
 - +9 Zeni (defeat).
 - Threat neutralized. Specimen retained.
 - Recovered 12.0 Magicules.
 - Analyzing Thornback Gnasher. Remain nearby.
 - Recovered 4.0 Magicules.
 - Absorbed vitality: +25 HP over 10s.
-- +11 XP (absorption).
+- +22 XP (absorption).
 - Analysis complete. Common: Thorn Lash acquired. Activate it in the skill tree (K).
-- +4 XP (showcase assistance). Level 2 reached: +1 skill point.
 - Skill activated: Thorn Lash.
 - Fusion: Rending Bite + Thorn Lash → Piercing Fang (Extra).
 - Mimicry: Gnasher Form.
@@ -948,15 +959,16 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
-- +1500 XP (trial). Level 3 reached: +1 skill point.
-- Trial reward: Rare Traveler's Blade.
+- +3000 XP (trial). Level 4 reached: +2 skill points.
+- Trial reward: Rare Sanguine Gladius.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
-- +21 XP (defeat).
+- A Mysterious Egg! Use it from your bag to hatch a pet.
+- +42 XP (defeat).
 - +9 Zeni (defeat).
 - Threat neutralized. Specimen retained.
 - Recovered 16.0 Magicules.
-- +546 XP (showcase assistance). Level 4 reached: +1 skill point.
+- Picked up Common Warden's Helm.
 - Skill tree: Gel Vitality. +10 max HP
 - Equipped Rare Iron Helm.
 - Equipped Epic Scale Mail.
@@ -967,13 +979,14 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Rare Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Rare Sleet Blade.
-- +40 Zeni (chest).
+- Chest opened: Rare Blackened Charm.
+- +25 Zeni (chest).
+- Picked up Rare Blackened Charm.
 - World "Showcase World" loaded. Esc: pause menu — switch on Multiplayer to invite friends.
 - Multiplayer is on: Invite a Friend makes one code per friend.
 - Multiplayer is off: your world is single player again.
 
 The bot retreated 0 time(s) to let Magicules recover.
-XP assistance for skill points: 550 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
+XP assistance for skill points: 0 XP in total (creatures respawn after 60 s; the showcase does not wait to farm them).
 
-**Result: 0 failed checks, 163 screenshots.**
+**Result: 0 failed checks, 166 screenshots.**

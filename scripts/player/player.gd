@@ -23,7 +23,18 @@ var exhaustion_active: bool = false
 var exhaustion_left: float = 0.0
 var remote_direction := Vector2.ZERO
 var last_input_msec: int = 0
-var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "race": "Slime", "quests": {}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": [], "zeni": 0, "ship": {"owned": false, "at": ""}, "ferry_pass_until": 0.0, "tools": {"axe": 0, "pickaxe": 0, "rod": 0}, "mounts": [], "mount": "", "augments": [], "auras": [], "aura": "", "bonus_points": 0, "champion": false, "professions": {"woodcutting": 0, "mining": 0, "fishing": 0, "smithing": 0, "alchemy": 0, "cooking": 0, "enchanting": 0, "tailoring": 0}, "fish_log": {}}
+## SVE feedback: Shift sprints (SPRINT_FACTOR faster) while stamina lasts (SPRINT_SECONDS from full,
+## STAMINA_REFILL_SECONDS back to full). An emptied bar must refill to SPRINT_RESUME first. The
+## host decides the speed; the controlling peer runs the same meter for its bar under the feet.
+const SPRINT_FACTOR := 1.6
+const SPRINT_SECONDS := 5.0
+const STAMINA_REFILL_SECONDS := 4.0
+const SPRINT_RESUME := 0.25
+var stamina := 1.0
+var sprinting := false
+var remote_sprint := false
+var _winded := false
+var progression: Dictionary = {"level": 1, "experience": 0, "skill_points": 1, "race": "Slime", "quests": {}, "equipment": {}, "tree": {"nodes": [], "active": [], "free": []}, "chests": [], "zeni": 0, "ship": {"owned": false, "at": ""}, "ferry_pass_until": 0.0, "tools": starter_tools(), "mounts": [], "mount": "", "augments": [], "auras": [], "aura": "", "bonus_points": 0, "champion": false, "professions": {"woodcutting": 0, "mining": 0, "fishing": 0, "smithing": 0, "alchemy": 0, "cooking": 0, "enchanting": 0, "tailoring": 0}, "fish_log": {}}
 ## Current mimic form and the time until it can change again (host-owned, saved).
 ## Gear (17e): owned items and active cooldowns; equipped item IDs live in progression.equipment.
 var gear: Dictionary = {"items": [], "cooldowns": {}}
@@ -32,6 +43,15 @@ var gear: Dictionary = {"items": [], "cooldowns": {}}
 ## level) and drops the bag (materials and unequipped gear) as a pile. Host only, not saved.
 const RESPAWN_DELAY := 5.0
 const DEATH_XP_SHARE := 0.1
+const EARLY_XP_LEVEL := 5
+## SVE feedback: new characters carry a basic axe, pickaxe and rod, and earn double XP up to
+## EARLY_XP_LEVEL. Older suites that count exact XP or gathered amounts switch these off.
+static var starter_kit := true
+static var early_double_xp := true
+
+static func starter_tools() -> Dictionary:
+    var tier: int = 1 if starter_kit else 0
+    return {"axe": tier, "pickaxe": tier, "rod": tier}
 const TRADE := preload("res://scripts/trade/trade_catalogue.gd")
 const TRAVEL := preload("res://scripts/travel/travel_catalogue.gd")
 const UPGRADES := preload("res://scripts/items/upgrade_catalogue.gd")
@@ -482,6 +502,9 @@ func gain_experience(amount: int, reason: String) -> void:
         return
     if DEV.xp and DEV.applies(self):
         amount *= DEV.XP_FACTOR
+    # Early levels go twice as fast; from level 6 on it is the usual climb.
+    if early_double_xp and int(progression.get("level", 1)) <= EARLY_XP_LEVEL:
+        amount *= 2
     # M11e: Scholar's Soup and the Moonlit Feast ("wisdom").
     if elixirs.has("wisdom"):
         amount = int(round(amount * (1.0 + elixir("wisdom") / 100.0)))
@@ -513,18 +536,53 @@ func _physics_process(_delta: float) -> void:
         direction = remote_direction
     if is_exhausted():
         direction = Vector2.ZERO
+    var wants_sprint := false
+    if local_controlled and not input_blocked:
+        wants_sprint = Input.is_action_pressed("sprint")
+    elif network_controlled and not input_blocked:
+        wants_sprint = remote_sprint
+    if local_controlled or not session.replica_world:
+        _run_stamina(_delta, wants_sprint and not direction.is_zero_approx() and $Health.current > 0)
     if session.replica_world:
         if local_controlled:
-            session.send_move(direction)
+            session.send_move(direction, wants_sprint)
         return
     if $Health.current <= 0 or is_exhausted():
         velocity = Vector2.ZERO
         return
-    velocity = direction * current_speed()
+    velocity = direction * current_speed() * (SPRINT_FACTOR if sprinting else 1.0)
     if not direction.is_zero_approx():
         facing = direction
     move_and_slide()
     queue_redraw()
+
+## Sprint stamina: drains while sprinting, refills otherwise (see SPRINT_SECONDS).
+func _run_stamina(delta: float, wants: bool) -> void:
+    var before := stamina
+    if _winded and stamina >= SPRINT_RESUME:
+        _winded = false
+    sprinting = wants and not _winded and stamina > 0.0
+    if sprinting:
+        stamina = maxf(0.0, stamina - delta / SPRINT_SECONDS)
+        if stamina <= 0.001:
+            stamina = 0.0
+            _winded = true
+            sprinting = false
+    else:
+        stamina = minf(1.0, stamina + delta / STAMINA_REFILL_SECONDS)
+        if stamina >= 0.999:
+            stamina = 1.0
+    if local_controlled and (stamina < 1.0 or before < 1.0):
+        queue_redraw()
+
+## The stamina bar under the feet while it is not full (only the controlling player sees it).
+func _draw_stamina() -> void:
+    if not local_controlled or stamina >= 1.0:
+        return
+    var rect := Rect2(-10, 9, 20, 3)
+    draw_rect(rect.grow(1.0), Color(0.08, 0.06, 0.1, 0.8))
+    var fill := Color("e8c25a") if not _winded else Color("c0563e")
+    draw_rect(Rect2(rect.position, Vector2(rect.size.x * stamina, rect.size.y)), fill)
 
 ## --- Chopping and mining (user request)
 const CHOP := preload("res://scripts/visual/chopping.gd")
@@ -1464,6 +1522,7 @@ func _draw() -> void:
         CHOP.draw_tool(self, CHOP.tool_for(gather_resource), gather_phase(), facing)
     if has_node("Health") and $Health.current > 0 and not exhaustion_active and form == FORMS.BASE:
         _draw_gear()
+    _draw_stamina()
 
 ## The weapon in hand (user feedback: the old coloured lines looked odd): the item's own icon,
 ## held at the side the character faces (behind the body when facing away).

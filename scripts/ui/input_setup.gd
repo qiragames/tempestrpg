@@ -8,7 +8,7 @@ extends RefCounted
 
 ## Rebindable actions in the Keys list: [action, label].
 const REBINDABLE := [
-    ["move_up", "Move up"], ["move_down", "Move down"], ["move_left", "Move left"], ["move_right", "Move right"],
+    ["move_up", "Move up"], ["move_down", "Move down"], ["move_left", "Move left"], ["move_right", "Move right"], ["sprint", "Sprint"],
     ["attack", "Strike"], ["absorb", "Absorb"], ["interact", "Interact / talk"], ["transform", "Mimic form"],
     ["skill_1", "Skill 1"], ["skill_2", "Skill 2"], ["skill_3", "Skill 3"], ["skill_4", "Skill 4"],
     ["skill_5", "Skill 5"], ["skill_6", "Skill 6"], ["skill_7", "Skill 7"], ["skill_8", "Skill 8"],

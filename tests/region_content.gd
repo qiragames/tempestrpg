@@ -54,6 +54,9 @@ func _document(world: Node2D, actor: Node2D) -> Dictionary:
     return data
 
 func _run() -> void:
+    # Exact XP and gathered amounts: no double early XP, no starter tools (see tests/sve_fixes.gd).
+    preload("res://scripts/player/player.gd").starter_kit = false
+    preload("res://scripts/player/player.gd").early_double_xp = false
     # --- Placement
     var reach := _reachable(MAP.to_tile(LAYOUT.SPAWN))
     var expected_region := {"thornwood": MAP.Region.THORNWOOD, "crater": MAP.Region.CINDER_CRATER, "lakeshore": -1, "meadow": MAP.Region.VERDANT, "beach": MAP.Region.VERDANT, "keep": MAP.Region.MIRROR_LAKE, "harrowmere": MAP.Region.HARROWMERE,
@@ -124,7 +127,9 @@ func _run() -> void:
     actor.position = REGION.at(REGION.CHESTS[1][1])
     world.loot_rng.seed = 5
     _check(world.nearest_chest(actor) == "chest_keep" and world.open_chest(actor, "chest_keep"), "The keep's chest opens on the islet")
-    var keep_item: Dictionary = actor.gear.items.back()
+    # The item pops out beside the chest (SVE feedback), claimed by the opener.
+    var popped: Array = get_nodes_in_group("gear_pickups").filter(func(node): return node.owner_id == actor.character_id)
+    var keep_item: Dictionary = popped.back().item if not popped.is_empty() else {"rarity": -1}
     _check(int(keep_item.rarity) >= 2 and "chest_keep" in actor.progression.chests, "The keep's chest gives Rare or better (trial odds) and is remembered")
     var rich_ok := true
     for seed in range(40):

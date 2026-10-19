@@ -44,6 +44,9 @@ func _friend(id: String) -> CharacterBody2D:
     return other
 
 func _run() -> void:
+    # Exact XP and gathered amounts: no double early XP, no starter tools (see tests/sve_fixes.gd).
+    preload("res://scripts/player/player.gd").starter_kit = false
+    preload("res://scripts/player/player.gd").early_double_xp = false
     session = root.get_node("GameSession")
     # --- Harbours (static)
     var harbours_ok := MAP.HARBOURS.size() == 12
@@ -229,7 +232,7 @@ func _run() -> void:
     legacy.players.host.health.maximum = 120
     legacy.players.host.health.current = mini(int(legacy.players.host.health.current), 120)
     var migrated: Variant = STORE.migrate(legacy)
-    _check(migrated is Dictionary and migrated.version == STORE.VERSION and migrated.players.host.progression.ship == {"owned": false, "at": ""} and migrated.players.host.progression.tools.rod == 0 and migrated.camp.tool_yield == {"wood": 0, "stone": 0} and migrated.harbours is Dictionary, "v23 worlds: no ship, pass, tools, mounts or augments yet; empty camp tool yield; harbours")
+    _check(migrated is Dictionary and migrated.version == STORE.VERSION and migrated.players.host.progression.ship == {"owned": false, "at": ""} and migrated.players.host.progression.tools.rod == 1 and migrated.camp.tool_yield == {"wood": 0, "stone": 0} and migrated.harbours is Dictionary, "v23 worlds: no ship, pass, mounts or augments yet, the basic tools (v42); empty camp tool yield; harbours")
     session.stop_session(false)
     world.queue_free()
     await _frames()

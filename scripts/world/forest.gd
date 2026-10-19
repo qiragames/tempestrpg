@@ -64,6 +64,8 @@ var loot_rng := RandomNumberGenerator.new()
 var chest_layer: Node2D
 const SOURCES := preload("res://scripts/items/gear_sources.gd")
 const GEAR_PICKUP := preload("res://scenes/pickups/gear_pickup.tscn")
+const GEAR_PICKUP_REACH := 48.0
+const CLAIM_RULES := preload("res://scripts/pickups/claim.gd")
 var local_player: CharacterBody2D
 var progression: Dictionary = {"quests": {}, "settlements": {}, "world_time": 0.0}
 ## The current seed's layout. Seed 0 (the reference map) until a hosted world applies its own.
@@ -71,6 +73,8 @@ var layout: Dictionary = LAYOUT.generate(0)
 var _decorations: Node2D
 
 func _ready() -> void:
+    # Loot created in the first moments was loaded with the world: it lies still instead of popping.
+    set_meta("born_msec", Time.get_ticks_msec())
     # Depth (step 20): characters, creatures, props and buildings are drawn in order of their feet,
     # so a character behind a tree or hut is hidden by it. Ground art is this node's own drawing.
     y_sort_enabled = true
@@ -242,6 +246,41 @@ func drop_gear(item: Dictionary, at: Vector2, id: String = "", owner_id: String 
     add_child(pickup)
     return pickup
 
+## Host, SVE feedback: loot pops out of a creature or chest at `from` and lands a short hop away
+## (on open ground in sight of `from`, so it can always be picked up).
+func pop_gear(item: Dictionary, from: Vector2, owner_id: String = "", claim_until: float = -1.0) -> Node2D:
+    var landing := from + Vector2(0, 14)
+    var start: float = loot_rng.randf() * TAU
+    for attempt in range(8):
+        var spot := from + Vector2.from_angle(start + attempt * TAU / 8.0) * loot_rng.randf_range(16.0, 24.0)
+        var ray := PhysicsRayQueryParameters2D.create(from, spot, 1)
+        if get_world_2d().direct_space_state.intersect_ray(ray).is_empty():
+            landing = spot
+            break
+    var pickup: Node2D = drop_gear(item, landing, "", owner_id, claim_until)
+    if pickup != null:
+        pickup.pop_from = from - landing
+    return pickup
+
+## Host: F picks up the nearest loot within reach (walking over it takes it as well).
+func nearest_loot(actor: Node2D) -> String:
+    var best := ""
+    var distance: float = GEAR_PICKUP_REACH + 0.1
+    for node in get_tree().get_nodes_in_group("gear_pickups"):
+        var gap: float = actor.global_position.distance_to(node.global_position)
+        if gap < distance and CLAIM_RULES.can_take(self, node.owner_id, node.claim_until, actor.character_id):
+            best = node.entity_id
+            distance = gap
+    return best
+
+func take_loot(actor: Node2D, id: String) -> bool:
+    if multiplayer.has_multiplayer_peer() and not multiplayer.is_server():
+        return false
+    var lying: Node = entity_by_id(id)
+    if lying == null or not lying.is_in_group("gear_pickups") or actor.get_node("Health").current <= 0:
+        return false
+    return lying.try_give(actor, true)
+
 func nearest_chest(actor: Node2D) -> String:
     var opened: Array = actor.progression.get("chests", [])
     for chest in layout.get("chests", []):
@@ -255,12 +294,15 @@ func open_chest(actor: Node2D, id: String) -> bool:
         return false
     if session.replica_world or actor.get_node("Health").current <= 0 or nearest_chest(actor) != id:
         return false
-    if actor.gear.items.size() >= actor.GEAR.MAX_ITEMS:
-        session.notify_character(actor.character_id, "Gear bag full. Make room before opening the chest.")
-        return false
     # The keep's and the crater's chests use the trial's better odds (Rare or Epic).
     var item: Dictionary = SOURCES.roll_trial(loot_rng) if REGION.is_rich_chest(id) else SOURCES.roll_chest(loot_rng)
-    actor.add_item(item)
+    # SVE feedback: the item pops out of the chest and lies beside it, this character's for a while.
+    var chest_at: Vector2 = actor.global_position
+    for chest in layout.get("chests", []):
+        if chest.id == id:
+            chest_at = chest.position
+    if pop_gear(item, chest_at, actor.character_id) == null:
+        actor.add_item(item)
     actor.progression["chests"] = actor.progression.get("chests", []) + [id]
     session.notify_character(actor.character_id, "Chest opened: %s." % actor.GEAR.display_name(item))
     # M4.5c: chests hold Zeni too.

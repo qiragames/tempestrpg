@@ -20,6 +20,9 @@ func _frames(count: int = 3) -> void:
         await process_frame
 
 func _run() -> void:
+    # Exact XP and gathered amounts: no double early XP, no starter tools (see tests/sve_fixes.gd).
+    preload("res://scripts/player/player.gd").starter_kit = false
+    preload("res://scripts/player/player.gd").early_double_xp = false
     var session: Node = root.get_node("GameSession")
     var dir := OS.get_temp_dir().path_join("tempestrpg-gather-" + Crypto.new().generate_random_bytes(6).hex_encode())
     DirAccess.make_dir_recursive_absolute(dir)

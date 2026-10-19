@@ -6,9 +6,12 @@ extends Control
 const MAP := preload("res://scripts/world/world_map.gd")
 const UI := preload("res://scripts/ui/ui_style.gd")
 const FRAME := Rect2(20, 12, 600, 336)
-const IMAGE_AT := Vector2(104, 44)
-## Screen pixels per tile (the whole 1200 x 768 grid fits the frame).
-const SCALE := 0.36
+const IMAGE_AT := Vector2(32, 42)
+## SVE feedback: the map stays inside the frame (it used to run past the right edge); the view is
+## fitted into this area.
+const CANVAS_SIZE := Vector2(576, 282)
+## Fitted scale for the normal view (kept for callers that size things by it).
+const SCALE := 0.3
 ## Map colours by terrain.
 const COLORS := {
     "ocean": Color("2f6fa8"), "shore": Color("6fc3dc"), "lake": Color("5fb8d8"), "lava": Color("e0642a"),
@@ -202,7 +205,7 @@ func _init(owner_hud: CanvasLayer) -> void:
     _close.pressed.connect(close)
     _canvas = Control.new()
     _canvas.position = IMAGE_AT
-    _canvas.size = Vector2(MAP.WORLD_VIEW.size) * SCALE
+    _canvas.size = CANVAS_SIZE
     _canvas.mouse_filter = Control.MOUSE_FILTER_STOP
     _canvas.clip_contents = true
     _canvas.draw.connect(_draw_map)
@@ -294,6 +297,43 @@ func _draw_props() -> void:
             if at.x > -20 and at.y > -20 and at.x < _canvas.size.x + 20 and at.y < _canvas.size.y + 20:
                 _canvas.draw_texture_rect_region(spec[0], Rect2(at - Vector2(region.size.x / 2.0, region.size.y * 0.75) * size, region.size * size), region)
 
+## SVE feedback: map labels in the crisp pixel fonts with a thin outline, each placed at the first
+## of its candidate spots that overlaps no label already drawn (else left out at this zoom).
+const LABEL_INK := Color(0.03, 0.04, 0.06)
+var _placed: Array = []
+var _reserved: Array = []
+
+## Candidate placements around a point: "centre", "below", "right", "left", "above".
+func _place_label(anchor: Vector2, text: String, color: Color, sides: Array, kind: String = "body", force: bool = false) -> bool:
+    var font: Font = UI.font(kind)
+    var size: int = UI.FONT_SIZES[kind]
+    var extent := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size)
+    var height: float = font.get_ascent(size) - 2.0
+    var bounds := Rect2(Vector2.ZERO, _canvas.size).grow(-2.0)
+    for side in sides:
+        var top_left: Vector2
+        match side:
+            "centre":
+                top_left = anchor - Vector2(extent.x / 2.0, height / 2.0)
+            "below":
+                top_left = anchor + Vector2(-extent.x / 2.0, 5)
+            "above":
+                top_left = anchor + Vector2(-extent.x / 2.0, -height - 6)
+            "right":
+                top_left = anchor + Vector2(6, -height / 2.0)
+            "left":
+                top_left = anchor + Vector2(-extent.x - 6, -height / 2.0)
+        top_left = top_left.round()
+        var rect := Rect2(top_left, Vector2(extent.x, height)).grow(1.0)
+        if not force and (not bounds.encloses(rect) or _placed.any(func(other): return other.intersects(rect)) or _reserved.any(func(other): return other.intersects(rect))):
+            continue
+        _placed.append(rect)
+        var baseline := top_left + Vector2(0, font.get_ascent(size) - 1.0)
+        _canvas.draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 2, LABEL_INK)
+        _canvas.draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
+        return true
+    return false
+
 func _shown(tile: Vector2) -> bool:
     return _zone_rect().has_point(Vector2i(tile.floor()))
 
@@ -304,35 +344,32 @@ func _draw_map() -> void:
     _canvas.draw_texture_rect(dungeon_texture(dungeon) if not dungeon.is_empty() else (realm_texture() if realm else world_texture()), Rect2(_offset, _view.size * _scale), false)
     _draw_props()
     _canvas.draw_rect(Rect2(Vector2(-1, -1), _canvas.size + Vector2(2, 2)), UI.GOLD_DARK, false, 1.0)
-    var font: Font = _canvas.get_theme_default_font()
+    _placed.clear()
+    # Labels keep clear of your arrow and the town squares.
+    _reserved = [Rect2(to_map(hud.player.global_position).round() - Vector2(8, 8), Vector2(16, 16))]
+    for town in MAP.TOWNS:
+        if _shown(town[3]):
+            _reserved.append(Rect2(tile_to_map(town[3]).round() - Vector2(3, 3), Vector2(6, 6)))
     if not dungeon.is_empty():
         var spec: Array = DUNGEONS.DUNGEONS[dungeon]
         var title := "%s · Lv %d–%d · %s in the deepest chamber" % [spec[0], spec[3][0], spec[3][1], spec[5]]
-        _canvas.draw_string_outline(font, Vector2(8, 14), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, 3, Color(0.03, 0.04, 0.06))
-        _canvas.draw_string(font, Vector2(8, 14), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("ffcf7a"))
+        _place_label(Vector2(8, 4), title, Color("ffcf7a"), ["right"], "body", true)
     elif realm:
-        for entry in REALM_LABELS:
-            var size := font.get_string_size(entry[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 9)
-            var at: Vector2 = tile_to_map(entry[1]) - Vector2(size.x / 2.0, 0)
-            _canvas.draw_string_outline(font, at.round(), entry[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 9, 3, Color(0.03, 0.04, 0.06))
-            _canvas.draw_string(font, at.round(), entry[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.TEXT)
         var realm_levels: String = "The Ki Realm · " + preload("res://scripts/world/region_content.gd").range_text("The Ki Realm")
-        _canvas.draw_string_outline(font, Vector2(8, 14), realm_levels, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, 3, Color(0.03, 0.04, 0.06))
-        _canvas.draw_string(font, Vector2(8, 14), realm_levels, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("ffcf7a"))
+        _place_label(Vector2(2, 8), realm_levels, Color("ffcf7a"), ["right"], "body", true)
+        for entry in REALM_LABELS:
+            _place_label(tile_to_map(entry[1]), entry[0], UI.TEXT, ["centre", "below", "above"], "body")
+    # Region names first (they matter most), each with its level range under it.
     for region in ([] if realm else LABELS.keys()):
         var name: String = MAP.REGION_NAMES[region]
-        var size := font.get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, 9)
-        var at: Vector2 = tile_to_map(LABELS[region]) - Vector2(size.x / 2.0, 0)
+        var at: Vector2 = tile_to_map(LABELS[region])
         var reachable: bool = region in MAP.REACHABLE or region == MAP.Region.SEA
-        _canvas.draw_string_outline(font, at.round(), name, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, 3, Color(0.03, 0.04, 0.06))
-        _canvas.draw_string(font, at.round(), name, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.TEXT if reachable else Color(UI.TEXT, 0.55))
+        if not _place_label(at, name, UI.TEXT if reachable else Color(UI.TEXT, 0.6), ["centre", "below", "above"], "body"):
+            continue
         # M7 (user request): what level the region is for.
         var levels: String = preload("res://scripts/world/region_content.gd").range_text(name)
         if not levels.is_empty():
-            var level_size := font.get_string_size(levels, HORIZONTAL_ALIGNMENT_LEFT, -1, 8)
-            var below: Vector2 = tile_to_map(LABELS[region]) + Vector2(-level_size.x / 2.0, 10)
-            _canvas.draw_string_outline(font, below.round(), levels, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.03, 0.04, 0.06))
-            _canvas.draw_string(font, below.round(), levels, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("ffcf7a"))
+            _place_label(at + Vector2(0, 2), levels, Color("ffcf7a"), ["below"])
     # Towns (larger, named) and villages; ferry piers.
     for town in MAP.TOWNS:
         if not _shown(town[3]):
@@ -342,16 +379,14 @@ func _draw_map() -> void:
         _canvas.draw_rect(Rect2(spot - Vector2(2, 2) if big else spot - Vector2(1, 1), Vector2(5, 5) if big else Vector2(3, 3)), Color(0.03, 0.04, 0.06))
         _canvas.draw_rect(Rect2(spot - Vector2(1, 1) if big else spot - Vector2(0.5, 0.5), Vector2(3, 3) if big else Vector2(2, 2)), UI.GOLD_LIGHT if big else UI.TEXT)
         if big:
-            _canvas.draw_string_outline(font, spot + Vector2(4, 9), town[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.03, 0.04, 0.06))
-            _canvas.draw_string(font, spot + Vector2(4, 9), town[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, UI.GOLD_LIGHT)
+            _place_label(spot, town[1], UI.GOLD_LIGHT, ["right", "left", "below", "above"])
     # M5d: the rival nations at their capitals.
     if not realm:
         for entry in preload("res://scripts/nation/rival_nations.gd").RIVALS:
             var capital := tile_to_map(MAP.town(entry[3])[3]).round()
             _canvas.draw_rect(Rect2(capital + Vector2(-8, -12), Vector2(1, 9)), Color("6b4a2b"))
             _canvas.draw_rect(Rect2(capital + Vector2(-7, -12), Vector2(6, 4)), entry[4])
-            _canvas.draw_string_outline(font, capital + Vector2(-8, -14), entry[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.03, 0.04, 0.06))
-            _canvas.draw_string(font, capital + Vector2(-8, -14), entry[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, entry[4].lightened(0.35))
+            _place_label(capital + Vector2(-4, -8), entry[1], entry[4].lightened(0.35), ["above", "left", "right"])
     # M5a: your nation's name and banner at the camp.
     var camp: Node2D = hud.get_parent().get("camp")
     if camp != null and camp.state.founded and not realm:
@@ -361,8 +396,7 @@ func _draw_map() -> void:
         _canvas.draw_rect(Rect2(at + Vector2(-1, -10), Vector2(1, 10)), Color("6b4a2b"))
         _canvas.draw_rect(Rect2(at + Vector2(0, -10), Vector2(7, 5)), color)
         var title: String = nation.name if not String(nation.name).is_empty() else camp.NATION.tier_name(int(nation.tier))
-        _canvas.draw_string_outline(font, at + Vector2(9, -4), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.03, 0.04, 0.06))
-        _canvas.draw_string(font, at + Vector2(9, -4), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, color.lightened(0.3))
+        _place_label(at + Vector2(3, -6), title, color.lightened(0.3), ["right", "above", "left"])
     for ferry in ([] if realm else MAP.HARBOURS):
         var pier := tile_to_map(ferry[2]).round()
         _canvas.draw_arc(pier, 2.5, 0, TAU, 10, Color(0.03, 0.04, 0.06), 2.0)
@@ -372,16 +406,14 @@ func _draw_map() -> void:
         if _shown(DUNGEONS.DUNGEONS[cave][2]):
             var mouth := tile_to_map(DUNGEONS.DUNGEONS[cave][2]).round()
             _canvas.draw_arc(mouth, 3.0, PI, TAU, 8, Color("c89a6a"), 2.0)
-            _canvas.draw_string_outline(font, mouth + Vector2(5, 3), DUNGEONS.DUNGEONS[cave][0], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.03, 0.04, 0.06))
-            _canvas.draw_string(font, mouth + Vector2(5, 3), DUNGEONS.DUNGEONS[cave][0], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("e8c89a"))
+            _place_label(mouth, DUNGEONS.DUNGEONS[cave][0], Color("e8c89a"), ["right", "left", "below", "above"])
     var bosses := preload("res://scripts/bosses/boss_catalogue.gd")
     for elite in hud.player.progression.get("elites", []):
         if bosses.ELITES.has(elite) and _shown(bosses.ELITES[elite][3]):
             var at_elite := tile_to_map(bosses.ELITES[elite][3]).round()
             _canvas.draw_arc(at_elite, 3.5, 0, TAU, 12, Color("ff5a5a"), 1.5)
             var label: String = "%s (Lv %d)" % [bosses.ELITES[elite][0], bosses.ELITES[elite][5]]
-            _canvas.draw_string_outline(font, at_elite + Vector2(5, 3), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.03, 0.04, 0.06))
-            _canvas.draw_string(font, at_elite + Vector2(5, 3), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("ffb0a0"))
+            _place_label(at_elite, label, Color("ffb0a0"), ["right", "left", "below", "above"])
     # Discovered leveling spots (violet rings, named) and your dropped item piles (gold) — 24a.
     var known: Array = hud.player.progression.get("spots", [])
     var region_content := preload("res://scripts/world/region_content.gd")
@@ -389,8 +421,7 @@ func _draw_map() -> void:
         if spot[0] in known and _shown(spot[2]):
             var at := to_map(region_content.at(spot[2])).round()
             _canvas.draw_arc(at, 3.0, 0, TAU, 12, Color("c48bff"), 1.5)
-            _canvas.draw_string_outline(font, at + Vector2(5, 3), region_content.SPOT_NAMES[spot[0]], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, Color(0.03, 0.04, 0.06))
-            _canvas.draw_string(font, at + Vector2(5, 3), region_content.SPOT_NAMES[spot[0]], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("e0c8ff"))
+            _place_label(at, region_content.SPOT_NAMES[spot[0]], Color("e0c8ff"), ["right", "left", "below", "above"])
     for node in hud.get_parent().get_children():
         if node.is_in_group("item_piles") and node.owner_id == hud.player.character_id and _shown(Vector2(MAP.to_tile(node.global_position))):
             var pile := to_map(node.global_position).round()

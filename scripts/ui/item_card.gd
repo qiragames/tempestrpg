@@ -11,7 +11,7 @@ const MAX_HEIGHT := 240.0
 const GOOD := Color("7ee08a")
 const BAD := Color("ef6b62")
 const STAT_NAMES := {"damage": "Weapon damage", "hp": "Max HP", "magicules": "Max Magicules", "regen": "Magicules/s", "speed": "Move speed", "strike": "Strike damage", "defense": "Damage taken"}
-const SLOT_TYPES := {"head": "Head", "body": "Body", "hands": "Hands", "feet": "Feet", "accessory": "Accessory"}
+const SLOT_TYPES := {"head": "Head", "body": "Body", "hands": "Hands", "feet": "Boots", "accessory": "Accessory"}
 
 var item: Dictionary = {}
 var _box: VBoxContainer

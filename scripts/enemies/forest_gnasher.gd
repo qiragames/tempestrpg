@@ -315,10 +315,10 @@ func _defeat() -> void:
         # character took part); everyone with a share gets the full XP (24a).
         _drop_magicules.call_deferred(ranked)
         # One gear roll (17g); its item goes to the top damage dealer.
-        if world != null and world.has_method("drop_gear"):
+        if world != null and world.has_method("pop_gear"):
             var item: Dictionary = world.SOURCES.roll_drop(difficulty, world.loot_rng, level)
             if not item.is_empty():
-                world.drop_gear.call_deferred(item, position + Vector2(10, 6), "", ranked[0][0] if not ranked.is_empty() else "")
+                world.pop_gear.call_deferred(item, position, ranked[0][0] if not ranked.is_empty() else "")
         var rewarded := false
         # Zeni (M4.5c) is split by damage share like the Magicules; XP is full for everyone.
         var coins: int = TRADE.zeni_for(level, difficulty)

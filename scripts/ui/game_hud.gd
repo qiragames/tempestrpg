@@ -403,17 +403,49 @@ func _build_hotbar() -> void:
         badge.add_theme_stylebox_override("normal", badge_box)
         badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
         add_child(badge)
-    _backdrop(Rect2(4, 266, 166, 72))
+    _log_back = _backdrop(Rect2(4, 266, 166, 72))
+    _log_back.name = "LogBox"
     _log = RichTextLabel.new()
+    _log.name = "Log"
     _log.bbcode_enabled = true
     _log.position = Vector2(9, 270)
     _log.size = Vector2(158, 66)
     _log.add_theme_font_size_override("normal_font_size", 9)
-    # Newest lines stay visible; no scrollbar over the play area.
+    # Newest lines stay visible; SVE feedback: the mouse wheel scrolls back through the last
+    # LOG_HISTORY lines (a thin bar on the right shows where you are).
     _log.scroll_following = true
-    _log.scroll_active = false
-    _log.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    _log.scroll_active = true
+    _log.mouse_filter = Control.MOUSE_FILTER_STOP
+    var bar: VScrollBar = _log.get_v_scroll_bar()
+    bar.custom_minimum_size.x = 3
+    for part in ["scroll", "scroll_focus"]:
+        var track := StyleBoxFlat.new()
+        track.bg_color = Color(0, 0, 0, 0.25)
+        bar.add_theme_stylebox_override(part, track)
+    for part in ["grabber", "grabber_highlight", "grabber_pressed"]:
+        var grip := StyleBoxFlat.new()
+        grip.bg_color = Color(UI.GOLD_LIGHT, 0.7 if part == "grabber" else 0.95)
+        bar.add_theme_stylebox_override(part, grip)
     add_child(_log)
+    # SVE feedback: - shrinks the log to its title bar, + grows it (normal, then tall).
+    _log_title = _label("LOG", Vector2(9, 0), Vector2(40, 12), self, 7)
+    _log_title.add_theme_color_override("font_color", UI.TEXT_DIM)
+    _log_less = _button("-", Vector2(0, 0), Vector2(12, 11), self)
+    _log_less.name = "LogLess"
+    _log_less.tooltip_text = "Smaller log"
+    _log_less.pressed.connect(func(): set_log_mode(log_mode - 1))
+    _log_more = _button("+", Vector2(0, 0), Vector2(12, 11), self)
+    _log_more.name = "LogMore"
+    _log_more.tooltip_text = "Bigger log"
+    _log_more.pressed.connect(func(): set_log_mode(log_mode + 1))
+    for small in [_log_less, _log_more]:
+        small.focus_mode = Control.FOCUS_NONE
+        small.add_theme_font_size_override("font_size", 8)
+        for state in ["normal", "hover", "pressed", "disabled"]:
+            var plate: StyleBox = UI.button_box(state).duplicate()
+            plate.set_content_margin_all(0)
+            small.add_theme_stylebox_override(state, plate)
+    set_log_mode(LOG_NORMAL)
 
 func _activate_slot(index: int) -> void:
     if get_tree().paused or player.input_blocked or (session.replica_world and not session.active):
@@ -745,9 +777,42 @@ func _process(_delta: float) -> void:
 func record_event(message: String, colour: String = "") -> void:
     var line := message.replace("[", "[lb]")
     _events.append("[color=#%s]%s[/color]" % [colour, line] if not colour.is_empty() else line)
-    if _events.size() > 5:
+    if _events.size() > LOG_HISTORY:
         _events.pop_front()
     _log.text = "\n".join(_events)
+
+## SVE feedback: the log box's size - LOG_MINI (title bar only), LOG_NORMAL, LOG_TALL.
+const LOG_MINI := 0
+const LOG_NORMAL := 1
+const LOG_TALL := 2
+## Lines kept for scrolling back.
+const LOG_HISTORY := 30
+## Box top edge (the bottom stays at 338) per mode.
+const LOG_TOPS := [324, 256, 140]
+var log_mode := LOG_NORMAL
+var _log_back: Panel
+var _log_title: Label
+var _log_less: Button
+var _log_more: Button
+
+func set_log_mode(mode: int) -> void:
+    log_mode = clampi(mode, LOG_MINI, LOG_TALL)
+    var top: float = LOG_TOPS[log_mode]
+    _log_back.position = Vector2(4, top)
+    _log_back.size = Vector2(166, 338 - top)
+    _log.visible = log_mode != LOG_MINI
+    _log.position = Vector2(9, top + 13)
+    _log.size = Vector2(156, 338 - top - 15)
+    _log_title.visible = log_mode == LOG_MINI
+    _log_title.position = Vector2(9, top + 1)
+    _log_less.position = Vector2(140, top + 2)
+    _log_more.position = Vector2(154, top + 2)
+    _log_less.disabled = log_mode == LOG_MINI
+    _log_more.disabled = log_mode == LOG_TALL
+    if is_instance_valid(_chat_input):
+        _chat_input.position = Vector2(4, top - 16)
+    # Keep the newest line in view after resizing.
+    _log.scroll_to_line(maxi(0, _log.get_line_count() - 1))
 
 ## --- M14a: chat. Enter opens a line; /g writes to your guild, /p to your party.
 const CHAT_COLOURS := {"world": "ffe9c4", "guild": "8fe3a0", "party": "ff8adf"}
@@ -763,7 +828,7 @@ func open_chat() -> void:
     if not is_instance_valid(_chat_input):
         _chat_input = LineEdit.new()
         _chat_input.name = "ChatInput"
-        _chat_input.position = Vector2(4, 250)
+        _chat_input.position = Vector2(4, LOG_TOPS[log_mode] - 16)
         _chat_input.size = Vector2(166, 14)
         _chat_input.max_length = 120
         _chat_input.placeholder_text = "Say... (/g guild, /p party)"

@@ -72,6 +72,9 @@ func _reachable(start: Vector2i) -> PackedByteArray:
     return seen
 
 func _run() -> void:
+    # Exact XP and gathered amounts: no double early XP, no starter tools (see tests/sve_fixes.gd).
+    preload("res://scripts/player/player.gd").starter_kit = false
+    preload("res://scripts/player/player.gd").early_double_xp = false
     session = root.get_node("GameSession")
     # --- Leveling spots: placement and respawn speed
     var reach := _reachable(MAP.to_tile(LAYOUT.SPAWN))
@@ -164,6 +167,9 @@ func _run() -> void:
     rng.seed = 4
     var worn: Dictionary = preload("res://scripts/items/gear_sources.gd").roll_chest(rng)
     var spare: Dictionary = preload("res://scripts/items/gear_sources.gd").roll_chest(rng)
+    # Loot popped out earlier may have landed under the character: start from an empty gear bag.
+    actor.gear.items = []
+    actor.progression.equipment = {}
     actor.add_item(worn)
     actor.add_item(spare)
     var kind: String = preload("res://scripts/items/gear_catalogue.gd").BASES[worn.base].slot

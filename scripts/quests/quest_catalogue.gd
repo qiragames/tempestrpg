@@ -64,7 +64,7 @@ const QUESTS := {
     "main_0": {"title": "The Night the Sky Fell", "kind": "main", "giver": "lumi", "level": 1, "requires": [],
         "intro": [["Lumi", "You're awake! Easy now — the sea threw you onto this shore. I'm Lumi. I fell from the sky too, long ago... and lately something keeps calling me. Something broken."]],
         "steps": [
-            {"type": "kill", "kind": "", "region": "The First Clearing", "count": 3, "text": "Defend yourself: defeat 3 creatures in the First Clearing", "say": [["Lumi", "Not bad for someone who can't remember their own name!"]]},
+            {"type": "kill", "kind": "", "region": "", "count": 3, "text": "Defend yourself: defeat 3 creatures around the clearing", "say": [["Lumi", "Not bad for someone who can't remember their own name!"]]},
             {"type": "camp", "text": "Make camp before dark: reach the camp site in the clearing", "say": [["Lumi", "A fire, a roof... it's a start. Now — do you feel how fast the light is fading?"]]},
             {"type": "night", "text": "Live through your first night (from dusk until dawn)", "say": [["Lumi", "So dark... The nights weren't always like this. Not before the moon broke. The call comes from the west — from a town with a tower full of glass."]]},
             {"type": "talk", "npc": "orrin", "text": "Follow Lumi's pull to Brookhaven and find the astronomer Orrin", "say": [["Orrin the Astronomer", "A star-sprite! By the old charts... then the stories are true. Come in, come in — and mind the broken lens."]]},

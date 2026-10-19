@@ -17,6 +17,9 @@ func _report(data: Dictionary) -> void:
     file.store_string(JSON.stringify(data))
     file.close()
 func _run() -> void:
+    # Exact XP and gathered amounts: no double early XP, no starter tools (see tests/sve_fixes.gd).
+    preload("res://scripts/player/player.gd").starter_kit = false
+    preload("res://scripts/player/player.gd").early_double_xp = false
     session = root.get_node("GameSession")
     world = load("res://scenes/world/forest.tscn").instantiate()
     root.add_child(world)

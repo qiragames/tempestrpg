@@ -124,6 +124,12 @@ func open_nearest() -> void:
         if not person.is_empty():
             _talk_realm(person)
             return
+    # SVE feedback: F picks up loot lying a short way off.
+    if hud.get_parent().has_method("nearest_loot"):
+        var loot: String = hud.get_parent().nearest_loot(hud.player)
+        if not loot.is_empty():
+            session.request_action("loot", {"id": loot})
+            return
     # User request: F at a tree or rock chops or mines it.
     var camp_node_f = hud.get_parent().get("camp")
     if camp_node_f != null:

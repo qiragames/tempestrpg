@@ -33,6 +33,9 @@ func _progress(level: int, experience: int, points: int) -> Dictionary:
     return {"level": level, "experience": experience, "skill_points": points, "race": "Slime", "quests": {}, "equipment": {}}
 
 func _run() -> void:
+    # Exact XP and gathered amounts: no double early XP, no starter tools (see tests/sve_fixes.gd).
+    preload("res://scripts/player/player.gd").starter_kit = false
+    preload("res://scripts/player/player.gd").early_double_xp = false
     # --- Curve and validation
     # 24b curve: 100 * (level - 1)^2.8 -> 100, 696, 2167, 4850, ... (tuned by tests/balance_probe.gd)
     _check(LEVELING.xp_for_level(1) == 0 and LEVELING.xp_for_level(2) == 100 and LEVELING.xp_for_level(3) == 696 and LEVELING.xp_for_level(4) == 2167 and LEVELING.xp_for_level(5) == 4850, "Level curve (24b): 100, 696, 2167, 4850, ...")
