@@ -171,6 +171,7 @@ Requested by the user after 17e; exact order and scope to be confirmed with the 
 
 ### Tool crafting (user request 2026-10-19) · Done
 
+- **Release v1.3.0: Done (Claude, 2026-10-19)** from `claude/release-v1.3`: the playtest fixes (loot on the ground, sprint, log box, map, starter tools, double XP to level 5) and tool crafting.
 - **Tool crafting: Done (Claude, 2026-10-19)** on `claude/tool-crafting`. **Tool crafting (user request):** axes, pickaxes and fishing rods now have **seven tiers** — Basic, Bronze, Iron, Silver, Gold, Mithril, Adamantite (rods: Basic, Birch, Pine, Maple, Cherrywood, Ironwood, Jadewood). Town merchants sell the first two; every higher tier is crafted at the camp's Forge or in a town, one after the other, with the tool's own profession level (Woodcutting for axes, Mining for pickaxes, Fishing for rods: 5 / 10 / 18 / 25 / 32 / 40) and that level's materials (axes: logs + bars, pickaxes: ores + a log handle, rods: logs + fish). Crafting always succeeds and gives profession XP. Each tier needs fewer swings, gathers more, works faster and makes rare fish likelier and the reel zone wider; nothing is locked behind a tool (user choice). The Woodcutting, Mining and Fishing tabs show your tool, the next one with its ingredients and a Craft button, and the tiers after it. Save v43 turns the old Fine and Master tools into Iron and Gold, which work exactly as before. Tests: `tests/tool_crafting.gd` (25).
 
 ### M11 — More to do in the world (user batch 2026-10-16) · In progress, requires M9
@@ -276,6 +277,7 @@ Updates happen during our project work, not through an unattended background pro
 
 ## Progress log
 
+- 2026-10-19: Claude Code published release v1.3.0 (version 1.3.0 in project.godot and the exe; HOW TO PLAY covers tools, sprint and loot).
 - 2026-10-19: Claude Code added tool crafting on `claude/tool-crafting`: `TravelCatalogue` (seven tiers, `TOOL_POWER`, `tool_name`, `SHOP_TIERS`), `CraftingCatalogue.TOOL_RECIPES`, `Player.craft_tool` (through the `craft` intent with `tool:<tool>:<tier>`), the tool rows in `ProfessionsPanel`, tier power in `work_seconds`, node chance and fishing, save v43.
 - 2026-10-19: Claude Code fixed the user's playtest findings on `claude/sve-fixes`: `Forest.pop_gear`/`nearest_loot`/`take_loot` and the `loot` intent, `GearPickup.try_give` and its pop animation, sprint (`Player._run_stamina`, `sprint` action, `_move_input(direction, sprint)`), the log box modes, map label placement (`WorldMapPanel._place_label`), two-column equipment stats, starter tools and save v42, double XP to level 5, `house_a`/boulder props (world cache rebuilt).
 - 2026-10-19: Claude Code published release v1.2.0 (version 1.2.0 in project.godot and the exe; HOW TO PLAY covers guilds, chat, duels, the arena and houses).
