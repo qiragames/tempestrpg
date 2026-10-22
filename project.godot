@@ -173,7 +173,12 @@ absorb={
 
 attack={
 "deadzone": 0.2,
-"events": [Object(InputEventKey,"physical_keycode":32), Object(InputEventKey,"physical_keycode":74)]
+"events": [Object(InputEventKey,"physical_keycode":32), Object(InputEventKey,"physical_keycode":74), Object(InputEventMouseButton,"button_index":1)]
+}
+
+dash={
+"deadzone": 0.2,
+"events": [Object(InputEventMouseButton,"button_index":2)]
 }
 
 move_left={

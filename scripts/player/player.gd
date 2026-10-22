@@ -24,6 +24,18 @@ var exhaustion_left: float = 0.0
 var remote_direction := Vector2.ZERO
 ## A guest's own character moves at once on its screen (see StateCodec.apply_player).
 var predicting := false
+## User request: face the mouse. A guest's aim (host side) and when the mouse was last used here.
+var remote_aim := Vector2.ZERO
+var _mouse_msec := -100000
+const MOUSE_AIM_MS := 4000
+## Dash (right click): DASH_DISTANCE in DASH_TIME for a third of the stamina, briefly untouchable.
+const DASH_DISTANCE := 48.0
+const DASH_TIME := 0.16
+const DASH_COST := 1.0 / 3.0
+const DASH_COOLDOWN := 0.5
+var _dash_left := 0.0
+var _dash_dir := Vector2.ZERO
+var _dash_ready_msec := 0
 var last_input_msec: int = 0
 ## SVE feedback: Shift sprints (SPRINT_FACTOR faster) while stamina lasts (SPRINT_SECONDS from full,
 ## STAMINA_REFILL_SECONDS back to full). An emptied bar must refill to SPRINT_RESUME first. The
@@ -541,6 +553,7 @@ func _physics_process(_delta: float) -> void:
         direction = remote_direction
     if is_exhausted():
         direction = Vector2.ZERO
+    var aim := aim_direction()
     var wants_sprint := false
     if local_controlled and not input_blocked:
         wants_sprint = Input.is_action_pressed("sprint")
@@ -550,15 +563,16 @@ func _physics_process(_delta: float) -> void:
         _run_stamina(_delta, wants_sprint and not direction.is_zero_approx() and $Health.current > 0)
     if session.replica_world:
         if local_controlled:
-            session.send_move(direction, wants_sprint)
+            session.send_move(direction, wants_sprint, aim)
             # Prediction: move now like the host will (it stays the authority, see apply_player).
             predicting = true
             if $Health.current <= 0 or is_exhausted() or input_blocked:
                 velocity = Vector2.ZERO
+            elif _dash_left > 0.0:
+                _dash_step(_delta)
             else:
                 velocity = direction * current_speed() * (SPRINT_FACTOR if sprinting else 1.0)
-                if not direction.is_zero_approx():
-                    facing = direction
+                _face(direction, aim)
                 move_and_slide()
         return
     # Character screen: time played (host-side, while the character is in a world).
@@ -567,11 +581,53 @@ func _physics_process(_delta: float) -> void:
     if $Health.current <= 0 or is_exhausted():
         velocity = Vector2.ZERO
         return
+    if _dash_left > 0.0:
+        _dash_step(_delta)
+        queue_redraw()
+        return
     velocity = direction * current_speed() * (SPRINT_FACTOR if sprinting else 1.0)
-    if not direction.is_zero_approx():
-        facing = direction
+    _face(direction, aim if local_controlled else remote_aim)
     move_and_slide()
     queue_redraw()
+
+## Where the mouse points from this character (zero when the mouse has not been used lately, e.g.
+## with a gamepad, or for characters played elsewhere).
+func aim_direction() -> Vector2:
+    if not local_controlled or Time.get_ticks_msec() - _mouse_msec > MOUSE_AIM_MS or not is_inside_tree():
+        return Vector2.ZERO
+    var offset := get_global_mouse_position() - global_position
+    return offset.normalized() if offset.length() > 4.0 else Vector2.ZERO
+
+func _face(direction: Vector2, aim: Vector2) -> void:
+    if aim != Vector2.ZERO:
+        facing = aim
+    elif not direction.is_zero_approx():
+        facing = direction
+
+## Host (and a guest's own prediction): start a dash; false when not ready or too tired.
+func dash(direction: Vector2) -> bool:
+    if direction.length() < 0.1 or $Health.current <= 0 or is_exhausted() or _dash_left > 0.0 or Time.get_ticks_msec() < _dash_ready_msec:
+        return false
+    if stamina < DASH_COST - 0.001:
+        if AUTHORITY.can_mutate(self):
+            session.notify_character(character_id, "Too tired to dash.")
+        return false
+    stamina = maxf(0.0, stamina - DASH_COST)
+    _dash_dir = direction.normalized()
+    _dash_left = DASH_TIME
+    _dash_ready_msec = Time.get_ticks_msec() + int(DASH_COOLDOWN * 1000.0)
+    facing = _dash_dir
+    if AUTHORITY.can_mutate(self):
+        $Health.immunity_left = maxf($Health.immunity_left, DASH_TIME + 0.12)
+    dismount()
+    queue_redraw()
+    return true
+
+func _dash_step(delta: float) -> void:
+    var step := minf(delta, _dash_left)
+    _dash_left -= delta
+    velocity = _dash_dir * (DASH_DISTANCE / DASH_TIME) * (step / maxf(delta, 0.0001))
+    move_and_slide()
 
 ## User report: health comes back by itself out of combat — after CALM_SECONDS without being
 ## hit or striking, REST_REGEN of the maximum per second (at least 1 HP a second). Host only.
@@ -1605,8 +1661,26 @@ func _process(delta: float) -> void:
         session.queue_save()
         queue_redraw()
 
+func _input(event: InputEvent) -> void:
+    if local_controlled and (event is InputEventMouseMotion or event is InputEventMouseButton):
+        _mouse_msec = Time.get_ticks_msec()
+
+## The aim to send with a strike, skill or dash ({} without a mouse aim).
+func _aim_payload() -> Dictionary:
+    var aim := aim_direction()
+    return {"aim": [aim.x, aim.y]} if aim != Vector2.ZERO else {}
+
 func _unhandled_input(event: InputEvent) -> void:
     if not local_controlled or input_blocked:
+        return
+    if event.is_action_pressed("dash") and not event.is_echo():
+        var moving := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+        var toward: Vector2 = moving if not moving.is_zero_approx() else (aim_direction() if aim_direction() != Vector2.ZERO else facing)
+        if session.active:
+            if dash(toward):
+                session.request_action("dash", {"aim": [toward.x, toward.y]})
+        else:
+            dash(toward)
         return
     if event.is_action_pressed("transform") and not event.is_echo():
         var target := next_form()
@@ -1640,8 +1714,13 @@ func _unhandled_input(event: InputEvent) -> void:
             session.request_action("respawn")
         for action in ["attack", "absorb", "skill_1", "skill_2", "skill_3", "skill_4", "skill_5", "skill_6", "skill_7", "skill_8"]:
             if event.is_action_pressed(action) and not event.is_echo():
-                session.request_action(action)
+                var payload: Dictionary = _aim_payload() if action != "absorb" else {}
+                if payload.has("aim"):
+                    facing = aim_direction()
+                session.request_action(action, payload)
         return
+    if aim_direction() != Vector2.ZERO and (event.is_action_pressed("attack") or event.is_action_pressed("skill_1") or event.is_action_pressed("skill_2") or event.is_action_pressed("skill_3") or event.is_action_pressed("skill_4") or event.is_action_pressed("skill_5") or event.is_action_pressed("skill_6") or event.is_action_pressed("skill_7") or event.is_action_pressed("skill_8")):
+        facing = aim_direction()
     if event.is_action_pressed("attack") and not event.is_echo():
         $MeleeAttack.attack(facing)
     elif event.is_action_pressed("absorb") and not event.is_echo():

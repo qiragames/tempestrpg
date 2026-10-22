@@ -764,12 +764,12 @@ func _accepted(character: String, credential: String) -> void:
     world.bind_local_player(actor)
     character_assigned.emit(character)
 
-func send_move(direction: Vector2, sprint: bool = false) -> void:
+func send_move(direction: Vector2, sprint: bool = false, aim: Vector2 = Vector2.ZERO) -> void:
     if active and not multiplayer.is_server() and not local_character_id.is_empty():
-        _move_input.rpc_id(1, direction, sprint)
+        _move_input.rpc_id(1, direction, sprint, aim)
 
 @rpc("any_peer", "call_remote", "unreliable_ordered", 1)
-func _move_input(direction: Vector2, sprint: bool = false) -> void:
+func _move_input(direction: Vector2, sprint: bool = false, aim: Vector2 = Vector2.ZERO) -> void:
     if not multiplayer.is_server():
         return
     var peer := multiplayer.get_remote_sender_id()
@@ -780,6 +780,8 @@ func _move_input(direction: Vector2, sprint: bool = false) -> void:
     if actor:
         actor.remote_direction = direction.limit_length(1.0)
         actor.remote_sprint = sprint == true
+        # User request: the character faces the guest's mouse.
+        actor.remote_aim = aim.normalized() if is_finite(aim.x) and is_finite(aim.y) and aim.length() > 0.1 and aim.length() <= 1.5 else Vector2.ZERO
         actor.last_input_msec = Time.get_ticks_msec()
 
 func request_action(action: String, payload: Dictionary = {}) -> void:
@@ -1277,10 +1279,21 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
         return actor.get_node("Inventory").discard(StringName(payload.id))
     if actor.input_blocked or actor.is_exhausted():
         return false
-    if not payload.is_empty():
+    # User request: strikes, skills and dashes go where the mouse points ({"aim": [x, y]}).
+    var aim := Vector2.ZERO
+    if payload.size() == 1 and payload.get("aim") is Array and payload.aim.size() == 2 and (payload.aim[0] is float or payload.aim[0] is int) and (payload.aim[1] is float or payload.aim[1] is int):
+        aim = Vector2(float(payload.aim[0]), float(payload.aim[1]))
+        if not is_finite(aim.x) or not is_finite(aim.y) or aim.length() < 0.1 or aim.length() > 1.5:
+            rejected_requests += 1
+            return false
+        aim = aim.normalized()
+        actor.facing = aim
+    elif not payload.is_empty():
         rejected_requests += 1
         return false
     match action:
+        "dash":
+            return actor.dash(aim if aim != Vector2.ZERO else actor.facing)
         "attack":
             return actor.get_node("MeleeAttack").attack(actor.facing)
         "absorb":

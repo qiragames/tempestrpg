@@ -37,7 +37,7 @@ func _run() -> void:
     var health = player.get_node("Health")
     var enemy_health = enemy.get_node("Health")
     var melee = player.get_node("MeleeAttack")
-    _check(InputMap.has_action("attack") and InputMap.action_get_events("attack").size() == 2, "Strike must have Space and J bindings")
+    _check(InputMap.has_action("attack") and InputMap.action_get_events("attack").size() == 3 and InputMap.action_get_events("attack").any(func(event): return event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT), "Strike is on Space, J and left click")
     _check(health.current == 100 and enemy_health.current == 30, "Actors must initialize with their configured health")
     _check(not health.take_damage(-10) and not health.take_damage(0) and health.current == 100, "Invalid damage must not heal or injure actors")
 
