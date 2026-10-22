@@ -384,10 +384,10 @@ func _run() -> void:
     # Fusion window (U): drop Rending Bite into the area, then drop Thorn Lash onto it.
     await _tap("fusion")
     _check(await _until(func(): return hud.fusion.visible and paused), "U opens the fusion window")
-    hud.fusion._drop_on_area(Vector2(120, 70), {"skill": "rending_bite"})
+    hud.fusion.select("piercing_fang")
     await _wait(0.2)
-    await _shot("fusion_ready", "Fusion window: Rending Bite placed in the fusion area, skills listed on the right")
-    hud.fusion._drop_on_tile(Vector2.ZERO, {"skill": "thorn_lash"}, 0)
+    await _shot("fusion_ready", "Fusion recipe book: Rending Bite + Thorn Lash → Piercing Fang is ready")
+    _check(await _click(hud.fusion._fuse), "Clicked Fuse")
     await _wait(0.3)
     await _shot("fusion_done", "Fusion: Rending Bite + Thorn Lash became Piercing Fang (Extra), with a Split button")
     await _tap("fusion")
