@@ -13,11 +13,11 @@ Pixel scale 1:1 with the 640x360 viewport; nearest filtering (project default). 
 | `player_human/human_attack.png` | 64x16 | Human: 4 directions x 1 frame | `assets/source/packs/ninja_adventure/Actor/Character/Boy/SeparateAnim/Attack.png` |
 | `player_human/human_dead.png` | 16x16 | Human: defeated pose | `assets/source/packs/ninja_adventure/Actor/Character/Boy/SeparateAnim/Dead.png` |
 | `player_human/human_faceset.png` | 38x38 | Human portrait | `assets/source/packs/ninja_adventure/Actor/Character/Boy/Faceset.png` |
-| `player_demon/demon_idle.png` | 64x16 | Demon race: 4 directions x 1 frame | `assets/source/packs/ninja_adventure/Actor/Character/DemonRed/SeparateAnim/Idle.png` |
-| `player_demon/demon_walk.png` | 64x64 | Demon: 4 directions x 4 frames | `assets/source/packs/ninja_adventure/Actor/Character/DemonRed/SeparateAnim/Walk.png` |
-| `player_demon/demon_attack.png` | 64x16 | Demon: 4 directions x 1 frame | `assets/source/packs/ninja_adventure/Actor/Character/DemonRed/SeparateAnim/Attack.png` |
-| `player_demon/demon_dead.png` | 16x16 | Demon: defeated pose | `assets/source/packs/ninja_adventure/Actor/Character/DemonRed/SeparateAnim/Dead.png` |
-| `player_demon/demon_faceset.png` | 38x38 | Demon portrait | `assets/source/packs/ninja_adventure/Actor/Character/DemonRed/Faceset.png` |
+| `player_demon/demon_idle.png` | 64x16 | Demon race: 4 directions x 1 frame | built by `tools/make_demon_sprites.py` from the Human Idle sheet (crimson skin, violet robes, glowing eyes, horns) |
+| `player_demon/demon_walk.png` | 64x64 | Demon: 4 directions x 4 frames | built by `tools/make_demon_sprites.py` from the Human Walk sheet (crimson skin, violet robes, glowing eyes, horns) |
+| `player_demon/demon_attack.png` | 64x16 | Demon: 4 directions x 1 frame | built by `tools/make_demon_sprites.py` from the Human Attack sheet (crimson skin, violet robes, glowing eyes, horns) |
+| `player_demon/demon_dead.png` | 16x16 | Demon: defeated pose | built by `tools/make_demon_sprites.py` from the Human Dead sheet (crimson skin, violet robes, glowing eyes, horns) |
+| `player_demon/demon_faceset.png` | 38x38 | Demon portrait | built by `tools/make_demon_sprites.py` from the Human portrait (crimson skin, horns) |
 | `gnasher/gnasher_idle.png` | 128x32 | Forest Gnasher (user: Goblin look): 4 frames of 32x32 | `assets/source/packs/pixel_crawler/Entities/Mobs/Orc Crew/Orc/Idle/Idle-Sheet.png` |
 | `gnasher/gnasher_run.png` | 384x64 | Gnasher: 6 frames of 64x64 | `assets/source/packs/pixel_crawler/Entities/Mobs/Orc Crew/Orc/Run/Run-Sheet.png` |
 | `gnasher/gnasher_death.png` | 384x64 | Gnasher: 6 frames of 64x64 | `assets/source/packs/pixel_crawler/Entities/Mobs/Orc Crew/Orc/Death/Death-Sheet.png` |
