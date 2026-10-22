@@ -647,6 +647,9 @@ func start_node(index: int) -> bool:
     if global_position.distance_to(nodes.work_point(index)) > nodes.REACH + 6.0:
         return false
     var node: Dictionary = nodes.info(index)
+    if nodes.success_chance(self, index) <= 0.0:
+        session.notify_character(character_id, "Too hard for now: %s needs %s level %d." % [PRO.resource_info(node.resource)[0], PRO.PROFESSIONS[node.profession][0], int(node.required)])
+        return false
     gather_id = "node:%d" % index
     gather_resource = {"woodcutting": "wood", "mining": "stone", "alchemy": "herb"}[node.profession]
     gather_at = node.foot + Vector2(0, -6)
@@ -742,6 +745,9 @@ func craft(recipe_id: String) -> bool:
         return false
     var level: int = PRO.level_of(progression, profession)
     var required: int = int(recipe[2])
+    if PRO.chance(level, required) <= 0.0:
+        session.notify_character(character_id, "%s needs %s level %d (more than 10 levels above yours)." % [recipe[1], PRO.PROFESSIONS[profession][0], required])
+        return false
     var rng: RandomNumberGenerator = get_parent().loot_rng if get_parent() != null and get_parent().get("loot_rng") != null else RandomNumberGenerator.new()
     # Thrifty (20): one try in five keeps the ingredients.
     if not (level >= 20 and rng.randf() < 0.2):

@@ -221,10 +221,11 @@ func _defeat() -> void:
         var item: Dictionary
         if rng.randf() < BOSS.UNIQUE_CHANCE and not uniques.is_empty():
             var base: String = uniques[rng.randi_range(0, uniques.size() - 1)]
-            var rarity: int = maxi(int(GEAR.BASES[base].min_rarity), 4 if rng.randf() < 0.7 else 5)
+            # Lower drop rates (user request): a Mythic unique 4× rarer than the old 30%.
+            var rarity: int = maxi(int(GEAR.BASES[base].min_rarity), 4 if rng.randf() >= 0.075 else 5)
             item = GEAR.roll(base, rarity, rng)
         else:
-            item = SOURCES._item(rng, LOOT_RARITY if raid else ELITE_LOOT_RARITY, level)
+            item = SOURCES.loot_item(rng, LOOT_RARITY if raid else ELITE_LOOT_RARITY, level)
         # Personal loot: only this helper can pick it up (for a long while).
         if world.has_method("pop_gear"):
             world.pop_gear.call_deferred(item, position, actor.character_id, (world.progression.get("world_time", 0.0) + 1800.0))

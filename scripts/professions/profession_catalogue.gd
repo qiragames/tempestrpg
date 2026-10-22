@@ -69,12 +69,21 @@ static func has_milestone(level: int, milestone: int) -> bool:
 
 ## Success chance of one attempt (soft gate, always shown): 70% at the required level, +2% per
 ## level above (max 98%), −4% per level below (min 5%); milestone and tool bonuses on top.
+## User report (level 3 at a level-18 node still had 14%): below the requirement the chance falls
+## fast — 70% → 20% over the first 5 levels short, then halving each level (about 1% at 10 short),
+## and nothing further below. Tool and level bonuses only scale it up there.
+const TOO_FAR_BELOW := 10
+
 static func chance(level: int, required: int, bonus: float = 0.0) -> float:
     var diff := level - required
-    var base: float = 0.70 + 0.02 * diff if diff >= 0 else 0.70 + 0.04 * diff
-    if level >= 10:
-        base += 0.05
-    return clampf(base + bonus, 0.05, 0.98)
+    if diff >= 0:
+        var base: float = 0.70 + 0.02 * diff + (0.05 if level >= 10 else 0.0)
+        return clampf(base + bonus, 0.05, 0.98)
+    var short := -diff
+    if short > TOO_FAR_BELOW:
+        return 0.0
+    var below: float = 0.70 - 0.10 * short if short <= 5 else 0.20 * pow(0.5, short - 5)
+    return clampf(below * (1.0 + bonus * 3.0), 0.01, 0.70)
 
 ## Seconds per swing (or per step of work): faster with level (−0.6% per level), slower below
 ## the requirement (+6% per level short, at most double), tool tier −8% each.

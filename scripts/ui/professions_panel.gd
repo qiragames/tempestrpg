@@ -78,7 +78,7 @@ func _init(owner_hud: CanvasLayer) -> void:
     _list.custom_minimum_size = Vector2(FRAME.size.x - 44, 0)
     _list.add_theme_constant_override("separation", 1)
     scroll.add_child(_list)
-    hud._label("Everything can be tried: below the level it is slower and fails more · the % is your chance per try · L / Esc: close", FRAME.position + Vector2(14, FRAME.size.y - 22), Vector2(FRAME.size.x - 28, 14), self, 8).add_theme_color_override("font_color", UI.TEXT_DIM)
+    hud._label("Below the level it is slower and fails more; more than 10 levels below it cannot be done · the % is your chance per try · L / Esc: close", FRAME.position + Vector2(14, FRAME.size.y - 22), Vector2(FRAME.size.x - 28, 14), self, 8).add_theme_color_override("font_color", UI.TEXT_DIM)
     hide()
 
 func is_open() -> bool:

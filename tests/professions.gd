@@ -24,7 +24,9 @@ func _frames(count: int = 3) -> void:
 func _run() -> void:
     # Rules.
     _check(PRO.level_for(0) == 1 and PRO.level_for(PRO.max_xp()) == 50 and PRO.level_for(PRO.xp_for(10)) == 10 and PRO.level_for(PRO.xp_for(10) - 1) == 9, "Levels 1-50 follow the curve")
-    _check(is_equal_approx(PRO.chance(1, 1), 0.70) and PRO.chance(1, 40) == 0.05 and PRO.chance(50, 1) == 0.98 and PRO.chance(5, 10) < PRO.chance(10, 10), "Soft gates: 70% at the level, less below (never zero), more above")
+    _check(is_equal_approx(PRO.chance(1, 1), 0.70) and PRO.chance(50, 1) == 0.98 and PRO.chance(5, 10) < PRO.chance(10, 10), "Soft gates: 70% at the level, less below, more above")
+    _check(is_equal_approx(PRO.chance(5, 10), 0.20) and PRO.chance(3, 13) < 0.02 and PRO.chance(3, 18) == 0.0 and PRO.chance(1, 40) == 0.0, "Far below the level (user report: Lv 3 at Lv 18 had 14%): 20% at 5 short, ~1% at 10 short, nothing beyond")
+    _check(PRO.chance(3, 18, 0.12) == 0.0 and PRO.chance(5, 10, 0.12) < 0.30, "Tools only scale small chances up")
     _check(PRO.work_seconds(1.0, 1, 30) > PRO.work_seconds(1.0, 30, 30) and PRO.work_seconds(1.0, 50, 1) < 0.7, "Below the level work is slower; higher levels work faster")
     var regions_ok := true
     for table in [PRO.WOODS, PRO.ORES]:

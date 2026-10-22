@@ -46,6 +46,21 @@ static func _base(rng: RandomNumberGenerator, slots: Array = [], rarity: int = 0
     return pool[rng.randi_range(0, pool.size() - 1)]
 
 ## A rolled item at a rarity from a base fitting that rarity and level.
+## User request (lower drop rates): loot from creatures, chests, the trial and bosses rolls Epic
+## 1.5×, Legendary 2× and Mythic 4× rarer than its table says (crafting keeps its odds).
+## Whole-number factors with those ratios (12 : 8 : 6 : 3).
+const LOOT_SCALE := [12, 12, 12, 8, 6, 3]
+
+static func loot_weights(weights: Array) -> Array:
+    var scaled: Array = []
+    for index in range(weights.size()):
+        scaled.append(int(weights[index]) * LOOT_SCALE[index])
+    return scaled
+
+## A loot roll (scaled rarities).
+static func loot_item(rng: RandomNumberGenerator, weights: Array, level: int) -> Dictionary:
+    return _item(rng, loot_weights(weights), level)
+
 static func _item(rng: RandomNumberGenerator, weights: Array, level: int, slots: Array = []) -> Dictionary:
     var rarity := _weighted(rng, weights)
     return GEAR.roll(_base(rng, slots, rarity, level), rarity, rng)
@@ -58,13 +73,13 @@ static func roll_drop(difficulty: int, rng: RandomNumberGenerator, level: int = 
         return _item(rng, dev.LOOT_RARITY, maxi(level, 6))
     if rng.randf() >= DROP_CHANCE[difficulty]:
         return {}
-    return _item(rng, DROP_RARITY[difficulty], level)
+    return loot_item(rng, DROP_RARITY[difficulty], level)
 
 static func roll_chest(rng: RandomNumberGenerator, level: int = 6) -> Dictionary:
-    return _item(rng, CHEST_RARITY, level)
+    return loot_item(rng, CHEST_RARITY, level)
 
 static func roll_trial(rng: RandomNumberGenerator, level: int = 6) -> Dictionary:
-    return _item(rng, TRIAL_RARITY, level)
+    return loot_item(rng, TRIAL_RARITY, level)
 
 static func roll_forge(recipe: String, rng: RandomNumberGenerator, level: int = 4) -> Dictionary:
     return _item(rng, FORGE_RARITY, level, RECIPES[recipe].slots)

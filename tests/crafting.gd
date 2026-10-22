@@ -110,11 +110,14 @@ func _run() -> void:
     actor.progression.professions.smithing = 0
     bag.add_material("ore_starmetal", 2)
     bag.add_material("gem_sapphire", 1)
+    _check(not actor.craft("smelt:bar_starmetal") and bag.count_of("ore_starmetal") == 2, "More than 10 levels above yours: refused, nothing used")
+    bag.add_material("ore_iron", 2)
+    var iron_before: int = bag.count_of("bar_iron")
     var failed := 0
     for _i in range(1):
-        if not actor.craft("smelt:bar_starmetal"):
+        if not actor.craft("smelt:bar_iron"):
             failed += 1
-    _check(bag.count_of("ore_starmetal") == 0 and bag.count_of("bar_starmetal") + failed == 1, "A try uses the ingredients whether it works or not")
+    _check(bag.count_of("ore_iron") == 0 and bag.count_of("bar_iron") - iron_before + failed >= 1, "A try uses the ingredients whether it works or not")
     # Alchemy: brew and drink.
     actor.progression.professions.alchemy = PRO.xp_for(50)
     bag.add_material("herb_mint", 4)
