@@ -59,10 +59,24 @@ static func capture_player(actor: Node2D) -> Dictionary:
         "fishing": [actor.fishing_bite_in, actor.fishing_window] if actor.fishing_bite_in != -INF else []
     }
 
+## A guest's predicted position further than this from the host's jumps to the host's.
+const PREDICTION_SNAP := 80.0
+
 static func apply_player(actor: Node2D, state: Dictionary, world: Node2D, replica: bool) -> void:
     actor.character_id = state.id
-    actor.position = to_vector(state.position)
-    actor.facing = to_vector(state.facing)
+    var host_position := to_vector(state.position)
+    if replica and actor.local_controlled and actor.get("predicting"):
+        # User report (lag for a connected player): a guest moves its own character at once
+        # (prediction); the host's position only corrects it - at once when far off (a teleport,
+        # a ferry, a knock-back), gently while standing still.
+        var gap: float = actor.position.distance_to(host_position)
+        if gap > PREDICTION_SNAP:
+            actor.position = host_position
+        elif actor.velocity.length() < 1.0:
+            actor.position = host_position if gap < 1.0 else actor.position.lerp(host_position, 0.5)
+    else:
+        actor.position = host_position
+        actor.facing = to_vector(state.facing)
     actor.move_speed = state.move_speed
     actor.apply_form(state.form.id)
     actor.form_cooldown = state.form.cooldown
@@ -148,7 +162,9 @@ static func capture_entities(world: Node2D) -> Dictionary:
             allies.append({"id": node.entity_id, "position": vector(node.position), "owner": node.owner_id, "name": node.display_name, "race": node.race, "maximum_hp": node.maximum_hp, "power": node.power, "speed": node.follow_speed, "work": {"role": node.work_role, "target": node.work_target, "remaining": node.work_left}})
     return {"enemies": enemies, "pickups": pickups, "allies": allies, "camp": world.camp.state.duplicate(true), "trial": world.trial.state.duplicate(true), "respawns": world.respawner.capture(), "loot": loot, "piles": piles, "trade": world.trade.capture(), "harbours": world.harbours.capture(), "party": world.party.capture(), "realm": world.realm.capture(), "siege": world.siege.capture(), "exchange": world.exchange.capture() if world.get("exchange") != null else {}, "events": world.events.capture() if world.get("events") != null else {}, "guilds": world.guilds.capture() if world.get("guilds") != null else {}, "chat": world.chat.capture() if world.get("chat") != null else {}, "duels": world.duels.capture() if world.get("duels") != null else {}, "housing": world.housing.capture() if world.get("housing") != null else {}}
 
-static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> void:
+## `changed_enemies` (guests' delta snapshots): only these creature ids are re-applied; the others
+## are unchanged since the last snapshot (null = apply every creature).
+static func apply_entities(world: Node2D, data: Dictionary, replica: bool, changed_enemies: Variant = null) -> void:
     world.camp.restore(data.camp)
     world.trial.restore(data.get("trial"))
     if data.get("trade") is Dictionary:
@@ -201,6 +217,8 @@ static func apply_entities(world: Node2D, data: Dictionary, replica: bool) -> vo
         ally.queue_redraw()
     for state in data.enemies:
         wanted[state.id] = true
+        if changed_enemies is Dictionary and not changed_enemies.has(state.id):
+            continue
         var actor = world.entity_by_id(state.id)
         if actor == null:
             actor = load(enemy_scene(state.kind)).instantiate()

@@ -22,6 +22,8 @@ var input_blocked: bool = false
 var exhaustion_active: bool = false
 var exhaustion_left: float = 0.0
 var remote_direction := Vector2.ZERO
+## A guest's own character moves at once on its screen (see StateCodec.apply_player).
+var predicting := false
 var last_input_msec: int = 0
 ## SVE feedback: Shift sprints (SPRINT_FACTOR faster) while stamina lasts (SPRINT_SECONDS from full,
 ## STAMINA_REFILL_SECONDS back to full). An emptied bar must refill to SPRINT_RESUME first. The
@@ -98,6 +100,7 @@ func _ready() -> void:
         if amount > 0:
             dismount()
             fishing_bite_in = -INF
+            _calm = 0.0
     )
     $Health.defeated.connect(func():
         $Magicules.enabled = false
@@ -548,9 +551,19 @@ func _physics_process(_delta: float) -> void:
     if session.replica_world:
         if local_controlled:
             session.send_move(direction, wants_sprint)
+            # Prediction: move now like the host will (it stays the authority, see apply_player).
+            predicting = true
+            if $Health.current <= 0 or is_exhausted() or input_blocked:
+                velocity = Vector2.ZERO
+            else:
+                velocity = direction * current_speed() * (SPRINT_FACTOR if sprinting else 1.0)
+                if not direction.is_zero_approx():
+                    facing = direction
+                move_and_slide()
         return
     # Character screen: time played (host-side, while the character is in a world).
     progression["playtime"] = float(progression.get("playtime", 0.0)) + _delta
+    _rest_regen(_delta)
     if $Health.current <= 0 or is_exhausted():
         velocity = Vector2.ZERO
         return
@@ -559,6 +572,30 @@ func _physics_process(_delta: float) -> void:
         facing = direction
     move_and_slide()
     queue_redraw()
+
+## User report: health comes back by itself out of combat — after CALM_SECONDS without being
+## hit or striking, REST_REGEN of the maximum per second (at least 1 HP a second). Host only.
+const CALM_SECONDS := 6.0
+const REST_REGEN := 0.015
+var _calm := 0.0
+var _rest_carry := 0.0
+
+func _rest_regen(delta: float) -> void:
+    # Only characters someone plays (a parked server host or a left guest keeps its HP).
+    if not (local_controlled or network_controlled):
+        return
+    var health: Node = $Health
+    if $MeleeAttack.cooldown_left > 0.0:
+        _calm = 0.0
+    _calm += delta
+    if _calm < CALM_SECONDS or health.current <= 0 or health.current >= health.maximum:
+        _rest_carry = 0.0
+        return
+    _rest_carry += maxf(1.0, health.maximum * REST_REGEN) * delta
+    var whole := int(_rest_carry)
+    if whole > 0:
+        _rest_carry -= whole
+        health.heal(whole)
 
 ## Sprint stamina: drains while sprinting, refills otherwise (see SPRINT_SECONDS).
 func _run_stamina(delta: float, wants: bool) -> void:
@@ -769,12 +806,10 @@ func craft(recipe_id: String) -> bool:
     session.queue_save()
     return true
 
-## Host, user request: salvage a piece of gear from the bag (not worn) at the Forge or in a town.
+## Host, user request: salvage a piece of gear from the bag (not worn) — anywhere (user report:
+## the button was always greyed away from a Forge or town).
 func salvage(id: String, quiet: bool = false) -> bool:
     if not AUTHORITY.can_mutate(self) or $Health.current <= 0:
-        return false
-    if craft_station("smithing").is_empty():
-        session.notify_character(character_id, "Salvage at the camp's Forge or in a town.")
         return false
     var item: Dictionary = item_by_id(id)
     if item.is_empty() or progression.get("equipment", {}).values().has(id):
@@ -802,9 +837,6 @@ func salvage(id: String, quiet: bool = false) -> bool:
 
 ## Host: salvage every Common piece in the bag (worn pieces stay).
 func salvage_common() -> int:
-    if craft_station("smithing").is_empty():
-        session.notify_character(character_id, "Salvage at the camp's Forge or in a town.")
-        return 0
     var count := 0
     for item in gear.items.duplicate():
         if int(item.get("rarity", 0)) == 0 and salvage(String(item.id), true):

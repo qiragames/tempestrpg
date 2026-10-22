@@ -378,13 +378,27 @@ func player_by_id(id: String) -> CharacterBody2D:
             return actor
     return null
 
+## User report (crazy lag for a connected player): every snapshot looked up each of the ~250
+## creatures by scanning all world children (quadratic, ~15 ms per snapshot on a guest). Found
+## entities are remembered; a miss scans once and remembers everything it passes.
+var _entity_index: Dictionary = {}
+
 func entity_by_id(id: String) -> Node2D:
     if id.is_empty():
         return null
+    var cached: Variant = _entity_index.get(id)
+    if cached != null and is_instance_valid(cached) and cached.get_parent() == self and cached.entity_id == id and not cached.is_queued_for_deletion():
+        return cached
+    _entity_index.erase(id)
+    var found: Node2D = null
     for actor in get_children():
-        if (actor.is_in_group("enemies") or actor.is_in_group("magicule_pickups") or actor.is_in_group("allies") or actor.is_in_group("gear_pickups") or actor.is_in_group("item_piles")) and actor.entity_id == id and not actor.is_queued_for_deletion():
-            return actor
-    return null
+        if (actor.is_in_group("enemies") or actor.is_in_group("magicule_pickups") or actor.is_in_group("allies") or actor.is_in_group("gear_pickups") or actor.is_in_group("item_piles")) and not actor.is_queued_for_deletion():
+            var actor_id: String = actor.entity_id
+            if not _entity_index.has(actor_id):
+                _entity_index[actor_id] = actor
+            if actor_id == id:
+                found = actor
+    return found
 
 func _process(delta: float) -> void:
     if not is_instance_valid(local_player):

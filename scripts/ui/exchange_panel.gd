@@ -18,6 +18,7 @@ var _title: Label
 var _status: Label
 var _ready: Button
 var _zeni_label: Label
+var _zeni_field: LineEdit
 var _asked := ""
 var _shown_signature := ""
 var _paused_before := false
@@ -55,6 +56,16 @@ func _init(owner_hud: CanvasLayer) -> void:
     _theirs = lists[2]
     var zeni_x: float = FRAME.position.x + 14 + COLUMN + 6
     _zeni_label = hud._label("Zeni: 0", Vector2(zeni_x, FRAME.position.y + 226), Vector2(COLUMN, 14), self, 9)
+    # Type an amount (Enter) or step it.
+    _zeni_field = LineEdit.new()
+    _zeni_field.name = "ZeniAmount"
+    _zeni_field.position = Vector2(zeni_x + COLUMN - 70, FRAME.position.y + 222)
+    _zeni_field.size = Vector2(70, 18)
+    _zeni_field.placeholder_text = "amount"
+    _zeni_field.add_theme_font_size_override("font_size", 8)
+    _zeni_field.text_submitted.connect(func(text: String): _set_zeni(int(text) if text.strip_edges().is_valid_int() else 0))
+    _zeni_field.focus_exited.connect(func(): _set_zeni(int(_zeni_field.text) if _zeni_field.text.strip_edges().is_valid_int() else int(_my_offer().zeni)))
+    add_child(_zeni_field)
     var steps := [[-1000, "-1k"], [-100, "-100"], [100, "+100"], [1000, "+1k"]]
     for index in range(steps.size()):
         var button: Button = hud._button(steps[index][1], Vector2(zeni_x + index * 44, FRAME.position.y + 242), Vector2(42, 18), self)
@@ -88,17 +99,34 @@ func current() -> Dictionary:
 func is_open() -> bool:
     return visible
 
+## User report (Zeni values rewritten): online the host's copy of your offer arrives a moment
+## later, so quick clicks built on an old copy. The offer you last sent is used until the host's
+## copy catches up (or the trade changes).
+var _pending: Dictionary = {}
+var _pending_trade := ""
+
 func _my_offer() -> Dictionary:
     var trade := current()
-    return trade.get("offer", {}).get(me(), {"gear": [], "goods": {}, "zeni": 0}).duplicate(true)
+    var confirmed: Dictionary = trade.get("offer", {}).get(me(), {"gear": [], "goods": {}, "zeni": 0})
+    var trade_id: String = exchange().trade_of(me()) if exchange() != null else ""
+    if not _pending.is_empty() and _pending_trade == trade_id:
+        return _pending.duplicate(true)
+    return confirmed.duplicate(true)
 
 func _send_offer(offer: Dictionary) -> void:
+    _pending = offer.duplicate(true)
+    _pending_trade = exchange().trade_of(me()) if exchange() != null else ""
     hud.session.request_action("exchange", {"operation": "offer", "offer": offer})
 
 func _change_zeni(step: int) -> void:
+    _set_zeni(int(_my_offer().zeni) + step)
+
+func _set_zeni(amount: int) -> void:
     var offer := _my_offer()
-    offer.zeni = clampi(int(offer.zeni) + step, 0, int(hud.player.progression.get("zeni", 0)))
+    offer.zeni = clampi(amount, 0, int(hud.player.progression.get("zeni", 0)))
     _send_offer(offer)
+    if is_instance_valid(_zeni_field) and not _zeni_field.has_focus():
+        _zeni_field.text = str(int(offer.zeni))
 
 func _add_gear(id: String) -> void:
     var offer := _my_offer()
@@ -147,7 +175,17 @@ func _process(_delta: float) -> void:
             _shown_signature = signature
             refresh()
 
+## An offer with whole numbers (JSON from the host turns them into floats).
+static func _normal(offer: Dictionary) -> Dictionary:
+    var goods := {}
+    for id in offer.get("goods", {}):
+        goods[String(id)] = int(offer.goods[id])
+    var gear: Array = offer.get("gear", []).duplicate()
+    gear.sort()
+    return {"gear": gear, "goods": goods, "zeni": int(offer.get("zeni", 0))}
+
 func _open() -> void:
+    _pending = {}
     _paused_before = get_tree().paused
     if hud.session.active:
         hud.player.input_blocked = true
@@ -169,6 +207,10 @@ func refresh() -> void:
         for child in list.get_children():
             child.queue_free()
     var offer: Dictionary = trade.offer.get(me(), {})
+    # The host caught up with what we sent: back to its copy.
+    if not _pending.is_empty() and JSON.stringify(_normal(_pending)) == JSON.stringify(_normal(offer)):
+        _pending = {}
+    offer = _my_offer()
     var worn: Array = hud.player.progression.get("equipment", {}).values()
     # Your things.
     for item in hud.player.gear.items:
@@ -190,7 +232,9 @@ func refresh() -> void:
             _line(_offer, "✕ %s" % GEAR.display_name(item), GEAR.icon_texture(item.base, int(item.rarity))).pressed.connect(_remove.bind("gear", id))
     for id in offer.get("goods", {}):
         _line(_offer, "✕ %s ×%d" % [TRADE.good_info(id)[0] if TRADE.is_good(id) else id, int(offer.goods[id])], null).pressed.connect(_remove.bind("goods", id))
-    _zeni_label.text = "Zeni: %d (you have %d)" % [int(offer.get("zeni", 0)), int(hud.player.progression.get("zeni", 0))]
+    _zeni_label.text = "Zeni (you have %d):" % int(hud.player.progression.get("zeni", 0))
+    if not _zeni_field.has_focus():
+        _zeni_field.text = str(int(offer.get("zeni", 0)))
     # Theirs.
     var theirs: Dictionary = trade.offer.get(partner, {})
     var partner_actor: Node = hud.get_parent().player_by_id(partner)

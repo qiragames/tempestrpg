@@ -77,14 +77,24 @@ func _run() -> void:
     actor.progression["zeni"] = 1000
     var fare: int = TRAVEL.fare("dunemarch", "bogsend")
     _check(harbours.buy_ticket(actor, "dunemarch", "bogsend") and actor.get_node("Inventory").count_of(TRAVEL.ticket_id("bogsend")) == 1 and actor.zeni() == 1000 - fare, "A ticket for one harbour goes into the bag")
-    _check(not harbours.sail(actor, "dunemarch", "hanamura"), "A ticket only takes you where it says")
+    var purse: int = actor.zeni()
+    actor.progression["zeni"] = 0
+    _check(not harbours.sail(actor, "dunemarch", "hanamura"), "A ticket only takes you where it says (and without Zeni you cannot pay the fare)")
+    actor.progression["zeni"] = purse
     var friend := _friend("friend")
     _at(friend, MAP.dock_position("dunemarch") + Vector2(10, 0))
     await _frames(1)
     _check(harbours.sail(actor, "dunemarch", "bogsend") and actor.get_node("Inventory").count_of(TRAVEL.ticket_id("bogsend")) == 0 and harbours.nearest_harbour(actor) == "bogsend" and harbours.nearest_harbour(friend) == "dunemarch", "Sailing uses the ticket; the ferry takes nobody along")
+    # User report: Sail pays the fare when there is no ticket.
+    var before_fare: int = actor.zeni()
+    _check(harbours.sail(actor, "bogsend", "dunemarch") and actor.zeni() == before_fare - TRAVEL.fare("bogsend", "dunemarch") and harbours.nearest_harbour(actor) == "dunemarch", "Without a ticket, Sail pays the fare")
+    _check(harbours.sail(actor, "dunemarch", "bogsend"), "...and back")
     _check(harbours.buy_pass(actor, "bogsend") and harbours.has_pass(actor) and harbours.sail(actor, "bogsend", "cinderport") and harbours.sail(actor, "cinderport", "rimehaven"), "A ferry pass: unlimited trips")
     world.progression["world_time"] = float(world.progression.get("world_time", 0.0)) + TRAVEL.PASS_SECONDS + 1.0
+    purse = actor.zeni()
+    actor.progression["zeni"] = 0
     _check(not harbours.has_pass(actor) and not harbours.sail(actor, "rimehaven", "sunfall"), "The pass runs out after an hour of world time")
+    actor.progression["zeni"] = purse
     # --- Your own ship
     _at(actor, MAP.dock_position("cinderport"))
     actor.progression["zeni"] = TRAVEL.SHIP_PRICE - 1
@@ -95,7 +105,9 @@ func _run() -> void:
     _at(actor, MAP.dock_position("cinderport"))
     _check(harbours.buy_ship(actor, "cinderport") and harbours.owns_ship(actor) and actor.progression.ship.at == "cinderport" and actor.zeni() == 50, "Bought a ship at Cinderport")
     _at(actor, MAP.dock_position("sunfall"))
-    _check(not harbours.sail(actor, "sunfall", "hanamura"), "The ship sails from where it lies")
+    actor.progression["zeni"] = 0
+    _check(not harbours.sail(actor, "sunfall", "hanamura"), "The ship sails from where it lies (and the ferry needs its fare)")
+    actor.progression["zeni"] = 50
     _check(harbours.summon(actor, "sunfall") and actor.progression.ship.at == "sunfall", "Summoned to Sunfall")
     await _frames(2)
     _check(harbours.get_node_or_null("Ship_host") != null and harbours.get_node("Ship_host").position.distance_to(MAP.berth_position("sunfall")) < 1.0, "Everyone sees the ship docked at the harbour")

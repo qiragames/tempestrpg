@@ -85,7 +85,10 @@ const ACTIVES := {
     "barrier": {"name": "Barrier", "cooldown": 30.0, "text": "2 s of invulnerability"},
     "surge": {"name": "Mana Surge", "cooldown": 45.0, "text": "Restore 30 Magicules"},
 }
-const MAX_ITEMS := 30
+## Every owned piece, worn or not (user report: the bag said full with free cells — worn pieces
+## counted against 30). The equipment window's 32 cells hold the loose ones; the 7 slots the rest.
+const BAG_CELLS := 32
+const MAX_ITEMS := BAG_CELLS + 7
 
 ## Item stat values are whole numbers except regeneration (one decimal).
 static func _round(stat: String, value: float) -> float:

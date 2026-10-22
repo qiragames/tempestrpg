@@ -121,7 +121,7 @@ func _run() -> void:
     me.progression["zeni"] = 1000000
     _check(session.apply_action(me, "class", {"operation": "choose", "slot": "main", "id": "monk"}), "Changed to Monk")
     _check(not book.knows(&"fireball") and not book.knows(&"frost_nova") and book.knows(&"palm_strike") and book.knows(&"hundred_fists") and not &"fireball" in book._slots, "The Mage's skills are gone (also from the hotbar); the Monk's two arrived")
-    _check(me.progression.equipment.get("weapon", "") == "", "The staff went back into the bag")
+    _check(me.progression.equipment.get("weapon", "") == "item_cls_staff000001", "A Common staff stays in hand (any weapon up to Rare works aside from the class)")
     var fist: Dictionary = GEAR.roll(_base("fist", 1), 0, RandomNumberGenerator.new())
     fist["id"] = "item_cls_fist0000001"
     me.add_item(fist)

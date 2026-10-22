@@ -20,7 +20,7 @@ const CLASSES := {
 }
 const ORDER := ["warrior", "assassin", "lancer", "reaper", "archer", "mage", "monk"]
 const SUB_LEVEL := 20
-## Classless characters may use weapons up to this rarity (Rare).
+## Anyone may use any weapon up to this rarity (Rare); above it, only its class or subclass.
 const CLASSLESS_RARITY := 2
 ## Changing a class or subclass (once chosen) costs this many Zeni per character level; so does
 ## resetting the attribute points.
@@ -73,12 +73,12 @@ static func problem(progression: Dictionary, item: Dictionary) -> String:
         return "Needs level %d." % int(needs.level)
     var mine := chosen(progression)
     var wanted: String = String(needs["class"])
-    if not wanted.is_empty():
+    # User rule: every weapon up to Rare works for everyone; above Rare it needs its class (main
+    # or subclass).
+    if not wanted.is_empty() and int(item.get("rarity", 0)) > CLASSLESS_RARITY and wanted != mine.main and wanted != mine.sub:
         if mine.main.is_empty() and mine.sub.is_empty():
-            if int(item.get("rarity", 0)) > CLASSLESS_RARITY:
-                return "Choose a class at the master in your settlement to use %s weapons above Rare." % CLASSES[wanted][0].to_lower()
-        elif wanted != mine.main and wanted != mine.sub:
-            return "Only a %s (class or subclass) can use this." % CLASSES[wanted][0]
+            return "Choose a class at the master in your settlement to use %s weapons above Rare." % CLASSES[wanted][0].to_lower()
+        return "Above Rare, only a %s (class or subclass) can use this." % CLASSES[wanted][0]
     for key in needs.attributes:
         if ATTRIBUTES.value(progression, key) < int(needs.attributes[key]):
             return "Needs %s %d." % [ATTRIBUTES.SHORT[key], int(needs.attributes[key])]
@@ -88,7 +88,7 @@ static func problem(progression: Dictionary, item: Dictionary) -> String:
 static func requirement_text(item: Dictionary) -> String:
     var needs := requirements(item)
     var parts: Array = ["Lv %d" % int(needs.level)]
-    if not String(needs["class"]).is_empty():
+    if not String(needs["class"]).is_empty() and int(item.get("rarity", 0)) > CLASSLESS_RARITY:
         parts.append(CLASSES[needs["class"]][0])
     for key in needs.attributes:
         parts.append("%s %d" % [ATTRIBUTES.SHORT[key], int(needs.attributes[key])])

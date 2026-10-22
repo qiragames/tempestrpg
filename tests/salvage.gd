@@ -55,11 +55,8 @@ func _run() -> void:
     var me = world.get_local_player()
     me.global_position = Vector2(480, 340)
     me.add_item(sword)
-    _check(not session.apply_action(me, "gear", {"operation": "salvage", "id": sword.id}) and not me.item_by_id(sword.id).is_empty(), "Away from the Forge or a town nothing is salvaged")
-    me.global_position = MAP.to_world(Vector2(MAP.town("brookhaven")[3]))
-    await _frames(2)
     var bar: String = sword_gain.keys()[0]
-    _check(session.apply_action(me, "gear", {"operation": "salvage", "id": sword.id}) and me.item_by_id(sword.id).is_empty() and me.ingredient_count(bar) == 1, "In a town the sword becomes a bar")
+    _check(session.apply_action(me, "gear", {"operation": "salvage", "id": sword.id}) and me.item_by_id(sword.id).is_empty() and me.ingredient_count(bar) == 1, "Salvaging works anywhere: the sword becomes a bar")
     var worn: Dictionary = GEAR.roll("cloth_hood", 0, rng)
     me.add_item(worn)
     preload("res://scripts/progression/class_catalogue.gd").enforced = false
@@ -77,11 +74,13 @@ func _run() -> void:
     bag.capacity = bag.total_units()
     _check(not session.apply_action(me, "gear", {"operation": "salvage", "id": rare.id}) and not me.item_by_id(rare.id).is_empty(), "A full bag keeps the item")
     # The button in the equipment window.
+    bag.capacity = 200
+    me.add_item(GEAR.roll("copper_ring", 0, rng))
     var hud: CanvasLayer = world.get_node("HUD")
     hud.gear_panel.open()
     hud.gear_panel._selected = rare.id
     await _frames(2)
-    _check(not hud.gear_panel._salvage.disabled and hud.gear_panel._salvage.tooltip_text.contains("Breaks it into") and not hud.gear_panel._salvage_common.disabled, "The equipment window offers Salvage and Salvage Commons in town")
+    _check(not hud.gear_panel._salvage.disabled and hud.gear_panel._salvage.tooltip_text.contains("Breaks it into") and not hud.gear_panel._salvage_common.disabled, "The equipment window offers Salvage and Salvage Commons")
     hud.gear_panel.close()
     world.queue_free()
     await _frames()

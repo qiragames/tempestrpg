@@ -1536,7 +1536,13 @@ func _snapshot(packet: Dictionary, revision: int) -> void:
             actor.local_controlled = id == local_character_id
             world.add_child(actor)
             actor.configure_replica()
-    CODEC.apply_entities(world, data, true)
+    # Only the creatures this delta changed (the guest keeps the rest as they are).
+    var changed_enemies: Variant = null
+    if packet.get("delta", false) and packet.has("enemies_changed"):
+        changed_enemies = {}
+        for entry in packet.enemies_changed:
+            changed_enemies[entry.id] = true
+    CODEC.apply_entities(world, data, true, changed_enemies)
     for id in data.players:
         CODEC.apply_player(world.player_by_id(id), data.players[id], world, true)
         var actor = world.player_by_id(id)

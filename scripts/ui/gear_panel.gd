@@ -283,7 +283,7 @@ func gear_score() -> int:
 
 func refresh() -> void:
     var player = hud.player
-    _salvage_common.disabled = player.craft_station("smithing").is_empty()
+    _salvage_common.disabled = not player.gear.items.any(func(item): return int(item.get("rarity", 0)) == 0 and _worn_slot(String(item.id)).is_empty())
     var equipment: Dictionary = player.progression.get("equipment", {})
     for slot in GEAR.SLOTS:
         var item: Dictionary = player.item_by_id(equipment.get(slot, ""))
@@ -308,9 +308,8 @@ func refresh() -> void:
         _details.text = "%s\n%s\n\n%s" % [GEAR.display_name(selected), "Worn: " + SLOT_NAMES[worn] if not worn.is_empty() else "In the bag", GEAR.describe(selected)]
         _equip.disabled = false
         _equip.text = "Take off" if not worn.is_empty() else "Equip (%s)" % SLOT_NAMES[target_slot(selected)]
-        var station: bool = not player.craft_station("smithing").is_empty()
-        _salvage.disabled = not worn.is_empty() or not station
-        _salvage.tooltip_text = ("Breaks it into: " + _yield_text(selected)) if station else "Salvage at the camp's Forge or in a town."
+        _salvage.disabled = not worn.is_empty()
+        _salvage.tooltip_text = "Breaks it into: " + _yield_text(selected) if worn.is_empty() else "Take it off first."
     # The card: the hovered item (else nothing, so the doll stays visible).
     var carded: Dictionary = player.item_by_id(_hovered) if not _hovered.is_empty() else {}
     var place: String = _worn_slot(carded.get("id", ""))

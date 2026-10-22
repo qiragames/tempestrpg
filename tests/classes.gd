@@ -66,9 +66,11 @@ func _run() -> void:
     rare_bow["id"] = "item_class_bow000001"
     var epic_bow: Dictionary = GEAR.roll(bow_base, 3, rng)
     epic_bow["id"] = "item_class_bow000002"
-    var sword: Dictionary = GEAR.roll(sword_base, 1, rng)
+    var sword: Dictionary = GEAR.roll(sword_base, 3, rng)
     sword["id"] = "item_class_sword0001"
-    for item in [rare_bow, epic_bow, sword]:
+    var plain_sword: Dictionary = GEAR.roll(sword_base, 1, rng)
+    plain_sword["id"] = "item_class_sword0002"
+    for item in [rare_bow, epic_bow, sword, plain_sword]:
         me.add_item(item)
     _check(me.equip("item_class_bow000001", "weapon"), "Classless: a Rare bow is fine")
     _check(not me.equip("item_class_bow000002", "weapon"), "Classless: an Epic bow is not")
@@ -76,7 +78,8 @@ func _run() -> void:
     me.global_position = master.position_in_world() + Vector2(10, 0)
     _check(session.apply_action(me, "class", {"operation": "choose", "slot": "main", "id": "archer"}) and CLASSES.chosen(me.progression).main == "archer", "Choosing Archer (free the first time)")
     _check(me.equip("item_class_bow000002", "weapon"), "An Archer uses the Epic bow")
-    _check(not me.equip("item_class_sword0001", "weapon") or CLASSES.problem(me.progression, sword).is_empty() == false, "...but not a sword (no Warrior class or subclass)")
+    _check(not me.equip("item_class_sword0001", "weapon") or CLASSES.problem(me.progression, sword).is_empty() == false, "...but not an Epic sword (no Warrior class or subclass)")
+    _check(CLASSES.problem(me.progression, plain_sword).is_empty(), "User rule: any weapon up to Rare works aside from the class (an Archer with an Uncommon sword)")
     _check(not session.apply_action(me, "class", {"operation": "choose", "slot": "sub", "id": "warrior"}), "No subclass before level 20")
     me.gain_experience(LEVELING.xp_for_level(20), "test")
     _check(session.apply_action(me, "class", {"operation": "choose", "slot": "sub", "id": "warrior"}) and me.equip("item_class_sword0001", "weapon"), "Level 20: Warrior as a subclass; swords allowed")

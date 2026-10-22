@@ -1185,9 +1185,15 @@ func _scale_element(node: Node) -> void:
     var centre := control.position + control.size / 2.0
     var right_edge: bool = control.position.x + control.size.x > VIEW.x - 40.0
     var left_edge: bool = control.position.x < 120.0
+    # User report (skills overlapped the button tips): bottom pieces shrink toward the top of the
+    # controls line while it is shown, not into it.
+    var floor_y: float = VIEW.y
+    var is_bar: bool = control.name in ["Controls", "BottomBar"]
+    if not is_bar and has_node("Controls") and $Controls.visible:
+        floor_y = VIEW.y - (VIEW.y - $BottomBar.position.y) * hud_scale - 1.0 if has_node("BottomBar") else VIEW.y
     var anchor := Vector2(
         VIEW.x if right_edge and not left_edge else (0.0 if left_edge else VIEW.x / 2.0),
-        VIEW.y if centre.y > VIEW.y / 2.0 else 0.0)
+        floor_y if centre.y > VIEW.y / 2.0 else 0.0)
     if control.size.x >= VIEW.x * 0.9:
         anchor.x = 0.0
     control.pivot_offset = anchor - control.position
@@ -1208,6 +1214,8 @@ func _toggle_controls() -> void:
     $Controls.visible = values.controls
     if has_node("BottomBar"):
         $BottomBar.visible = values.controls
+    for child in get_children():
+        _scale_element(child)
 
 ## Pause overlay after the user's reference (step 22): dimmed world, GAME PAUSED banner, the menu
 ## with the slime marker, a character/world card, Options, and shortcuts into the bag, skill tree

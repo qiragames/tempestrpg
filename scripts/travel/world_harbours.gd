@@ -177,8 +177,11 @@ func sail(actor: Node2D, here: String, destination: String) -> bool:
         pass
     elif actor.get_node("Inventory").count_of(TRAVEL.ticket_id(destination)) > 0:
         actor.get_node("Inventory").discard(StringName(TRAVEL.ticket_id(destination)), 1)
+    # User report (the journey would not start without buying a ticket first): Sail pays the fare.
+    elif actor.zeni() >= TRAVEL.fare(here, destination):
+        actor.spend_zeni(TRAVEL.fare(here, destination))
     else:
-        return _refuse(actor, "You need a ticket to %s, a ferry pass or your own ship." % MAP.harbour(destination)[1])
+        return _refuse(actor, "The ferry to %s costs %d Zeni (or use a ticket, a pass or your own ship)." % [MAP.harbour(destination)[1], TRAVEL.fare(here, destination)])
     for index in range(voyagers.size()):
         var voyager: Node2D = voyagers[index]
         voyager.global_position = MAP.dock_position(destination) + Vector2((index % 2) * 12 - 6, int(index / 2) * 10)

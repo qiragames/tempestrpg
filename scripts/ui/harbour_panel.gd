@@ -25,6 +25,9 @@ var _guest_index := 0
 var _voyage := {}
 var _paused_before := false
 
+## The fare Sail will pay (0 with a ticket, a pass or your ship here).
+var _paying := 0
+
 func _init(owner_hud: CanvasLayer) -> void:
     hud = owner_hud
     name = "HarbourPanel"
@@ -146,11 +149,13 @@ func _refresh() -> void:
         _choice.text = "Choose a harbour on the map."
     else:
         var fare := TRAVEL.fare(here, destination)
-        var how := "on your ship" if own_here else ("with your pass" if node.has_pass(me) else ("with your ticket" if me.get_node("Inventory").count_of(TRAVEL.ticket_id(destination)) > 0 else "— buy a ticket first"))
-        can_sail = own_here or node.has_pass(me) or me.get_node("Inventory").count_of(TRAVEL.ticket_id(destination)) > 0
+        var covered: bool = own_here or node.has_pass(me) or me.get_node("Inventory").count_of(TRAVEL.ticket_id(destination)) > 0
+        var how := "on your ship" if own_here else ("with your pass" if node.has_pass(me) else ("with your ticket" if covered else "— Sail pays the fare"))
+        can_sail = covered or me.zeni() >= fare
+        _paying = 0 if covered else fare
         _choice.text = "To %s %s (ticket %d Zeni)" % [MAP.harbour(destination)[1], how, fare]
     var busy := not _voyage.is_empty()
-    _button_state("sail", "Sail", not busy and can_sail and not destination.is_empty(), true)
+    _button_state("sail", "Sail · %d Zeni" % _paying if _paying > 0 and not destination.is_empty() else "Sail", not busy and can_sail and not destination.is_empty(), true)
     _button_state("ticket", "Buy ticket · %d Zeni" % (TRAVEL.fare(here, destination) if not destination.is_empty() else 0), not busy and not destination.is_empty() and not own_here and me.zeni() >= (TRAVEL.fare(here, destination) if not destination.is_empty() else 0), not own_here)
     _button_state("pass", "Ferry pass (1 h) · %d Zeni" % TRAVEL.PASS_PRICE, not busy and me.zeni() >= TRAVEL.PASS_PRICE, not ship.get("owned", false))
     _button_state("ship", "Buy a ship · %d Zeni" % TRAVEL.SHIP_PRICE, not busy and me.zeni() >= TRAVEL.SHIP_PRICE, entry[4] and not ship.get("owned", false))
