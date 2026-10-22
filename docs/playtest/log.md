@@ -142,7 +142,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 
 ## 8. Shrine
 - [x] Walked to the shrine
-  Magicules near shrine: 70.0 -> 95.5 in 3s (base regen 6/s after 1.5s delay)
+  Magicules near shrine: 70.0 -> 95.6 in 3s (base regen 6/s after 1.5s delay)
 - [x] Shrine visibly speeds up regeneration
 
 ![Resting at the Essence Shrine](25_shrine.png)
@@ -168,9 +168,10 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - [x] Activated Thorn Lash in the skill tree
 - [x] U opens the fusion window
 
-![Fusion window: Rending Bite placed in the fusion area, skills listed on the right](29_fusion_ready.png)
-*Fusion window: Rending Bite placed in the fusion area, skills listed on the right* (960x540)
+![Fusion recipe book: Rending Bite + Thorn Lash → Piercing Fang is ready](29_fusion_ready.png)
+*Fusion recipe book: Rending Bite + Thorn Lash → Piercing Fang is ready* (960x540)
 
+- [x] Clicked Fuse
 
 ![Fusion: Rending Bite + Thorn Lash became Piercing Fang (Extra), with a Split button](30_fusion_done.png)
 *Fusion: Rending Bite + Thorn Lash became Piercing Fang (Extra), with a Split button* (960x540)
@@ -297,7 +298,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (960x540)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Rare Winter Knife
+- [x] The chest gave an Uncommon-or-better item: Rare Mystic Sting
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (960x540)
@@ -393,8 +394,8 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *World map: your pile (gold X) and discovered leveling spots (violet)* (960x540)
 
 ## 16. Sound and effects (step 23)
-- Sounds played during this run: analysis ×3, build ×3, chest ×1, defeat ×7, evolve ×1, form ×2, gather ×12, hit ×13, hurt ×4, item ×2, learned ×2, level_up ×2, magicules ×3, swing ×12, ui_accept ×16, ui_move ×12
-- Effects shown: aura ×3, boost ×3, claw ×7, hit_spark ×50, ring ×7, slash ×13, smoke ×12, sparkle ×6
+- Sounds played during this run: analysis ×3, build ×3, chest ×1, defeat ×7, evolve ×1, form ×2, gather ×12, hit ×13, hurt ×4, item ×1, learned ×2, level_up ×2, magicules ×3, swing ×12, ui_accept ×17, ui_move ×12
+- Effects shown: aura ×3, boost ×3, claw ×7, hit_spark ×51, ring ×7, slash ×13, smoke ×12, sparkle ×5
 - [x] The run produced the "swing" cue
 - [x] The run produced the "hit" cue
 - [x] The run produced the "defeat" cue
@@ -960,14 +961,13 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +3000 XP (trial). Level 4 reached: +2 skill points.
-- Trial reward: Epic Scarlet Knuckles.
+- Trial reward: Epic Traveler's Recurve II.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +42 XP (defeat).
 - +9 Zeni (defeat).
 - Threat neutralized. Specimen retained.
 - Recovered 16.0 Magicules.
-- Picked up Uncommon Soldier's Fang.
 - Skill tree: Gel Vitality. +10 max HP
 - Equipped Rare Iron Helm.
 - Equipped Epic Scale Mail.
@@ -978,9 +978,9 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Rare Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Rare Winter Knife.
-- +34 Zeni (chest).
-- Picked up Rare Winter Knife.
+- Chest opened: Rare Mystic Sting.
+- +33 Zeni (chest).
+- Picked up Rare Mystic Sting.
 - World "Showcase World" loaded. Esc: pause menu — switch on Multiplayer to invite friends.
 - Multiplayer is on: Invite a Friend makes one code per friend.
 - Multiplayer is off: your world is single player again.
