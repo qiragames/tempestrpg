@@ -17,6 +17,7 @@ const CREDITS := [
     ["Ninja Adventure Asset Pack", "Pixel-Boy and AAA · CC0 · characters, tiles, props, icons"],
     ["Pixel Crawler", "Anokolisa · creatures, crafting stations"],
     ["Gear icons", "Gear icons by Kyrise (https://kyrise.itch.io/) · CC BY 4.0"],
+    ["Goods icons", "Potion, scroll, fish, gem, herb and key icons by Kyrise (https://kyrise.itch.io/) · CC BY 4.0; bread, map and mushroom by 7Soul1 · CC0"],
     ["16x16 Weapon RPG Icons", "Shade (merchant-shade) · scythe and spear icons"],
     ["Fantasy UI Borders", "Kenney (www.kenney.nl) · CC0 · ornamented frames"],
     ["Input Prompts Pixel", "Kenney (www.kenney.nl) · CC0 · key and mouse icons"],

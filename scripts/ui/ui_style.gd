@@ -263,7 +263,54 @@ static func skill_icon(id: String) -> Texture2D:
 static func icon(id: String) -> Texture2D:
     if id.begins_with("bossmat_"):
         return preload("res://scripts/bosses/boss_loot.gd").icon(id)
-    return load(ICONS[id]) if ICONS.has(id) else null
+    if ICONS.has(id):
+        return load(ICONS[id])
+    var kind := goods_kind(id)
+    return load("res://assets/game/ui/icons/goods/%s.png" % kind) if not kind.is_empty() else null
+
+## User request (merchant window like the equipment menu): every kind of good gets an icon
+## (Kyrise CC BY 4.0, 7Soul CC0). The kind's file in assets/game/ui/icons/goods ("" for none).
+static func goods_kind(id: String) -> String:
+    var crafting := preload("res://scripts/professions/crafting_catalogue.gd")
+    var pro := preload("res://scripts/professions/profession_catalogue.gd")
+    if id.begins_with("teleport_"):
+        return "teleport"
+    if id.begins_with("scroll_"):
+        return "scroll"
+    if id.begins_with("ticket_"):
+        return "ticket"
+    if id.begins_with("wish_orb_"):
+        return "orb"
+    if id == "pet_egg":
+        return "egg"
+    if id == crafting.ARCANE_ESSENCE:
+        return "essence"
+    if id.begins_with("rune_") or id.begins_with("aug_"):
+        return "rune"
+    if id.begins_with("mount_"):
+        return "mount"
+    if id.contains("key"):
+        return "key"
+    if crafting.is_food(id):
+        return "meal"
+    if crafting.POTIONS.has(id):
+        var effect: String = crafting.POTIONS[id][3]
+        return "heal" if effect in ["heal", "full"] else ("tonic" if effect == "tonic" else "elixir")
+    if crafting.is_bar(id):
+        return "../bar_iron"
+    if id.begins_with("log_"):
+        return "../wood"
+    if id.begins_with("ore_"):
+        return "../stone"
+    if id == "herb_glowcap":
+        return "mushroom"
+    if id.begins_with("herb_"):
+        return "herb"
+    if pro.GEMS.has(id):
+        return "gem"
+    if preload("res://scripts/professions/fish_catalogue.gd").FISH.has(id):
+        return "fish"
+    return ""
 
 ## The prepared gear icon for an item instance: one per base and rarity (step 18).
 static func gear_icon(item: Dictionary) -> Texture2D:
