@@ -104,6 +104,7 @@ var _score: Label
 var _details: Label
 var _equip: Button
 var _salvage: Button
+var _drop: Button
 var _salvage_common: Button
 var _close: Button
 var _selected: String = ""
@@ -197,6 +198,10 @@ func _init(owner_hud: CanvasLayer) -> void:
     _salvage_common = hud._button("Salvage Commons", ORIGIN + Vector2(146, 308), Vector2(74, 20), self)
     _salvage_common.name = "SalvageCommon"
     _salvage_common.pressed.connect(func(): _request({"operation": "salvage_common"}))
+    # User request: drop a loose piece at your feet.
+    _drop = hud._button("Drop", ORIGIN + Vector2(224, 280), Vector2(56, 24), self)
+    _drop.name = "Drop"
+    _drop.pressed.connect(func(): _request({"operation": "drop", "id": _selected}))
     for small in [_salvage, _salvage_common]:
         small.add_theme_font_size_override("font_size", 8)
     _details = hud._label("", ORIGIN + Vector2(14, 312), Vector2(260, 14), self, 8)
@@ -253,6 +258,8 @@ func _request(payload: Dictionary) -> void:
         hud.player.salvage(payload.id)
     elif payload.operation == "salvage_common":
         hud.player.salvage_common()
+    elif payload.operation == "drop":
+        hud.session.apply_action(hud.player, "gear", payload)
     else:
         hud.player.unequip(payload.slot)
 
@@ -303,12 +310,14 @@ func refresh() -> void:
         _equip.disabled = true
         _equip.text = "Equip"
         _salvage.disabled = true
+        _drop.disabled = true
     else:
         # Plain-text details stay available (tests, screen readers); the card shows them.
         _details.text = "%s\n%s\n\n%s" % [GEAR.display_name(selected), "Worn: " + SLOT_NAMES[worn] if not worn.is_empty() else "In the bag", GEAR.describe(selected)]
         _equip.disabled = false
         _equip.text = "Take off" if not worn.is_empty() else "Equip (%s)" % SLOT_NAMES[target_slot(selected)]
         _salvage.disabled = not worn.is_empty()
+        _drop.disabled = not worn.is_empty()
         _salvage.tooltip_text = "Breaks it into: " + _yield_text(selected) if worn.is_empty() else "Take it off first."
     # The card: the hovered item (else nothing, so the doll stays visible).
     var carded: Dictionary = player.item_by_id(_hovered) if not _hovered.is_empty() else {}

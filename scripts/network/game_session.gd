@@ -1220,6 +1220,12 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             rejected_requests += 1
             return false
         return actor.use_good(payload.id)
+    if action == "drop_item":
+        # User request: drop bag things at your feet.
+        if payload.size() != 2 or not payload.get("id") is String or payload.id.length() > 64 or not (payload.get("count") is int or (payload.get("count") is float and payload.count == floor(payload.count))) or int(payload.count) < 1 or int(payload.count) > 1000:
+            rejected_requests += 1
+            return false
+        return world.drop_from_bag(actor, payload.id, int(payload.count))
     if action == "loot":
         # SVE feedback: F picks up nearby loot; the host checks reach, claim and room.
         if payload.size() != 1 or not payload.get("id") is String or payload.id.length() > 64:
@@ -1245,6 +1251,9 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             return actor.salvage(payload.id)
         if operation == "salvage_common" and payload.size() == 1:
             return actor.salvage_common() > 0
+        # User request: drop a loose piece at your feet.
+        if operation == "drop" and payload.size() == 2 and payload.get("id") is String and payload.id.length() <= 64:
+            return world.drop_gear_item(actor, payload.id)
         rejected_requests += 1
         return false
     if action == "fusion":

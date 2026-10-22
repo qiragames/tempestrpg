@@ -18,12 +18,21 @@ var item: Dictionary = {}
 var owner_id: String = ""
 var claim_until: float = 0.0
 const CLAIM := preload("res://scripts/pickups/claim.gd")
+const LABELS := preload("res://scripts/pickups/claim_label.gd")
 var _full_notified: Dictionary = {}
 ## Visual only: where the pop starts relative to the resting spot, and its progress (1 = landed).
 var pop_from: Vector2 = Vector2.ZERO
 var _pop: float = 1.0
 var _age: float = 0.0
 var _icon: Texture2D
+## User request: loot shows who it belongs to and for how long (and when it disappears) once it
+## has lain LABEL_AFTER seconds; it disappears LIFETIME seconds of world time after dropping.
+const LABEL_AFTER := 10.0
+const LIFETIME := 600.0
+var since := 0.0
+## User request (drop equipment): whoever dropped it only picks it up by walking over it after
+## stepping away (F works any time).
+var dropper := ""
 
 func _ready() -> void:
     if entity_id.is_empty():
@@ -48,9 +57,22 @@ func _process(delta: float) -> void:
     queue_redraw()
 
 func _physics_process(_delta: float) -> void:
-    if not AUTHORITY.can_mutate(self) or _pop < 1.0:
+    if not AUTHORITY.can_mutate(self):
         return
+    if CLAIM.world_time(get_parent()) - since > LIFETIME:
+        set_physics_process(false)
+        queue_free()
+        get_node("/root/GameSession").queue_save()
+        return
+    if _pop < 1.0:
+        return
+    if not dropper.is_empty():
+        var who: Node = get_parent().player_by_id(dropper) if get_parent().has_method("player_by_id") else null
+        if who == null or who.global_position.distance_to(global_position) > REACH:
+            dropper = ""
     for body in get_overlapping_bodies():
+        if body.get("character_id") == dropper and not dropper.is_empty():
+            continue
         if try_give(body, false):
             return
 
@@ -80,6 +102,7 @@ func try_give(body: Node, from_reach: bool) -> bool:
     return false
 
 func _draw() -> void:
+    LABELS.draw_timer(self, owner_id, claim_until, since, since + LIFETIME, Vector2(0, -16))
     var color := Color(GEAR.RARITY_COLORS[int(item.get("rarity", 0))])
     # The arc: from pop_from up and over to the resting spot, with a small bounce at the end.
     var t := _pop

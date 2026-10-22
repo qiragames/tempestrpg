@@ -251,6 +251,7 @@ func drop_gear(item: Dictionary, at: Vector2, id: String = "", owner_id: String 
     pickup.position = at
     pickup.owner_id = owner_id
     pickup.claim_until = claim_until if claim_until >= 0.0 else (preload("res://scripts/pickups/claim.gd").until(self) if not owner_id.is_empty() else 0.0)
+    pickup.since = preload("res://scripts/pickups/claim.gd").world_time(self)
     add_child(pickup)
     return pickup
 
@@ -270,10 +271,53 @@ func pop_gear(item: Dictionary, from: Vector2, owner_id: String = "", claim_unti
         pickup.pop_from = from - landing
     return pickup
 
+## User request: drop bag things or loose gear at your feet (anyone may take them; gone after 10
+## minutes of world time).
+const DROP_LIFETIME := 600.0
+
+func drop_from_bag(actor: Node2D, id: String, count: int) -> bool:
+    var bag: Node = actor.get_node("Inventory")
+    count = mini(count, bag.count_of(StringName(id)))
+    if count <= 0 or preload("res://scripts/realm/realm_catalogue.gd").is_orb(id):
+        return false
+    if get_tree().get_nodes_in_group("item_piles").size() >= preload("res://scripts/pickups/item_pile.gd").MAX_PILES:
+        session.notify_character(actor.character_id, "Too much is lying around already.")
+        return false
+    if not bag.discard(StringName(id), count):
+        return false
+    var pile: Node2D = drop_pile("", {id: count}, [], actor.global_position + Vector2(0, 10), "", 0.0)
+    if pile == null:
+        bag.add_material(id, count)
+        return false
+    pile.gone_at = CLAIM_RULES.world_time(self) + DROP_LIFETIME
+    pile.dropper = actor.character_id
+    session.queue_save()
+    return true
+
+func drop_gear_item(actor: Node2D, id: String) -> bool:
+    var item: Dictionary = actor.item_by_id(id)
+    if item.is_empty() or actor.progression.get("equipment", {}).values().has(id):
+        return false
+    if not actor.remove_item(id):
+        return false
+    var pickup: Node2D = drop_gear(item, actor.global_position + Vector2(0, 12), "", "", 0.0)
+    if pickup == null:
+        actor.add_item(item)
+        return false
+    pickup.dropper = actor.character_id
+    pickup.pop_from = Vector2(0, -12)
+    session.queue_save()
+    return true
+
 ## Host: F picks up the nearest loot within reach (walking over it takes it as well).
 func nearest_loot(actor: Node2D) -> String:
     var best := ""
     var distance: float = GEAR_PICKUP_REACH + 0.1
+    for node in get_tree().get_nodes_in_group("item_piles"):
+        var pile_gap: float = actor.global_position.distance_to(node.global_position)
+        if pile_gap < distance and CLAIM_RULES.can_take(self, node.owner_id, node.claim_until, actor.character_id):
+            best = node.entity_id
+            distance = pile_gap
     for node in get_tree().get_nodes_in_group("gear_pickups"):
         var gap: float = actor.global_position.distance_to(node.global_position)
         if gap < distance and CLAIM_RULES.can_take(self, node.owner_id, node.claim_until, actor.character_id):
@@ -285,7 +329,11 @@ func take_loot(actor: Node2D, id: String) -> bool:
     if multiplayer.has_multiplayer_peer() and not multiplayer.is_server():
         return false
     var lying: Node = entity_by_id(id)
-    if lying == null or not lying.is_in_group("gear_pickups") or actor.get_node("Health").current <= 0:
+    if lying == null or actor.get_node("Health").current <= 0:
+        return false
+    if lying.is_in_group("item_piles"):
+        return lying.take(actor)
+    if not lying.is_in_group("gear_pickups"):
         return false
     return lying.try_give(actor, true)
 

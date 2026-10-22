@@ -33,6 +33,7 @@ var _items: ItemList
 var _details: Label
 var _capacity: Label
 var _discard: Button
+var _drop_all: Button
 ## Use a consumable or read a scroll from the bag (M4.5c).
 var _use: Button
 ## Shop and ferry window (M4.5c), see trade_panel.gd.
@@ -975,17 +976,23 @@ func _build_inventory() -> void:
     _items.item_selected.connect(_select_item)
     _modal.add_child(_items)
     _details = _label("", o + Vector2(228, 58), Vector2(192, 115), _modal)
-    _discard = _button("Discard 1", o + Vector2(228, 186), Vector2(96, 30), _modal)
-    _use = _button("Use", o + Vector2(330, 186), Vector2(96, 30), _modal)
+    # User request: drop things on the ground (anyone may take them; gone after 10 minutes).
+    _discard = _button("Drop 1", o + Vector2(228, 186), Vector2(62, 30), _modal)
+    _drop_all = _button("Drop all", o + Vector2(294, 186), Vector2(62, 30), _modal)
+    _drop_all.pressed.connect(func():
+        var count: int = inventory.count_of(_selection)
+        if count > 0:
+            session.request_action("drop_item", {"id": String(_selection), "count": count})
+            get_tree().create_timer(0.15, true).timeout.connect(_refresh_inventory)
+    )
+    _use = _button("Use", o + Vector2(360, 186), Vector2(66, 30), _modal)
     _use.pressed.connect(func():
         session.request_action("use_item", {"id": String(_selection)})
         get_tree().create_timer(0.15, true).timeout.connect(_refresh_inventory)
     )
     _discard.pressed.connect(func():
-        if session.active:
-            session.request_action("discard", {"id": String(_selection)})
-        else:
-            inventory.discard(_selection)
+        session.request_action("drop_item", {"id": String(_selection), "count": 1})
+        get_tree().create_timer(0.15, true).timeout.connect(_refresh_inventory)
     )
     _close = _button("Close", o + Vector2(348, 6), Vector2(80, 26), _modal)
     _close.pressed.connect(close_inventory)
@@ -1010,6 +1017,7 @@ func _refresh_inventory() -> void:
         _selection = &""
         _details.text = "No materials stored.\n\nAbsorb and analyze a defeated creature to retain its essence."
         _discard.disabled = true
+        _drop_all.disabled = true
         _use.disabled = true
     else:
         _items.select(selected)
@@ -1020,6 +1028,7 @@ func _select_item(index: int) -> void:
     _selection = entry.id
     _details.text = "%s\n%s · ×%d\n\n%s" % [entry.name, entry.category, entry.count, entry.description]
     _discard.disabled = false
+    _drop_all.disabled = false
     _use.disabled = not preload("res://scripts/trade/trade_catalogue.gd").is_good(String(entry.id))
     _use.text = "Read" if String(entry.id).begins_with("scroll_") else "Use"
 

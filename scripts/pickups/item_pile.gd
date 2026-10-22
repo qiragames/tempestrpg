@@ -20,6 +20,10 @@ var materials: Dictionary = {}
 var items: Array = []
 ## Zeni dropped with the bag (M4.5c: a defeat drops 10% of the purse).
 var zeni: int = 0
+## User request (drop items): things dropped on purpose disappear at this world time (0 = never),
+## and whoever dropped them only picks them up by walking over them after stepping away.
+var gone_at: float = 0.0
+var dropper: String = ""
 
 func _init() -> void:
     collision_layer = 0
@@ -41,11 +45,26 @@ func _ready() -> void:
 func is_empty() -> bool:
     return materials.is_empty() and items.is_empty() and zeni <= 0
 
+func _process(_delta: float) -> void:
+    # The claim timer above the pile counts down on every peer.
+    queue_redraw()
+
 func _physics_process(_delta: float) -> void:
     if not AUTHORITY.can_mutate(self):
         return
+    if gone_at > 0.0 and CLAIM.world_time(get_parent()) >= gone_at:
+        set_physics_process(false)
+        queue_free()
+        get_node("/root/GameSession").queue_save()
+        return
+    if not dropper.is_empty():
+        var who: Node = get_parent().player_by_id(dropper) if get_parent().has_method("player_by_id") else null
+        if who == null or who.global_position.distance_to(global_position) > REACH + 12.0:
+            dropper = ""
     for body in get_overlapping_bodies():
         if not body.is_in_group("player") or not body.has_method("add_item") or body.get_node("Health").current <= 0:
+            continue
+        if body.character_id == dropper:
             continue
         if not CLAIM.can_take(get_parent(), owner_id, claim_until, body.character_id):
             continue
@@ -55,6 +74,13 @@ func _physics_process(_delta: float) -> void:
             continue
         if _give(body):
             return
+
+## Host: F next to it takes what fits (also its dropper).
+func take(body: Node) -> bool:
+    if body.global_position.distance_to(global_position) > 48.0 or not CLAIM.can_take(get_parent(), owner_id, claim_until, body.character_id):
+        return false
+    _give(body)
+    return true
 
 ## Move what fits into the character's bag and gear; true when the pile is gone.
 func _give(body: Node) -> bool:
@@ -86,6 +112,7 @@ func _give(body: Node) -> bool:
     return false
 
 func _draw() -> void:
+    preload("res://scripts/pickups/claim_label.gd").draw_timer(self, owner_id, claim_until, (gone_at - 600.0) if gone_at > 0.0 else claim_until - CLAIM.CLAIM_SECONDS, gone_at if gone_at > 0.0 else -1.0, Vector2(0, -14))
     draw_circle(Vector2.ZERO, 10.0, Color(0.95, 0.75, 0.3, 0.22))
     draw_rect(Rect2(-6, -3, 12, 7), Color("8b5a2b"))
     draw_rect(Rect2(-4, -6, 8, 4), Color("c8954f"))
@@ -93,11 +120,16 @@ func _draw() -> void:
 
 ## Saved / replicated form.
 func capture() -> Dictionary:
-    return {"id": entity_id, "position": [position.x, position.y], "owner": owner_id, "claim_until": claim_until, "materials": materials.duplicate(), "items": items.duplicate(true), "zeni": zeni}
+    var saved := {"id": entity_id, "position": [position.x, position.y], "owner": owner_id, "claim_until": claim_until, "materials": materials.duplicate(), "items": items.duplicate(true), "zeni": zeni}
+    if gone_at > 0.0:
+        saved["gone_at"] = gone_at
+    return saved
 
 static func valid(entry: Variant) -> bool:
     # "zeni" is optional (piles saved before M4.5c have none).
-    if not entry is Dictionary or entry.size() != (7 if entry.has("zeni") else 6) or not entry.get("id") is String or not String(entry.id).begins_with("pile_") or String(entry.id).length() > 64:
+    if not entry is Dictionary or entry.size() != (7 if entry.has("zeni") else 6) + (1 if entry.has("gone_at") else 0) or not entry.get("id") is String or not String(entry.id).begins_with("pile_") or String(entry.id).length() > 64:
+        return false
+    if entry.has("gone_at") and (not (entry.gone_at is float or entry.gone_at is int) or not is_finite(float(entry.gone_at)) or float(entry.gone_at) < 0.0):
         return false
     if not entry.get("owner") is String or not (entry.get("claim_until") is float or entry.get("claim_until") is int) or not is_finite(float(entry.claim_until)) or float(entry.claim_until) < 0.0:
         return false

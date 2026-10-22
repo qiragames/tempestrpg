@@ -153,7 +153,7 @@ static func capture_entities(world: Node2D) -> Dictionary:
             var health = node.get_node("Health")
             enemies.append({"id": node.entity_id, "kind": node.kind, "position": vector(node.position), "home": vector(node.home), "difficulty": node.difficulty, "hp": health.current, "maximum_hp": health.maximum, "immunity": health.immunity_left, "state": node.state, "state_time": node.state_time, "target": node.target.character_id if is_instance_valid(node.target) else "", "credit": node.credit.duplicate(), "group_scaled": node._group_scaled, "status": node.shown_status})
         elif node.is_in_group("gear_pickups"):
-            loot.append({"id": node.entity_id, "position": vector(node.position), "item": node.item.duplicate(true), "owner": node.owner_id, "claim_until": node.claim_until})
+            loot.append({"id": node.entity_id, "position": vector(node.position), "item": node.item.duplicate(true), "owner": node.owner_id, "claim_until": node.claim_until, "since": node.since})
         elif node.is_in_group("magicule_pickups"):
             pickups.append({"id": node.entity_id, "position": vector(node.position), "amount": node.amount, "owner": node.owner_id, "claim_until": node.claim_until})
         elif node.is_in_group("item_piles"):
@@ -270,6 +270,7 @@ static func apply_entities(world: Node2D, data: Dictionary, replica: bool, chang
         if lying != null:
             lying.owner_id = String(state.get("owner", ""))
             lying.claim_until = float(state.get("claim_until", 0.0))
+            lying.since = float(state.get("since", lying.since))
             lying.position = to_vector(state.position)
             lying.set_physics_process(not replica)
             lying.queue_redraw()
@@ -281,6 +282,7 @@ static func apply_entities(world: Node2D, data: Dictionary, replica: bool, chang
         if pile != null:
             pile.materials = state.materials.duplicate()
             pile.items = state.items.duplicate(true)
+            pile.gone_at = float(state.get("gone_at", 0.0))
             pile.position = to_vector(state.position)
             pile.set_physics_process(not replica)
             pile.queue_redraw()
