@@ -117,7 +117,7 @@ func _run() -> void:
     hud.skill_tree._node_buttons.slime_bounce.pressed.emit()
     await _frames(1)
     _check("slime_bounce" in progression.tree.nodes and actor.move_speed == 100.0, "Clicking a node buys it (Bounce: +5 move speed)")
-    _check(hud.skill_tree._activate_buttons[0].text == "Active ✓" and hud.skill_tree._activate_buttons[0].disabled, "Learned skills list shows Rending Bite as active")
+    _check(hud.skill_tree._activate_buttons[0].text.begins_with("Hotbar slot") and not hud.skill_tree._activate_buttons[0].disabled, "Learned skills list shows Rending Bite as active, with its hotbar slot (click moves it)")
     hud.skill_tree.close()
     await _frames(1)
     _check(not hud.skill_tree.visible and not paused, "Closing resumes")

@@ -160,8 +160,9 @@ func assign_slot(index: int, id: StringName) -> bool:
     if _slots[index] == id:
         return false
     var previous := _slots.find(id) if id != &"" else -1
+    # User request (sort the hotbar): moving a skill onto a taken slot swaps the two.
     if previous >= 0:
-        _slots[previous] = &""
+        _slots[previous] = _slots[index]
     _slots[index] = id
     return true
 

@@ -421,6 +421,14 @@ func _build_hotbar() -> void:
         button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
         button.alignment = HORIZONTAL_ALIGNMENT_CENTER
         button.pressed.connect(_activate_slot.bind(index))
+        # User request: sort the hotbar by dragging a skill onto another slot (they swap);
+        # right click clears a slot.
+        button.set_drag_forwarding(_slot_drag.bind(index), _slot_can_drop.bind(index), _slot_drop.bind(index))
+        button.gui_input.connect(func(event: InputEvent):
+            if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+                session.request_action("assign_slot", {"slot": index, "id": ""})
+                button.accept_event()
+        )
         for state in ["normal", "hover", "pressed", "disabled"]:
             button.add_theme_stylebox_override(state, UI.round_slot({"normal": "slot", "hover": "slot_hover", "pressed": "slot_pressed", "disabled": "slot_disabled"}[state]))
         _slots.append(button)
@@ -473,6 +481,31 @@ func _build_hotbar() -> void:
             plate.set_content_margin_all(0)
             small.add_theme_stylebox_override(state, plate)
     set_log_mode(LOG_NORMAL)
+
+func _slot_skill(index: int) -> String:
+    var skill: Resource = player.get_node("SkillBook").skill_at_slot(index) if is_instance_valid(player) else null
+    return String(skill.id) if skill != null else ""
+
+func _slot_drag(_at: Vector2, index: int) -> Variant:
+    var id := _slot_skill(index)
+    if id.is_empty():
+        return null
+    var preview := TextureRect.new()
+    preview.texture = _slots[index].icon
+    preview.size = Vector2(24, 24)
+    preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+    if _slots[index].get_viewport().gui_is_dragging():
+        _slots[index].set_drag_preview(preview)
+    else:
+        preview.free()
+    return {"hotbar_skill": id, "from": index}
+
+func _slot_can_drop(_at: Vector2, data: Variant, index: int) -> bool:
+    return data is Dictionary and data.has("hotbar_skill") and int(data.from) != index
+
+func _slot_drop(_at: Vector2, data: Variant, index: int) -> void:
+    session.request_action("assign_slot", {"slot": index, "id": String(data.hotbar_skill)})
 
 func _activate_slot(index: int) -> void:
     if get_tree().paused or player.input_blocked or (session.replica_world and not session.active):

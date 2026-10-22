@@ -162,6 +162,14 @@ func _activate(index: int) -> void:
     var learned: Array = hud.player.get_node("SkillBook").evidence_ids()
     if index >= learned.size():
         return
+    # User request (sort the hotbar from the skill menu): an active skill goes on the hotbar, and
+    # each click moves it one slot further (it swaps with what is there).
+    if learned[index] in hud.player.progression.tree.active:
+        var book = hud.player.get_node("SkillBook")
+        var at: int = book._slots.find(StringName(learned[index]))
+        var target: int = (at + 1) % book.SLOT_COUNT if at >= 0 else maxi(0, book._slots.find(&""))
+        hud.session.request_action("assign_slot", {"slot": target, "id": learned[index]})
+        return
     if hud.session.active:
         hud.session.request_action("tree", {"operation": "activate", "id": learned[index]})
     else:
@@ -215,8 +223,9 @@ func refresh() -> void:
         var skill: Resource = book.get_skill(StringName(learned[index]))
         var active: bool = learned[index] in progression.tree.active
         _skill_labels[index].text = "%s (%s)" % [skill.display_name if skill != null else learned[index], skill.tier if skill != null else "?"]
-        _activate_buttons[index].text = "Active ✓" if active else "Activate · 1 point"
-        _activate_buttons[index].disabled = active or points < TREE.ACTIVATE_COST
+        var slot: int = book._slots.find(StringName(learned[index]))
+        _activate_buttons[index].text = ("Hotbar slot %d ▸ (click: next slot)" % (slot + 1) if slot >= 0 else "Active ✓ · put on the hotbar") if active else "Activate · 1 point"
+        _activate_buttons[index].disabled = not active and points < TREE.ACTIVATE_COST
 
 func _process(_delta: float) -> void:
     if visible:
