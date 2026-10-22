@@ -247,6 +247,8 @@ func start_host(port: int = DEFAULT_PORT, path: String = "user://worlds/forest.j
         return saved
     world._announce("Hosting for up to 8 players on UDP %d. F9 saves." % port if listening else "World \"%s\" loaded. Esc: pause menu — switch on Multiplayer to invite friends." % world_meta.name)
     character_assigned.emit("host")
+    # The owner's launch options (dev builds only).
+    preload("res://scripts/dev/dev_tools.gd").apply_launch.call_deferred(host_actor)
     return OK
 
 func _listen(port: int) -> Error:

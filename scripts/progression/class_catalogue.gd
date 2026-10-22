@@ -68,6 +68,10 @@ static func requirements(item: Dictionary) -> Dictionary:
 static func problem(progression: Dictionary, item: Dictionary) -> String:
     if not enforced:
         return ""
+    # The owner's mod menu (dev builds only): wear anything.
+    var dev := preload("res://scripts/dev/dev_tools.gd")
+    if dev.free_gear and dev.available():
+        return ""
     var needs := requirements(item)
     if int(progression.get("level", 1)) < int(needs.level):
         return "Needs level %d." % int(needs.level)

@@ -39,7 +39,7 @@ func _init(owner_hud: CanvasLayer) -> void:
     close.pressed.connect(close_panel)
     # Boosts.
     var y := 40.0
-    for entry in [["speed", "Super speed (×3)"], ["xp", "Super XP (×10)"], ["loot", "Super loot (every kill drops, mostly Epic+)"], ["zeni", "Super Zeni (×10)"], ["god", "God mode (no damage)"]]:
+    for entry in [["speed", "Super speed (×3)"], ["xp", "Super XP (×10)"], ["loot", "Super loot (every kill drops, mostly Epic+)"], ["zeni", "Super Zeni (×10)"], ["god", "God mode (no damage)"], ["free_gear", "Wear anything (no level/class/attribute needs)"]]:
         var check := CheckButton.new()
         check.text = entry[1]
         check.position = FRAME.position + Vector2(14, y)
@@ -52,11 +52,16 @@ func _init(owner_hud: CanvasLayer) -> void:
         y += 24.0
     # Quick gifts.
     y += 6.0
-    for entry in [["+10,000 Zeni", "zeni"], ["+1 level", "level"], ["+5 skill points", "points"], ["Full heal", "heal"], ["Max level (20)", "max"]]:
-        var button: Button = hud._button(entry[0], FRAME.position + Vector2(14, y), Vector2(250, 22), self)
+    var gift_index := 0
+    for entry in [["+10,000 Zeni", "zeni"], ["+1 level", "level"], ["+5 skill points", "points"], ["Full heal", "heal"], ["Max level", "max"], ["Every Mythic weapon", "mythics"]]:
+        # Two columns, so everything fits above the status line.
+        var column: int = gift_index % 2
+        var button: Button = hud._button(entry[0], FRAME.position + Vector2(14 + column * 128, y), Vector2(122, 22), self)
         button.add_theme_font_size_override("font_size", 9)
         button.pressed.connect(_gift.bind(entry[1]))
-        y += 25.0
+        gift_index += 1
+        if column == 1:
+            y += 25.0
     _status = hud._label("", FRAME.position + Vector2(14, FRAME.size.y - 40), Vector2(250, 30), self, 8)
     _status.add_theme_color_override("font_color", UI.GOLD_LIGHT)
     # Item browser.
@@ -194,6 +199,11 @@ func _gift(kind: String) -> void:
             var extra: int = mini(5, 30 - int(player.progression.get("bonus_points", 0)))
             player.progression["bonus_points"] = int(player.progression.get("bonus_points", 0)) + extra
             player.progression["skill_points"] = int(player.progression.skill_points) + extra
+        "mythics":
+            var result: Array = DEV.give_mythics(player)
+            _status.text = "%d Mythic weapons in the bag, %d at your feet." % [result[0], result[1]]
+            hud.session.queue_save()
+            return
         "heal":
             player.get_node("Health").heal(player.get_node("Health").maximum)
             player.get_node("Magicules").restore(player.get_node("Magicules").maximum)
