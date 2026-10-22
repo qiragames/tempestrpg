@@ -1799,13 +1799,6 @@ func _draw() -> void:
             var phase := fmod(progress * 3.0 + ring / 3.0, 1.0)
             draw_arc(Vector2(0, 2 - phase * 18.0), 10.0 - phase * 4.0, 0, TAU, 20, Color(0.55, 0.9, 1.0, 0.8 * (1.0 - phase)), 1.5)
 
-## The weapon in hand (user feedback: the old coloured lines looked odd): the item's own icon,
-## held at the side the character faces (behind the body when facing away).
-var _weapon_icon: Texture2D
-var _weapon_icon_key := ""
-
-var _weapon_fx: CPUParticles2D
-
 ## M6b: the rod's line and bobber on the water; a hooked fish pulls the bobber under.
 func _draw_line() -> void:
     var direction := facing.normalized() if facing.length() > 0.1 else Vector2.DOWN
@@ -1825,73 +1818,22 @@ func _draw_line() -> void:
         draw_circle(bobber, 2.0, Color("d4473f"))
         draw_rect(Rect2(bobber + Vector2(-2, -1), Vector2(4, 1)), Color.WHITE)
 
-func _draw_weapon(item: Dictionary) -> void:
-    var key := "%s:%d" % [item.base, int(item.rarity)]
-    if key != _weapon_icon_key:
-        _weapon_icon_key = key
-        _weapon_icon = GEAR.icon_texture(item.base, int(item.rarity))
-        _update_weapon_fx(item)
-    if _weapon_icon == null:
-        return
-    var side := 1.0 if facing.x >= -0.1 else -1.0
-    var size := Vector2(14, 14)
-    var at := Vector2(7.0 * side, 0.0) if absf(facing.x) > 0.3 else Vector2(8.0, 1.0)
-    # Rare and up glow (pulsing); the colour is the element's, else the rarity's.
-    var rarity: int = int(item.rarity)
-    if rarity >= 2:
-        var element: String = String(GEAR.BASES[item.base].get("element", ""))
-        var glow: Color = preload("res://scripts/items/element_catalogue.gd").color(element) if not element.is_empty() else Color(GEAR.RARITY_COLORS[rarity])
-        var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 260.0)
-        draw_circle(at + Vector2(0, -4), 5.0 + rarity * 1.2, Color(glow, 0.08 + 0.05 * rarity + 0.06 * pulse))
-    if is_instance_valid(_weapon_fx):
-        _weapon_fx.position = at + Vector2(0, -4)
-    draw_set_transform(at, 0.0, Vector2(side, 1.0))
-    draw_texture_rect(_weapon_icon, Rect2(-size / 2.0 - Vector2(0, 4), size), false)
-    draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+## SVE feedback 2026-10-22: the weapon is held in the hand and moves with each strike
+## (scripts/visual/weapon_hand.gd, a child drawn over the body sprite); no glow around it.
+var weapon_hand: Node2D
 
-## Epic and up: sparks rise from the weapon (more and bigger for Legendary and Mythic).
-func _update_weapon_fx(item: Dictionary) -> void:
-    var rarity: int = int(item.rarity) if not item.is_empty() else 0
-    if rarity < 3 or preload("res://scripts/visual/effects.gd").reduced:
-        if is_instance_valid(_weapon_fx):
-            _weapon_fx.queue_free()
-        _weapon_fx = null
-        return
-    if not is_instance_valid(_weapon_fx):
-        _weapon_fx = CPUParticles2D.new()
-        _weapon_fx.name = "WeaponFx"
-        _weapon_fx.local_coords = false
-        _weapon_fx.direction = Vector2.UP
-        _weapon_fx.spread = 40.0
-        _weapon_fx.gravity = Vector2(0, -18)
-        _weapon_fx.initial_velocity_min = 4.0
-        _weapon_fx.initial_velocity_max = 12.0
-        _weapon_fx.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
-        _weapon_fx.emission_sphere_radius = 4.0
-        add_child(_weapon_fx)
-    var element: String = String(GEAR.BASES[item.base].get("element", ""))
-    var colour: Color = preload("res://scripts/items/element_catalogue.gd").color(element) if not element.is_empty() else Color(GEAR.RARITY_COLORS[rarity])
-    _weapon_fx.amount = [0, 0, 0, 6, 12, 22][rarity]
-    _weapon_fx.lifetime = 0.6 + 0.15 * rarity
-    _weapon_fx.scale_amount_min = 0.8
-    _weapon_fx.scale_amount_max = 1.0 + 0.4 * (rarity - 3)
-    var ramp := Gradient.new()
-    ramp.set_color(0, Color(colour.lightened(0.3), 0.9))
-    ramp.set_color(1, Color(colour, 0.0))
-    _weapon_fx.color_ramp = ramp
-    _weapon_fx.emitting = true
-
-## Distinct, rarity-coloured looks per item base (placeholders until the sprite step).
 func _draw_gear() -> void:
-    # No weapon (or a plain one): no weapon sparks.
-    if is_instance_valid(_weapon_fx) and item_by_id(progression.get("equipment", {}).get("weapon", "")).is_empty():
-        _update_weapon_fx({})
-        _weapon_icon_key = ""
-    # User request: no coloured bars for worn armour and jewellery (they looked odd); the weapon
-    # in hand is the only gear drawn on the character.
-    var weapon: Dictionary = item_by_id(progression.get("equipment", {}).get("weapon", ""))
-    if not weapon.is_empty():
-        _draw_weapon(weapon)
+    if not is_instance_valid(weapon_hand):
+        weapon_hand = preload("res://scripts/visual/weapon_hand.gd").new(self)
+        add_child(weapon_hand)
+
+## The weapon's in-hand texture and sparks (tests).
+var _weapon_icon: Texture2D:
+    get:
+        return weapon_hand._texture if is_instance_valid(weapon_hand) else null
+var _weapon_fx: CPUParticles2D:
+    get:
+        return weapon_hand._fx if is_instance_valid(weapon_hand) else null
 
 func _draw_body() -> void:
     # The animated body replaces these placeholder shapes; they remain only as a fallback.

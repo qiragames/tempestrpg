@@ -4,6 +4,7 @@ extends Control
 ## on the right, a stats panel (gear score, stats, active set bonuses) and the owned items as a
 ## grid of squares. Drag an item onto a slot (or double-click it, or press Equip); drag a worn
 ## item back to the grid or right-click its slot to take it off. Hovering shows the item card.
+const SPARKLE := preload("res://scripts/ui/rarity_sparkle.gd")
 const GEAR := preload("res://scripts/items/gear_catalogue.gd")
 const UI := preload("res://scripts/ui/ui_style.gd")
 const SETS := preload("res://scripts/items/set_catalogue.gd")
@@ -55,11 +56,16 @@ class GearCell extends Panel:
     func _draw() -> void:
         if texture != null:
             draw_texture_rect(texture, Rect2(Vector2(2, 2), size - Vector2(4, 4)), false)
+            SPARKLE.draw(self, Rect2(Vector2(2, 2), size - Vector2(4, 4)), rarity, item_id.hash())
         elif not slot.is_empty():
             var font := get_theme_default_font()
             draw_string(font, Vector2(0, size.y / 2.0 + 3), SLOT_NAMES[slot], HORIZONTAL_ALIGNMENT_CENTER, size.x, 7, Color(0.55, 0.55, 0.6))
         if not item_id.is_empty() and item_id == owner_panel._selected:
             draw_rect(Rect2(Vector2.ONE, size - Vector2(2, 2)), UI.CYAN, false, 1.0)
+
+    func _process(_delta: float) -> void:
+        if texture != null and SPARKLE.animates(rarity) and is_visible_in_tree():
+            queue_redraw()
 
     func _get_drag_data(_at: Vector2) -> Variant:
         if item_id.is_empty():
