@@ -99,7 +99,7 @@ func refresh() -> void:
         var row := HBoxContainer.new()
         row.custom_minimum_size = Vector2(0, 22)
         _list.add_child(row)
-        var label: Label = hud._label(actor.character_id, Vector2.ZERO, Vector2(200, 20), row, 9)
+        var label: Label = hud._label(preload("res://scripts/progression/character_names.gd").display(actor.progression), Vector2.ZERO, Vector2(200, 20), row, 9)
         label.custom_minimum_size = Vector2(200, 20)
         var fight: Button = hud._button("Challenge", Vector2.ZERO, Vector2(90, 20), row)
         fight.custom_minimum_size = Vector2(90, 20)
@@ -115,7 +115,7 @@ func refresh() -> void:
     _text("Arena board (arena won/lost · duels won/lost)", UI.GOLD_LIGHT)
     var place := 1
     for row in board():
-        _text("%d. %s   arena %d/%d · duels %d/%d" % [place, row[0], row[1][0], row[1][1], row[2][0], row[2][1]], UI.TEXT if row[0] != me.character_id else Color("8fe3a0"))
+        _text("%d. %s   arena %d/%d · duels %d/%d" % [place, preload("res://scripts/progression/character_names.gd").named(self, row[0]), row[1][0], row[1][1], row[2][0], row[2][1]], UI.TEXT if row[0] != me.character_id else Color("8fe3a0"))
         place += 1
 
 func _process(_delta: float) -> void:

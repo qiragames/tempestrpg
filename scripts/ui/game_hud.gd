@@ -375,7 +375,9 @@ func _refresh_status() -> void:
     _xp_bar.value = _xp_bar.max_value if level >= LEVELING.LEVEL_CAP else clampi(int(player.progression.get("experience", 0)) - floor_xp, 0, next_xp - floor_xp)
     var mimic: bool = player.form != player.FORMS.BASE
     var worn: String = preload("res://scripts/progression/achievements.gd").worn_title(player)
-    _name.text = "%s%s%s" % [player.race(), " · %s form" % player.FORMS.FORMS[player.form].name if mimic else "", " · %s" % worn if not worn.is_empty() else ""]
+    # SVE feedback 2026-10-22: "Name (Race)" (just the race for an unnamed character).
+    var named: String = preload("res://scripts/progression/character_names.gd").of(player.progression)
+    _name.text = "%s%s%s" % ["%s (%s)" % [named, player.race()] if not named.is_empty() else player.race(), " · %s form" % player.FORMS.FORMS[player.form].name if mimic else "", " · %s" % worn if not worn.is_empty() else ""]
     var body: String = player._body_id()
     if body != _portrait_id:
         _portrait_id = body
@@ -418,6 +420,9 @@ func _build_hotbar() -> void:
         button.add_theme_font_size_override("font_size", 8)
         button.focus_mode = Control.FOCUS_NONE
         button.clip_text = true
+        # SVE feedback 2026-10-22: a filled slot grew with its icon and hung over the controls line;
+        # the icon now shrinks into the fixed 34 x 34 slot.
+        button.expand_icon = true
         button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
         button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
         button.alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -849,6 +854,15 @@ func _process(_delta: float) -> void:
 ## M14a: chat lines arrive in colour (bbcode), so every message is escaped first.
 func record_event(message: String, colour: String = "") -> void:
     var line := message.replace("[", "[lb]")
+    # SVE feedback 2026-10-22: the same message again (e.g. pressing Absorb with nothing near)
+    # becomes "message ×N" on one line instead of filling the log.
+    if not _events.is_empty() and message == _last_event:
+        _event_repeats += 1
+        line += " [color=#%s]×%d[/color]" % [UI.GOLD_LIGHT.to_html(false), _event_repeats]
+        _events.pop_back()
+    else:
+        _last_event = message
+        _event_repeats = 1
     _events.append("[color=#%s]%s[/color]" % [colour, line] if not colour.is_empty() else line)
     if _events.size() > LOG_HISTORY:
         _events.pop_front()
@@ -860,6 +874,8 @@ const LOG_NORMAL := 1
 const LOG_TALL := 2
 ## Lines kept for scrolling back.
 const LOG_HISTORY := 30
+var _last_event := ""
+var _event_repeats := 0
 ## Box top edge (the bottom stays at 338) per mode.
 const LOG_TOPS := [324, 256, 140]
 var log_mode := LOG_NORMAL

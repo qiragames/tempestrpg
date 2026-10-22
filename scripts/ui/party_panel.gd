@@ -3,6 +3,7 @@ extends Control
 ## online with Invite, and a pending invitation to accept or decline. Also draws the party frames
 ## (HP / Magicule bars of the other members) under the status card. Only names travel to the
 ## host; it checks every rule (WorldParty).
+const NAMES := preload("res://scripts/progression/character_names.gd")
 const UI := preload("res://scripts/ui/ui_style.gd")
 const FRAME := Rect2(150, 40, 340, 270)
 const PARTY_COLOR := Color("ff8adf")
@@ -125,7 +126,7 @@ func _refresh() -> void:
     var me: String = hud.player.character_id
     var node := party()
     var invite: Dictionary = node.state.invites.get(me, {})
-    _invite_label.text = "%s invites you to their party." % invite.from if not invite.is_empty() else ""
+    _invite_label.text = "%s invites you to their party." % _who(invite.from) if not invite.is_empty() else ""
     _accept.visible = not invite.is_empty()
     _decline.visible = not invite.is_empty()
     # M15: a duel challenge to answer, or the running duel to give up.
@@ -134,7 +135,7 @@ func _refresh() -> void:
         var offer: Dictionary = duels.state.challenges.get(me, {})
         if not offer.is_empty():
             var row := _row()
-            var text: Label = _fit(hud._label("%s challenges you%s" % [offer.from, " (arena)" if offer.arena else ""], Vector2.ZERO, Vector2(170, 20), row, 9), 170)
+            var text: Label = _fit(hud._label("%s challenges you%s" % [_who(offer.from), " (arena)" if offer.arena else ""], Vector2.ZERO, Vector2(170, 20), row, 9), 170)
             text.add_theme_color_override("font_color", Color("ffb070"))
             var yes: Button = _fit(hud._button("Fight", Vector2.ZERO, Vector2(60, 20), row), 60)
             yes.pressed.connect(func():
@@ -145,7 +146,7 @@ func _refresh() -> void:
             _list.add_child(row)
         if duels.in_match(me):
             var row := _row()
-            _fit(hud._label("Fighting %s" % duels.opponent(me), Vector2.ZERO, Vector2(170, 20), row, 9), 170)
+            _fit(hud._label("Fighting %s" % _who(duels.opponent(me)), Vector2.ZERO, Vector2(170, 20), row, 9), 170)
             var give_up: Button = _fit(hud._button("Give up", Vector2.ZERO, Vector2(80, 20), row), 80)
             give_up.pressed.connect(func(): _duel("forfeit"))
             _list.add_child(row)
@@ -155,7 +156,7 @@ func _refresh() -> void:
     if mine.size() > 1:
         for id in mine:
             var row := _row()
-            var name_label: Label = hud._label(("★ " if node.leader(me) == id else "") + id + (" (you)" if id == me else ""), Vector2.ZERO, Vector2(170, 20), row, 10)
+            var name_label: Label = hud._label(("★ " if node.leader(me) == id else "") + _who(id) + (" (you)" if id == me else ""), Vector2.ZERO, Vector2(170, 20), row, 10)
             name_label.add_theme_color_override("font_color", PARTY_COLOR)
             _fit(name_label, 170)
             if id == me:
@@ -176,7 +177,7 @@ func _refresh() -> void:
         _fit(hud._label("Online:", Vector2.ZERO, Vector2(200, 18), _list, 10), 200)
     for id in others:
         var row := _row()
-        _fit(hud._label(id, Vector2.ZERO, Vector2(170, 20), row, 10), 170)
+        _fit(hud._label(_who(id), Vector2.ZERO, Vector2(170, 20), row, 10), 170)
         var invite_button: Button = _fit(hud._button("Invite", Vector2.ZERO, Vector2(110, 20), row), 110)
         invite_button.disabled = mine.size() >= node.MAX_SIZE or (mine.size() > 1 and not leading)
         invite_button.pressed.connect(_send.bind("invite", id))
@@ -185,6 +186,11 @@ func _refresh() -> void:
         _list.add_child(row)
     if others.is_empty() and mine.size() <= 1:
         _fit(hud._label("Nobody else is online. Open your world to friends (Esc).", Vector2.ZERO, Vector2(300, 18), _list, 10), 290)
+
+## SVE feedback 2026-10-22: characters by name (their race when unnamed), never by their id
+## (host_..., player_...).
+func _who(id: String) -> String:
+    return NAMES.named(self, id)
 
 ## M15: a Duel button (they must stand near you; at an Arena it is a best-of-three match).
 func _duel_button(id: String) -> Button:
@@ -232,7 +238,7 @@ func _draw_frames() -> void:
             continue
         var actor: Node = hud.get_parent().player_by_id(id)
         _frames.draw_rect(Rect2(0, y, 130, 22), Color(0.02, 0.03, 0.06, 0.75))
-        _frames.draw_string(font, Vector2(4, y + 8), id, HORIZONTAL_ALIGNMENT_LEFT, 120, 8, PARTY_COLOR)
+        _frames.draw_string(font, Vector2(4, y + 8), _who(id), HORIZONTAL_ALIGNMENT_LEFT, 120, 8, PARTY_COLOR)
         if actor != null:
             var health: Node = actor.get_node("Health")
             var pool: Node = actor.get_node("Magicules")

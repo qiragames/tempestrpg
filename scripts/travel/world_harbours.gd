@@ -126,7 +126,7 @@ func invite(owner: Node2D, here: String, guest_id: String) -> bool:
     if crew_of(owner.character_id).size() >= TRAVEL.CREW_MAX - 1:
         return _refuse(owner, "Your ship takes %d characters in all." % TRAVEL.CREW_MAX)
     state.invites[guest_id] = {"owner": owner.character_id, "until": world_time() + TRAVEL.INVITE_SECONDS}
-    session().notify_character(guest_id, "%s invites you aboard their ship. Open the harbour (F) to accept." % owner.character_id)
+    session().notify_character(guest_id, "%s invites you aboard their ship. Open the harbour (F) to accept." % preload("res://scripts/progression/character_names.gd").display(owner.progression))
     session().notify_character(owner.character_id, "Invited %s aboard." % guest_id)
     return true
 
@@ -141,7 +141,7 @@ func accept(guest: Node2D) -> bool:
     state.invites.erase(guest.character_id)
     leave_crew(guest)
     state.crews[invite.owner] = crew_of(invite.owner) + [guest.character_id]
-    session().notify_character(invite.owner, "%s is aboard." % guest.character_id)
+    session().notify_character(invite.owner, "%s is aboard." % preload("res://scripts/progression/character_names.gd").display(guest.progression))
     session().notify_character(guest.character_id, "You are aboard %s's ship; it sails when they choose a harbour." % invite.owner)
     return true
 

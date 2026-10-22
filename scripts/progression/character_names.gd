@@ -31,3 +31,19 @@ static func of(progression: Dictionary) -> String:
 static func display(progression: Dictionary) -> String:
     var name := of(progression)
     return name if not name.is_empty() else String(progression.get("race", "Slime"))
+
+## SVE feedback 2026-10-22 (ids like host_... in the party menu): what to show for a character id
+## in messages and lists — the character's name (or race) while it is in the world, else "Someone".
+static func named(anywhere: Node, id: String) -> String:
+    if anywhere == null or not anywhere.is_inside_tree():
+        return "Someone"
+    for actor in anywhere.get_tree().get_nodes_in_group("player"):
+        if actor.character_id == id:
+            return display(actor.progression)
+    # Away: the host still has the character's record.
+    var session: Node = anywhere.get_tree().root.get_node_or_null("GameSession")
+    if session != null and session.get("records") is Dictionary and session.records.get(id, {}).get("progression", {}) is Dictionary:
+        var progression: Dictionary = session.records.get(id, {}).get("progression", {})
+        if not progression.is_empty():
+            return display(progression)
+    return "Someone"

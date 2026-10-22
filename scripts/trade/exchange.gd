@@ -63,7 +63,7 @@ func request(actor: Node2D, who: String) -> bool:
         _notify(actor.character_id, "Stand next to %s to trade." % who.left(16))
         return false
     state.requests[who] = {"from": actor.character_id, "until": _now() + REQUEST_SECONDS}
-    _notify(who, "%s wants to trade with you (P: accept or decline)." % actor.character_id.left(16))
+    _notify(who, "%s wants to trade with you (P: accept or decline)." % preload("res://scripts/progression/character_names.gd").display(actor.progression))
     _notify(actor.character_id, "Trade request sent.")
     return true
 
@@ -86,7 +86,7 @@ func decline(actor: Node2D) -> bool:
     if not AUTHORITY.can_mutate(actor) or asked.is_empty():
         return false
     state.requests.erase(actor.character_id)
-    _notify(String(asked.from), "%s declined the trade." % actor.character_id.left(16))
+    _notify(String(asked.from), "%s declined the trade." % preload("res://scripts/progression/character_names.gd").display(actor.progression))
     return true
 
 ## Replace your side's offer: {"gear": [item ids], "goods": {id: count}, "zeni": amount}.
@@ -133,7 +133,7 @@ func cancel(actor: Node2D) -> bool:
     var trade_id := trade_of(actor.character_id)
     if not AUTHORITY.can_mutate(actor) or trade_id.is_empty():
         return false
-    _end(trade_id, "%s cancelled the trade." % actor.character_id.left(16))
+    _end(trade_id, "%s cancelled the trade." % preload("res://scripts/progression/character_names.gd").display(actor.progression))
     return true
 
 func _end(trade_id: String, message: String) -> void:

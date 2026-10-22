@@ -252,7 +252,13 @@ func place_problem(actor: Node2D, kind: String, tile: Vector2i) -> String:
     if state.nation.buildings.size() >= NATION.MAX_BUILDINGS:
         return "No more buildings fit the settlement."
     var area := NATION.footprint(kind, tile)
-    if area.get_center().distance_to(SITE) + area.size.length() / 2.0 > NATION.radius(tier()):
+    var outside: bool = area.get_center().distance_to(SITE) + area.size.length() / 2.0 > NATION.radius(tier())
+    # SVE feedback 2026-10-22: Your House may stand anywhere free in the world.
+    if outside and kind == "home":
+        var wild := wild_problem(area)
+        if not wild.is_empty():
+            return wild
+    elif outside:
         return "Outside your %s (grow it to build further out)." % NATION.tier_name(tier()).to_lower()
     if actor != null and actor.global_position.distance_to(NATION.foot(tile)) > PLACE_REACH:
         return "Too far away."
@@ -260,6 +266,32 @@ func place_problem(actor: Node2D, kind: String, tile: Vector2i) -> String:
         if int(state[resource]) < int(spec[3][resource]):
             return "%s costs %s." % [spec[0], NATION.cost_text(spec[3])]
     return clear_problem(area)
+
+## Why a house cannot stand on this open ground outside the settlement: not in a town, on a road,
+## by a cave mouth or a harbour, in a dungeon, the Ki Realm or indoors ("" when it can).
+const WILD_TOWN_MARGIN := 4.0
+const WILD_GATE_CLEARANCE := 64.0
+func wild_problem(area: Rect2) -> String:
+    var centre := area.get_center()
+    if MAP.in_realm(centre) or not MAP.dungeon_at(centre).is_empty() or MAP.HOME_ZONE.has_point(centre):
+        return "Not here."
+    var tile := (centre - MAP.ORIGIN) / MAP.TILE
+    for town in MAP.TOWNS:
+        if tile.distance_to(town[3]) <= MAP.PLACE_RADIUS[town[4]] + WILD_TOWN_MARGIN:
+            return "Not inside %s." % town[1]
+    var dungeons := preload("res://scripts/dungeons/dungeon_catalogue.gd")
+    for id in dungeons.DUNGEONS:
+        if centre.distance_to(MAP.to_world(dungeons.DUNGEONS[id][2])) < WILD_GATE_CLEARANCE:
+            return "Too close to the cave mouth."
+    for ferry in MAP.HARBOURS:
+        if centre.distance_to(MAP.to_world(Vector2(ferry[2]))) < WILD_GATE_CLEARANCE:
+            return "Too close to the harbour."
+    var dirt: PackedByteArray = MAP.data().dirt
+    for y in range(MAP.to_tile(area.position).y, MAP.to_tile(area.end).y + 2):
+        for x in range(MAP.to_tile(area.position).x, MAP.to_tile(area.end).x + 2):
+            if MAP.in_grid(Vector2i(x, y)) and dirt[MAP.vertex_index(x, y)] > 0:
+                return "Not on a road."
+    return ""
 
 ## Free ground: no water or cliffs, other buildings, the camp's structures (built or not), the
 ## flag, deposits, chests, the trial stone, trees, rocks, props or anyone standing there.

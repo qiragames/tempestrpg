@@ -8,7 +8,8 @@ const UI := preload("res://scripts/ui/ui_style.gd")
 const NATION := preload("res://scripts/nation/nation_catalogue.gd")
 const MAP := preload("res://scripts/world/world_map.gd")
 const TERRAIN := preload("res://scripts/world/world_terrain.gd")
-const FRAME := Rect2(70, 14, 500, 330)
+const FRAME := Rect2(70, 8, 500, 344)
+const TABS := [["camp", "Camp"], ["nation", "Nation"], ["build", "Build"], ["citizens", "Citizens"]]
 
 var hud: CanvasLayer
 var _title: Label
@@ -22,6 +23,12 @@ var _emblems: Array = []
 var _build_buttons: Dictionary = {}
 var _demolish: Button
 var _banner: Control
+var _overview: Control
+var _build_page: Control
+var _stock: Label
+var _tab_buttons: Dictionary = {}
+## The tab shown: "nation" or "build" (the camp tab is the camp window, the citizens tab its own).
+var tab := "nation"
 var _paused_before := false
 ## Build mode: the kind being placed ("demolish" to tear down), the ghost in the world.
 var mode := ""
@@ -49,29 +56,36 @@ func _init(owner_hud: CanvasLayer) -> void:
     frame.size = FRAME.size
     frame.add_theme_stylebox_override("panel", UI.ornate())
     window.add_child(frame)
-    _title = UI.heading(hud._label("", FRAME.position + Vector2(56, 10), Vector2(330, 20), window, 14))
-    var close: Button = hud._button("Close", FRAME.position + Vector2(FRAME.size.x - 92, 8), Vector2(80, 24), window)
+    # SVE feedback 2026-10-22: the camp (B) and the nation share one window with tabs, and the
+    # building list scrolls instead of running off the screen.
+    _tab_buttons = make_tabs(hud, window, FRAME.position + Vector2(14, 10), "nation")
+    var close: Button = hud._button("Close", FRAME.position + Vector2(FRAME.size.x - 92, 8), Vector2(80, 22), window)
     close.pressed.connect(close_panel)
+    # --- Nation tab: name, banner, tier, rank up.
+    _overview = Control.new()
+    _overview.name = "Overview"
+    _overview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    window.add_child(_overview)
+    _title = UI.heading(hud._label("", FRAME.position + Vector2(56, 42), Vector2(400, 20), _overview, 14))
     _banner = Control.new()
-    _banner.position = FRAME.position + Vector2(16, 8)
+    _banner.position = FRAME.position + Vector2(16, 40)
     _banner.size = Vector2(34, 40)
     _banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
     _banner.draw.connect(_draw_banner)
-    window.add_child(_banner)
-    # Name and banner (founder).
-    hud._label("Name", FRAME.position + Vector2(56, 38), Vector2(40, 16), window, 9).add_theme_color_override("font_color", UI.TEXT_DIM)
+    _overview.add_child(_banner)
+    hud._label("Name", FRAME.position + Vector2(56, 70), Vector2(40, 16), _overview, 9).add_theme_color_override("font_color", UI.TEXT_DIM)
     _name = LineEdit.new()
-    _name.position = FRAME.position + Vector2(92, 34)
+    _name.position = FRAME.position + Vector2(92, 66)
     _name.size = Vector2(180, 22)
     _name.max_length = NATION.NAME_LENGTH
     _name.add_theme_font_size_override("font_size", 10)
     _name.placeholder_text = "Name your nation"
-    window.add_child(_name)
-    _rename = hud._button("Rename", FRAME.position + Vector2(278, 34), Vector2(70, 22), window)
+    _overview.add_child(_name)
+    _rename = hud._button("Rename", FRAME.position + Vector2(278, 66), Vector2(70, 22), _overview)
     _rename.add_theme_font_size_override("font_size", 9)
     _rename.pressed.connect(func(): _send("name", _name.text))
     for index in range(NATION.COLORS.size()):
-        var swatch: Button = hud._button("", FRAME.position + Vector2(56 + index * 20, 62), Vector2(16, 16), window)
+        var swatch: Button = hud._button("", FRAME.position + Vector2(56 + index * 20, 96), Vector2(16, 16), _overview)
         var style := StyleBoxFlat.new()
         style.bg_color = NATION.COLORS[index]
         swatch.add_theme_stylebox_override("normal", style)
@@ -79,38 +93,47 @@ func _init(owner_hud: CanvasLayer) -> void:
         swatch.pressed.connect(func(): _send("banner", "%d,%d" % [index, int(_nation().emblem)]))
         _colors.append(swatch)
     for index in range(NATION.EMBLEMS.size()):
-        var emblem: Button = hud._button(NATION.EMBLEMS[index], FRAME.position + Vector2(222 + index * 44, 60), Vector2(42, 20), window)
+        var emblem: Button = hud._button(NATION.EMBLEMS[index], FRAME.position + Vector2(222 + index * 44, 94), Vector2(42, 20), _overview)
         emblem.add_theme_font_size_override("font_size", 8)
         emblem.pressed.connect(func(): _send("banner", "%d,%d" % [int(_nation().color), index]))
         _emblems.append(emblem)
-    # Tier.
-    _tier = hud._label("", FRAME.position + Vector2(16, 84), Vector2(FRAME.size.x - 130, 46), window, 9)
-    _rank = hud._button("Rank up", FRAME.position + Vector2(FRAME.size.x - 108, 90), Vector2(96, 26), window)
+    _tier = hud._label("", FRAME.position + Vector2(16, 124), Vector2(FRAME.size.x - 32, 60), _overview, 9)
+    _rank = hud._button("Rank up", FRAME.position + Vector2(16, 196), Vector2(120, 26), _overview)
     _rank.pressed.connect(func(): _send("rank", "next"))
-    _horde = hud._button("Face the horde", FRAME.position + Vector2(FRAME.size.x - 108, 60), Vector2(96, 22), window)
-    _horde.add_theme_font_size_override("font_size", 8)
+    _horde = hud._button("Face the horde", FRAME.position + Vector2(144, 196), Vector2(120, 26), _overview)
+    _horde.add_theme_font_size_override("font_size", 9)
     _horde.tooltip_text = "Call the monster horde now (a village with 3 citizens; at the flag)."
     _horde.pressed.connect(func(): _send("siege", "now"))
-    # Buildings.
-    UI.heading(hud._label("BUILD", FRAME.position + Vector2(16, 130), Vector2(200, 16), window, 11))
-    var people: Button = hud._button("Citizens & trade…", FRAME.position + Vector2(FRAME.size.x - 180, 126), Vector2(164, 20), window)
-    people.add_theme_font_size_override("font_size", 9)
-    people.pressed.connect(func():
-        close_panel()
-        hud.citizens_panel.open()
-    )
-    var index := 0
+    hud._label("Rank up and the horde happen at the camp flag · N / Esc: close · B: the camp", FRAME.position + Vector2(16, FRAME.size.y - 22), Vector2(FRAME.size.x - 32, 14), _overview, 8).add_theme_color_override("font_color", UI.TEXT_DIM)
+    # --- Build tab: the buildings in a scrolling grid.
+    _build_page = Control.new()
+    _build_page.name = "Build"
+    _build_page.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    window.add_child(_build_page)
+    _stock = hud._label("", FRAME.position + Vector2(16, 40), Vector2(FRAME.size.x - 32, 14), _build_page, 9)
+    var scroll := ScrollContainer.new()
+    scroll.name = "Buildings"
+    scroll.position = FRAME.position + Vector2(14, 58)
+    scroll.size = Vector2(FRAME.size.x - 28, FRAME.size.y - 86)
+    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    _build_page.add_child(scroll)
+    var grid := GridContainer.new()
+    grid.columns = 3
+    grid.add_theme_constant_override("h_separation", 6)
+    grid.add_theme_constant_override("v_separation", 6)
+    scroll.add_child(grid)
     for kind in NATION.BUILDINGS:
-        var button: Button = hud._button("", FRAME.position + Vector2(16 + (index % 3) * 158, 150 + int(index / 3) * 40), Vector2(152, 36), window)
+        var button: Button = hud._button("", Vector2.ZERO, Vector2(150, 36), grid)
+        button.custom_minimum_size = Vector2(150, 36)
         button.add_theme_font_size_override("font_size", 8)
         button.pressed.connect(start_mode.bind(kind))
         button.tooltip_text = NATION.BUILDINGS[kind][6]
         _build_buttons[kind] = button
-        index += 1
-    _demolish = hud._button("Demolish…", FRAME.position + Vector2(16 + (index % 3) * 158, 150 + int(index / 3) * 40), Vector2(152, 36), window)
+    _demolish = hud._button("Demolish…", Vector2.ZERO, Vector2(150, 36), grid)
+    _demolish.custom_minimum_size = Vector2(150, 36)
     _demolish.add_theme_font_size_override("font_size", 9)
     _demolish.pressed.connect(start_mode.bind("demolish"))
-    hud._label("Build anywhere inside your settlement's ring · materials come from the camp stock (B) · N / Esc: close", FRAME.position + Vector2(16, FRAME.size.y - 22), Vector2(FRAME.size.x - 32, 14), window, 8).add_theme_color_override("font_color", UI.TEXT_DIM)
+    hud._label("Your House: anywhere free in the world · other buildings: inside your settlement's ring · N / Esc: close", FRAME.position + Vector2(16, FRAME.size.y - 22), Vector2(FRAME.size.x - 32, 14), _build_page, 8).add_theme_color_override("font_color", UI.TEXT_DIM)
     window.hide()
     _hint = hud._label("", Vector2(120, 300), Vector2(400, 40), self, 10)
     _hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -133,11 +156,56 @@ func _nation() -> Dictionary:
 func is_open() -> bool:
     return window().visible or not mode.is_empty()
 
-func open() -> void:
-    if hud.menu_open() or not camp().state.founded:
-        if not camp().state.founded:
-            hud.session.notify_character(hud.player.character_id, "Found the camp first (B at the camp flag).")
+## The tab row shared by this window and the camp window (B), so both read as one window.
+static func make_tabs(owner_hud: CanvasLayer, parent: Control, origin: Vector2, current: String) -> Dictionary:
+    var buttons := {}
+    for index in range(TABS.size()):
+        var id: String = TABS[index][0]
+        var button: Button = owner_hud._button(TABS[index][1], origin + Vector2(index * 76, 0), Vector2(72, 20), parent)
+        button.name = "Tab" + TABS[index][1]
+        button.add_theme_font_size_override("font_size", 9)
+        button.toggle_mode = true
+        button.focus_mode = Control.FOCUS_NONE
+        button.set_pressed_no_signal(id == current)
+        button.pressed.connect(func(): owner_hud.nation_panel.show_tab(id))
+        buttons[id] = button
+    return buttons
+
+## Switch tabs: "camp" is the camp window (B), "citizens" the citizens & trade window, "nation"
+## and "build" are pages of this window. Before the camp is founded only the camp tab opens.
+func show_tab(which: String) -> void:
+    var camp_window: Panel = hud._camp_dialog
+    if which == "camp":
+        if not camp_window.visible:
+            close_panel()
+            camp_window.open_dialog()
         return
+    if not camp().state.founded:
+        hud.session.notify_character(hud.player.character_id, "Found the camp first (the Camp tab, at the camp flag).")
+        camp_window.refresh_tabs()
+        return
+    if which == "citizens":
+        close_panel()
+        camp_window.close_dialog()
+        hud.citizens_panel.open()
+        return
+    if window().visible:
+        tab = which
+        _refresh()
+    else:
+        camp_window.close_dialog()
+        open(which)
+
+func open(which: String = "") -> void:
+    if not camp().state.founded:
+        # Before the camp exists the window starts at its Camp tab.
+        if not hud.menu_open():
+            hud._camp_dialog.open_dialog()
+        return
+    if hud.menu_open():
+        return
+    if not which.is_empty():
+        tab = which
     _paused_before = get_tree().paused
     _block(true)
     if not hud.session.active:
@@ -164,6 +232,11 @@ func _send(operation: String, id: String) -> void:
 
 func _refresh() -> void:
     var nation := _nation()
+    _overview.visible = tab == "nation"
+    _build_page.visible = tab == "build"
+    for id in _tab_buttons:
+        _tab_buttons[id].set_pressed_no_signal(id == tab)
+    _stock.text = "%s · stock %d wood, %d stone, %d essence" % [NATION.tier_name(int(nation.tier)), camp().state.wood, camp().state.stone, camp().state.essence]
     var founder: bool = camp().state.founder == hud.player.character_id
     _title.text = ("%s · %s" % [nation.name, NATION.tier_name(int(nation.tier))] if not String(nation.name).is_empty() else "YOUR NATION · %s" % NATION.tier_name(int(nation.tier))).to_upper()
     _name.editable = founder
@@ -318,4 +391,7 @@ func _unhandled_input(event: InputEvent) -> void:
         get_viewport().set_input_as_handled()
     elif window().visible and event.is_action_pressed("ui_cancel"):
         close_panel()
+        get_viewport().set_input_as_handled()
+    elif window().visible and event.is_action_pressed("camp") and not event.is_echo() and not _name.has_focus():
+        show_tab("camp")
         get_viewport().set_input_as_handled()

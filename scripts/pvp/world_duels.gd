@@ -96,7 +96,7 @@ func challenge(actor: Node2D, target_id: String) -> bool:
         return false
     var arena: bool = arena_at(actor) != Vector2.INF and arena_at(target) != Vector2.INF
     state.challenges[target_id] = {"from": actor.character_id, "until": _clock + CHALLENGE_SECONDS, "arena": arena}
-    _tell(target_id, "%s challenges you to %s (P to answer)." % [actor.character_id, "an arena match (best of three)" if arena else "a duel"])
+    _tell(target_id, "%s challenges you to %s (P to answer)." % [preload("res://scripts/progression/character_names.gd").display(actor.progression), "an arena match (best of three)" if arena else "a duel"])
     _tell(actor.character_id, "You challenged %s." % target_id)
     return true
 
@@ -121,14 +121,14 @@ func accept(actor: Node2D) -> bool:
     state.matches[id] = {"a": offer.from, "b": actor.character_id, "at": [centre.x, centre.y], "ring": ARENA_RING if arena else RING, "arena": arena, "round": 1, "wins": [0, 0], "until": _clock + BREAK_SECONDS + ROUND_SECONDS, "resume": _clock + BREAK_SECONDS}
     for fighter in [rival, actor]:
         _restore(fighter)
-    _tell(offer.from, "%s accepted! Fight in the ring — round 1 begins in %d s." % [actor.character_id, int(BREAK_SECONDS)])
+    _tell(offer.from, "%s accepted! Fight in the ring — round 1 begins in %d s." % [preload("res://scripts/progression/character_names.gd").display(actor.progression), int(BREAK_SECONDS)])
     _tell(actor.character_id, "Fight %s in the ring — round 1 begins in %d s." % [offer.from, int(BREAK_SECONDS)])
     return true
 
 func decline(actor: Node) -> bool:
     if not _host() or not state.challenges.has(actor.character_id):
         return false
-    _tell(state.challenges[actor.character_id].from, "%s declined the challenge." % actor.character_id)
+    _tell(state.challenges[actor.character_id].from, "%s declined the challenge." % preload("res://scripts/progression/character_names.gd").display(actor.progression))
     state.challenges.erase(actor.character_id)
     return true
 
@@ -136,7 +136,7 @@ func forfeit(actor: Node) -> bool:
     var id := match_of(actor.character_id)
     if not _host() or id.is_empty():
         return false
-    _finish(id, opponent(actor.character_id), "%s gave up." % actor.character_id)
+    _finish(id, opponent(actor.character_id), "%s gave up." % preload("res://scripts/progression/character_names.gd").display(actor.progression))
     return true
 
 ## From Health.take_damage (via Player.duel_guard): the blow that would finish a fighter wins the
@@ -219,7 +219,7 @@ func _process(delta: float) -> void:
         var centre := Vector2(entry.at[0], entry.at[1])
         for pair in [[a, entry.b], [b, entry.a]]:
             if state.matches.has(id) and pair[0].global_position.distance_to(centre) > float(entry.ring) + 8.0:
-                _finish(id, pair[1], "%s left the ring." % pair[0].character_id)
+                _finish(id, pair[1], "%s left the ring." % preload("res://scripts/progression/character_names.gd").display(pair[0].progression))
         if state.matches.has(id) and _clock >= float(entry.until):
             var share_a: float = float(a.get_node("Health").current) / maxf(1.0, a.get_node("Health").maximum)
             var share_b: float = float(b.get_node("Health").current) / maxf(1.0, b.get_node("Health").maximum)
@@ -251,7 +251,7 @@ func banner(character_id: String) -> String:
     var mine := 0 if entry.a == character_id else 1
     var waiting: float = float(entry.resume) - _clock
     var left: float = maxf(0.0, float(entry.until) - _clock)
-    return "%s vs %s · round %d · %d-%d · %s" % ["ARENA" if entry.arena else "DUEL", opponent(character_id), int(entry.round), int(entry.wins[mine]), int(entry.wins[1 - mine]), ("starts in %d" % ceili(waiting)) if waiting > 0.0 else "%d:%02d" % [int(left) / 60, int(left) % 60]]
+    return "%s vs %s · round %d · %d-%d · %s" % ["ARENA" if entry.arena else "DUEL", preload("res://scripts/progression/character_names.gd").named(self, opponent(character_id)), int(entry.round), int(entry.wins[mine]), int(entry.wins[1 - mine]), ("starts in %d" % ceili(waiting)) if waiting > 0.0 else "%d:%02d" % [int(left) / 60, int(left) % 60]]
 
 func capture() -> Dictionary:
     var copy := state.duplicate(true)

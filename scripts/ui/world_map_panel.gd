@@ -3,6 +3,7 @@ extends Control
 ## tile, shown scaled), region names (regions reached by ferry are faded), towns and villages,
 ## ferry piers, your position (blinking) and the other characters. Opens like the other windows:
 ## solo play pauses, online only this character stops.
+const NAMES := preload("res://scripts/progression/character_names.gd")
 const MAP := preload("res://scripts/world/world_map.gd")
 const UI := preload("res://scripts/ui/ui_style.gd")
 const FRAME := Rect2(20, 12, 600, 336)
@@ -396,6 +397,8 @@ func _draw_map() -> void:
     for town in MAP.TOWNS:
         if _shown(town[3]):
             _reserved.append(Rect2(tile_to_map(town[3]).round() - Vector2(3, 3), Vector2(6, 6)))
+    # SVE feedback 2026-10-22: your name beside your arrow (placed first, so other labels keep clear).
+    _place_label(to_map(hud.player.global_position).round(), NAMES.display(hud.player.progression), UI.CYAN, ["above", "below", "right", "left"], "body", true)
     if not realm:
         for ferry in MAP.HARBOURS:
             _reserved.append(Rect2(tile_to_map(ferry[2]).round() - Vector2(4, 4), Vector2(8, 8)))
@@ -482,6 +485,8 @@ func _draw_map() -> void:
             var party: Node = hud.get_parent().get("party")
             var mate: bool = party != null and party.same_party(hud.player.character_id, child.character_id)
             UI.draw_arrow(_canvas, to_map(child.global_position).round(), child.facing, 5.0 if mate else 4.5, Color("ff8adf") if mate else Color(0.92, 0.94, 1.0))
+            if mate:
+                _place_label(to_map(child.global_position).round(), NAMES.display(child.progression), Color("ff8adf"), ["above", "below", "right", "left"])
     if teleport_mode:
         var pulse := 0.5 + 0.5 * sin(_time * 4.0)
         for target in teleport_targets():

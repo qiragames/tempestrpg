@@ -486,9 +486,20 @@ func _discover_spots() -> void:
             session.queue_save()
 
 func _analysis_changed(message: String) -> void:
+    if _analysis_hint.is_empty():
+        _analysis_hint = $HUD/Analysis.text
     $HUD/Analysis.text = message
+    # SVE feedback 2026-10-22: a status ("No reachable defeated creature nearby.") stayed in the box
+    # forever; after a few seconds the box shows its usual hint again (not during an analysis).
+    get_tree().create_timer(ANALYSIS_STATUS_SECONDS).timeout.connect(func():
+        if is_instance_valid(local_player) and $HUD/Analysis.text == message and not local_player.get_node("Absorption").active:
+            $HUD/Analysis.text = _analysis_hint
+    )
     if get_local_player().get_node("Health").current > 0:
         _announce(message)
+
+const ANALYSIS_STATUS_SECONDS := 6.0
+var _analysis_hint := ""
 
 func _announce(message: String) -> void:
     $HUD/SystemVoice.text = "[System] " + message

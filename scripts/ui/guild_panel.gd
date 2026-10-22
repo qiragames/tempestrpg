@@ -167,7 +167,7 @@ func refresh() -> void:
         var row := _row()
         var their: String = node.rank_of(member)
         var online: bool = hud.get_parent().player_by_id(member) != null
-        var label: Label = hud._label("%s%s%s" % ["★ " if their == "leader" else ("◆ " if their == "officer" else ""), member, " (you)" if member == me else ("" if online else " · away")], Vector2.ZERO, Vector2(150, 20), row, 9)
+        var label: Label = hud._label("%s%s%s" % ["★ " if their == "leader" else ("◆ " if their == "officer" else ""), preload("res://scripts/progression/character_names.gd").named(self, member), " (you)" if member == me else ("" if online else " · away")], Vector2.ZERO, Vector2(150, 20), row, 9)
         label.custom_minimum_size = Vector2(150, 20)
         label.add_theme_color_override("font_color", GUILD_COLOR if online else UI.TEXT_DIM)
         if member == me:

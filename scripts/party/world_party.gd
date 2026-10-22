@@ -84,7 +84,7 @@ func invite(actor: Node, guest_id: String) -> bool:
         _tell(actor.character_id, "Only the party leader invites.")
         return false
     state.invites[guest_id] = {"from": actor.character_id, "until": world_time() + INVITE_SECONDS}
-    _tell(guest_id, "%s invites you to their party (P to answer)." % actor.character_id)
+    _tell(guest_id, "%s invites you to their party (P to answer)." % preload("res://scripts/progression/character_names.gd").display(actor.progression))
     _tell(actor.character_id, "Invited %s to the party." % guest_id)
     return true
 
@@ -105,7 +105,7 @@ func accept(guest: Node) -> bool:
         return false
     state.parties[party].members.append(guest.character_id)
     for id in state.parties[party].members:
-        _tell(id, "%s joined the party." % guest.character_id)
+        _tell(id, "%s joined the party." % preload("res://scripts/progression/character_names.gd").display(guest.progression))
     session().queue_save()
     return true
 
@@ -114,7 +114,7 @@ func decline(guest: Node) -> bool:
         return false
     var from: String = state.invites[guest.character_id].from
     state.invites.erase(guest.character_id)
-    _tell(from, "%s declined the invitation." % guest.character_id)
+    _tell(from, "%s declined the invitation." % preload("res://scripts/progression/character_names.gd").display(guest.progression))
     return true
 
 ## Host: leave your party (the next member leads; a party of one dissolves).
@@ -159,7 +159,7 @@ func revive(actor: Node, target_id: String) -> bool:
     target.death_left = 0.0
     target.get_node("Magicules").enabled = true
     for id in members(target_id):
-        _tell(id, "%s revived %s." % [actor.character_id, target_id])
+        _tell(id, "%s revived %s." % [preload("res://scripts/progression/character_names.gd").display(actor.progression), preload("res://scripts/progression/character_names.gd").named(self, target_id)])
     session().queue_save()
     return true
 

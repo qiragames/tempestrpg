@@ -16,12 +16,12 @@ const TIERS := [
 ## Buildings: kind → [name, art (WorldTerrain prop, "" = drawn), collision size, cost, tier,
 ## unique, description].
 const BUILDINGS := {
-    "house": ["House", "house_wood", Vector2(40, 20), {"wood": 10, "stone": 4}, 0, false, "A home for citizens (housing grows with M5b)."],
+    "house": ["House", "house_wood", Vector2(40, 20), {"wood": 10, "stone": 4}, 0, false, "A home for two citizens."],
     "well": ["Well", "well", Vector2(24, 12), {"wood": 2, "stone": 8}, 0, false, "Fresh water for the settlement."],
     "banner": ["Banner", "", Vector2(6, 6), {"wood": 4}, 0, false, "Flies your nation's banner."],
-    "hut": ["Straw Hut", "hut_straw", Vector2(40, 18), {"wood": 8}, 0, false, "A simple home."],
-    "big_house": ["Large House", "house_b", Vector2(56, 20), {"wood": 18, "stone": 10}, 1, false, "A large home for a family of citizens."],
-    "watchtower": ["Watchtower", "lookout", Vector2(20, 12), {"wood": 10, "stone": 20}, 1, false, "Looks out over the land (guards in M5c)."],
+    "hut": ["Straw Hut", "hut_straw", Vector2(40, 18), {"wood": 8}, 0, false, "A simple home for one citizen."],
+    "big_house": ["Large House", "house_b", Vector2(56, 20), {"wood": 18, "stone": 10}, 1, false, "A large home for four citizens."],
+    "watchtower": ["Watchtower", "lookout", Vector2(20, 12), {"wood": 10, "stone": 20}, 1, false, "Looks out over the land."],
     "town_hall": ["Town Hall", "hall", Vector2(56, 24), {"wood": 40, "stone": 30, "essence": 2}, 1, true, "The seat of your nation; needed to become a town."],
     "lodge": ["Lodge", "lodge", Vector2(56, 22), {"wood": 30, "stone": 16}, 2, false, "A great timber hall (homes for six)."],
     "field": ["Field", "", Vector2(32, 32), {"wood": 4}, 0, false, "Farmland: plant and harvest crops for food (F)."],

@@ -10,14 +10,18 @@ var _build_buttons: Dictionary = {}
 var _craft_buttons: Dictionary = {}
 var _hire_buttons: Dictionary = {}
 var _paused_before: bool = false
+var _tabs: Dictionary = {}
+const NATION_PANEL := preload("res://scripts/ui/nation_panel.gd")
 @onready var hud = get_parent()
 @onready var session: Node = get_node("/root/GameSession")
 
 func _ready() -> void:
-    position = Vector2(116, 8)
-    size = Vector2(408, 346)
-    add_theme_stylebox_override("panel", hud._panel_style())
-    hud.UI.heading(hud._label("THE FIRST GOBLIN CAMP", Vector2(12, 8), Vector2(384, 22), self, 15))
+    # SVE feedback 2026-10-22: the camp is the first tab of the nation window (N); same frame,
+    # same tab row (the content sits in the middle of the wider frame).
+    var frame: Rect2 = NATION_PANEL.FRAME
+    position = frame.position
+    size = frame.size
+    add_theme_stylebox_override("panel", hud.UI.ornate())
     _stock = hud._label("", Vector2(12, 32), Vector2(384, 18), self, 11)
     _hint = hud._label("", Vector2(12, 50), Vector2(384, 70), self, 9)
     _found = hud._button("Found camp", Vector2(12, 124), Vector2(124, 26), self)
@@ -63,7 +67,15 @@ func _ready() -> void:
         recipe_index += 1
     var close: Button = hud._button("Close", Vector2(294, 312), Vector2(102, 26), self)
     close.pressed.connect(close_dialog)
+    for child in get_children():
+        child.position += Vector2(46, 0)
+    _tabs = NATION_PANEL.make_tabs(hud, self, Vector2(14, 10), "camp")
     hide()
+
+## The camp tab stays the highlighted one (a refused click on another tab would flip it).
+func refresh_tabs() -> void:
+    for id in _tabs:
+        _tabs[id].set_pressed_no_signal(id == "camp")
 
 func _owned_ally() -> Node2D:
     for ally in get_tree().get_nodes_in_group("allies"):
@@ -110,6 +122,7 @@ func _refresh() -> void:
     var camp = hud.get_parent().camp
     if camp == null:
         return
+    refresh_tabs()
     _stock.text = "Camp level %d · Shared stock: %d wood · %d stone · %d essence" % [camp.level(), camp.state.wood, camp.state.stone, camp.state.essence]
     if not camp.state.founded:
         _hint.text = "Camp site (350, 350), west of spawn. Found it with your named ally nearby.\nNear wood (300, 350), (350, 300); stone (410, 350). Gather within 36px.\nFound, build and offer within 55px of the flag."
@@ -153,6 +166,9 @@ func _unhandled_input(event: InputEvent) -> void:
         get_viewport().set_input_as_handled()
     elif visible and event.is_action_pressed("ui_cancel"):
         close_dialog()
+        get_viewport().set_input_as_handled()
+    elif visible and event.is_action_pressed("nation") and not event.is_echo():
+        hud.nation_panel.show_tab("nation")
         get_viewport().set_input_as_handled()
 
 func _exit_tree() -> void:

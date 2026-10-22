@@ -146,7 +146,7 @@ func invite(actor: Node, guest_id: String) -> bool:
         _tell(actor.character_id, "A guild holds %d characters." % MAX_MEMBERS)
         return false
     state.invites[guest_id] = {"guild": id, "from": actor.character_id, "until": world_time() + INVITE_SECONDS}
-    _tell(guest_id, "%s invites you to the guild %s <%s> (P → Guild to answer)." % [actor.character_id, state.guilds[id].name, state.guilds[id].tag])
+    _tell(guest_id, "%s invites you to the guild %s <%s> (P → Guild to answer)." % [preload("res://scripts/progression/character_names.gd").display(actor.progression), state.guilds[id].name, state.guilds[id].tag])
     _tell(actor.character_id, "Invited %s to the guild." % guest_id)
     return true
 
@@ -162,7 +162,7 @@ func accept(guest: Node) -> bool:
         _tell(guest.character_id, "That guild is full.")
         return false
     state.guilds[id].members.append(guest.character_id)
-    _tell_guild(id, "%s joined the guild." % guest.character_id)
+    _tell_guild(id, "%s joined the guild." % preload("res://scripts/progression/character_names.gd").display(guest.progression))
     session().queue_save()
     return true
 
@@ -171,7 +171,7 @@ func decline(guest: Node) -> bool:
         return false
     var from: String = state.invites[guest.character_id].from
     state.invites.erase(guest.character_id)
-    _tell(from, "%s declined the guild invitation." % guest.character_id)
+    _tell(from, "%s declined the guild invitation." % preload("res://scripts/progression/character_names.gd").display(guest.progression))
     return true
 
 ## Leave (a leader hands the lead to an officer, else the longest member; alone, the guild ends —
@@ -242,7 +242,7 @@ func transfer(actor: Node, member_id: String) -> bool:
     entry.officers.erase(member_id)
     if not actor.character_id in entry.officers:
         entry.officers.append(actor.character_id)
-    _tell_guild(guild_of(member_id), "%s hands the guild to %s." % [actor.character_id, member_id])
+    _tell_guild(guild_of(member_id), "%s hands the guild to %s." % [preload("res://scripts/progression/character_names.gd").display(actor.progression), preload("res://scripts/progression/character_names.gd").named(self, member_id)])
     session().queue_save()
     return true
 
