@@ -298,7 +298,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *A closed chest (gold lock) at a point of interest* (960x540)
 
 - [x] F opens the chest
-- [x] The chest gave an Uncommon-or-better item: Rare Mystic Sting
+- [x] The chest gave an Uncommon-or-better item: Uncommon Ash Spear
 
 ![Chest opened (lid up) and the item announced](50_chest_open.png)
 *Chest opened (lid up) and the item announced* (960x540)
@@ -394,7 +394,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 *World map: your pile (gold X) and discovered leveling spots (violet)* (960x540)
 
 ## 16. Sound and effects (step 23)
-- Sounds played during this run: analysis ×3, build ×3, chest ×1, defeat ×7, evolve ×1, form ×2, gather ×12, hit ×13, hurt ×4, item ×1, learned ×2, level_up ×2, magicules ×3, swing ×12, ui_accept ×17, ui_move ×12
+- Sounds played during this run: analysis ×3, build ×3, chest ×1, defeat ×7, evolve ×1, form ×2, gather ×12, hit ×13, hurt ×4, item ×1, learned ×2, level_up ×2, magicules ×3, swing ×12, ui_accept ×17, ui_move ×13
 - Effects shown: aura ×3, boost ×3, claw ×7, hit_spark ×51, ring ×7, slash ×13, smoke ×12, sparkle ×5
 - [x] The run produced the "swing" cue
 - [x] The run produced the "hit" cue
@@ -961,7 +961,7 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Threat neutralized.
 - Proving Trial complete. Unique: Predator Focus acquired. Activate it in the skill tree (K).
 - +3000 XP (trial). Level 4 reached: +2 skill points.
-- Trial reward: Epic Traveler's Recurve II.
+- Trial reward: Rare Golden Kukri.
 - Skill activated: Predator Focus.
 - Predator Focus: your next analysis within 20s reaches twice as far and completes almost instantly.
 - +42 XP (defeat).
@@ -978,9 +978,9 @@ Automated, visible run on Windows. Viewport (640.0, 360.0), window (1920, 1080).
 - Equipped Rare Ash Spear.
 - Equipped Rare Field Scythe.
 - Equipped Common Hunting Bow.
-- Chest opened: Rare Mystic Sting.
-- +33 Zeni (chest).
-- Picked up Rare Mystic Sting.
+- Chest opened: Uncommon Ash Spear.
+- +42 Zeni (chest).
+- Picked up Uncommon Ash Spear.
 - World "Showcase World" loaded. Esc: pause menu — switch on Multiplayer to invite friends.
 - Multiplayer is on: Invite a Friend makes one code per friend.
 - Multiplayer is off: your world is single player again.
