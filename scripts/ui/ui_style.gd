@@ -32,6 +32,19 @@ const ICONS := {
     "wood": "res://assets/game/ui/icons/wood.png",
     "stone": "res://assets/game/ui/icons/stone.png",
     "essence": "res://assets/game/ui/icons/essence.png",
+    # SVE feedback 2026-10-22 (bag as an icon grid): every creature material has an icon.
+    "frost_pelt": "res://assets/game/ui/icons/goods/essence.png",
+    "wisp_mote": "res://assets/game/ui/icons/goods/orb.png",
+    "viper_scale": "res://assets/game/ui/icons/goods/gem.png",
+    "scuttler_shell": "res://assets/game/ui/icons/stone.png",
+    "kappa_shell": "res://assets/game/ui/icons/stone.png",
+    "mirecap_spore": "res://assets/game/ui/icons/goods/mushroom.png",
+    "bamboo_fiber": "res://assets/game/ui/icons/goods/herb.png",
+    "lantern_paper": "res://assets/game/ui/icons/goods/scroll.png",
+    "owl_feather": "res://assets/game/ui/icons/quill.png",
+    "mole_claw": "res://assets/game/ui/icons/quill.png",
+    "ember_core": "res://assets/game/ui/icons/goods/orb.png",
+    "salamander_scale": "res://assets/game/ui/icons/goods/gem.png",
 }
 ## Pieces of the pixel UI (assets/game/ui/pixel/) and their corner sizes.
 const PIECES := {

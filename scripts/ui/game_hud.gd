@@ -29,7 +29,6 @@ var gear_panel: Control
 var world_map: Control
 const WORLD_MAP := preload("res://scripts/world/world_map.gd")
 var _modal: Control
-var _items: ItemList
 var _details: Label
 var _capacity: Label
 var _discard: Button
@@ -966,9 +965,18 @@ func _poll_chat() -> void:
             var prefix: String = {"world": "", "guild": "[Guild] ", "party": "[Party] "}[line.channel]
             record_event("%s%s: %s" % [prefix, line.from, line.text], CHAT_COLOURS[line.channel])
 
+## SVE feedback 2026-10-22: the bag looks like the equipment window — a scrolling grid of icon
+## cells (count in the corner, name and description on hover) and the item card beside it.
+const BAG_FRAME := Rect2(20, 8, 600, 344)
+const BAG_COLUMNS := 8
+## The grid always shows at least this many cells (empty ones included).
+const BAG_MIN_CELLS := 48
+const BAG_CELL := preload("res://scripts/ui/bag_cell.gd")
+var _bag_grid: GridContainer
+var _bag_icon: TextureRect
+
 func _build_inventory() -> void:
-    # Centered 440x240 frame; children are placed relative to its top-left corner.
-    var o := Vector2(100, 60)
+    var o: Vector2 = BAG_FRAME.position
     _modal = Control.new()
     _modal.name = "InventoryPanel"
     _modal.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -979,74 +987,124 @@ func _build_inventory() -> void:
     _modal.add_child(backdrop)
     var frame := Panel.new()
     frame.position = o
-    frame.size = Vector2(440, 240)
-    frame.add_theme_stylebox_override("panel", _panel_style())
+    frame.size = BAG_FRAME.size
+    frame.add_theme_stylebox_override("panel", UI.ornate())
     _modal.add_child(frame)
-    UI.heading(_label("DIMENSIONAL STORAGE", o + Vector2(12, 8), Vector2(240, 20), _modal, 14))
-    _capacity = _label("", o + Vector2(14, 34), Vector2(190, 16), _modal, 10)
-    UI.heading(_label("MATERIAL DETAILS", o + Vector2(228, 36), Vector2(188, 16), _modal, 10))
-    _items = ItemList.new()
-    _items.position = o + Vector2(14, 56)
-    _items.size = Vector2(198, 122)
-    _items.add_theme_font_size_override("font_size", 12)
-    _items.item_selected.connect(_select_item)
-    _modal.add_child(_items)
-    _details = _label("", o + Vector2(228, 58), Vector2(192, 115), _modal)
+    UI.heading(_label("DIMENSIONAL STORAGE", o + Vector2(14, 10), Vector2(260, 20), _modal, 14))
+    _capacity = _label("", o + Vector2(14, 34), Vector2(320, 16), _modal, 10)
+    var scroll := ScrollContainer.new()
+    scroll.name = "BagScroll"
+    scroll.position = o + Vector2(14, 54)
+    scroll.size = Vector2(BAG_COLUMNS * 36 + 14, BAG_FRAME.size.y - 84)
+    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    _modal.add_child(scroll)
+    _bag_grid = GridContainer.new()
+    _bag_grid.name = "BagGrid"
+    _bag_grid.columns = BAG_COLUMNS
+    _bag_grid.add_theme_constant_override("h_separation", 4)
+    _bag_grid.add_theme_constant_override("v_separation", 4)
+    scroll.add_child(_bag_grid)
+    # The item card.
+    var card_x := 14.0 + BAG_COLUMNS * 36 + 26
+    var card := Panel.new()
+    card.position = o + Vector2(card_x, 44)
+    card.size = Vector2(BAG_FRAME.size.x - card_x - 14, 214)
+    card.add_theme_stylebox_override("panel", UI.round_slot("slot"))
+    _modal.add_child(card)
+    _bag_icon = TextureRect.new()
+    _bag_icon.position = card.position + Vector2(10, 10)
+    _bag_icon.size = Vector2(40, 40)
+    _bag_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    _bag_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+    _modal.add_child(_bag_icon)
+    _details = _label("", card.position + Vector2(10, 56), Vector2(card.size.x - 20, card.size.y - 62), _modal, 10)
+    var buttons_y := 44.0 + 214.0 + 10.0
     # User request: drop things on the ground (anyone may take them; gone after 10 minutes).
-    _discard = _button("Drop 1", o + Vector2(228, 186), Vector2(62, 30), _modal)
-    _drop_all = _button("Drop all", o + Vector2(294, 186), Vector2(62, 30), _modal)
+    _discard = _button("Drop 1", o + Vector2(card_x, buttons_y), Vector2(70, 26), _modal)
+    _drop_all = _button("Drop all", o + Vector2(card_x + 76, buttons_y), Vector2(70, 26), _modal)
     _drop_all.pressed.connect(func():
         var count: int = inventory.count_of(_selection)
         if count > 0:
             session.request_action("drop_item", {"id": String(_selection), "count": count})
             get_tree().create_timer(0.15, true).timeout.connect(_refresh_inventory)
     )
-    _use = _button("Use", o + Vector2(360, 186), Vector2(66, 30), _modal)
-    _use.pressed.connect(func():
-        if String(_selection).begins_with("teleport_"):
-            close_inventory()
-            world_map.open_teleport()
-            return
-        session.request_action("use_item", {"id": String(_selection)})
-        get_tree().create_timer(0.15, true).timeout.connect(_refresh_inventory)
-    )
+    _use = _button("Use", o + Vector2(card_x + 152, buttons_y), Vector2(BAG_FRAME.size.x - card_x - 14 - 152, 26), _modal)
+    _use.pressed.connect(_use_selection)
     _discard.pressed.connect(func():
         session.request_action("drop_item", {"id": String(_selection), "count": 1})
         get_tree().create_timer(0.15, true).timeout.connect(_refresh_inventory)
     )
-    _close = _button("Close", o + Vector2(348, 6), Vector2(80, 26), _modal)
+    _close = _button("Close", o + Vector2(BAG_FRAME.size.x - 94, 8), Vector2(80, 24), _modal)
     _close.pressed.connect(close_inventory)
-    var equipment_button := _button("Equipment", o + Vector2(258, 6), Vector2(84, 26), _modal)
+    var equipment_button := _button("Equipment", o + Vector2(BAG_FRAME.size.x - 184, 8), Vector2(84, 24), _modal)
     equipment_button.pressed.connect(func():
         close_inventory()
         gear_panel.open()
     )
-    _label("I / Esc: close · Multiplayer continues while browsing", o + Vector2(14, 218), Vector2(400, 16), _modal, 10)
+    _label("Click: select · double click: use · hover: details · I / Esc: close", o + Vector2(14, BAG_FRAME.size.y - 22), Vector2(BAG_FRAME.size.x - 28, 14), _modal, 9).add_theme_color_override("font_color", UI.TEXT_DIM)
     _modal.hide()
+
+func _use_selection() -> void:
+    if _selection == &"" or _use.disabled:
+        return
+    if String(_selection).begins_with("teleport_"):
+        close_inventory()
+        world_map.open_teleport()
+        return
+    session.request_action("use_item", {"id": String(_selection)})
+    get_tree().create_timer(0.15, true).timeout.connect(_refresh_inventory)
+
+## The bag's filled cells (tests).
+func bag_cells() -> Array:
+    return _bag_grid.get_children().filter(func(cell): return cell.item_id != &"")
 
 func _refresh_inventory() -> void:
     _entries = inventory.entries()
-    _items.clear()
-    _capacity.text = "BAG · %d / %d units" % [inventory.total_units(), inventory.capacity]
-    var selected: int = 0
-    for index in range(_entries.size()):
-        _items.add_item("%s ×%d" % [_entries[index].name, _entries[index].count], UI.icon(String(_entries[index].id)))
-        if _entries[index].id == _selection:
-            selected = index
+    _capacity.text = "BAG · %d / %d units · %d kinds" % [inventory.total_units(), inventory.capacity, _entries.size()]
+    if not _entries.any(func(entry): return entry.id == _selection):
+        _selection = _entries[0].id if not _entries.is_empty() else &""
+    var wanted: int = maxi(BAG_MIN_CELLS, int(ceil(float(_entries.size() + 1) / BAG_COLUMNS)) * BAG_COLUMNS)
+    while _bag_grid.get_child_count() < wanted:
+        var cell: Panel = BAG_CELL.new()
+        cell.picked.connect(func(id: StringName):
+            _selection = id
+            _refresh_inventory()
+        )
+        cell.used.connect(func(id: StringName):
+            _selection = id
+            _refresh_inventory()
+            _use_selection()
+        )
+        _bag_grid.add_child(cell)
+    while _bag_grid.get_child_count() > wanted:
+        var extra: Node = _bag_grid.get_child(_bag_grid.get_child_count() - 1)
+        _bag_grid.remove_child(extra)
+        extra.queue_free()
+    for index in range(_bag_grid.get_child_count()):
+        var entry: Dictionary = _entries[index] if index < _entries.size() else {}
+        _bag_grid.get_child(index).set_entry(entry, not entry.is_empty() and entry.id == _selection)
     if _entries.is_empty():
         _selection = &""
-        _details.text = "No materials stored.\n\nAbsorb and analyze a defeated creature to retain its essence."
+        _bag_icon.texture = null
+        _details.text = "No materials stored.
+
+Absorb and analyze a defeated creature to retain its essence."
         _discard.disabled = true
         _drop_all.disabled = true
         _use.disabled = true
     else:
-        _items.select(selected)
-        _select_item(selected)
+        for index in range(_entries.size()):
+            if _entries[index].id == _selection:
+                _select_item(index)
 
 func _select_item(index: int) -> void:
     var entry: Dictionary = _entries[index]
     _selection = entry.id
-    _details.text = "%s\n%s · ×%d\n\n%s" % [entry.name, entry.category, entry.count, entry.description]
+    _bag_icon.texture = UI.icon(String(entry.id))
+    _details.text = "%s
+%s · ×%d
+
+%s" % [entry.name, entry.category, entry.count, entry.description]
     _discard.disabled = false
     _drop_all.disabled = false
     _use.disabled = not preload("res://scripts/trade/trade_catalogue.gd").is_good(String(entry.id))

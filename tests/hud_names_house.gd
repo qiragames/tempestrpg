@@ -52,6 +52,34 @@ func _run() -> void:
     _check(world.get_node("HUD/Analysis").text != hint, "The analysis box shows the status")
     await create_timer(world.ANALYSIS_STATUS_SECONDS + 0.5).timeout
     _check(world.get_node("HUD/Analysis").text == hint, "…and its hint again a few seconds later")
+    # --- The bag: an icon grid like the equipment window
+    var bag: Node = me.get_node("Inventory")
+    bag.add_material("gnasher_essence", 3)
+    bag.add_material("teleport_harrowmere", 1)
+    for index in range(60):
+        bag.add_material("healing_draught" if index == 0 else "magicule_tonic", 1)
+    hud.open_inventory()
+    await _frames(2)
+    var cells: Array = hud.bag_cells()
+    _check(cells.size() == bag.entries().size() and cells.all(func(cell): return cell.icon != null), "Every kind in the bag is an icon cell")
+    var essence: Array = cells.filter(func(cell): return cell.item_id == &"gnasher_essence")
+    _check(not essence.is_empty() and essence[0].count >= 3 and String(essence[0].tooltip_text).contains("Gnasher Essence") and String(essence[0].tooltip_text).split(String.chr(10)).size() >= 3, "Hover shows the full name, kind and description")
+    _check(hud._bag_grid.get_child_count() >= hud.BAG_MIN_CELLS and hud._bag_grid.get_child_count() % hud.BAG_COLUMNS == 0, "Empty cells fill the grid")
+    var bag_scroll: ScrollContainer = hud._modal.get_node("BagScroll")
+    _check(Rect2(hud.BAG_FRAME).encloses(Rect2(bag_scroll.position, bag_scroll.size)), "The grid scrolls inside the window")
+    essence[0].picked.emit(&"gnasher_essence")
+    await _frames(1)
+    _check(hud._selection == &"gnasher_essence" and hud._details.text.contains("Gnasher Essence") and hud._bag_icon.texture != null, "A click shows the item card")
+    me.get_node("Magicules").current = 1.0
+    me.consumable_cooldown = 0.0
+    var tonics: int = bag.count_of(&"magicule_tonic")
+    var tonic: Array = hud.bag_cells().filter(func(cell): return cell.item_id == &"magicule_tonic")
+    tonic[0].used.emit(&"magicule_tonic")
+    await _frames(3)
+    _check(bag.count_of(&"magicule_tonic") == tonics - 1, "A double click uses it")
+    hud.close_inventory()
+    var materials: Dictionary = preload("res://scripts/skills/skill_catalogue.gd").MATERIALS
+    _check(materials.keys().all(func(id): return preload("res://scripts/ui/ui_style.gd").icon(id) != null), "Every creature material has an icon")
     # --- Names
     me.progression["name"] = "Benni"
     await _frames(2)

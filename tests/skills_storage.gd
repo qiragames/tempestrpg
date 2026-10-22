@@ -104,7 +104,7 @@ func _run() -> void:
     await _frames(120)
     _check(paused and hud.get_node("InventoryPanel").visible, "I must open a paused inventory overlay")
     _check(second.position.is_equal_approx(position_before) and is_equal_approx(melee.cooldown_left, cooldown_before) and is_equal_approx(pool.current, reserve_before), "Inventory pause must freeze enemy AI, attack cooldown, and regeneration")
-    _check(hud._items.item_count == 1 and hud._details.text.contains("Gnasher Essence"), "Inventory must show a selectable stack and real material details")
+    _check(hud.bag_cells().size() == 1 and hud._details.text.contains("Gnasher Essence"), "Inventory must show a selectable stack and real material details")
     _check(hud._close.has_focus(), "Opening inventory must focus its close control")
     _input(&"ui_cancel")
     await _frames(2)
@@ -121,7 +121,7 @@ func _run() -> void:
     _input(&"inventory")
     await _frames(2)
     hud._discard.pressed.emit()
-    _check(bag.total_units() == 0 and hud._items.item_count == 0 and hud._discard.disabled, "Discard UI must remove one material and refresh selection")
+    _check(bag.total_units() == 0 and hud.bag_cells().is_empty() and hud._discard.disabled, "Discard UI must remove one material and refresh selection")
     _check(book.knows(&"rending_bite"), "Discarding material must not erase learned knowledge")
     hud.close_inventory()
 

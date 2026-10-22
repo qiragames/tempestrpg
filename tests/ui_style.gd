@@ -88,7 +88,7 @@ func _run() -> void:
     # --- Icons
     actor.get_node("Inventory").add_specimen(load("res://data/specimens/forest_gnasher.tres"))
     await _frames(2)
-    _check(hud._items.item_count == 1 and hud._items.get_item_icon(0) == UI.icon("gnasher_essence") and UI.icon("thornback_quill") != null, "Bag materials show their icons")
+    _check(hud.bag_cells().size() == 1 and hud.bag_cells()[0].icon == UI.icon("gnasher_essence") and UI.icon("thornback_quill") != null, "Bag materials show their icons")
     var icons_ok := true
     for base in GEAR.BASES:
         for rarity in range(5):

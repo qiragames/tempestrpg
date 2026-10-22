@@ -110,8 +110,10 @@ func _update_weather(me: Node2D) -> void:
     if weather_id == _shown_weather:
         return
     _shown_weather = weather_id
-    var falling := {"rain": [Color(0.75, 0.85, 1.0, 0.7), 600, Vector2(40, 460), 0.7, Vector2(2, 10)], "storm": [Color(0.8, 0.86, 1.0, 0.75), 850, Vector2(110, 560), 0.6, Vector2(2, 12)],
-        "monsoon": [Color(0.75, 0.9, 0.9, 0.7), 750, Vector2(30, 500), 0.65, Vector2(2, 11)], "snow": [Color(1, 1, 1, 0.95), 450, Vector2(18, 45), 7.0, Vector2(3, 3)],
+    # User feedback 2026-10-22 (the rain looked like blue bars): thin, faint streaks that lean
+    # with their fall and fade toward the top.
+    var falling := {"rain": [Color(0.78, 0.87, 1.0, 0.38), 520, Vector2(70, 460), 0.7, Vector2(1, 7)], "storm": [Color(0.82, 0.88, 1.0, 0.45), 750, Vector2(140, 560), 0.6, Vector2(1, 9)],
+        "monsoon": [Color(0.78, 0.92, 0.92, 0.4), 650, Vector2(60, 500), 0.65, Vector2(1, 8)], "snow": [Color(1, 1, 1, 0.95), 450, Vector2(18, 45), 7.0, Vector2(3, 3)],
         "sandstorm": [Color(0.98, 0.82, 0.5, 0.75), 750, Vector2(480, 50), 1.5, Vector2(5, 2)], "ashfall": [Color(0.3, 0.26, 0.26, 0.9), 280, Vector2(12, 40), 7.0, Vector2(3, 3)]}
     if falling.has(weather_id):
         var spec: Array = falling[weather_id]
@@ -125,7 +127,14 @@ func _update_weather(me: Node2D) -> void:
         _particles.lifetime = spec[3]
         var image := Image.create(int(spec[4].x), int(spec[4].y), false, Image.FORMAT_RGBA8)
         image.fill(Color.WHITE)
+        var streak: bool = weather_id in ["rain", "storm", "monsoon"]
+        if streak:
+            for y in range(image.get_height()):
+                for x in range(image.get_width()):
+                    image.set_pixel(x, y, Color(1, 1, 1, 0.25 + 0.75 * float(y + 1) / image.get_height()))
         _particles.texture = ImageTexture.create_from_image(image)
+        # Streaks point along their fall.
+        _particles.particle_flag_align_y = streak
         _particles.rotation = 0.0
         _particles.emitting = true
     else:
