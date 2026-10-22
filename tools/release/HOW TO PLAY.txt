@@ -60,6 +60,13 @@ YOUR HOUSE
   Zeni, the wardrobe opens your storage, the stove lets you cook. Friends can visit.
   Or rent a room at a major city's town hall (F there -> "Rent an inn room").
 
+COMBAT AND MOVING (new in 1.6)
+  Your character faces the mouse; strikes and skills go where it points. Left click strikes,
+  right click dashes (a third of the stamina). Drag hotbar skills onto other slots to sort them.
+  Health comes back by itself after a few seconds out of combat.
+  Teleport scrolls: each city's merchant sells one for its city; use it and click the city.
+  Drop things from the bag or the equipment window; loot on the ground shows whose it is.
+
 CHARACTERS (new in 1.5)
   PLAY shows your characters with their stats and progress. Play one's world, take it to a
   friend's world (if they allow own characters), or make a new character (name and race).
