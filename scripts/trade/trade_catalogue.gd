@@ -83,7 +83,7 @@ static func bag_item(id: String) -> bool:
     return preload("res://scripts/skills/skill_catalogue.gd").MATERIALS.has(id) or is_good(id)
 
 static func is_good(id: String) -> bool:
-    return id == "pet_egg" or preload("res://scripts/dungeons/dungeon_features.gd").is_key(id) or CONSUMABLES.has(id) or scroll_skill(id) in COMMON_SCROLLS + RARE_SCROLLS or not TRAVEL.ticket_harbour(id).is_empty() or TRAVEL.is_fish(id) or UPGRADES.is_rune(id) or UPGRADES.is_augment(id) or REALM.is_orb(id) or PRO.is_resource(id) or CRAFT.is_good(id) or preload("res://scripts/bosses/boss_loot.gd").is_material(id)
+    return not teleport_town(id).is_empty() or id == "pet_egg" or preload("res://scripts/dungeons/dungeon_features.gd").is_key(id) or CONSUMABLES.has(id) or scroll_skill(id) in COMMON_SCROLLS + RARE_SCROLLS or not TRAVEL.ticket_harbour(id).is_empty() or TRAVEL.is_fish(id) or UPGRADES.is_rune(id) or UPGRADES.is_augment(id) or REALM.is_orb(id) or PRO.is_resource(id) or CRAFT.is_good(id) or preload("res://scripts/bosses/boss_loot.gd").is_material(id)
 
 ## The display name of anything that goes in the bag (goods and creature materials).
 static func item_name(id: String) -> String:
@@ -94,8 +94,33 @@ static func item_name(id: String) -> String:
         return load(catalogue.SPECIMENS[catalogue.MATERIALS[id]]).material_name
     return id.replace("_", " ").capitalize()
 
+## --- User request: teleport scrolls. Each city's merchant sells "Scroll: <City>"; using one opens
+## the map and, after TELEPORT_SECONDS (a hit cancels it), takes you there.
+const TELEPORT_PRICE := 120
+const TELEPORT_SECONDS := 3.0
+
+static func teleport_id(town: String) -> String:
+    return "teleport_" + town
+
+## The city a teleport scroll leads to ("" when it is not one).
+static func teleport_town(id: String) -> String:
+    if not id.begins_with("teleport_"):
+        return ""
+    var town := id.trim_prefix("teleport_")
+    return town if not teleport_merchant(town).is_empty() else ""
+
+## The city merchant a scroll arrives at.
+static func teleport_merchant(town: String) -> String:
+    for entry in MERCHANTS:
+        if entry[3] == "town" and entry[4] == town:
+            return entry[0]
+    return ""
+
 ## [name, category, description] of a good.
 static func good_info(id: String) -> Array:
+    if not teleport_town(id).is_empty():
+        var city: String = MAP.town(teleport_town(id))[1]
+        return ["Scroll: %s" % city, "Scrolls", "Use it: the map opens, click %s and you are there after %d seconds (a hit cancels it; the scroll is kept then)." % [city, int(TELEPORT_SECONDS)]]
     # User request after M15: every boss's own material.
     if preload("res://scripts/bosses/boss_loot.gd").is_material(id):
         return preload("res://scripts/bosses/boss_loot.gd").good_info(id)
@@ -128,6 +153,8 @@ static func good_info(id: String) -> Array:
 
 ## Buy price of a bag good or material ("" for unknown).
 static func price(id: String) -> int:
+    if not teleport_town(id).is_empty():
+        return TELEPORT_PRICE
     if preload("res://scripts/bosses/boss_loot.gd").is_material(id):
         return preload("res://scripts/bosses/boss_loot.gd").PRICE
     if MATERIAL_PRICE.has(id):
@@ -221,6 +248,9 @@ static func roll_stock(entry: Array, rng: RandomNumberGenerator) -> Array:
         for tool in TRAVEL.TOOLS:
             for tier in range(1, top + 1):
                 stock.append({"kind": "tool", "id": TRAVEL.tool_item(tool, tier), "price": TRAVEL.tool_price(tool, tier), "count": 99})
+    # A city's merchant sells the scroll to its own city.
+    if kind == "town":
+        stock.append({"kind": "good", "id": teleport_id(String(entry[4])), "price": TELEPORT_PRICE, "count": 99})
     # Mounts at the stables of Brookhaven, Amberhold and Dunemarch.
     for mount in STABLES.get(entry[0], []):
         stock.append({"kind": "mount", "id": TRAVEL.mount_item(mount), "price": TRAVEL.MOUNTS[mount][2], "count": 99})

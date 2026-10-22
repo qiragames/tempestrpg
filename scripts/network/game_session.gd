@@ -1220,6 +1220,12 @@ func apply_action(actor: Node2D, action: String, payload: Dictionary = {}) -> bo
             rejected_requests += 1
             return false
         return actor.use_good(payload.id)
+    if action == "teleport":
+        # User request: a city's teleport scroll (the host checks the scroll and runs the cast).
+        if payload.size() != 1 or not payload.get("to") is String or payload.to.length() > 32:
+            rejected_requests += 1
+            return false
+        return actor.start_teleport(payload.to)
     if action == "drop_item":
         # User request: drop bag things at your feet.
         if payload.size() != 2 or not payload.get("id") is String or payload.id.length() > 64 or not (payload.get("count") is int or (payload.get("count") is float and payload.count == floor(payload.count))) or int(payload.count) < 1 or int(payload.count) > 1000:

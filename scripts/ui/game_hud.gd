@@ -987,6 +987,10 @@ func _build_inventory() -> void:
     )
     _use = _button("Use", o + Vector2(360, 186), Vector2(66, 30), _modal)
     _use.pressed.connect(func():
+        if String(_selection).begins_with("teleport_"):
+            close_inventory()
+            world_map.open_teleport()
+            return
         session.request_action("use_item", {"id": String(_selection)})
         get_tree().create_timer(0.15, true).timeout.connect(_refresh_inventory)
     )

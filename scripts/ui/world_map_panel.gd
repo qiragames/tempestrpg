@@ -259,7 +259,46 @@ func zoom_at(point: Vector2, factor: float) -> void:
     _centre = tile - (point - _canvas.size / 2.0) / _scale
     _apply_zoom()
 
+## User request: teleport scrolls. The map opens in teleport mode: cities you carry a scroll for
+## glow; clicking one starts the teleport.
+var teleport_mode := false
+
+func open_teleport() -> void:
+    open()
+    if not visible:
+        return
+    teleport_mode = true
+    _title.text = "TELEPORT · CLICK A GLOWING CITY"
+
+## Cities this character holds a scroll for: [[town id, map point]].
+func teleport_targets() -> Array:
+    var found: Array = []
+    var trade := preload("res://scripts/trade/trade_catalogue.gd")
+    for town in MAP.TOWNS:
+        if hud.player.get_node("Inventory").count_of(StringName(trade.teleport_id(town[0]))) > 0 and not trade.teleport_merchant(town[0]).is_empty():
+            found.append([town[0], tile_to_map(town[3]).round()])
+    return found
+
+func teleport_at(point: Vector2) -> String:
+    for target in teleport_targets():
+        if point.distance_to(target[1]) <= 12.0:
+            return target[0]
+    return ""
+
+func choose_teleport(town: String) -> void:
+    hud.session.request_action("teleport", {"to": town})
+    if hud.session.active:
+        # The caster's own screen shows the cast at once.
+        hud.player.teleport_left = preload("res://scripts/trade/trade_catalogue.gd").TELEPORT_SECONDS
+    close()
+
 func _map_input(event: InputEvent) -> void:
+    if teleport_mode and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+        var town := teleport_at(event.position)
+        if not town.is_empty():
+            choose_teleport(town)
+            _canvas.accept_event()
+            return
     if event is InputEventMouseButton and event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
         zoom_at(event.position, 1.25 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 0.8)
         _canvas.accept_event()
@@ -443,6 +482,10 @@ func _draw_map() -> void:
             var party: Node = hud.get_parent().get("party")
             var mate: bool = party != null and party.same_party(hud.player.character_id, child.character_id)
             UI.draw_arrow(_canvas, to_map(child.global_position).round(), child.facing, 5.0 if mate else 4.5, Color("ff8adf") if mate else Color(0.92, 0.94, 1.0))
+    if teleport_mode:
+        var pulse := 0.5 + 0.5 * sin(_time * 4.0)
+        for target in teleport_targets():
+            _canvas.draw_arc(target[1], 7.0 + pulse * 2.0, 0, TAU, 20, Color(0.55, 0.9, 1.0, 0.9), 2.0)
     # You: an arrow showing where you face, with a soft pulse.
     UI.draw_arrow(_canvas, to_map(hud.player.global_position).round(), hud.player.facing, 7.0, UI.CYAN, true)
 
@@ -463,6 +506,7 @@ func open() -> void:
 func close() -> void:
     if not visible:
         return
+    teleport_mode = false
     hide()
     if hud.session.active:
         hud.player.input_blocked = false

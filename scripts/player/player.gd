@@ -67,6 +67,7 @@ static func starter_tools() -> Dictionary:
     var tier: int = 1 if starter_kit else 0
     return {"axe": tier, "pickaxe": tier, "rod": tier}
 const TRADE := preload("res://scripts/trade/trade_catalogue.gd")
+const MAP_DATA := preload("res://scripts/world/world_map.gd")
 const TRAVEL := preload("res://scripts/travel/travel_catalogue.gd")
 const UPGRADES := preload("res://scripts/items/upgrade_catalogue.gd")
 ## Fishing (M4.5d, host): seconds until a bite (negative: biting for that long), -INF when not
@@ -113,6 +114,10 @@ func _ready() -> void:
             dismount()
             fishing_bite_in = -INF
             _calm = 0.0
+            if not teleport_to.is_empty():
+                teleport_to = ""
+                teleport_left = 0.0
+                session.notify_character(character_id, "Teleport interrupted.")
     )
     $Health.defeated.connect(func():
         $Magicules.enabled = false
@@ -578,6 +583,7 @@ func _physics_process(_delta: float) -> void:
     # Character screen: time played (host-side, while the character is in a world).
     progression["playtime"] = float(progression.get("playtime", 0.0)) + _delta
     _rest_regen(_delta)
+    _tick_teleport(_delta)
     if $Health.current <= 0 or is_exhausted():
         velocity = Vector2.ZERO
         return
@@ -628,6 +634,47 @@ func _dash_step(delta: float) -> void:
     _dash_left -= delta
     velocity = _dash_dir * (DASH_DISTANCE / DASH_TIME) * (step / maxf(delta, 0.0001))
     move_and_slide()
+
+## User request: teleport scrolls. Host: a 3 s cast toward a city (a hit cancels it; the scroll
+## is used on arrival). The cast is also shown on the caster's own screen (teleport_left).
+var teleport_to := ""
+var teleport_left := 0.0
+
+func start_teleport(town: String) -> bool:
+    if not AUTHORITY.can_mutate(self) or $Health.current <= 0 or is_exhausted() or not teleport_to.is_empty():
+        return false
+    var scroll: String = TRADE.teleport_id(town)
+    if TRADE.teleport_town(scroll).is_empty() or $Inventory.count_of(StringName(scroll)) <= 0:
+        return false
+    if session.replica_world:
+        return false
+    teleport_to = town
+    teleport_left = TRADE.TELEPORT_SECONDS
+    dismount()
+    session.notify_character(character_id, "Teleporting to %s…" % MAP_DATA.town(town)[1])
+    queue_redraw()
+    return true
+
+func _tick_teleport(delta: float) -> void:
+    if teleport_to.is_empty():
+        return
+    teleport_left -= delta
+    queue_redraw()
+    if teleport_left > 0.0:
+        return
+    var town := teleport_to
+    teleport_to = ""
+    var scroll: String = TRADE.teleport_id(town)
+    if not $Inventory.discard(StringName(scroll), 1):
+        return
+    var world: Node = get_parent()
+    var arrive: Vector2 = world.trade.merchant_position(TRADE.teleport_merchant(town)) + Vector2(0, 26)
+    global_position = arrive
+    velocity = Vector2.ZERO
+    if world.get("terrain") != null:
+        world.terrain.ensure_props_at(arrive)
+    session.notify_character(character_id, "Arrived in %s." % MAP_DATA.town(town)[1])
+    session.queue_save()
 
 ## User report: health comes back by itself out of combat — after CALM_SECONDS without being
 ## hit or striking, REST_REGEN of the maximum per second (at least 1 HP a second). Host only.
@@ -1745,6 +1792,12 @@ func _draw() -> void:
     if has_node("Health") and $Health.current > 0 and not exhaustion_active and form == FORMS.BASE:
         _draw_gear()
     _draw_stamina()
+    if teleport_left > 0.0:
+        # The teleport's glow: rising rings.
+        var progress := 1.0 - teleport_left / TRADE.TELEPORT_SECONDS
+        for ring in range(3):
+            var phase := fmod(progress * 3.0 + ring / 3.0, 1.0)
+            draw_arc(Vector2(0, 2 - phase * 18.0), 10.0 - phase * 4.0, 0, TAU, 20, Color(0.55, 0.9, 1.0, 0.8 * (1.0 - phase)), 1.5)
 
 ## The weapon in hand (user feedback: the old coloured lines looked odd): the item's own icon,
 ## held at the side the character faces (behind the body when facing away).
