@@ -34,6 +34,13 @@ const EFFECTS := {
     "burrow_strike": {"dash": 40.0, "stun": 0.4},
     "ember_burst": {"area": 32.0, "dot": [6.0, 3.0]},
     "magma_bite": {"dot": [8.0, 3.0], "drain": 0.2},
+    # v1.7 fusions.
+    "permafrost_maul": {"stun": 0.7, "root": 1.0, "slow": [0.5, 2.5]},
+    "venom_sandstorm": {"area": 38.0, "dot": [8.0, 3.0]},
+    "rot_bloom": {"area": 34.0, "root": 1.6, "dot": [5.0, 3.0]},
+    "lantern_lance": {"knockback": 30.0, "dot": [6.0, 3.0]},
+    "sky_dive": {"dash": 56.0, "stun": 0.7, "knockback": 36.0},
+    "magma_eruption": {"area": 42.0, "dot": [10.0, 3.0], "drain": 0.2},
     # M4.5c scroll-only skills.
     "tempest_edge": {"area": 34.0, "knockback": 40.0},
     "glacial_nova": {"area": 40.0, "root": 1.0, "slow": [0.4, 3.0]},

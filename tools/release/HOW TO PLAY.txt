@@ -64,6 +64,7 @@ NEW IN 1.7
   B and N open one window with tabs: Camp, Nation, Build, Citizens. Your House can stand
   anywhere free in the world. The bag is an icon grid: hover for details, double click to use.
   Skill fusion (U) is a recipe book: pick a recipe, then Fuse (Split gives the skills back).
+  Seven fusions now: each region's two creature skills fuse into a stronger Extra skill.
 
 COMBAT AND MOVING (new in 1.6)
   Your character faces the mouse; strikes and skills go where it points. Left click strikes,

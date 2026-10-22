@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/skills/skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"sky_dive"
+display_name = "Sky Dive"
+tier = "Extra"
+description = "Fuse Gale Wing with Burrow Strike: leap on the wind and crash down, stunning what you land on."
+damage = 62
+magicule_cost = 18.0
+cooldown = 1.2
+effect = &"strike"

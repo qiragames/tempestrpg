@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="" load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/skills/skill_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"lantern_lance"
+display_name = "Lantern Lance"
+tier = "Extra"
+description = "Fuse Bamboo Thrust with Lantern Flare: a burning lance of light that pierces a line of creatures."
+damage = 62
+magicule_cost = 18.0
+cooldown = 1.2
+effect = &"pierce"

@@ -121,6 +121,34 @@ func _run() -> void:
     panel.split_selected()
     await _frames(1)
     _check(book.knows(&"rending_bite") and book.knows(&"thorn_lash") and panel.state("piercing_fang") == "ready" and panel._detail.text.begins_with("Split"), "Split gives both skills back")
+    # v1.7: a fusion for each region's pair of creature skills.
+    var FX := preload("res://scripts/skills/skill_effects.gd")
+    var recipes: Array = panel.recipe_ids()
+    _check(recipes.size() == 7 and CATALOGUE.catalogue_errors().is_empty(), "Seven fusion recipes, all valid")
+    var parts_used: Array = []
+    var recipes_ok := true
+    for id in recipes:
+        var data: Resource = load(CATALOGUE.SKILLS[id])
+        parts_used.append_array(CATALOGUE.components(id))
+        recipes_ok = recipes_ok and data.tier == "Extra" and data.damage == FX.damage_for(data.magicule_cost) and not FX.effects(id).is_empty() and preload("res://scripts/ui/ui_style.gd").skill_icon(id) != null
+    var unique_parts := {}
+    for part in parts_used:
+        unique_parts[part] = true
+    _check(recipes_ok and unique_parts.size() == parts_used.size(), "Each fused skill has its stats, effect and icon; every creature skill belongs to one recipe")
+    for specimen in ["frost_bear", "snow_wisp"]:
+        book.record_analysis(StringName(specimen))
+    actor.gain_experience(preload("res://scripts/progression/leveling.gd").xp_for_level(8) - int(progression.get("experience", 0)), "test")
+    for part in ["frost_maul", "chill_touch"]:
+        actor.activate_skill(part)
+    panel.refresh()
+    panel.select("permafrost_maul")
+    _check(panel.state("permafrost_maul") == "ready" and not panel._fuse.disabled, "Frost Maul + Chill Touch: Permafrost Maul is ready")
+    panel.fuse_selected()
+    await _frames(1)
+    _check(book.knows(&"permafrost_maul") and not book.knows(&"frost_maul") and not book.knows(&"chill_touch"), "…and fuses")
+    panel.split_selected()
+    await _frames(1)
+    _check(book.knows(&"frost_maul") and book.knows(&"chill_touch") and not book.knows(&"permafrost_maul"), "…and splits back")
     panel.close()
     await _frames(1)
     _check(not panel.visible and not paused, "Closing resumes")
@@ -133,7 +161,7 @@ func _run() -> void:
     var saved: Dictionary = STORE.load_world(path)
     var held_saved: Array = saved.data.players.host.skill_ids.duplicate()
     held_saved.sort()
-    _check(saved.ok and saved.data.version == STORE.VERSION and held_saved == ["piercing_fang", "predator_focus"], "The save holds the fused skill, not its consumed parts")
+    _check(saved.ok and saved.data.version == STORE.VERSION and held_saved == ["chill_touch", "frost_maul", "piercing_fang", "predator_focus"], "The save holds the fused skill, not its consumed parts")
     session.stop_session(false)
     world.queue_free()
     await _frames()
